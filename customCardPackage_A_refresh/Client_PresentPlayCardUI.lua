@@ -132,7 +132,7 @@ function play_CardBlock_card(game, cardInstance, playCard)
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
         local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert):SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
+        CreateLabel(vert).SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
         TargetPlayerBtn = CreateButton (vert).SetText("Select player...").SetOnClick(function() TargetPlayerClicked_Fizz(strPrompt) end);
 
         CreateButton(vert).SetText("Play Card").SetOnClick(
