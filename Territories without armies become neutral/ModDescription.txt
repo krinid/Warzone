@@ -1,0 +1,2 @@
+As soon as territories have no actual armies or special units (like Commanders), they will become neutral. Takes effect after every order.
+If you use multi-attack, theoretically you could have thousands attacks. Use the "Limited Multiattacks" mod to prevent this from happening.

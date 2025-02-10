@@ -1,0 +1,2 @@
+This mod allows players to attach notes into their orders list. To create a note go to Game > Mod: Order Notes. To view teammate order notes, view their orders (click Name >  Teammate's Orders).
+Notes are removed once the turn has advanced; they are only viewable while building orders for that turn.
