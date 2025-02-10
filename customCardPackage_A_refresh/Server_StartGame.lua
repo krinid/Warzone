@@ -1,26 +1,9 @@
 require("utilities");
 
-function Server_StartGame(game,standing)
+-- NO CODE HERE (none that is executed, at least, other than the require command)
+
+function Server_StartGame_DONTCALL (game,standing)
     print ("[START GAME - func START]");
-    --[[local playerGameData = Mod.PlayerGameData;
-    for playerID in pairs(game.ServerGame.Game.PlayingPlayers) do
-        if(playerID>50)then
-          playerGameData[playerID]={};
-          if(Mod.Settings.PestCardIn)then
-            PestPieces = Mod.Settings.PestCardStartPieces%Mod.Settings.PestCardPiecesNeeded;
-            PestCards = (Mod.Settings.PestCardStartPieces-PestPieces)/Mod.Settings.PestCardPiecesNeeded;
-            playerGameData[playerID].PestCardPieces=PestPieces;
-            playerGameData[playerID].PestCards=PestCards;
-          end
-        if(Mod.Settings.IsolationEnabled)then
-            IsolationPieces = Mod.Settings.IsolationStartPieces%Mod.Settings.IsolationPiecesNeeded;
-            IsolationCards = (Mod.Settings.IsolationStartPieces-IsolationPieces)/Mod.Settings.IsolationPiecesNeeded;
-            playerGameData[playerID].IsolationCardPieces=IsolationPieces;
-            playerGameData[playerID].IsolationCards=IsolationCards;
-        end
-        playerGameData[playerID].SuccessfullyAttacked=0;
-      end
-    end]]
 
     local privateGameData = Mod.PrivateGameData;
     local publicGameData = Mod.PublicGameData;
@@ -34,11 +17,10 @@ function Server_StartGame(game,standing)
     publicGameData.QuicksandData = {};       --set TornadoData to empty (initialize)
     publicGameData.EarthquakeData = {};       --set TornadoData to empty (initialize)
     publicGameData.CardData = {};          --saves data for all defined cards including custom mods & the cardID for CardPieces card so can't use it to redeem CardPieces cards/pieces; set CardCardData to empty (initialize)
-    publicGameData.CardData.definedCards = nil;
+    publicGameData.CardData.DefinedCards = nil;
     publicGameData.CardData.CardPiecesCardID = nil;
 
-    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
-    publicGameData.CardData.definedCards = getDefinedCardList (game);
+    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
     Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
 
     --if Mod.Settings.CardPiecesCardID is set, grab the cardID from this setting

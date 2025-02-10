@@ -1,45 +1,3 @@
-
-function setPlayerNotifications()
-	local t = {};
-	t.Messages = {};
-	t.LeftPlayers = {};
-	t.JoinedPlayers = {};
-	t.FactionWarDeclarations = {};
-	t.FactionsPeaceOffers = {};
-	t.FactionsPeaceConfirmed = {};
-	t.FactionsPeaceDeclined = {};
-	t.FactionsKicks = {};
-	t.FactionsPendingJoins = {};
-	t.WarDeclarations = {};
-	t.PeaceOffers = {};
-	t.PeaceDeclines = {};
-	t.PeaceConfirmed = {};
-	t.NewFactionLeader = {};
-	t.GotKicked = {};
-	t.JoinRequestApproved = {};
-	t.JoinRequestRejected = {};
-	return t;
-end
-
-function resetPlayerNotifications(t)
-	t.LeftPlayers = {};
-	t.JoinedPlayers = {};
-	t.FactionWarDeclarations = {};
-	t.FactionsPeaceConfirmed = {};
-	t.FactionsPeaceDeclined = {};
-	t.FactionsKicks = {};
-	t.FactionsPendingJoins = {};
-	t.WarDeclarations = {};
-	t.PeaceConfirmed = {};
-	t.PeaceDeclines = {};
-	t.NewFactionLeader = {};
-	t.GotKicked = {};
-	t.JoinRequestApproved = {};
-	t.JoinRequestRejected = {};
-	t.Messages = {};
-	return t;
-end
-
 function count(t, func)
 	local c = 0;
 	for _, v in pairs(t) do
@@ -50,16 +8,6 @@ function count(t, func)
 		end
 	end
 	return c;
-end
-
-function getSlotName(i)
-	local c = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
-	local s = "Slot ";
-	if i > 25 then
-		s = s .. c[math.floor(i / 26)];
-		i = i - math.floor(i / 26);
-	end
-	return s .. c[i % 26 + 1];
 end
 
 function concatArrays(t1, t2)
@@ -81,25 +29,6 @@ function filterDeadPlayers(game, array)
 		table.remove(array, index);
 	end
 	return array;
-end
-
-function getPlayerHashMap(data, p, p2)
-	local t = {};
-	if data.IsInFaction[p] then
-		for _, faction in pairs(data.PlayerInFaction[p]) do
-			concatArrays(t, data.Factions[faction].FactionMembers);
-		end
-	else
-		table.insert(t, p);
-	end
-	if data.IsInFaction[p2] then
-		for _, faction in pairs(data.PlayerInFaction[p2]) do
-			concatArrays(t, data.Factions[faction].FactionMembers);
-		end
-	else
-		table.insert(t, p2);
-	end
-	return t;
 end
 
 function valueInTable(t, v)
@@ -131,27 +60,13 @@ function createEvent(m, p, h);
 	return t;
 end
 
-function isFactionLeader(p)
-	if Mod.PublicGameData.IsInFaction[p] then
-		for _, faction in pairs(Mod.PublicGameData.PlayerInFaction[p]) do
-			if type(faction) == type(table) then
-				for i, v in pairs(faction) do print(i, v); end
-			end
-			if Mod.PublicGameData.Factions[faction].FactionLeader == p then
-				return true;
-			end
-		end
-	end
-	return false;
-end
-
 --- END of Dutch's functions
 
 --- START of dabo's functions
 function tablelength(T)
 	local count = 0;
 	if (T==nil) then return 0; end
-	if (type(myVariable) ~= "table") then return 0; end
+	if (type(T) ~= "table") then return 0; end
 	for _ in pairs(T) do count = count + 1 end
 	return count
 end
@@ -167,16 +82,6 @@ end
 		  end
 		  return t
   end
-
-  --[[function toTerritoryName(territoryid,game)
-	game.Map.Territories[targetterritoryid].Name
-	for _,playerinfo in pairs(game.Map.Territories)do
-		if(playerid == playerinfo.ID)then
-			return playerinfo.DisplayName(nil, false);
-		end
-	end
-	return "Error - Player ID not found.";
-end]]
 
 function toPlayerName(playerid, game)
 	if (playerid ~= nil) then
@@ -237,7 +142,19 @@ local function tableToString(tbl, indent)
 	result = result .. indent .. "}"
 	return result
 end
-	
+
+--[[function tableToString_(tbl)
+    if type(tbl) ~= "table" then
+        return tostring(tbl)  -- Return the value as-is if it's not a table
+    end
+    local result = "{"
+    for k, v in pairs(tbl) do
+        result = result .. tostring(k) .. "=" .. tostring(v) .. ", "
+    end
+    result = result:sub(1, -3) .. "}"  -- Remove the trailing comma and space
+    return result
+end]]
+
 local function tableToString_ORIG(tbl, indent)
 	if type(tbl) ~= "table" then
 		return tostring(tbl)  -- Return the value as-is if it's not a table
@@ -250,7 +167,7 @@ local function tableToString_ORIG(tbl, indent)
 	result = result .. indent .. "}"
 	return result
 end
-	
+
 -- Main function to print object details
 function printObjectDetails(object, strObjectName, strLocationHeader)
 	strObjectName = strObjectName or ""  -- Default blank value if not provided
@@ -371,18 +288,6 @@ end
 	end
 end]]
 
-function tableToString_(tbl)
-    if type(tbl) ~= "table" then
-        return tostring(tbl)  -- Return the value as-is if it's not a table
-    end
-    local result = "{"
-    for k, v in pairs(tbl) do
-        result = result .. tostring(k) .. "=" .. tostring(v) .. ", "
-    end
-    result = result:sub(1, -3) .. "}"  -- Remove the trailing comma and space
-    return result
-end
-
 function startsWith(str, sub)
 	return string.sub(str, 1, string.len(sub)) == sub;
 end
@@ -469,9 +374,11 @@ function getDefinedCardList (game)
     local cards = {};
 	local publicGameData = Mod.PublicGameData;
 
-	if (false) then --(publicGameData.CardData.definedCards ~= nil) then
-		print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
-		return publicGameData.CardData.definedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+	if (publicGameData.CardData.DefinedCards ~= nil) then
+	--if (Mod.Settings.DefinedCards ~= nil) then
+			print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
+		--return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+		return Mod.Settings.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 	else
 		print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.definedCards");
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
@@ -480,7 +387,7 @@ function getDefinedCardList (game)
 			cards[cardID] = strCardName;
 			count = count +1
 		end
-		printObjectDetails (cards, "card", count .." defined cards total");
+		--printObjectDetails (cards, "card", count .." defined cards total");
 		return cards;
 	end
 end
@@ -488,19 +395,19 @@ end
 --given a card name, return it's cardID
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
-	local cards;
+	local cards={};
 	--[[print ("[getCardID] match name=="..strCardNameToMatch.."::");
 	print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
 	print ("{} == nil --> "..tostring ({} == nil));
 	print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
 	print ("Mod.PublicGameData.CardData.definedCards == nil --> "..tostring (Mod.PublicGameData.CardData.definedCards == nil));
 	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
-	if (Mod.PublicGameData.CardData.definedCards == nil) then
-		--print ("run function");
+	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
+		print ("run function");
 		cards = getDefinedCardList (game);
 	else
-		--print ("get from pgd");
-		cards = Mod.PublicGameData.CardData.definedCards;
+		print ("get from pgd");
+		cards = Mod.PublicGameData.CardData.DefinedCards;
 	end
 
 	--print ("[getCardID] tablelength=="..tablelength (cards));

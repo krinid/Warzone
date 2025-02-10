@@ -1,104 +1,163 @@
-function Server_Created(game, settings)
-    --displayAllCardsAndSettings(game, settings);
-end
+require("utilities");
 
-function displayAllCardsAndSettings (game, settings)
+function Server_Created (game, settings)
+    print ("[SERVER CREATED] START");
 
-    print("All cards in the game:");
-    
-    for cardID, card in pairs(game.Settings.Cards) do
-        if rawget(card, "Name") ~= nil then
-            print ("Card Name: " .. card.Name);
-            print ("-1-----------------------------------------------------------------------------");
-            if rawget(card, "Name") == "Isolation" then
-                print ("-2-----------------------------------------------------------------------------");
-                print ("Isolation card found - IsStoredInActiveOrders="..tostring(card.IsStoredInActiveOrders));
-                print ("Isolation card found - ActiveOrderDuration="..tostring(card.ActiveOrderDuration));
-                card.IsStoredInActiveOrders = true;
-                card.ActiveOrderDuration = 10;
-                print ("Isolation card found - IsStoredInActiveOrders="..tostring(card.IsStoredInActiveOrders));
-                print ("Isolation card found - ActiveOrderDuration="..tostring(card.ActiveOrderDuration));
-            end
-        end
+    local privateGameData = Mod.PrivateGameData;
+    local publicGameData = Mod.PublicGameData;
+    privateGameData.NeutralizeData = {};   --set NeutralizeData to empty (initialize)
+    privateGameData.IsolationData = {};    --set IsolationData to empty (initialize)
+    publicGameData.PestilenceData = {};    --set PestilenceData to empty (initialize)
+    privateGameData.ShieldData = {};     --set MonolithData to empty (initialize)
+    privateGameData.MonolithData = {};     --set MonolithData to empty (initialize)
+    publicGameData.CardBlockData = {};     --set CardBlockData to empty (initialize)
+    publicGameData.TornadoData = {};       --set TornadoData to empty (initialize)
+    publicGameData.QuicksandData = {};       --set TornadoData to empty (initialize)
+    publicGameData.EarthquakeData = {};       --set TornadoData to empty (initialize)
+    publicGameData.CardData = {};          --saves data for all defined cards including custom mods & the cardID for CardPieces card so can't use it to redeem CardPieces cards/pieces; set CardCardData to empty (initialize)
+    publicGameData.CardData.DefinedCards = nil;
+    publicGameData.CardData.CardPiecesCardID = nil;
 
-        --this didn't work; the fields aren't writable
-        -- --[[
-        if (card.ID == 1000002) then
-            print ("-3-----------------------------------------------------------------------------");
-            print ("Isolation card found - IsStoredInActiveOrders="..tostring(card.IsStoredInActiveOrders));
-            print ("Isolation card found - ActiveOrderDuration="..tostring(card.ActiveOrderDuration));
-            --printObjectDetails(card.writableKeys, "Card");
-            --[[
-            --card.IsStoredInActiveOrders = true;
-            card.ActiveOrderDuration = 10;
-            print ("-4-----------------------------------------------------------------------------");
-            print ("Isolation card found - IsStoredInActiveOrders="..tostring(card.IsStoredInActiveOrders));
-            print ("Isolation card found - ActiveOrderDuration="..tostring(card.ActiveOrderDuration));
-            ]]
-        end
-        --if card.Name ~= nil then
-        --    print ("Card Name: " .. card.Name);
-        --end
-        -- ]]
-        
-        printObjectDetails(card, "Card");
-        --[[print("Card ID: " .. cardID);
-        print("ID: " .. card.ID);
-        --print("Card Name: " .. card.Name);
-        print("Card Description: " .. card.Description);
-        print("Card Friendly Description: " .. card.FriendlyDescription);
-        --print("Card Image: " .. card.ImageFilename);
-        print("Card Weight: " .. card.Weight);
-        print("Card NumPieces: " .. card.NumPieces);
-        print("Card IsStoredInActiveOrders: " .. tostring(card.IsStoredInActiveOrders));
-        print("Card ActiveOrderDuration: " .. card.ActiveOrderDuration);
-        print("Card Initial Pieces: " .. card.InitialPieces);
-        print("Card MinimumPiecesPerTurn: " .. card.MinimumPiecesPerTurn);
-        ]]
---[[
-ActiveCardExpireBehavior ActiveCardExpireBehaviorOptions (enum):
-ActiveOrderDuration integer:
-CardID CardID:
-Description string:
-FriendlyDescription string:
-ID CardID:
-InitialPieces integer:
-IsStoredInActiveOrders boolean:
-MinimumPiecesPerTurn integer:
-NumPieces integer:
-Weight number:
-]]
-end
-    
-    
-    
-    --[[
-    local overriddenBonuses = {};
+    --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
+    --print ("game.Settings==nil --> "..tostring(game.Settings==nil));
+    --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
+    --print ("settings==nil --> "..tostring(settings==nil));
+    --print ("settings.Cards==nil --> "..tostring(settings.Cards==nil));
 
-    settings.cardSettings = {};
-    for _, bonus in pairs(game.Map.Bonuses) do
-		--skip negative bonuses unless AllowNegative was checked
-		if (bonus.Amount > 0 or Mod.Settings.AllowNegative) then 
-			local rndAmount = math.random(-Mod.Settings.RandomizeAmount, Mod.Settings.RandomizeAmount);
-
-			if (rndAmount ~= 0) then --don't do anything if we're not changing the bonus.  We could leave this check off and it would work, but it show up in Settings as an overridden bonus when it's not.
-
-				local newValue = bonus.Amount + rndAmount;
-
-				-- don't take a positive or zero bonus negative unless AllowNegative was checked.
-				if (newValue < 0 and not Mod.Settings.AllowNegative) then
-					newValue = 0;
-				end
-
-				-- -1000 to +1000 is the maximum allowed range for overridden bonuses, never go beyond that
-				if (newValue < -1000) then newValue = -1000 end;
-				if (newValue > 1000) then newValue = 1000 end;
-		
-				overriddenBonuses[bonus.ID] = newValue;
-			end
-		end
+    --[[cards={};
+    count=0;
+    for cardID, cardConfig in pairs(game.Settings.Cards) do
+        local strCardName = getCardName_fromObject(cardConfig);
+        --print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
+        cards[cardID] = strCardName;
+        count = count +1;
     end
+    printObjectDetails (cards, "cards", count .." defined cards total", game);]]
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
 
-    settings.OverriddenBonuses = overriddenBonuses;
-]]
+    --[[print ("04----------------------");
+    print ("Mod.PublicGameData==nil --> "..tostring(Mod.PublicGameData==nil));
+    print ("05----------------------");
+    print ("Mod.PublicGameData.CardData==nil --> "..tostring(Mod.PublicGameData.CardData==nil));
+    print ("06----------------------");
+    print ("Mod.PublicGameData.CardData.DefinedCards==nil --> "..tostring(Mod.PublicGameData.CardData.DefinedCards==nil));
+    print ("07----------------------");
+    print ("Mod.PublicGameData.CardData.CardPiecesCardID==nil --> "..tostring(Mod.PublicGameData.CardData.DefinedCards.CardPiecesCardID==nil));
+    print ("08----------------------");]]
+
+
+    printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "card PGD", "");--count .." defined cards total", game);
+    print ("09----------------------");
+
+    --[[for cardID, cardConfig in pairs(Mod.Settings.DefinedCards) do
+        local strCardName = getCardName_fromObject(cardConfig);
+        print ("@@@@@cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
+        cards[cardID] = strCardName;
+        count = count +1;
+    end]]
+
+    --if Mod.Settings.CardPiecesCardID is set, grab the cardID from this setting
+    --standalone app can't grab this yet, need a new version
+    if (Mod.Settings.CardPiecesCardID == nil) then
+        print ("[CardPiece CardID] get from getCardID function");
+        publicGameData.CardData.CardPiecesCardID = getCardID ("Card Piece");
+        print ("10----------------------");
+    else
+        print ("[CardPiece CardID] acquired from Mod.Settings.CardPiecesCardID");
+        publicGameData.CardData.CardPiecesCardID = Mod.Settings.CardPiecesCardID;
+        print ("11----------------------");
+    end
+    print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
+    print ("12----------------------");
+
+    Mod.PrivateGameData = privateGameData;
+    Mod.PublicGameData = publicGameData;
+    print ("[SERVER CREATED] PrivateGameData & PublicGameData constructs initialized");
+
+    --printObjectDetails (Mod.PublicGameData.CardData, "all card data", "");
+    --printObjectDetails (Mod.PublicGameData.CardData.definedCards, "defined cards", "");
+    --printObjectDetails (Mod.PublicGameData.CardData.CardPiecesCardID, "CardPiece cardID", "");
+
+    print ("turn#="..game.Game.TurnNumber.."::");
+    --dataStorageTest ();
+    print ("[SERVER CREATED] END");
+end
+
+function dataStorageTest_pre ()
+    --privateGameData = {NeutralizeData={1, "b", 3, "d"},   --set NeutralizeData to empty
+    print ("[TEST private data]");
+    for key,data in pairs(Mod.PrivateGameData) do
+        print (key, data);
+    end
+    --[[print ("[TEST private data - NeutralizeData]");
+    for key,data in pairs (Mod.PrivateGameData.NeutralizeData) do
+        print (key, data);
+    end
+    printObjectDetails (Mod.PrivateGameData.NeutralizeData, "neuData");
+    print ("display contents");
+    --printObjectDetails ({"someobject", "somevalue"}, "randomobject");
+    printObjectDetails (Mod.PublicGameData, "[public data]");
+    printObjectDetails (Mod.PublicGameData.IsolatedTerritories, "[public data - isodata]");
+    printObjectDetails (Mod.PrivateGameData, "[public data]");
+    printObjectDetails (Mod.PrivateGameData.NeutralizeData, "[private data - neutralize data]");]]
+end
+
+function dataStorageTest ()
+    -- test writing to Mod.PublicGameData, Mod.PrivateGameData, Mod.PlayerGameData
+    -- all data must be saved to a code construct, then have the code construct assigned the the Mod.Public/Private/PlayerGameData construct; can't modify variable values directly
+      local data = Mod.PublicGameData;
+      publicGameData = Mod.PublicGameData; --readable from anywhere, writeable only from Server hooks
+      privateGameData = Mod.PrivateGameData;  --readable only from Server hooks
+      playerGameData = Mod.PlayerGameData;  --readable/writeable from both Client & Server hooks
+          --Client hooks can only access data for the user associated with the Client hook (current player), doesn't need index b/c it can only access data for current player, automatically gets assigned playerID of current player
+          --Server hooks access this using an index of playerID
+          --but can't use [0]~[49], and can only use playerID #'s that are actually in the game, violations will generate 'trying to index nil' errors
+          --best to abandon use of PlayerGameData & just use PublicGameData & PrivateGameData
+      publicGameData.someProperty = "this is some public data";
+      publicGameData.anotherProperty = "here is some more public data";
+      publicGameData.wantMore = "would you like some more? (public ... data)";
+    
+      print ("[public data]");
+      for key,data in pairs(publicGameData) do
+          print (key, data);
+      end
+
+      privateGameData.someProperty = "this is some private data";
+      privateGameData.anotherProperty = "here is some more private data";
+      privateGameData.wantMore = "would you like some more? (private ... data)";
+    
+      print ("[private data]");
+      for key,data in pairs(privateGameData) do
+          print (key, data);
+      end
+
+      --1058239 = krinid
+      --[[playerGameData[0].someProperty = "this is some player data [neutral?]";
+      playerGameData[0].anotherProperty = "here is some more player data [neutral?]";
+      playerGameData[0].wantMore = "would you like some more? (player ... data [neutral?])";
+      
+      playerGameData[1].someProperty = "this is some player data [AI1?]";
+      playerGameData[1].anotherProperty = "here is some more player data [AI1?]";
+      playerGameData[1].wantMore = "would you like some more? (player ... data [AI1?])";
+      ]]
+      playerGameData[1058239].someProperty = "this is some player 1058239 data";
+      playerGameData[1058239].anotherProperty = "here is some more player 1058239 data";
+      playerGameData[1058239].wantMore = "would you like some more? (player 1058239 ... data)";
+
+      --playerGameData[4545454].wantMore = "just a random # and some text";
+
+      print ("[player data]");
+      --[[for key,data in pairs(playerGameData[0]) do
+          print (key, data);
+      end
+
+      for key,data in pairs(playerGameData[1]) do
+        print (key, data);
+      end]]
+
+      for key,data in pairs(playerGameData[1058239]) do
+        print (key, data);
+      end
 end
