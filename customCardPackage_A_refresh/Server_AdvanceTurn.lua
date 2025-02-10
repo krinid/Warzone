@@ -67,7 +67,7 @@ function Server_AdvanceTurn_Start(game,addOrder)
 end
 
 --return true if this order is a card play by a player impacted by Card Block
-function execute_CardBlock_skip_affected_player_card_plays (gameOrder, skip, addOrder)
+function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder)
 	local publicGameData = Mod.PublicGameData;
 	local targetPlayerID = gameOrder.PlayerID;
 
@@ -131,7 +131,7 @@ end
 function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");
 	--skip order if this order is a card play by a player impacted by Card Block
-	if (execute_CardBlock_skip_affected_player_card_plays (gameOrder, skip, addOrder) == true) then
+	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
 		--skip order is actually done within the function above; the true/false return value is just a singal as to whether to proceed further execution in this function (if false) or not (if true)
 		return; --don't process the rest of the function, else it will still process card plays
