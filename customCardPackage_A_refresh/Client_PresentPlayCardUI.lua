@@ -148,7 +148,7 @@ function play_CardBlock_card(game, cardInstance, playCard)
         end);
         TargetPlayerClicked_Fizz(strPrompt);
     end);
-    UI.Alert ("bugger50bbb");
+    --UI.Alert ("bugger50bbb");
 end
 
 function play_cardPiece_card (game, cardInstance, playCard)
