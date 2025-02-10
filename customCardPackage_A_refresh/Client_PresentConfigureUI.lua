@@ -313,16 +313,16 @@ function quicksandCheckboxClicked()
         QuicksandDuration = CreateNumberInputField(horzQuicksandDuration).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandDuration).SetWholeNumbers(true).SetInteractable(true);
         
 		local horzQuicksandBlockEntry = CreateHorz(UIcontainer);
-        QuicksandBlockEntryIntoTerritory = CreateCheckBox(horzQuicksandBlockEntry).SetText("Block entry into territory").SetIsChecked(Mod.Settings.QuicksandBlockEntryIntoTerritory):SetInteractable(true);
+        QuicksandBlockEntryIntoTerritory = CreateCheckBox(horzQuicksandBlockEntry).SetText("Block entry into territory").SetIsChecked(Mod.Settings.QuicksandBlockEntryIntoTerritory).SetInteractable(true);
         
 		local horzQuicksandBlockAirliftIn = CreateHorz(UIcontainer);
-        QuicksandBlockAirliftsIntoTerritory = CreateCheckBox(horzQuicksandBlockAirliftIn).SetText("Block airlifts into territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsIntoTerritory):SetInteractable(true);
+        QuicksandBlockAirliftsIntoTerritory = CreateCheckBox(horzQuicksandBlockAirliftIn).SetText("Block airlifts into territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsIntoTerritory).SetInteractable(true);
        
 		local horzQuicksandBlockAirliftOut = CreateHorz(UIcontainer);
-        QuicksandBlockAirliftsFromTerritory = CreateCheckBox(horzQuicksandBlockAirliftOut).SetText("Block airlifts from territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsFromTerritory):SetInteractable(true);
+        QuicksandBlockAirliftsFromTerritory = CreateCheckBox(horzQuicksandBlockAirliftOut).SetText("Block airlifts from territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsFromTerritory).SetInteractable(true);
         
 		local horzQuicksandBlockExit = CreateHorz(UIcontainer);
-        QuicksandBlockExitFromTerritory = CreateCheckBox(horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory):SetInteractable(true);
+        QuicksandBlockExitFromTerritory = CreateCheckBox(horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory).SetInteractable(true);
         
 		local horzQuicksandDefendMod = CreateHorz(UIcontainer);
         CreateLabel(horzQuicksandDefendMod).SetText("Defend damage modifier: ");
