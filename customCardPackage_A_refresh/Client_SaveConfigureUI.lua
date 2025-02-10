@@ -162,7 +162,7 @@ function createCards_newCards(alert, addCard);
                 else
                         strQuicksandDesc = strQuicksandDesc .. "for " .. Mod.Settings.QuicksandDuration .. " turn" .. plural(Mod.Settings.QuicksandDuration) .. ".";
                 end
-                strQuicksandDesc = strQuicksandDesc .. "\n\nAttacks and transfers into the territory can still occur, but none can be executed from the territory while quicksand remains active. Units caught in quicksand also do "..Mod.Settings.QuicksandDefendDamageTakenModifier.."% less damage to attackers, and sustain "..Mod.Settings.QuicksandAttackDamageGivenModifier.."% more damage when attacked."; --&&& update these numbers
+                strQuicksandDesc = strQuicksandDesc .. "\n\nAttacks and transfers into the territory can still occur, but none can be executed from the territory while quicksand remains active. Units caught in quicksand also do "..Mod.Settings.QuicksandAttackDamageGivenModifier.."x less damage to attackers, and sustain "..Mod.Settings.QuicksandDefendDamageTakenModifier.."x more damage when attacked."; --&&& update these numbers
                 Mod.Settings.QuicksandCardID = addCard("Quicksand", strQuicksandDesc, "quicksand_130x180.png", Mod.Settings.QuicksandPiecesNeeded, Mod.Settings.QuicksandPiecesPerTurn, Mod.Settings.QuicksandStartPieces, Mod.Settings.QuicksandCardWeight, Mod.Settings.QuicksandDuration);
         end
 

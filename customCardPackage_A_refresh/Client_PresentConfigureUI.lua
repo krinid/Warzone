@@ -12,6 +12,7 @@ TODOs:
 - issues to resolve before publishing:
 	- blurb @ top of PresentConfiguration menu is old Dabo text
 	- PresentSettings updates
+	- on mod config screen, add blurb beside or beneath checkbox to indicate what each card does; keep mod description short b/c it appends that to top of the mod config screen
 	- Pestilence - don't notify Eliminated users that they're being pestilenced; and don't bother implementing it on eliminated users either, just pop the record off
 	- any other items to notify in Game_Refresh? there are other duration items but none as comprehensive as Pesti; maybe Earthquake? It won't turn stuff neutral so not as catastrophic
 	- disable Neutralize on Commanders, maybe all specials? test with AIs gifted specials - unless Fizz fixes -> going to fix in next update, yay! So don't bother disabling them
@@ -1027,7 +1028,7 @@ function setDefaultValues()
 		Mod.Settings.QuicksandBlockAirliftsIntoTerritory = false;
 		Mod.Settings.QuicksandBlockAirliftsFromTerritory = true;
 		Mod.Settings.QuicksandBlockExitFromTerritory = true;
-		Mod.Settings.QuicksandDefendDamageTakenModifier = 0.5; --increase damage taken by defender 50% while in quicksand
+		Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
 		Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
 		Mod.Settings.QuicksandPiecesNeeded = 10;
 		Mod.Settings.QuicksandStartPieces = 1;
