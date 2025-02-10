@@ -1001,7 +1001,6 @@ function setDefaultValues()
 	end
 
 	if (Mod.Settings.TornadoEnabled == nil) then
-		print ("[Tornado SDV]");
 		Mod.Settings.TornadoEnabled = false;
 		Mod.Settings.TornadoDuration = 3;
 		Mod.Settings.TornadoStrength = 10;
