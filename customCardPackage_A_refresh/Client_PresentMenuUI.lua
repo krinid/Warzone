@@ -67,12 +67,12 @@ end
 function showIsolationData ()
     CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
-    for k,v in pairs (Mod.PublicGameData.IsolationData) do
+    --[[for k,v in pairs (Mod.PublicGameData.IsolationData) do
         printObjectDetails (v,"record", "IsolationData");
         CreateLabel (MenuWindow).SetText (k..", " ..v.territory..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
         --local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
 
-    end
+    end]]
 end 
 
 function showCardBlockData_Nope ()
