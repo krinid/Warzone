@@ -33,6 +33,9 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 
   initialize_CardData (game);
 
+  print ("Mod.PrivateGameData.IsolationData qty "..tablelength(Mod.PrivateGameData.IsolationData));
+  print ("Mod.PublicGameData.IsolationData qty "..tablelength(Mod.PublicGameData.IsolationData));
+
   z = Mod.PrivateGameData.IsolationData;
   Mod.PublicGameData.IsolationData = z;
 
