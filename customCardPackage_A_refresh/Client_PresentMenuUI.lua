@@ -13,6 +13,7 @@ function Client_PresentMenuUI(RootParent, setMaxSize, setScrollable, game, close
 
     --deprecated, no longer required b/c they are actual cards that can be played normally w/o having to use the game/mod menu
 	print ("[PresentMenuUI] CARD OVERVIEW");
+    UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
 
     --local randomCard = decideRandomCard(game);
     --local event = WL.GameOrderEvent.Create(playerId, 'Receive a full ' .. randomCard.name .. ' from playing a Mystery Card', {});
