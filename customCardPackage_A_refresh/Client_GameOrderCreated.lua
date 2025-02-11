@@ -8,12 +8,21 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 	local publicGameData = Mod.PublicGameData;
 
     print ("[C_GOC] START");
-UI.Alert ("Checking orders");
-    --check for card plays by players impacted by CardBlock, and skip the order if so; include Reinforcements card in the block b/c this is client order entry time, so can stop it entirely
-    if (check_for_CardBlock == true) then
-        --player has played a card but is impacted by CardBlock, skip this order
-        UI.Alert ("You cannot play a card, because a Card Block has been used against you and is still active.");
-        skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+    UI.Alert ("Checking orders");
+
+    --check if order is a card play (could be regular or custom card)
+    if startsWith (gameOrder.proxyType, 'GameOrderPlayCard') == true then
+        print ("[CARD PLAY]");
+        --check for card plays by players impacted by CardBlock, and skip the order if so; include Reinforcements card in the block b/c this is client order entry time, so can stop it entirely
+        if (Mod.PublicGameData.CardBlockData[game.Us.ID] ~= nil) then
+            print ("[CARD BLOCK] true");
+            --if (check_for_CardBlock == true) then
+            --player has played a card but is impacted by CardBlock, skip this order
+            UI.Alert ("You cannot play a card, because a Card Block has been used against you and is still active.");
+            skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+        else
+            print ("[CARD BLOCK] false");
+        end
     end
 
 	--check for regular card plays
@@ -130,7 +139,7 @@ function check_for_CardBlock ()
     local publicGameData = Mod.PublicGameData;
     local targetPlayerID = game.Us.ID;
 
-    CreatLabel (TopLabel).SetText (tostring ("Mod.Settings.CardBlockEnabled == false --> "..tostring(Mod.Settings.CardBlockEnabled == false)));
+    CreateLabel (TopLabel).SetText (tostring ("Mod.Settings.CardBlockEnabled == false --> "..tostring(Mod.Settings.CardBlockEnabled == false)));
     --if CardBlock isn't in use, just return false
     if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
