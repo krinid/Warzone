@@ -286,7 +286,8 @@ function execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, add
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.CardBlockData == nil) then publicGameData.CardBlockData = {}; end
     local turnNumber_CardBlockExpires = (Mod.Settings.CardBlockDuration > 0) and (game.Game.TurnNumber + Mod.Settings.CardBlockDuration) or -1;
-    local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
+targetPlayerID = 1058239;
+	local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
     publicGameData.CardBlockData[targetPlayerID] = record;
     Mod.PublicGameData = publicGameData;
 	printObjectDetails (Mod.PublicGameData, "Mod.PublicGameData", "full");
