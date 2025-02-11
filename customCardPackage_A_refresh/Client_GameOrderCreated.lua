@@ -7,7 +7,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 	local publicGameData = Mod.PublicGameData;
 
     print ("[C_GOC] START");
-
+UI.Alert ("Checking orders");
     --check for card plays by players impacted by CardBlock, and skip the order if so; include Reinforcements card in the block b/c this is client order entry time, so can stop it entirely
     if (check_for_CardBlock == true) then
         --player has played a card but is impacted by CardBlock, skip this order
