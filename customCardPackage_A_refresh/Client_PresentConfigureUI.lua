@@ -10,8 +10,15 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 
 TODOs:
 - issues to resolve before publishing:
-	- blurb @ top of PresentConfiguration menu is old Dabo text
+	- Isolation move skip - use jumplocation to show the territory isolation area
+	- Isolation move skip - suppress 1st skip order; no value in it
 	- PresentSettings updates
+	- Isolation Special - can be blockaded; then there's no visual indicator; write code to detect this, recreate it & update the appropriate IsolationData record with it
+	- see if can catch "Shield wore off" order; same for Monolith, Isolation, etc; Pestilence has funny count b/c of Warning turn
+	- Pestilence - submit duration+1 as WZ card duration? it'll show up 1 turn early but end on time; or as now, show up early but then end 1 turn early
+		OR store Pesti order in table & put in customOrder, but don't call playCard until the warning turn is over and the actual HIT turn is here
+	- ISOLATION expirations BROKEN ???
+	check for SHIELD, MONOLITH
 	- on mod config screen, add blurb beside or beneath checkbox to indicate what each card does; keep mod description short b/c it appends that to top of the mod config screen
 	- Pestilence - don't notify Eliminated users that they're being pestilenced; and don't bother implementing it on eliminated users either, just pop the record off
 	- any other items to notify in Game_Refresh? there are other duration items but none as comprehensive as Pesti; maybe Earthquake? It won't turn stuff neutral so not as catastrophic

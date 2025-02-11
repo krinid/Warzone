@@ -369,7 +369,7 @@ end
 --return list of all cards defined in this game; includes custom cards
 --generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
 function getDefinedCardList (game)
-    print ("[CARDS DEFINED IN THIS GAME]"); 
+    print ("[CARDS DEFINED IN THIS GAME]");
     local count = 0;
     local cards = {};
 	local publicGameData = Mod.PublicGameData;
@@ -386,7 +386,8 @@ function getDefinedCardList (game)
 			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
 			cards[cardID] = strCardName;
 			count = count +1
-		end
+			--printObjectDetails (cardConfig, "cardConfig");
+	end
 		--printObjectDetails (cards, "card", count .." defined cards total");
 		return cards;
 	end
@@ -403,10 +404,10 @@ function getCardID (strCardNameToMatch, game)
 	print ("Mod.PublicGameData.CardData.definedCards == nil --> "..tostring (Mod.PublicGameData.CardData.definedCards == nil));
 	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
 	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
-		print ("run function");
+		--print ("run function");
 		cards = getDefinedCardList (game);
 	else
-		print ("get from pgd");
+		--print ("get from pgd");
 		cards = Mod.PublicGameData.CardData.DefinedCards;
 	end
 
@@ -414,7 +415,7 @@ function getCardID (strCardNameToMatch, game)
 	for cardID, strCardName in pairs(cards) do
 		--print ("[getCardID] cardID=="..cardID..", cardName=="..strCardName.."::");
 		if (strCardName == strCardNameToMatch) then
-			print ("[getCardID] matching card cardID=="..cardID.."::");
+			--print ("[getCardID] matching card cardID=="..cardID.."::");
 			return cardID;
 		end
 	end
@@ -437,5 +438,10 @@ function getCardName_fromObject(cardConfig)
         return 'Emergency Blockade card';
     end
     return cardConfig.proxyType:match("^CardGame(.*)");
+end
+
+function getTerritoryName (intTerrID, game)
+	if (intTerrID) == nil then return nil; end
+	return (game.Map.Territories[intTerrID].Name);
 end
 --- END of krinid's functions

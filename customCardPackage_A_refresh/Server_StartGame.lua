@@ -8,7 +8,7 @@ function Server_StartGame_DONTCALL (game,standing)
     local privateGameData = Mod.PrivateGameData;
     local publicGameData = Mod.PublicGameData;
     privateGameData.NeutralizeData = {};   --set NeutralizeData to empty (initialize)
-    privateGameData.IsolationData = {};    --set IsolationData to empty (initialize)
+    publicGameData.IsolationData = {};    --set IsolationData to empty (initialize)
     publicGameData.PestilenceData = {};    --set PestilenceData to empty (initialize)
     privateGameData.ShieldData = {};     --set MonolithData to empty (initialize)
     privateGameData.MonolithData = {};     --set MonolithData to empty (initialize)

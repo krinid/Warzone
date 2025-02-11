@@ -1,4 +1,5 @@
 require("utilities");
+require("DataConverter");
 
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E]::func start");
@@ -30,16 +31,20 @@ function Server_AdvanceTurn_Start(game,addOrder)
 	print ("[Server_AdvanceTurn_Start] -----------------------------------------------------------------");
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
 
-	for ID,player in pairs (game.ServerGame.Game.PlayingPlayers) do
-		print ("==================================================================\nID="..tostring(ID));
-		--printObjectDetails (player, "a", "b");
-		--local targetPlayerID = player.PlayerID; --same content as pestilenceDataRecord[pestilenceTarget_playerID];
-		local targetPlayerID = ID;
+	--process CardBlock data; if there is none, don't even start looping through the players, just skip to the next check
+	if (tablelength (publicGameData.CardBlockData)>0) then
+		for ID,player in pairs (game.ServerGame.Game.PlayingPlayers) do
+			print ("==================================================================\nID="..tostring(ID));
+			--printObjectDetails (player, "a", "b");
+			--local targetPlayerID = player.PlayerID; --same content as pestilenceDataRecord[pestilenceTarget_playerID];
+			local targetPlayerID = ID;
 
-		print ("[CARD BLOCK CHECK] for player "..targetPlayerID..", publicGameData.PestilenceData[targetPlayerID] ~= nil -->"..tostring(publicGameData.CardBlockData[targetPlayerID] ~= nil)); --.."/"..toPlayerName(playerID), game);
-		--print ("[CARD BLOCK CHECK] for player "..playerID.."/"..toPlayerName(playerID), game);
+			print ("[CARD BLOCK CHECK] for player "..targetPlayerID..", publicGameData.PestilenceData[targetPlayerID] ~= nil -->"..tostring(publicGameData.CardBlockData[targetPlayerID] ~= nil)); --.."/"..toPlayerName(playerID), game);
+			--print ("[CARD BLOCK CHECK] for player "..playerID.."/"..toPlayerName(playerID), game);
+		end
+	else
+		print ("[CARD BLOCK] no data defined, skip checks");
 	end
-
 
 
 	process_Neutralize_expirations (game, addOrder); --if there are pending Neutralize orders, check if any expire this turn and if so execute those actions
@@ -145,6 +150,35 @@ function process_game_orders (game,gameOrder,result,skip,addOrder)
 	local cardOrderContentDetails = nil;
 	local publicGameData = Mod.PublicGameData;
 
+	--check for regular card plays
+	if (gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
+		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
+
+		print ("[AIRLIFT PLAYED] FROM "..gameOrder.FromTerritoryID.."/"..getTerritoryName (gameOrder.FromTerritoryID, game)..", TO "..gameOrder.ToTerritoryID.."/"..getTerritoryName (gameOrder.ToTerritoryID, game)..", #armies=="..gameOrder.Armies.NumArmies.."::");
+
+		--if there's no IsolationData, do nothing (b/c there's nothing to check)
+		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
+			--do nothing, there are no Isolation operations in place, permit these orders
+			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
+		else
+			local strAirliftSkipOrder_Message="";
+			if (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
+				strAirliftSkipOrder_Message="Airlift failed since source and target territories are isolated";
+			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil) then
+				strAirliftSkipOrder_Message="Airlift failed since target territory is isolated";
+			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
+				strAirliftSkipOrder_Message="Airlift failed since source territory is isolated";
+			else
+				strAirliftSkipOrder_Message="Airlift failed due to unknown isolation conditions";
+			end
+			strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an Airlift from "..getTerritoryName (gameOrder.FromTerritoryID, game).." to "..getTerritoryName(gameOrder.ToTerritoryID, game);
+			print ("[AIRLIFT/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.FromTerritoryID .."/"..getTerritoryName (gameOrder.FromTerritoryID, game).."::, to="..gameOrder.ToTerritoryID .."/"..getTerritoryName(gameOrder.ToTerritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+		end
+	end
+
+	--check for Custom Card plays
 	--NOTE: proxyType=='GameOrderPlayCardCustom' indicates that a custom card played; but these can't be placed in the order list at a specific point, it just applies in the position according to regular move order
 	--so for now, ignore this; re-implement this when Fizz updates so these can placed at the proper execution point, eg: start of turn, after deployments, after attacks, etc
 	if (gameOrder.proxyType=='GameOrderPlayCardCustom') then
@@ -191,30 +225,31 @@ function process_game_orders (game,gameOrder,result,skip,addOrder)
 		end
 	end
 
-	--check orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory
+	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
 		--print ("[[  ATTACK // TRANSFER ]] check for Isolation, player "..gameOrder.PlayerID..", TO "..gameOrder.To..", FROM "..gameOrder.From.."::");
-		--print ("...Mod.PrivateGameData.IsolationData == nil -->".. tostring (Mod.PrivateGameData.IsolationData == nil));
-		--if Mod.PrivateGameData.IsolationData ~= nil then print (".....Mod.PrivateGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PrivateGameData.IsolationData[gameOrder.To] == nil)); end;
-		--if Mod.PrivateGameData.IsolationData ~= nil then print (".....Mod.PrivateGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PrivateGameData.IsolationData[gameOrder.From] == nil)); end;
+		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
+		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
+		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
 
-		if (Mod.PrivateGameData.IsolationData == nil or (Mod.PrivateGameData.IsolationData[gameOrder.To] == nil and Mod.PrivateGameData.IsolationData[gameOrder.From] == nil)) then
+		--if there's no IsolationData, do nothing (b/c there's nothing to check)
+		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
 			--weed out the cases above, then what's left are moves to or from Isolated territories
 		else
 			local strIsolationSkipOrder_Message="";
 
-			if (Mod.PrivateGameData.IsolationData[gameOrder.To] ~= nil and Mod.PrivateGameData.IsolationData[gameOrder.From] ~= nil) then
-				strIsolationSkipOrder_Message="Order failed since both territories are isolated";
-			elseif (Mod.PrivateGameData.IsolationData[gameOrder.To] ~= nil and Mod.PrivateGameData.IsolationData[gameOrder.From] == nil) then
+			if (Mod.PublicGameData.IsolationData[gameOrder.To] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.From] ~= nil) then
+				strIsolationSkipOrder_Message="Order failed since source and target territories are isolated";
+			elseif (Mod.PublicGameData.IsolationData[gameOrder.To] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil) then
 				strIsolationSkipOrder_Message="Order failed since target territory is isolated";
-			elseif (Mod.PrivateGameData.IsolationData[gameOrder.To] == nil and Mod.PrivateGameData.IsolationData[gameOrder.From] ~= nil) then
+			elseif (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] ~= nil) then
 				strIsolationSkipOrder_Message="Order failed since source territory is isolated";
 			end
 			strIsolationSkipOrder_Message=strIsolationSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
 			print ("ISOLATION - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strIsolationSkipOrder_Message.."::");
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strIsolationSkipOrder_Message, {}, {},{}));
-			skip (WL.ModOrderControl.Skip);
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
 	end
 end
@@ -304,7 +339,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.Name = 'Quicksand';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_specialunit.png';
-    builder.AttackPower = 0;
+    --builder.AttackPower = 0;
+    builder.AttackPowerPercentage = 0;
     --builder.DefensePower = -0.5;
 	builder.DefensePowerPercentage = -0.5;
     builder.DamageToKill = 999999;
@@ -352,6 +388,14 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
+
+	print ("Mod.Settings.ShieldDescription=="..tostring (Mod.Settings.ShieldDescription));
+	local strShieldDesc = tostring (Mod.Settings.ShieldDescription);
+	local recordUnitDesc = {UnitDescription = strShieldDesc};
+	local recordEssentials = {Essentials = recordUnitDesc};
+	--builder.ModData = strShieldDesc;
+	--builder.ModData = DataConverter.DataToString(recordEssentials); --use Dutch's library code to store unit description in a special "Essentials" table construct which is then stored in ModData
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = "The medic does not like standing on the front lines, but rather wants to stay back to heal up any wounded soldiers. Any time the player owning this unit loses armies on a territory connected to this medic, it will recover " .. Mod.Settings.Percentage .. "% of the armies lost\n\nThis unit can be bought for " .. Mod.Settings.Cost .. " gold in the purchase menu (same place where you buy cities)\n\nEach player can have up to " .. Mod.Settings.MaxUnits .. " Medic(s), so you can't have an army of Medics unfortunately"}});
 
     local specialUnit_Shield = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Shield};
@@ -412,7 +456,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
 		impactedTerritory.AddSpecialUnits = {specialUnit_Monolith}; --add special unit
 		--table.insert (modifiedTerritories, impactedTerritory);
-		printObjectDetails (specialUnit_Monolith, "Monolith specialUnit", "Monolith"); --show contents of the Isolation special unit -- &&&
+		printObjectDetails (specialUnit_Monolith, "Monolith specialUnit", "Monolith"); --show contents of the Monolith special unit
 		
 		local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Monolith action
 		--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
@@ -472,7 +516,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
 	impactedTerritory.AddSpecialUnits = {specialUnit_Isolation}; --add special unit
 	--table.insert (modifiedTerritories, impactedTerritory);
-	printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit -- &&&
+	printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit
 	
 	local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Neutralize action
 	--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
@@ -482,10 +526,10 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
 
 	--save data in Mod.PublicGameData so the special unit can be destroyed later
-	local privateGameData = Mod.PrivateGameData;
+	local publicGameData = Mod.PublicGameData;
 	local turnNumber_IsolationExpires = -1;
-	--print ("PRE  Isolation#items="..tablelength(privateGameData.IsolationData));
-	printObjectDetails (privateGameData.IsolationData, "[PRE  Isolation data]", "Execute Isolation operation");
+	--print ("PRE  Isolation#items="..tablelength(publicGameData.IsolationData));
+	printObjectDetails (publicGameData.IsolationData, "[PRE  Isolation data]", "Execute Isolation operation");
 	
 	if (Mod.Settings.IsolationDuration==0) then  --if Isolation duration is Permanent (don't auto-revert), set expiration turn to -1
 		turnNumber_IsolationExpires = -1; 
@@ -495,12 +539,12 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	print ("expire turn#="..turnNumber_IsolationExpires.."::duration=="..Mod.Settings.IsolationDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."::");
 	--even if Isolation duration==0, still make a note of the details of the Isolation action - probably not required though
 	local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
-	privateGameData.IsolationData [targetTerritoryID] = IsolationDataRecord; --do it as a non-contiguous array so can be referenced later as (privateGameData.IsolationData [targetTerritoryID] ~= nil) to identify if Isolation impacts a given territory
-	--table.insert (privateGameData.IsolationData, IsolationDataRecord);  --don't use this method, as it wastes the key by making it an auto-incrementing integer, rather than something meaningful like the territory ID
-	Mod.PrivateGameData = privateGameData;
-	printObjectDetails (privateGameData.IsolationData, "[POST Isolation data]");
+	publicGameData.IsolationData [targetTerritoryID] = IsolationDataRecord; --do it as a non-contiguous array so can be referenced later as (publicGameData.IsolationData [targetTerritoryID] ~= nil) to identify if Isolation impacts a given territory
+	--table.insert (publicGameData.IsolationData, IsolationDataRecord);  --don't use this method, as it wastes the key by making it an auto-incrementing integer, rather than something meaningful like the territory ID
+	Mod.PublicGameData = publicGameData;
+	printObjectDetails (publicGameData.IsolationData, "[POST Isolation data]");
 	printObjectDetails (IsolationDataRecord, "[POST Isolation data record]");
-	print ("POST Isolation#items="..tablelength(privateGameData.IsolationData));
+	print ("POST Isolation#items="..tablelength(publicGameData.IsolationData));
 	print ("[PROCESS ISOLATION END] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::".."description="..gameOrder.Description.."::");
 end
 
@@ -788,16 +832,18 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 end
 
 function process_Isolation_expirations (game,addOrder)
-	local privateGameData = Mod.PrivateGameData; 
-	local IsolationData = privateGameData.IsolationData;
+	local publicGameData = Mod.PublicGameData; 
+	local IsolationData = publicGameData.IsolationData;
 	local IsolationDataRecord = nil;
-	print ("[process_Isolation_expirations]# of Isolation data records=="..tablelength(IsolationData)..", IsolationData==nil -->"..tostring(privateGameData.IsolationData==nil).."::");
-	--print ("IsolationData==nil -->"..tostring(privateGameData.IsolationData==nil).."::");
-	--print ("IsolationData=={} -->"..tostring(privateGameData.IsolationData=={}).."::");
+	print ("[ISOLATION EXPIRATIONS] START");
+	print ("[process_Isolation_expirations]# of Isolation data records=="..tablelength(IsolationData)..", IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
+	--print ("IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
+	--print ("IsolationData=={} -->"..tostring(publicGameData.IsolationData=={}).."::");
 
 	--if there are pending Isolation orders, check if any expire this turn and if so execute those actions (delete the special unit to identify the Isolated territory)
-	if (#privateGameData.IsolationData==0) then
-		print ("no pending Isolation data")
+	if (tablelength (IsolationData)==0) then
+	--if (#IsolationData==0) then
+		print ("[ISOLATION EXPIRATIONS] no pending Isolation data");
 		return;
 	end
 	
@@ -838,6 +884,7 @@ function process_Isolation_expirations (game,addOrder)
 		end
 		printObjectDetails (IsolationDataRecord, "IsolationDataRecord", "[S_AT_S_PNE]");
 	end
+	print ("[ISOLATION EXPIRATIONS] END");
 end
 
 function process_Neutralize_expirations (game,addOrder)

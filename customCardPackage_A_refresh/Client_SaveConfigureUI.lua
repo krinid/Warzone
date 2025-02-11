@@ -114,13 +114,14 @@ function createCards_newCards(alert, addCard);
         print ("START create new cards");
 
         if Mod.Settings.ShieldEnabled == true then
-                local strShieldDesc = "Create a special unit that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
+                local strShieldDesc = "A special unit that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
                 if (Mod.Settings.ShieldDuration == -1) then
                     strShieldDesc = strShieldDesc .. "Shields never expire.";
                 else
                     strShieldDesc = strShieldDesc .. "Shields last " .. Mod.Settings.ShieldDuration .. " turn"..plural(Mod.Settings.ShieldDuration) .." before expiring.";
                 end
                 Mod.Settings.ShieldCardID = addCard("Shield", strShieldDesc, "shield_130x180.png", Mod.Settings.ShieldPiecesNeeded, Mod.Settings.ShieldPiecesPerTurn, Mod.Settings.ShieldStartPieces, Mod.Settings.ShieldCardWeight, Mod.Settings.ShieldDuration);
+                Mod.Settings.ShieldDescription = strShieldDesc;
         end
 
         if Mod.Settings.CardBlockEnabled == true then
