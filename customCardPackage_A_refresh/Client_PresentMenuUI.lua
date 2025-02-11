@@ -27,22 +27,8 @@ PlayerID: The ID of the player who invoked this call.
 payload: The data passed as the payload parameter to SendGameCustomMessage. Must be a lua table.
 setReturn: Optionally, a function that sets what data will be returned back to the client. If you wish to return data, pass a table as the sole argument to this function. Not calling this function will result in an empty table being returned.]]
 
-	print ("[PresentMenuUI] CARD OVERVIEW");
-    --UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
-    game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
-
-    local strText = "";
-    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
-        strText = strText .. "\n"..v.." ["..k.."]";
-    end
-    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..Mod.PublicGameData.CardData.CardPiecesCardID.."\n";
-    TopLabel.SetText (strText.."\n");
-
-    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
-        print ("[C_PMUI] "..k,v);
-        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
-    end 
-
+    showDefinedCards (game);
+    showCardBlockData ();
     --CreateLabel (MenuWindow).SetText (tostring(getCardID ("Card Piece")));
 
     --[[printObjectDetails (getDefinedCardList ());
@@ -66,6 +52,97 @@ function PresentMenuUI_callBack (table)
     end 
 end 
 
+function showCardBlockData ()
+    CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
+    for k,v in pairs (Mod.PublicGameData.CardBlockData) do
+        printObjectDetails (v,"a", "b");
+        CreateLabel (MenuWindow).SetText (k..", " ..v.castingPlayer..", "..v.turnNumberBlockEnds);
+        --local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
+
+    end
+end 
+
+function showCardBlockData_Nope ()
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
+
+    local publicGameData = Mod.PublicGameData;
+	local targetPlayerID = gameOrder.PlayerID;
+
+	--if CardBlock isn't in use, just return false
+	if (Mod.Settings.CardBlockEnabled == false) then return false; end
+
+	--if there is no CardBlock data, just return false
+	local numCardBlockDataRecords = tablelength (publicGameData.CardBlockData);
+	if (numCardBlockDataRecords == 0) then return false; end
+
+	--check if order is a card play (could be regular or custom card play)
+	if (string.find (gameOrder.proxyType, "GameOrderPlayCard") ~= nil) then
+		--printObjectDetails (gameOrder, "[ORDER] card play", "[Server_TurnAdvance_Order]");
+		print ("[ORDER::CARD PLAY] player=="..gameOrder.PlayerID..", proxyType=="..gameOrder.proxyType.."::_____________________");
+
+		--check if player this order is for is impacted by Card Block
+		if (publicGameData.CardBlockData[targetPlayerID] == nil) then
+			--no CardBlock data exists, so don't check, just return with don't block result (return value of false)
+			print ("[CARD BLOCK DATA dne]");
+			return false;
+		else
+			--CardBlock data exists, this user is being CardBlocked! Check if the order is a card play, and if so (and it's not a Reinf card), skip the order
+			print ("[CARD BLOCK DATA exists]");
+
+			if (gameOrder.proxyType == "GameOrderPlayCardReinforcement") then
+				--don't block Reinfs b/c the armies are already deployed, so blocking the card just gives the card back and the armies stay deployed
+				--ie: do nothing, let it process normally
+					print ("[CARD] Reinf card play - don't block");
+					return false;
+			else
+				--skip order, as it is a card play (that isn't Reinf) by a player impacted by CardBlock
+				printObjectDetails (publicGameData.CardBlockData, "CardBlockData", "in skip routine");
+
+				--block all other card plays (skip the order)
+				local strCardType = tostring (gameOrder.proxyType:match ("^GameOrderPlayCard(.*)"));
+				local strCardName = strCardType; --this will be accurate for regular cards; for custom cards this will show as "custom", and need to get the card name from ModData (and hope all modders do this?)
+
+				--display appropriate output message based on whether card is a regular card or a custom card
+				if (strCardType=="Custom") then
+					print ("[CARD PLAY BLOCKED] custom card=="..gameOrder.ModData.."::");
+					local modDataContent = split(gameOrder.ModData, "|");
+					cardOrderContentDetails = nil;
+					strCardName = modDataContent[1]; --1st component of ModData up to "|" is the card name
+				else
+					--regular card, nothing special to do, just skip the card
+					print ("[CARD PLAY BLOCKED] regular card==" .. strCardName);
+				end
+				
+				--
+				strCardBlockSkipOrder_Message = "Skipping order to play ".. strCardName.. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
+				print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
+				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}));
+				skip (WL.ModOrderControl.Skip); --skip this order
+				return true;
+			end
+		end
+	end
+	return false; --if it wasn't flagged by anything above, then it's either not a card play or the player this order is for isn't affected by a CardBlock operation
+end
+
+function showDefinedCards (game)
+	print ("[PresentMenuUI] CARD OVERVIEW");
+    --UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
+    game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
+
+    local strText = "";
+    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
+        strText = strText .. "\n"..v.." ["..k.."]";
+    end
+    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..Mod.PublicGameData.CardData.CardPiecesCardID.."\n";
+    TopLabel.SetText (strText.."\n");
+
+    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
+        print ("[C_PMUI] "..k,v);
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
+    end 
+end
 
 
 

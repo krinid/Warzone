@@ -1,4 +1,5 @@
 require("utilities");
+require("Client_PresentMenuUI");
 
 function Client_GameOrderCreated (game, gameOrder, skip)
 
@@ -129,6 +130,7 @@ function check_for_CardBlock ()
     local publicGameData = Mod.PublicGameData;
     local targetPlayerID = game.Us.ID;
 
+    CreatLabel (TopLabel).SetText (tostring ("Mod.Settings.CardBlockEnabled == false --> "..tostring(Mod.Settings.CardBlockEnabled == false)));
     --if CardBlock isn't in use, just return false
     if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
