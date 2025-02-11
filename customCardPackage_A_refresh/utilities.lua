@@ -374,6 +374,9 @@ function getDefinedCardList (game)
     local cards = {};
 	local publicGameData = Mod.PublicGameData;
 
+	--if CardData structure isn't defined (eg: from an ongoing game before this was done this way), then initialize the variable and populate the list here
+	if (publicGameData.CardData==nil) then publicGameData.CardData = {}; publicGameData.CardData.DefinedCards = nil; end
+
 	if (publicGameData.CardData.DefinedCards ~= nil) then
 	--if (Mod.Settings.DefinedCards ~= nil) then
 			print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
