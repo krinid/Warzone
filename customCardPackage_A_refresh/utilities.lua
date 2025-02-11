@@ -380,17 +380,20 @@ function getDefinedCardList (game)
 	if (publicGameData.CardData.DefinedCards ~= nil) then
 	--if (Mod.Settings.DefinedCards ~= nil) then
 			print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
-		--return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+		--return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.DefinedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 		return Mod.Settings.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 	else
-		print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.definedCards");
+		print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.DefinedCards");
+		print ("game==nil --> "..tostring (game==nil).."::");
+		print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
+		print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
 			local strCardName = getCardName_fromObject(cardConfig);
 			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
 			cards[cardID] = strCardName;
 			count = count +1
 			--printObjectDetails (cardConfig, "cardConfig");
-	end
+		end
 		--printObjectDetails (cards, "card", count .." defined cards total");
 		return cards;
 	end
