@@ -853,7 +853,8 @@ function process_Isolation_expirations (game,addOrder)
 		return;
 	end
 	
-	for a,IsolationDataRecord in pairs(IsolationData) do
+	print ("tablelength (IsolationData)=="..tablelength (IsolationData));
+	for a,IsolationDataRecord in pairs(Mod.PublicGameData.IsolationData) do
 		print ("here's one");
 
 		if (IsolationDataRecord.turnNumberIsolationEnds <= game.Game.TurnNumber) then   --do this for ease of testing temporarily; revert later to the line below that is commented out
@@ -878,7 +879,10 @@ function process_Isolation_expirations (game,addOrder)
 			local event = WL.GameOrderEvent.Create(territoryOwnerID_current, strRevertIsolationOrderMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+
 			--pop off this item from the Isolation table!
+			publicGameData.IsolationData [targetTerritoryID] = nil;
+			Mod.PublicGameData = publicGameData;
 		else
 			print ("expiry not yet");
 		end
