@@ -429,6 +429,7 @@ function getCardName_fromID(cardID, game);
 end
 
 function getCardName_fromObject(cardConfig)
+	if (cardConfig==nil) then print ("cardConfig==nil"); return nil; end
     if cardConfig.proxyType == 'CardGameCustom' then
         return cardConfig.Name;
     end

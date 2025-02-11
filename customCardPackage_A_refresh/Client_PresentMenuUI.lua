@@ -17,10 +17,10 @@ function Client_PresentMenuUI(RootParent, setMaxSize, setScrollable, game, close
     --local randomCard = decideRandomCard(game);
     --local event = WL.GameOrderEvent.Create(playerId, 'Receive a full ' .. randomCard.name .. ' from playing a Mystery Card', {});
 
-    x=1000008; print ("card=="..getCardName_fromID (x, game).. "/"..game.Settings.Cards[x].NumPieces);
+    x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
 
     for _,x in pairs({1, 6, 7, 1000013, 1000012, 1000002}) do
-        print ("card==" ..x .."/"..getCardName_fromID (x, game).. "/"..game.Settings.Cards[x].NumPieces);
+        print ("card==" ..x .."/"..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
     end
 
     print ("get cardID for AL=="..tostring(getCardID ("Airlift")));
