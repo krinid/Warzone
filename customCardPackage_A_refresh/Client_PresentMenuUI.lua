@@ -13,7 +13,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--if game.game.Settings == nil then 		print('ClientGame.game.Settings is nil'); 	end
 	--if game.game.Settings.Cards == nil then 		print('ClientGame.game.Settings.Cards is nil'); 	end
 
-    local TopLabel = CreateLabel (rootParent).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public");
+    MenuWindow = rootParent;
+    TopLabel = CreateLabel (rootParent).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public");
 --	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
 --	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor("#FFFFFF");
     
@@ -54,6 +55,7 @@ function PresentMenuUI_callBack (table)
     --printObjectDetails (value, Game);
     for k,v in pairs (table) do
         print ("[C_PMUI] "..k,v);
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/",v);
     end 
 end 
 
