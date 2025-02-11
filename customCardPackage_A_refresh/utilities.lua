@@ -495,8 +495,8 @@ function initialize_CardData (game)
     print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
     print ("[init] post");
 
-    print ("CardPiece=="..getCardID ("Card Piece"));
-    publicGameData.CardData.CardPiecesCardID = getCardID ("Card Piece");
+    print ("CardPiece=="..tostring(getCardID ("Card Piece")));
+    publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
     Mod.PublicGameData = publicGameData;
 
     --printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "card PGD", "");--count .." defined cards total", game);
