@@ -29,6 +29,7 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 
     showDefinedCards (game);
     showCardBlockData ();
+    showIsolationData ();
     --CreateLabel (MenuWindow).SetText (tostring(getCardID ("Card Piece")));
 
     --[[printObjectDetails (getDefinedCardList ());
@@ -56,9 +57,20 @@ function showCardBlockData ()
     CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
     for k,v in pairs (Mod.PublicGameData.CardBlockData) do
-        printObjectDetails (v,"a", "b");
+        printObjectDetails (v,"record", "CardBlockData");
         CreateLabel (MenuWindow).SetText (k..", " ..v.castingPlayer..", "..v.turnNumberBlockEnds);
         --local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
+
+    end
+end 
+
+function showIsolationData ()
+    CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
+    for k,v in pairs (Mod.PublicGameData.IsolationData) do
+        printObjectDetails (v,"record", "IsolationData");
+        CreateLabel (MenuWindow).SetText (k..", " ..v.territory..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
+        --local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
 
     end
 end 
