@@ -125,7 +125,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 end
 
 --return true if this order is a card play by a player impacted by Card Block; include block on Reinforcement cards b/c it's @ client order time, so can stop it entirely!
-function check_for_CardBlock
+function check_for_CardBlock ()
     local publicGameData = Mod.PublicGameData;
     local targetPlayerID = game.Us.ID;
 
