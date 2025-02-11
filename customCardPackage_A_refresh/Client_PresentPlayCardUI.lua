@@ -127,7 +127,7 @@ function play_CardBlock_card(game, cardInstance, playCard)
     local strPrompt = "Select the player you wish to block from playing cards";
     --UI.Alert ("bugger1");a
     print("[CARD BLOCK] card play clicked, played by=" .. strPlayerName_cardPlayer);
-    --UI.Alert ("bugger2");
+
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
@@ -148,7 +148,7 @@ function play_CardBlock_card(game, cardInstance, playCard)
         end);
         TargetPlayerClicked_Fizz(strPrompt);
     end);
-    --UI.Alert ("bugger50bbb");
+    --UI.Alert ("bugger50bbbc");
 end
 
 function play_cardPiece_card (game, cardInstance, playCard)

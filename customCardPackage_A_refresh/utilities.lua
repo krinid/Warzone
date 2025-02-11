@@ -384,9 +384,17 @@ function getDefinedCardList (game)
 		return Mod.Settings.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 	else
 		print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.DefinedCards");
+		if (game==nil) then print ("game is nil"); return nil; end
+		if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+		if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
 		print ("game==nil --> "..tostring (game==nil).."::");
 		print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
 		print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
+		print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
+		print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
+		print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
+		print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
+	
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
 			local strCardName = getCardName_fromObject(cardConfig);
 			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
@@ -403,17 +411,16 @@ end
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
 	local cards={};
-	--[[print ("[getCardID] match name=="..strCardNameToMatch.."::");
+	print ("[getCardID] match name=="..strCardNameToMatch.."::");
 	print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-	print ("{} == nil --> "..tostring ({} == nil));
 	print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-	print ("Mod.PublicGameData.CardData.definedCards == nil --> "..tostring (Mod.PublicGameData.CardData.definedCards == nil));
-	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
+	print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
+	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
 	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
-		--print ("run function");
+		print ("run function");
 		cards = getDefinedCardList (game);
 	else
-		--print ("get from pgd");
+		print ("get from pgd");
 		cards = Mod.PublicGameData.CardData.DefinedCards;
 	end
 
@@ -450,5 +457,66 @@ end
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
 	return (game.Map.Territories[intTerrID].Name);
+end
+
+function initialize_CardData (game)
+    local publicGameData = Mod.PublicGameData;
+
+    publicGameData.CardData = {};
+    publicGameData.CardData.DefinedCards = nil;
+    publicGameData.CardData.CardPiecesCardID = nil;
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    print ("[init] 0pre");
+    print ("game==nil --> "..tostring (game==nil).."::");
+    print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
+    print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
+    print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
+    print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
+    print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
+    print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
+
+    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    if (game==nil) then print ("game is nil"); return nil; end
+    if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+    if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+
+    print ("[init] pre");
+    print ("game==nil --> "..tostring (game==nil).."::");
+    print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
+    print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
+    print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
+    print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
+    print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
+    print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
+    print ("[init] post");
+
+    print ("CardPiece=="..getCardID ("Card Piece"));
+    publicGameData.CardData.CardPiecesCardID = getCardID ("Card Piece");
+    Mod.PublicGameData = publicGameData;
+
+    --printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "card PGD", "");--count .." defined cards total", game);
+
+    --if Mod.Settings.CardPiecesCardID is set, grab the cardID from this setting
+    --standalone app can't grab this yet, need a new version
+--[[    if (Mod.Settings.CardPiecesCardID == nil) then
+        print ("[CardPiece CardID] get from getCardID function");
+        publicGameData.CardData.CardPiecesCardID = getCardID ("Card Piece");
+        print ("10----------------------");
+    else
+        print ("[CardPiece CardID] acquired from Mod.Settings.CardPiecesCardID");
+        publicGameData.CardData.CardPiecesCardID = Mod.Settings.CardPiecesCardID;
+        print ("11----------------------");
+    end]]
+    
+    print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
+    print ("[CardPiece CardID] Mod.PublicGameData.CardData.CardPiecesCardID=="..tostring (Mod.PublicGameData.CardData.CardPiecesCardID));
+    print ("12----------------------");
+
+    --Mod.PublicGameData = publicGameData;
 end
 --- END of krinid's functions

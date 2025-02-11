@@ -17,46 +17,24 @@ function Server_Created (game, settings)
     publicGameData.CardData = {};          --saves data for all defined cards including custom mods & the cardID for CardPieces card so can't use it to redeem CardPieces cards/pieces; set CardCardData to empty (initialize)
     publicGameData.CardData.DefinedCards = nil;
     publicGameData.CardData.CardPiecesCardID = nil;
+    Mod.PrivateGameData = privateGameData;
+    Mod.PublicGameData = publicGameData;
 
+    initialize_CardData (game); --save defined card list into Mod.Settings.CardData
     --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
     --print ("game.Settings==nil --> "..tostring(game.Settings==nil));
     --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
     --print ("settings==nil --> "..tostring(settings==nil));
     --print ("settings.Cards==nil --> "..tostring(settings.Cards==nil));
 
-    --[[cards={};
-    count=0;
-    for cardID, cardConfig in pairs(game.Settings.Cards) do
-        local strCardName = getCardName_fromObject(cardConfig);
-        --print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
-        cards[cardID] = strCardName;
-        count = count +1;
-    end
-    printObjectDetails (cards, "cards", count .." defined cards total", game);]]
-    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    --printObjectDetails (cards, "cards", count .." defined cards total", game);
+
+    --[[Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
     publicGameData.CardData.DefinedCards = getDefinedCardList (game);
     Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
 
-    --[[print ("04----------------------");
-    print ("Mod.PublicGameData==nil --> "..tostring(Mod.PublicGameData==nil));
-    print ("05----------------------");
-    print ("Mod.PublicGameData.CardData==nil --> "..tostring(Mod.PublicGameData.CardData==nil));
-    print ("06----------------------");
-    print ("Mod.PublicGameData.CardData.DefinedCards==nil --> "..tostring(Mod.PublicGameData.CardData.DefinedCards==nil));
-    print ("07----------------------");
-    print ("Mod.PublicGameData.CardData.CardPiecesCardID==nil --> "..tostring(Mod.PublicGameData.CardData.DefinedCards.CardPiecesCardID==nil));
-    print ("08----------------------");]]
-
-
     printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "card PGD", "");--count .." defined cards total", game);
     print ("09----------------------");
-
-    --[[for cardID, cardConfig in pairs(Mod.Settings.DefinedCards) do
-        local strCardName = getCardName_fromObject(cardConfig);
-        print ("@@@@@cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
-        cards[cardID] = strCardName;
-        count = count +1;
-    end]]
 
     --if Mod.Settings.CardPiecesCardID is set, grab the cardID from this setting
     --standalone app can't grab this yet, need a new version
@@ -70,14 +48,12 @@ function Server_Created (game, settings)
         print ("11----------------------");
     end
     print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
-    print ("12----------------------");
+    print ("12----------------------");]]
 
-    Mod.PrivateGameData = privateGameData;
-    Mod.PublicGameData = publicGameData;
     print ("[SERVER CREATED] PrivateGameData & PublicGameData constructs initialized");
 
     --printObjectDetails (Mod.PublicGameData.CardData, "all card data", "");
-    --printObjectDetails (Mod.PublicGameData.CardData.definedCards, "defined cards", "");
+    --printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "defined cards", "");
     --printObjectDetails (Mod.PublicGameData.CardData.CardPiecesCardID, "CardPiece cardID", "");
 
     print ("turn#="..game.Game.TurnNumber.."::");

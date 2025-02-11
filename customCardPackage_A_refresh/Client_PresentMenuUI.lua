@@ -1,7 +1,9 @@
+require("UI_Events");
 require("utilities");
 
-function Client_PresentMenuUI(RootParent, setMaxSize, setScrollable, game, close)
-	if game == nil then 		print('ClientGame is nil'); 	end
+function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
+    --deprecated, no longer required b/c they are actual cards that can be played normally w/o having to use the game/mod menu
+    if game == nil then 		print('ClientGame is nil'); 	end
 	if game.LatestStanding == nil then 		print('ClientGame.LatestStanding is nil'); 	end
 	if game.LatestStanding.Cards == nil then 		print('ClientGame.LatestStanding.Cards is nil'); 	end
 	if game.Us == nil then 		print('ClientGame.Us is nil'); 	end
@@ -11,14 +13,31 @@ function Client_PresentMenuUI(RootParent, setMaxSize, setScrollable, game, close
 	--if game.game.Settings == nil then 		print('ClientGame.game.Settings is nil'); 	end
 	--if game.game.Settings.Cards == nil then 		print('ClientGame.game.Settings.Cards is nil'); 	end
 
-    --deprecated, no longer required b/c they are actual cards that can be played normally w/o having to use the game/mod menu
+    local TopLabel = CreateLabel (rootParent).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public");
+--	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
+--	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor("#FFFFFF");
+    
+--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
+Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
+Mod security should be applied when working with this Hook
+Arguments:
+Game: Provides read-only information about the game.
+PlayerID: The ID of the player who invoked this call.
+payload: The data passed as the payload parameter to SendGameCustomMessage. Must be a lua table.
+setReturn: Optionally, a function that sets what data will be returned back to the client. If you wish to return data, pass a table as the sole argument to this function. Not calling this function will result in an empty table being returned.]]
+
 	print ("[PresentMenuUI] CARD OVERVIEW");
-    UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
+    --UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
+    game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
 
-    --local randomCard = decideRandomCard(game);
-    --local event = WL.GameOrderEvent.Create(playerId, 'Receive a full ' .. randomCard.name .. ' from playing a Mystery Card', {});
+    local strText = "";
+    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
+        strText = strText .. "\n"..v.." ["..k.."]";
+    end
+    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..Mod.PublicGameData.CardData.CardPiecesCardID;
+    TopLabel.SetText (strText);
 
-    printObjectDetails (getDefinedCardList ());
+    --[[printObjectDetails (getDefinedCardList ());
     x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
 
     for _,x in pairs({1, 6, 7, 1000013, 1000012, 1000002}) do
@@ -28,9 +47,15 @@ function Client_PresentMenuUI(RootParent, setMaxSize, setScrollable, game, close
     print ("get cardID for AL=="..tostring(getCardID ("Airlift")));
     print ("get cardID for EQ=="..tostring(getCardID ("Earthquake")));
     print ("get cardID for AS=="..tostring(getCardID ("Airstrike")));
-    print ("get cardID for QS=="..tostring(getCardID ("Quicksand")));
+    print ("get cardID for QS=="..tostring(getCardID ("Quicksand")));]]
 end
 
+function PresentMenuUI_callBack (table)
+    --printObjectDetails (value, Game);
+    for k,v in pairs (table) do
+        print ("[C_PMUI] "..k,v);
+    end 
+end 
 
 
 
