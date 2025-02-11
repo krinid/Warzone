@@ -38,6 +38,13 @@ setReturn: Optionally, a function that sets what data will be returned back to t
     strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..Mod.PublicGameData.CardData.CardPiecesCardID;
     TopLabel.SetText (strText);
 
+    for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
+        print ("[C_PMUI] "..k,v);
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
+    end 
+
+    CreateLabel (MenuWindow).SetText (getCardID ("Card Piece"));
+
     --[[printObjectDetails (getDefinedCardList ());
     x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
 
@@ -55,7 +62,7 @@ function PresentMenuUI_callBack (table)
     --printObjectDetails (value, Game);
     for k,v in pairs (table) do
         print ("[C_PMUI] "..k,v);
-        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/",v);
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
     end 
 end 
 
