@@ -30,14 +30,21 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
       end
     end
   end]]
-
+print ("1..............,,,,,,,,,,,,,,,,,,,");
   initialize_CardData (game);
+print ("2..............,,,,,,,,,,,,,,,,,,,");
 
   print ("Mod.PrivateGameData.IsolationData qty "..tablelength(Mod.PrivateGameData.IsolationData));
   print ("Mod.PublicGameData.IsolationData qty "..tablelength(Mod.PublicGameData.IsolationData));
 
+  print ("3..............,,,,,,,,,,,,,,,,,,,");
   z = Mod.PrivateGameData.IsolationData;
   Mod.PublicGameData.IsolationData = z;
 
+  print ("4..............,,,,,,,,,,,,,,,,,,,");
+  print ("Mod.PrivateGameData.IsolationData qty "..tablelength(Mod.PrivateGameData.IsolationData));
+  print ("Mod.PublicGameData.IsolationData qty "..tablelength(Mod.PublicGameData.IsolationData));
+
+  print ("5..............,,,,,,,,,,,,,,,,,,,");
 
 end
