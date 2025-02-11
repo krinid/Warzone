@@ -43,7 +43,7 @@ setReturn: Optionally, a function that sets what data will be returned back to t
         CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
     end 
 
-    CreateLabel (MenuWindow).SetText (getCardID ("Card Piece"));
+    --CreateLabel (MenuWindow).SetText (getCardID ("Card Piece"));
 
     --[[printObjectDetails (getDefinedCardList ());
     x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
