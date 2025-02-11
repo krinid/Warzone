@@ -8,7 +8,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 	local publicGameData = Mod.PublicGameData;
 
     print ("[C_GOC] START");
-    UI.Alert ("Checking orders");
+    --UI.Alert ("Checking orders");
 
     --check if order is a card play (could be regular or custom card)
     if startsWith (gameOrder.proxyType, 'GameOrderPlayCard') == true then

@@ -54,13 +54,12 @@ function PresentMenuUI_callBack (table)
 end 
 
 function showCardBlockData ()
-    CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");
+    CreateLabel (MenuWindow).SetText ("\n\nCard aBlock data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
     for k,v in pairs (Mod.PublicGameData.CardBlockData) do
         printObjectDetails (v,"record", "CardBlockData");
         CreateLabel (MenuWindow).SetText (k..", " ..v.castingPlayer..", "..v.turnNumberBlockEnds);
         --local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
-
     end
 end 
 
@@ -68,7 +67,7 @@ function showIsolationData ()
     CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
     
-    if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then CreateLabel (MenuWindow).SetText ("IsolatioData is empty"); return; end
+    if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then CreateLabel (MenuWindow).SetText ("IsolationData is empty"); return; end
 
     for k,v in pairs (Mod.PublicGameData.IsolationData) do
         printObjectDetails (v,"record", "IsolationData");
