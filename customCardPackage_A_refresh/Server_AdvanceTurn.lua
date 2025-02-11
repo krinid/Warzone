@@ -1148,28 +1148,18 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 end
 
 function CardBlock_processEndOfTurn(game, addOrder)
-    local privateGameData = Mod.PrivateGameData;
+    local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
     print("[CARD BLOCK] processEndOfTurn START");
-    if (privateGameData.CardBlockData == nil) then print("[CARD BLOCK] no data"); return; end
-    for key, record in pairs(privateGameData.CardBlockData) do
+    if (publicGameData.CardBlockData == nil) then print("[CARD BLOCK] no data"); return; end
+    for key, record in pairs(publicGameData.CardBlockData) do
          if (record.turnNumberBlockEnds > 0 and turnNumber >= record.turnNumberBlockEnds) then
-              local terrID = findSpecialUnit(record.specialUnitID, game);
-              if (terrID ~= nil) then
-                   local impactedTerritory = WL.TerritoryModification.Create(terrID);
-                   impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};
-                   local event = WL.GameOrderEvent.Create(record.castingPlayer, "Card Block expired", {}, {impactedTerritory});
-                   event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-                        game.Map.Territories[terrID].MiddlePointX,
-                        game.Map.Territories[terrID].MiddlePointY,
-                        game.Map.Territories[terrID].MiddlePointX,
-                        game.Map.Territories[terrID].MiddlePointY);
-                   addOrder(event, true);
-                   privateGameData.CardBlockData[key] = nil;
-              end
-         end
+            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Card Block expired", {}, {});
+			addOrder(event, true);
+			publicGameData.CardBlockData[key] = nil;
+        end
     end
-    Mod.PrivateGameData = privateGameData;
+    Mod.PublicGameData = publicGameData;
     print("[CARD BLOCK] processEndOfTurn END");
 end
 

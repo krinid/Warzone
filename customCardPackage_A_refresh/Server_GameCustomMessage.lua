@@ -32,4 +32,9 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
   end]]
 
   initialize_CardData (game);
+
+  z = Mod.PrivateGameData.IsolationData;
+  Mod.PublicGameData.IsolationData = z;
+
+
 end

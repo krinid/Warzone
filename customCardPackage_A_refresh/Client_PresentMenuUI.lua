@@ -68,9 +68,6 @@ function showIsolationData ()
     CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
     
-    z = Mod.PrivateGameData.IsolationData;
-    Mod.PublicGameData.IsolationData = z;
-
     --[[for k,v in pairs (Mod.PublicGameData.IsolationData) do
         printObjectDetails (v,"record", "IsolationData");
         CreateLabel (MenuWindow).SetText (k..", " ..v.territory..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
