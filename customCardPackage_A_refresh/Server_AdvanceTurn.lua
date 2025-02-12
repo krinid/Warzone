@@ -555,7 +555,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	builder.DefensePowerPercentage = 100;
     builder.DamageToKill = 9999999;
     builder.DamageAbsorbedWhenAttacked = 9999999;
-    builder.CombatOrder = 0;
+    builder.CombatOrder = -10000; --before armies (which are 0)
     builder.CanBeGiftedWithGiftCard = false;
     builder.CanBeTransferredToTeammate = false;
     builder.CanBeAirliftedToSelf = false;

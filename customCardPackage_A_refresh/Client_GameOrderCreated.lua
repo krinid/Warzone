@@ -14,6 +14,8 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 	process_game_order_entry_RegularCards (game,gameOrder,result,skip,addOrder);
 	process_game_order_entry_CustomCards (game,gameOrder,result,skip,addOrder);
 	process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,addOrder);
+
+    print ("[C_GOC] END");
 end
 
 --check if player is playing a card and is impacted by CardBlock; skip the order if so
@@ -146,33 +148,30 @@ function process_game_order_entry_RegularCards (game,gameOrder,result,skip,addOr
 end
 
 function process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,addOrder)
-    --check for Attack/Transfers into/out of quicksand that violate the rules configured in Mod.Settings.QuicksandBlockEntryIntoTerritory & Mod.Settings.QuicksandBlockExitFromTerritory
-    --if there's no QuicksandData, do nothing (b/c there's nothing to check)
-    if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
-        --do nothing, permit these orders
-        --weed out the cases above, then what's left are moves to or from Isolated territories
-    else
-        local strQuicksandSkipOrder_Message="";
-        --block moves IN/OUT of the quicksand as per the mod settings
-        if (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
-            strQuicksandSkipOrder_Message="Order failed since source and target territories have quicksand, and quicksand is configured so you can neither move in or out of quicksand";
-        elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil) then
-            strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
-        elseif (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
-            strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
-        end
-        strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..".\n\nOriginal order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name..".";
-        print ("QUICKSAND - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strQuicksandSkipOrder_Message.."::");
-        UI.Alert (strQuicksandSkipOrder_Message);
-        skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
-    end
-
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
 		--print ("[[  ATTACK // TRANSFER ]] check for Isolation, player "..gameOrder.PlayerID..", TO "..gameOrder.To..", FROM "..gameOrder.From.."::");
-		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
-		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
-		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
+
+    --check for Attack/Transfers into/out of quicksand that violate the rules configured in Mod.Settings.QuicksandBlockEntryIntoTerritory & Mod.Settings.QuicksandBlockExitFromTerritory
+    --if there's no QuicksandData, do nothing (b/c there's nothing to check)
+        if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
+            --do nothing, permit these orders
+            --weed out the cases above, then what's left are moves to or from Isolated territories
+        else
+            local strQuicksandSkipOrder_Message="";
+            --block moves IN/OUT of the quicksand as per the mod settings
+            if (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+                strQuicksandSkipOrder_Message="Order failed since source and target territories have quicksand, and quicksand is configured so you can neither move in or out of quicksand";
+            elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
+                strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
+            elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+                strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
+            end
+            strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..".\n\nOriginal order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name..".";
+            print ("QUICKSAND - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strQuicksandSkipOrder_Message.."::");
+            UI.Alert (strQuicksandSkipOrder_Message);
+            skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+        end
 
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
@@ -195,8 +194,6 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,ad
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
 	end
-
-    print ("[C_GOC] END");
 end
 
 --return true if this order is a card play by a player impacted by Card Block; include block on Reinforcement cards b/c it's @ client order time, so can stop it entirely!
