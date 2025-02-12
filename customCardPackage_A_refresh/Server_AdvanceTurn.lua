@@ -399,10 +399,10 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
 
     builder.Name = 'Quicksand';
     builder.IncludeABeforeName = false;
-    builder.ImageFilename = 'quicksand_specialunit.png';
+    builder.ImageFilename = 'quicksand_v3_specialunit.png';
     --builder.AttackPower = 0;
     builder.AttackPowerPercentage = 0;
-    --builder.DefensePower = 0;
+    --builder.DefensePower = -50;
 	builder.DefensePowerPercentage = 0;
     builder.DamageToKill = 0;
     builder.DamageAbsorbedWhenAttacked = 0;

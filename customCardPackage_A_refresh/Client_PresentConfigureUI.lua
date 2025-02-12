@@ -12,6 +12,7 @@ TODOs:
 - issues to resolve before publishing:
 	- Isolation move skip - use jumplocation to show the territory isolation area
 	- Isolation move skip - suppress 1st skip order; no value in it
+	- ask Fizz to allow negative #'s for specials' power?
 	- PresentSettings updates
 	- Isolation Special - can be blockaded; then there's no visual indicator; write code to detect this, recreate it & update the appropriate IsolationData record with it
 	- see if can catch "Shield wore off" order; same for Monolith, Isolation, etc; Pestilence has funny count b/c of Warning turn
