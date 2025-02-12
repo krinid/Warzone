@@ -280,9 +280,9 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			--block moves IN/OUT of the quicksand as per the mod settings
 			if (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since source and target territories have quicksand, and quicksand is configured so you can neither move in or out of quicksand";
-			elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil) then
+			elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
-			elseif (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+			elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
 			end
 			strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
@@ -464,7 +464,11 @@ end
 
 -- EARTHQUAKE: similar to Pestilence but targets a player.
 function execute_Earthquake_operation(game, gameOrder, addOrder, targetPlayerID)
-    print("[PROCESS EARTHQUAKE] invoked on player " .. targetPlayerID);
+
+	--currently causing an error so just do nothing, just return
+	if true then return; end
+	
+	print("[PROCESS EARTHQUAKE] invoked on player " .. targetPlayerID.."/"..toPlayerName (targetPlayerID, game));
     local modifiedTerritories = {};
     for terrID, terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
          if (terr.OwnerPlayerID == targetPlayerID) then

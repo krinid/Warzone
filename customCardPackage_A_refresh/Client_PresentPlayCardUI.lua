@@ -200,26 +200,38 @@ end
 
 function play_Earthquake_card(game, cardInstance, playCard)
     print("[EARTHQUAKE] card play clicked, played by=" .. strPlayerName_cardPlayer);
+    EarthquakeGame = game;
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,400);
-        local vert = CreateVert(rootParent);
+        EarthquakeUI = CreateVert(rootParent);
         --change to BONUS
-        CreateLabel(vert).SetText("[EARTHQUAKE]\n\nSelect a target player for the earthquake:").SetColor(getColourCode("card play heading"));
-        local targetPlayerFuncs = {};
+        CreateLabel(EarthquakeUI).SetText("[EARTHQUAKE]\n\nSelect a bonus for the earthquake:").SetColor(getColourCode("card play heading"));
+        UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected);
+        --[[local targetPlayerFuncs = {};
         for playerID in pairs(game.Game.PlayingPlayers) do
             if (playerID ~= game.Us.ID) then
                 targetPlayerFuncs[playerID] = function() EarthquakeTargetSelected(playerID, game, playCard, close); end;
                 UI.CreateButton(vert).SetText(toPlayerName(playerID, game)).SetOnClick(targetPlayerFuncs[playerID]);
             end
-        end
+        end]]
     end);
 end
 
-function EarthquakeTargetSelected(targetPlayerID, game, playCard, close)
-    local targetPlayerName = toPlayerName(targetPlayerID, game);
+function EarthquakeTargetSelected(bonusDetails)
+    --[[local targetPlayerName = toPlayerName(targetPlayerID, game);
     print("[EARTHQUAKE] target player selected: " .. targetPlayerName);
-    playCard(strPlayerName_cardPlayer .. " invokes Earthquake on " .. targetPlayerName, 'Earthquake|' .. targetPlayerID, WL.TurnPhase.Gift);
-    close();
+    playCard(strPlayerName_cardPlayer .. " invokes Earthquake on " .. targetPlayerName, 'Earthquake|' .. targetPlayerID, WL.TurnPhase.Gift);]]
+
+    if bonusDetails == nil then return; end
+
+    CreateLabel(EarthquakeUI).SetText (bonusDetails.ID.."/"..bonusDetails.Name);
+    local array = {};
+    for _, terrID in pairs(EarthquakeGame.Map.Bonuses[bonusDetails.ID].Territories) do
+        CreateLabel(EarthquakeUI).SetText (terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name);
+        --createButton(vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
+    end
+
+    --close();
 end
 
 function play_Tornado_card(game, cardInstance, playCard)
