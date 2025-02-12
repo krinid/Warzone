@@ -159,25 +159,25 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,ad
             --weed out the cases above, then what's left are moves to or from Isolated territories
         else
             local strQuicksandSkipOrder_Message="";
-            local boolQuicksandAirliftViolation = false;
+            local boolQuicksandAttackTransferViolation = false;
             --block moves IN/OUT of the quicksand as per the mod settings
             if (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
                 strQuicksandSkipOrder_Message="Order failed since source and target territories have quicksand, and quicksand is configured so you can neither move in or out of quicksand";
-				boolQuicksandAirliftViolation = true;
+				boolQuicksandAttackTransferViolation = true;
             elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
                 strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
-				boolQuicksandAirliftViolation = true;
-            elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+				boolQuicksandAttackTransferViolation = true;
+            elseif (Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
                 strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
-				boolQuicksandAirliftViolation = true;
+				boolQuicksandAttackTransferViolation = true;
             else
-				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
-				--strAirliftSkipOrder_Message="Airlift failed due to unknown quicksand conditions";
-				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
+				--arriving here means there are no conditions where the AttackTransfer direction is being blocked, so let it proceed
+				--strAttackTransferSkipOrder_Message="AttackTransfer failed due to unknown quicksand conditions";
+				boolQuicksandAttackTransferViolation = false; --this is the default but restating it here for clarity
             end
             
 			--skip the order if a violation was flagged in the IF structure above
-			if (boolQuicksandAirliftViolation==true) then
+			if (boolQuicksandAttackTransferViolation==true) then
                 strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..".\n\nOriginal order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name..".";
                 print ("QUICKSAND - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strQuicksandSkipOrder_Message.."::");
                 UI.Alert (strQuicksandSkipOrder_Message);
