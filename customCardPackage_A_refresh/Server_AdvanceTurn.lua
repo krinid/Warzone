@@ -313,115 +313,6 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 	end
 end
 
-function process_game_orders_OLD (game,gameOrder,result,skip,addOrder)
-	local strCardTypeBeingPlayed = nil;
-	local cardOrderContentDetails = nil;
-	local publicGameData = Mod.PublicGameData;
-
-	--check for regular card plays
-	if (gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
-		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
-
-		print ("[AIRLIFT PLAYED] FROM "..gameOrder.FromTerritoryID.."/"..getTerritoryName (gameOrder.FromTerritoryID, game)..", TO "..gameOrder.ToTerritoryID.."/"..getTerritoryName (gameOrder.ToTerritoryID, game)..", #armies=="..gameOrder.Armies.NumArmies.."::");
-
-		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
-			--do nothing, there are no Isolation operations in place, permit these orders
-			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
-		else
-			local strAirliftSkipOrder_Message="";
-			if (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source and target territories are isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil) then
-				strAirliftSkipOrder_Message="Airlift failed since target territory is isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source territory is isolated";
-			else
-				strAirliftSkipOrder_Message="Airlift failed due to unknown isolation conditions";
-			end
-			strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an Airlift from "..getTerritoryName (gameOrder.FromTerritoryID, game).." to "..getTerritoryName(gameOrder.ToTerritoryID, game);
-			print ("[AIRLIFT/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.FromTerritoryID .."/"..getTerritoryName (gameOrder.FromTerritoryID, game).."::, to="..gameOrder.ToTerritoryID .."/"..getTerritoryName(gameOrder.ToTerritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
-		end
-	end
-
-	--check for Custom Card plays
-	--NOTE: proxyType=='GameOrderPlayCardCustom' indicates that a custom card played; but these can't be placed in the order list at a specific point, it just applies in the position according to regular move order
-	--so for now, ignore this; re-implement this when Fizz updates so these can placed at the proper execution point, eg: start of turn, after deployments, after attacks, etc
-	if (gameOrder.proxyType=='GameOrderPlayCardCustom') then
-		local modDataContent = split(gameOrder.ModData, "|");
-		--printObjectDetails (gameOrder, "gameOrder", "[TurnAdvance_Order]");
-		print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
-		strCardTypeBeingPlayed = nil;
-		cardOrderContentDetails = nil;
-		strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
-		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
-		
-		print ("[S_AT_O] cardType=="..strCardTypeBeingPlayed.."::cardOrderContent=="..tostring(cardOrderContentDetails));
-		if (strCardTypeBeingPlayed == "Nuke") then
-			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Isolation" then
-			execute_Isolation_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Pestilence" then
-			execute_Pestilence_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Shield") then
-			execute_Shield_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Monolith" then
-			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
-		elseif strCardTypeBeingPlayed == "Neutralize" then
-			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Deneutralize" then
-			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Airstrike" then
-			--Airstrike details go here
-		elseif strCardTypeBeingPlayed == "Card Piece" then
-			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Forest Fire" then
-			--Forest Fire details go here
-		elseif strCardTypeBeingPlayed == "Card Block" then
-			execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Earthquake" then
-			execute_Earthquake_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Tornado" then
-			execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Quicksand" then
-			execute_Quicksand_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		else
-			--custom card play not handled by this mod; could be an error, or a card from another mod
-			--do nothing
-		end
-	end
-
-	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
-	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
-		--print ("[[  ATTACK // TRANSFER ]] check for Isolation, player "..gameOrder.PlayerID..", TO "..gameOrder.To..", FROM "..gameOrder.From.."::");
-		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
-		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
-		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
-
-		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
-			--do nothing, permit these orders
-			--weed out the cases above, then what's left are moves to or from Isolated territories
-		else
-			local strIsolationSkipOrder_Message="";
-
-			if (Mod.PublicGameData.IsolationData[gameOrder.To] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.From] ~= nil) then
-				strIsolationSkipOrder_Message="Order failed since source and target territories are isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.To] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil) then
-				strIsolationSkipOrder_Message="Order failed since target territory is isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] ~= nil) then
-				strIsolationSkipOrder_Message="Order failed since source territory is isolated";
-			end
-			strIsolationSkipOrder_Message=strIsolationSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
-			print ("ISOLATION - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strIsolationSkipOrder_Message.."::");
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strIsolationSkipOrder_Message, {}, {},{}));
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
-		end
-	end
-end
-
 --process order to redeem Card Piece card for cards/pieces of card specified in targetCardID
 function execute_CardPiece_operation(game, gameOrder, skip, addOrder, targetCardID)
 	local strTargetCardName = getCardName_fromID (targetCardID, game);
@@ -462,27 +353,13 @@ function execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, add
 	print ("Mod.PublicGameData.CardBlockData[targetPlayerID]==nil-->"..tostring (Mod.PublicGameData.CardBlockData[targetPlayerID]==nil));
 end
 
--- EARTHQUAKE: similar to Pestilence but targets a player.
-function execute_Earthquake_operation(game, gameOrder, addOrder, targetPlayerID)
-
-	--currently causing an error so just do nothing, just return
-	if true then return; end
-	
-	print("[PROCESS EARTHQUAKE] invoked on player " .. targetPlayerID.."/"..toPlayerName (targetPlayerID, game));
-    local modifiedTerritories = {};
-    for terrID, terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-         if (terr.OwnerPlayerID == targetPlayerID) then
-              local impactedTerritory = WL.TerritoryModification.Create(terrID);
-              impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeDamage;
-              table.insert(modifiedTerritories, impactedTerritory);
-         end
-    end
-    local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, modifiedTerritories);
-    addOrder(event, true);
+function execute_Earthquake_operation(game, gameOrder, addOrder, targetBonusID)
+	--add record to EarthquakeData to process the earthquake operation @ turn end	
+	print("[PROCESS EARTHQUAKE] invoked on bonus " .. targetBonusID.."/".. getBonusName(targetBonusID, game));
     local publicGameData = Mod.PublicGameData;
-    if (publicGameData.EarthquakeData == nil) then publicGameData.EarthquakeData = {}; end
-    local turnNumber_EQExpires = (Mod.Settings.EarthquakeDuration > 0) and (game.Game.TurnNumber + Mod.Settings.EarthquakeDuration) or -1;
-    publicGameData.EarthquakeData[targetPlayerID] = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EQExpires};
+    if (publicGameData.EarthquakeData == nil) then publicGameData.EarthquakeData = {}; end --if no EarthquakeData, then initialize it
+    local turnNumber_EarthquakeExpires = (Mod.Settings.EarthquakeDuration > 0) and (game.Game.TurnNumber + Mod.Settings.EarthquakeDuration) or -1;
+    publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
     Mod.PublicGameData = publicGameData;
 end
 
@@ -1369,18 +1246,40 @@ function Tornado_processEndOfTurn(game, addOrder)
 end
 
 function Earthquake_processEndOfTurn(game, addOrder)
-    local publicGameData = Mod.PublicGameData;
+	local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
     print("[EARTHQUAKE] processEndOfTurn START");
-    if (publicGameData.EarthquakeData == nil) then print("[EARTHQUAKE] no data"); return; end
-    for playerID, record in pairs(publicGameData.EarthquakeData) do
+    if (publicGameData.EarthquakeData == nil) then print("[EARTHQUAKE] no data"); return; end --if no Earthquake data, skip everything, just return
+
+	for bonusID, record in pairs(publicGameData.EarthquakeData) do
+		--implement earthquake action (damge to bonus territories)
+		local modifiedTerritories = {};
+		local strBonusName = nil;
+		strBonusName = getBonusName (bonusID, game);
+		print ("[EARTHQUAKE] An earthquake ravages bonus " ..bonusID .."/".. strBonusName);
+		for _, terrID in pairs(game.Map.Bonuses[bonusID].Territories) do
+			print ("[EARTHQUAKE] " ..terrID .."/".. tostring(getTerritoryName(terrID, game)) .." takes "..Mod.Settings.EarthquakeStrength.." damage");
+			local impactedTerritory = WL.TerritoryModification.Create(terrID);
+			impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength;
+			table.insert(modifiedTerritories, impactedTerritory);
+		end
+		local event = WL.GameOrderEvent.Create(record.castingPlayer, "An earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
+		addOrder(event, true);
+
+		--publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
          if (record.turnNumberEarthquakeEnds > 0 and turnNumber >= record.turnNumberEarthquakeEnds) then
-              local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake effect ended on player " .. toPlayerName(playerID, game), {}, {});
-              addOrder(event, true);
-              publicGameData.EarthquakeData[playerID] = nil;
+            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ended on bonus " .. getBonusName (bonusID, game), {}, {});
+			  --[[event.JumpToActionSpotOpt = WL.RectangleVM.Create(
+				game.Map.Bonuses[bonusID].MiddlePointX,
+				game.Map.Bonuses[bonusID].MiddlePointY,
+				game.Map.Bonuses[bonusID].MiddlePointX,
+				game.Map.Bonuses[bonusID].MiddlePointY);]]
+			addOrder(event, true);
+            publicGameData.EarthquakeData[bonusID] = nil;
          end
     end
-    Mod.PublicGameData = publicGameData;
+
+	Mod.PublicGameData = publicGameData;
     print("[EARTHQUAKE] processEndOfTurn END");
 end
 
@@ -1392,7 +1291,7 @@ function Quicksand_processEndOfTurn(game, addOrder)
     for terrID, record in pairs(publicGameData.QuicksandData) do
          if (record.turnNumberQuicksandEnds > 0 and turnNumber >= record.turnNumberQuicksandEnds) then
               local impactedTerritory = WL.TerritoryModification.Create(terrID);
-              impactedTerritory.RemoveSpecialUnitsOpt = {};  -- adjust as needed to remove the Quicksand indicator
+              impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};  -- adjust as needed to remove the Quicksand indicator
               local event = WL.GameOrderEvent.Create(record.castingPlayer, "Quicksand effect ended", {}, {impactedTerritory});
               event.JumpToActionSpotOpt = WL.RectangleVM.Create(
                     game.Map.Territories[terrID].MiddlePointX,
@@ -1401,12 +1300,17 @@ function Quicksand_processEndOfTurn(game, addOrder)
                     game.Map.Territories[terrID].MiddlePointY);
               addOrder(event, true);
               publicGameData.QuicksandData[terrID] = nil;
-         end
+
+			strQuicksandEndsMessage = "Quicksand ends on "..getTerritoryName  (terrID, game);
+			local event = WL.GameOrderEvent.Create(record.castingPlayer, strQuicksandEndsMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
+			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+			--publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+		end
     end
     Mod.PublicGameData = publicGameData;
     print("[QUICKSAND] processEndOfTurn END");
 end
-
 
 function Shield_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;

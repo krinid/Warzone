@@ -30,10 +30,10 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 
     showDefinedCards (game);
     showCardBlockData ();
+    CreateLabel (MenuWindow).SetText ("\nCardPiece card ID: ".. tostring(getCardID ("Card Piece")));
     showIsolationData ();
     showQuicksandData ();
-    CreateLabel (MenuWindow).SetText ("CardPiece card ID: ".. tostring(getCardID ("Card Piece")));
-
+    showEarthquakeData ();    
     --[[printObjectDetails (getDefinedCardList ());
     x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
 
@@ -54,6 +54,16 @@ function PresentMenuUI_callBack (table)
         CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
     end 
 end 
+
+function showEarthquakeData ()
+    CreateLabel (MenuWindow).SetText ("\n\nEarthquake data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.EarthquakeData));
+    for k,v in pairs (Mod.PublicGameData.EarthquakeData) do
+        printObjectDetails (v,"record", "EarthquakeData");
+        CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetBonus)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberEarthquakeEnds));
+    end
+    --publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
+end
 
 function showCardBlockData ()
     CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");

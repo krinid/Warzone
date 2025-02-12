@@ -454,6 +454,11 @@ function getCardName_fromObject(cardConfig)
     return cardConfig.proxyType:match("^CardGame(.*)");
 end
 
+function getBonusName (intBonusID, game)
+	if (intBonusID) == nil then return nil; end
+	return (game.Map.Bonuses[intBonusID].Name);
+end 
+
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
 	return (game.Map.Territories[intTerrID].Name);
