@@ -194,7 +194,6 @@ function update_all_card_UI_display()
 	earthquakeCheckboxClicked();
 end
 
--- CARD BLOCK UI: similar to Shield but reworded for blocking card plays.
 function cardBlockCheckboxClicked()
     print("Card Block card checkbox clicked");
     Mod.Settings.CardBlockEnabled = CardBlockCardCheckbox.GetIsChecked();
@@ -466,10 +465,10 @@ function neutralizeCheckboxClicked()
 		UIcontainer = vertNeutralizeSettingsDetails;
 		print("create hori");
 
-		print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander)) --&&&
-        print("NeutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials))
-        print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander))
-        print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials))
+		print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
+        print("NeutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
+        print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
+        print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
 
 		print("create label");
 		horzNeutralizeDuration = CreateHorz(UIcontainer);

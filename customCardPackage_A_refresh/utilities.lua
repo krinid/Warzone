@@ -322,7 +322,7 @@ end
 
 --given input parameter of the text friendly name value of the turn phase, return the WZ internal numeric value that represents that turn phase; this # is what must be assigned to orders to properly associate the turn phase of the order
 function WLturnPhases_getNumericValue (strWLturnPhaseName)
-	return WLturnPhases()[strNukeImplementationPhase];
+	return WLturnPhases()[strWLturnPhaseName];
 end
 
 --create a few Horz objects to add a bit of invisible spacing (indenting)

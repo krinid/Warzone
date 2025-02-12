@@ -341,8 +341,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.ImageFilename = 'quicksand_specialunit.png';
     --builder.AttackPower = 0;
     builder.AttackPowerPercentage = 0;
-    --builder.DefensePower = -0.5;
-	builder.DefensePowerPercentage = -0.5;
+    --builder.DefensePower = 0;
+	builder.DefensePowerPercentage = 0;
     builder.DamageToKill = 999999;
     builder.DamageAbsorbedWhenAttacked = 0;
     --builder.Health = 0;
@@ -380,6 +380,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.ImageFilename = 'shield_special unit_clearback.png';
     builder.AttackPower = 0;
     builder.DefensePower = 0;
+	builder.DefensePowerPercentage = 100;
     builder.DamageToKill = 9999999;
     builder.DamageAbsorbedWhenAttacked = 9999999;
     builder.CombatOrder = 1;
@@ -854,6 +855,8 @@ function process_Isolation_expirations (game,addOrder)
 	end
 	
 	print ("tablelength (IsolationData)=="..tablelength (IsolationData));
+	if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then print ("IsolationData is empty"); return; end
+
 	for a,IsolationDataRecord in pairs(Mod.PublicGameData.IsolationData) do
 		print ("here's one");
 

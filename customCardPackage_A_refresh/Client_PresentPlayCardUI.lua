@@ -165,8 +165,8 @@ function play_cardPiece_card (game, cardInstance, playCard)
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent):SetFlexibleWidth(1);
-        CreateLabel(vert):SetText("[CARD PIECES]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
+        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
+        CreateLabel(vert).SetText("[CARD PIECES]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
         TargetCardButton = CreateButton (vert).SetText("Select card...").SetOnClick(function() CardPiece_CardSelection_clicked (strPrompt, cards, playCard, close) end);
     end);
 end
@@ -204,12 +204,12 @@ function play_Earthquake_card(game, cardInstance, playCard)
         setMaxSize(400,400);
         local vert = CreateVert(rootParent);
         --change to BONUS
-        CreateLabel(vert):SetText("[EARTHQUAKE]\n\nSelect a target player for the earthquake:"):SetColor(getColourCode("card play heading"));
+        CreateLabel(vert).SetText("[EARTHQUAKE]\n\nSelect a target player for the earthquake:").SetColor(getColourCode("card play heading"));
         local targetPlayerFuncs = {};
         for playerID in pairs(game.Game.PlayingPlayers) do
             if (playerID ~= game.Us.ID) then
                 targetPlayerFuncs[playerID] = function() EarthquakeTargetSelected(playerID, game, playCard, close); end;
-                UI.CreateButton(vert):SetText(toPlayerName(playerID, game)):SetOnClick(targetPlayerFuncs[playerID]);
+                UI.CreateButton(vert).SetText(toPlayerName(playerID, game)).SetOnClick(targetPlayerFuncs[playerID]);
             end
         end
     end);
@@ -226,12 +226,12 @@ function play_Tornado_card(game, cardInstance, playCard)
     print("[TORNADO] card play clicked, played by=" .. strPlayerName_cardPlayer);
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent):SetFlexibleWidth(1);
-        CreateLabel(vert):SetText("[TORNADO]\n\nSelect a territory to target with a Tornado:"):SetColor(getColourCode("card play heading"));
-        TargetTerritoryBtn = UI.CreateButton(vert):SetText("Select Territory"):SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert):SetText("");
+        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
+        CreateLabel(vert).SetText("[TORNADO]\n\nSelect a territory to target with a Tornado:").SetColor(getColourCode("card play heading"));
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Click the territory to target with Tornado");
-        UI.CreateButton(vert):SetText("Play Card"):SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("You must select a territory");
                 return;
@@ -247,12 +247,12 @@ function play_Quicksand_card(game, cardInstance, playCard)
     print("[QUICKSAND] card play clicked, played by=" .. strPlayerName_cardPlayer);
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent):SetFlexibleWidth(1);
-        CreateLabel(vert):SetText("[QUICKSAND]\n\nSelect a territory to convert into quicksand:"):SetColor(getColourCode("card play heading"));
-        TargetTerritoryBtn = UI.CreateButton(vert):SetText("Select Territory"):SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert):SetText("");
+        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
+        CreateLabel(vert).SetText("[QUICKSAND]\n\nSelect a territory to convert into quicksand:").SetColor(getColourCode("card play heading"));
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Click the territory to apply Quicksand to");
-        UI.CreateButton(vert):SetText("Play Card"):SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
