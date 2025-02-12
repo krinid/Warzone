@@ -16,7 +16,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	local boolHaltCodeExecutionAtEndofTurn = true;
+	--local boolHaltCodeExecutionAtEndofTurn = true;
 	if (boolHaltCodeExecutionAtEndofTurn==true) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
@@ -555,7 +555,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	builder.DefensePowerPercentage = 100;
     builder.DamageToKill = 9999999;
     builder.DamageAbsorbedWhenAttacked = 9999999;
-    builder.CombatOrder = 1;
+    builder.CombatOrder = 0;
     builder.CanBeGiftedWithGiftCard = false;
     builder.CanBeTransferredToTeammate = false;
     builder.CanBeAirliftedToSelf = false;
