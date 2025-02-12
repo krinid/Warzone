@@ -3,6 +3,7 @@ require("utilities");
 
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
     --deprecated, no longer required b/c they are actual cards that can be played normally w/o having to use the game/mod menu
+    Game = game;
     if game == nil then 		print('ClientGame is nil'); 	end
 	if game.LatestStanding == nil then 		print('ClientGame.LatestStanding is nil'); 	end
 	if game.LatestStanding.Cards == nil then 		print('ClientGame.LatestStanding.Cards is nil'); 	end
@@ -30,7 +31,8 @@ setReturn: Optionally, a function that sets what data will be returned back to t
     showDefinedCards (game);
     showCardBlockData ();
     showIsolationData ();
-    --CreateLabel (MenuWindow).SetText (tostring(getCardID ("Card Piece")));
+    showQuicksandData ();
+    CreateLabel (MenuWindow).SetText ("CardPiece card ID: ".. tostring(getCardID ("Card Piece")));
 
     --[[printObjectDetails (getDefinedCardList ());
     x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
@@ -54,7 +56,7 @@ function PresentMenuUI_callBack (table)
 end 
 
 function showCardBlockData ()
-    CreateLabel (MenuWindow).SetText ("\n\nCard aBlock data:");
+    CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
     for k,v in pairs (Mod.PublicGameData.CardBlockData) do
         printObjectDetails (v,"record", "CardBlockData");
@@ -71,7 +73,7 @@ function showQuicksandData ()
 
     for k,v in pairs (Mod.PublicGameData.QuicksandData) do
         printObjectDetails (v,"record", "QuicksandData");
-        CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/".."?"..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
+        CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game) ..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
         --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
         --local QuicksandDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds=turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};---&&&
     end
@@ -85,8 +87,8 @@ function showIsolationData ()
 
     for k,v in pairs (Mod.PublicGameData.IsolationData) do
         printObjectDetails (v,"record", "IsolationData");
-        CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/".."?"..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
-        --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
+        --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/".."?"..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
+        CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
         --local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
     end
 end 
