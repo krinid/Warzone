@@ -377,11 +377,10 @@ function getDefinedCardList (game)
 	--if CardData structure isn't defined (eg: from an ongoing game before this was done this way), then initialize the variable and populate the list here
 	if (publicGameData.CardData==nil) then publicGameData.CardData = {}; publicGameData.CardData.DefinedCards = nil; end
 
+	--if (false) then --publicGameData.CardData.DefinedCards ~= nil) then
 	if (publicGameData.CardData.DefinedCards ~= nil) then
-	--if (Mod.Settings.DefinedCards ~= nil) then
-			print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
-		--return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.DefinedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
-		return Mod.Settings.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+		print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
+		return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 	else
 		print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.DefinedCards");
 		if (game==nil) then print ("game is nil"); return nil; end
@@ -402,7 +401,7 @@ function getDefinedCardList (game)
 			count = count +1
 			--printObjectDetails (cardConfig, "cardConfig");
 		end
-		--printObjectDetails (cards, "card", count .." defined cards total");
+		printObjectDetails (cards, "card", count .." defined cards total");
 		return cards;
 	end
 end

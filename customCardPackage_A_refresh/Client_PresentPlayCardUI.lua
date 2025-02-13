@@ -3,18 +3,13 @@ require("UI_Events");
 
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
 function Client_PresentPlayCardUI(game, cardInstance, playCard)
-    --If your mod has multiple cards, you can look at game.Settings.Cards[cardInstance.CardID].Name to see which one was played
+    --when dealing with multiple cards in a single mod, observe game.Settings.Cards[cardInstance.CardID].Name to identify which one was played
     Game = game; --make client game object available globally
     
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
-    --PrintProxyInfo (game);
     PrintProxyInfo (cardInstance);
-    --PrintProxyInfo (playCard);
-
-    --printObjectDetails (game);
-    printObjectDetails (cardInstance, "cardInstance");
-    --printObjectDetails (playCard);
+    printObjectDetails (cardInstance, "cardInstance", "[PresentPlayCardUI]");
 
     strCardBeingPlayed = game.Settings.Cards[cardInstance.CardID].Name;
     print ("PLAY CARD="..strCardBeingPlayed.."::");
@@ -152,13 +147,26 @@ function play_CardBlock_card(game, cardInstance, playCard)
 end
 
 function play_cardPiece_card (game, cardInstance, playCard)
+    local publicGameData = Mod.PublicGameData;
+    local cards = getDefinedCardList (game);
+    --delme^^^
 
-    --do not permit receiving CardPiece cards/pieces
-    if (cards == nil) then cards = getDefinedCardList (game); end
-    --cards = getDefinedCardList (game);
+    local cards = nil;
     CardPieceCardID = cardInstance.CardID; --ensure player doesn't redeem Card Piece cards/pieces; esp if redeem amount is >1 whole card, this results in receiving infinite turn-over-turn card/piece quantities
 
-    print ("[PLAY CARD] "..cardInstance.CardID.."/".. cards[cardInstance.CardID] .. "//".. game.Settings.Cards[cardInstance.CardID].NumPieces);
+    print ("[PLAY CARD - CARD PIECE] "..CardPieceCardID.."::"); --/".. cards[CardPieceCardID] .. "//");
+
+    cards = getDefinedCardList (game);
+
+    print ("(cards==nil) --> "..tostring (cards==nil));
+    print ("tablelength (cards) --> ".. tablelength (cards));
+
+    --[[for k,v in pairs(cards) do
+        print (k,v);
+    end]]
+
+    print ("[PLAY CARD - CARD PIECE] "..CardPieceCardID.."/".. cards[CardPieceCardID] .. "//".. game.Settings.Cards[CardPieceCardID].NumPieces);
+
 
     local strPrompt = "Select a card type to receive cards/pieces of:"
 

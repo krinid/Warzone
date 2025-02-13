@@ -2,8 +2,11 @@ require("UI_Events");
 require("utilities");
 
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
-    --deprecated, no longer required b/c they are actual cards that can be played normally w/o having to use the game/mod menu
-    Game = game;
+    --used only for testing purposes
+    --original Dabo menu has been deprecated, as it no longer required to use the cards b/c they are actual WZ cards now that can be played normally via the built-in card play mechanism w/o having to use the game/mod menu
+
+    Game = game; --global variable to use in other functions in this code 
+
     if game == nil then 		print('ClientGame is nil'); 	end
 	if game.LatestStanding == nil then 		print('ClientGame.LatestStanding is nil'); 	end
 	if game.LatestStanding.Cards == nil then 		print('ClientGame.LatestStanding.Cards is nil'); 	end
@@ -18,7 +21,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     TopLabel = CreateLabel (rootParent).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public");
 --	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
 --	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor("#FFFFFF");
-    
+
 --[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
 Mod security should be applied when working with this Hook
@@ -30,21 +33,9 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 
     showDefinedCards (game);
     showCardBlockData ();
-    CreateLabel (MenuWindow).SetText ("\nCardPiece card ID: ".. tostring(getCardID ("Card Piece")));
     showIsolationData ();
     showQuicksandData ();
     showEarthquakeData ();    
-    --[[printObjectDetails (getDefinedCardList ());
-    x=1000008; print ("card=="..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
-
-    for _,x in pairs({1, 6, 7, 1000013, 1000012, 1000002}) do
-        print ("card==" ..x .."/"..tostring(getCardName_fromID (x, game)).. "/"..game.Settings.Cards[x].NumPieces);
-    end
-
-    print ("get cardID for AL=="..tostring(getCardID ("Airlift")));
-    print ("get cardID for EQ=="..tostring(getCardID ("Earthquake")));
-    print ("get cardID for AS=="..tostring(getCardID ("Airstrike")));
-    print ("get cardID for QS=="..tostring(getCardID ("Quicksand")));]]
 end
 
 function PresentMenuUI_callBack (table)
@@ -167,11 +158,25 @@ function showCardBlockData_Nope ()
 end
 
 function showDefinedCards (game)
-	print ("[PresentMenuUI] CARD OVERVIEW");
-    --UI.Alert ("[PresentMenuUI] CARD OVERVIEW");
+    print ("[PresentMenuUI] CARD OVERVIEW");
     game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
 
+    local cards = getDefinedCardList (game);
+    local CardPiecesCardID = Mod.PublicGameData.CardData.CardPiecesCardID;
+
     local strText = "";
+    for k,v in pairs (cards) do
+        strText = strText .. "\n"..v.." / ["..k.."]";
+    end
+    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..CardPiecesCardID.."\n";
+    TopLabel.SetText (strText.."\n");
+
+    --[[for k,v in pairs (cards) do
+        print ("[C_PMUI] "..k,v);
+        CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
+    end]]
+
+    --[[local strText = "";
     for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
         strText = strText .. "\n"..v.." ["..k.."]";
     end
@@ -181,7 +186,7 @@ function showDefinedCards (game)
     for k,v in pairs (Mod.PublicGameData.CardData.DefinedCards) do
         print ("[C_PMUI] "..k,v);
         CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
-    end 
+    end ]]
 end
 
 
