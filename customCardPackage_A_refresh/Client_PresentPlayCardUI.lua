@@ -221,7 +221,7 @@ function play_Earthquake_card(game, cardInstance, playCard)
             print(Earthquake_SelectedBonus.Name);
 
             print("[EARTHQUAKE] order input: bonus=" .. Earthquake_SelectedBonus.ID .. "/".. Earthquake_SelectedBonus.Name .." :: Earthquake|" .. Earthquake_SelectedBonus.ID);
-            playCard(strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.Gift);
+            playCard(strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
             close();
         end);
         labelEarthquake_BonusTerrList = CreateLabel (EarthquakeUI);
