@@ -12,6 +12,7 @@ TODOs:
 - issues to resolve before publishing:
 	- Isolation move skip - use jumplocation to show the territory isolation area
 	- Isolation move skip - suppress 1st skip order; no value in it
+	- @ end of turn, check if the territories for Isolation/Quicksand are missing special unit visual aids and if so, recreate them
 	- ask Fizz to allow negative #'s for specials' power?
 	- PresentSettings updates
 	- Isolation Special - can be blockaded; then there's no visual indicator; write code to detect this, recreate it & update the appropriate IsolationData record with it
