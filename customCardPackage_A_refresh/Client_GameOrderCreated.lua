@@ -10,10 +10,10 @@ function Client_GameOrderCreated (game, gameOrder, skip)
     print ("[C_GOC] START");
     --UI.Alert ("Checking orders");
 
-	process_game_order_entry_CardBlock (game,gameOrder,result,skip,addOrder);
-	process_game_order_entry_RegularCards (game,gameOrder,result,skip,addOrder);
-	process_game_order_entry_CustomCards (game,gameOrder,result,skip,addOrder);
-	process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,addOrder);
+	process_game_order_entry_CardBlock (game,gameOrder,skip);
+	process_game_order_entry_RegularCards (game,gameOrder,skip);
+	process_game_order_entry_CustomCards (game,gameOrder,skip);
+	process_game_order_entry_AttackTransfers (game,gameOrder,skip);
 
     print ("[C_GOC] END");
 end
@@ -36,7 +36,7 @@ function process_game_order_entry_CardBlock (game,gameOrder,result,skip,addOrder
     end
 end
 
-function process_game_order_entry_CustomCards (game,gameOrder,result,skip,addOrder)
+function process_game_order_entry_CustomCards (game,gameOrder,skip)
     --check for Custom Card plays
 	--NOTE: proxyType=='GameOrderPlayCardCustom' indicates that a custom card played; but these can't be placed in the order list at a specific point, it just applies in the position according to regular move order
 	--so for now, ignore this; re-implement this when Fizz updates so these can placed at the proper execution point, eg: start of turn, after deployments, after attacks, etc
@@ -73,7 +73,7 @@ function process_game_order_entry_CustomCards (game,gameOrder,result,skip,addOrd
 		elseif strCardTypeBeingPlayed == "Card Block" then
 			--execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Earthquake" then
-			--execute_Earthquake_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Earthquake_operation(game,gameOrder,skip, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Tornado" then
 			--execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Quicksand" then
@@ -85,7 +85,7 @@ function process_game_order_entry_CustomCards (game,gameOrder,result,skip,addOrd
 	end
 end 
 
-function process_game_order_entry_RegularCards (game,gameOrder,result,skip,addOrder)
+function process_game_order_entry_RegularCards (game,gameOrder,skip)
     --if there's no QuicksandData, do nothing (b/c there's nothing to check)
     local boolQuicksandAirliftViolation = false;
     local strAirliftSkipOrder_Message="";
@@ -147,7 +147,7 @@ function process_game_order_entry_RegularCards (game,gameOrder,result,skip,addOr
 	end
 end
 
-function process_game_order_entry_AttackTransfers (game,gameOrder,result,skip,addOrder)
+function process_game_order_entry_AttackTransfers (game,gameOrder,skip)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
 		--print ("[[  ATTACK // TRANSFER ]] check for Isolation, player "..gameOrder.PlayerID..", TO "..gameOrder.To..", FROM "..gameOrder.From.."::");
@@ -237,4 +237,25 @@ function check_for_CardBlock ()
             return true;
         end
     end
+end
+
+function execute_Earthquake_operation(game, gameOrder, skip, bonusID)
+	print ("[EARTHQUAKE] target bonus=="..bonusID.. "::");--..getBonusName (tonumber(bonusID), game).."::");
+	print ("[EARTHQUAKE] target bonus=="..bonusID.. "/"..getBonusName (tonumber(bonusID), game).."::");
+	print ("[EARTHQUAKE] target bonus=="..bonusID.. "/"..game.Map.Bonuses[bonusID].Name.."::");
+
+	if (game==nil) then print ("!!game is nil"); end
+	if (game.Map==nil) then print ("!!game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("!!game.Map.Bonuses is nil"); end
+
+	--originally intended to add a 'JumpToActionSpotOpt' event to the order but there's no avenue to add an order, it's just skip or not
+	--sooooo, this function does nothing now, lol
+
+	--local event = WL.GameOrderEvent.Create(game.Us.ID, "[EARTHQUAKE] target bonus=="..bonusID.. "/"..getBonusName (bonusID, game), {}, {});
+	local XYbonusCoords = getXYcoordsForBonus (tonumber(bonusID), game);
+	print ("ave X,Y=="..XYbonusCoords.average_X,XYbonusCoords.average_Y);
+	print ("min/max X/Y=="..XYbonusCoords.min_X,XYbonusCoords.max_X .."/"..XYbonusCoords.min_Y,XYbonusCoords.max_Y);
+
+	--XYbonusCoords = {X=1, Y=10};
+	--event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.X, XYbonusCoords.Y, XYbonusCoords.X, XYbonusCoords.Y);
 end

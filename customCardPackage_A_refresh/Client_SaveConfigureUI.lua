@@ -124,6 +124,16 @@ function createCards_newCards(alert, addCard);
                 Mod.Settings.ShieldDescription = strShieldDesc;
         end
 
+        if Mod.Settings.MonolithEnabled == true then
+                local strMonolithDesc = "Create a special unit that does no damage but cannot be killed. A territory cannot be captured while a Monolith unit resides on it, but the Monolith does not protect any units that are on the territory. All the units residing on the territory can be normally attacked and destroyed, and the Monolith will remain.";
+                if (Mod.Settings.MonolithDuration == -1) then
+                        strMonolithDesc = strMonolithDesc .. "Monoliths never expire.";
+                else
+                        strMonolithDesc = strMonolithDesc .. "Monoliths last " ..Mod.Settings.MonolithDuration .." turn"..plural(Mod.Settings.MonolithDuration) .." before expiring.";
+                end
+                Mod.Settings.MonolithCardID = addCard("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
+        end
+
         if Mod.Settings.CardBlockEnabled == true then
                 local strCardBlockDesc = "Block an opponent from playing cards ";
                 if (Mod.Settings.CardBlockDuration == -1) then
@@ -133,48 +143,6 @@ function createCards_newCards(alert, addCard);
                 end
                 
                 Mod.Settings.CardBlockCardID = addCard("Card Block", strCardBlockDesc, "Card Block_blueback_130x180.png", Mod.Settings.CardBlockPiecesNeeded, Mod.Settings.CardBlockPiecesPerTurn, Mod.Settings.CardBlockStartPieces, Mod.Settings.CardBlockCardWeight, Mod.Settings.CardBlockDuration);      
-        end
-
-        -- Earthquake – similar to Pestilence but reworded for seismic effects
-        if Mod.Settings.EarthquakeEnabled == true then
-                local strEarthquakeDesc = "Cause an earthquake that ravages all territories owned by a target player for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
-                if (Mod.Settings.EarthquakeDuration == -1) then
-                strEarthquakeDesc = strEarthquakeDesc .. "The effect is permanent.";
-                end
-                Mod.Settings.EarthquakeCardID = addCard("Earthquake", strEarthquakeDesc, "earthquake_130x180.png", Mod.Settings.EarthquakePiecesNeeded, Mod.Settings.EarthquakePiecesPerTurn, Mod.Settings.EarthquakeStartPieces, Mod.Settings.EarthquakeCardWeight, Mod.Settings.EarthquakeDuration);
-        end
-        
-        -- Tornado – similar to Pestilence but sends a tornado to a territory
-        if Mod.Settings.TornadoEnabled == true then
-                local strTornadoDesc = "Cause a tornado to develop on a territory, causing ".. Mod.Settings.TornadoStrength.." damage ";
-                if (Mod.Settings.TornadoDuration == -1) then
-                        strTornadoDesc = strTornadoDesc .. "per turn. The tornado continues permanently.";
-                else
-                        strTornadoDesc = strTornadoDesc .. "for " .. Mod.Settings.TornadoDuration .. " turn" .. plural(Mod.Settings.TornadoDuration) .. ".";
-                end
-                Mod.Settings.TornadoCardID = addCard("Tornado", strTornadoDesc, "tornado_130x180.png", Mod.Settings.TornadoPiecesNeeded, Mod.Settings.TornadoPiecesPerTurn, Mod.Settings.TornadoStartPieces, Mod.Settings.TornadoCardWeight, Mod.Settings.TornadoDuration);
-        end
-        
-        -- Quicksand – similar to Isolation but converts a territory into a Quicksand zone
-        if Mod.Settings.QuicksandEnabled == true then
-                local strQuicksandDesc = "Transform a territory into quicksand ";
-                if (Mod.Settings.QuicksandDuration == -1) then
-                        strQuicksandDesc = strQuicksandDesc .. "The effect is permanent.";
-                else
-                        strQuicksandDesc = strQuicksandDesc .. "for " .. Mod.Settings.QuicksandDuration .. " turn" .. plural(Mod.Settings.QuicksandDuration) .. ".";
-                end
-                strQuicksandDesc = strQuicksandDesc .. "\n\nAttacks and transfers into the territory can still occur, but none can be executed from the territory while quicksand remains active. Units caught in quicksand also do "..Mod.Settings.QuicksandAttackDamageGivenModifier.."x less damage to attackers, and sustain "..Mod.Settings.QuicksandDefendDamageTakenModifier.."x more damage when attacked."; --&&& update these numbers
-                Mod.Settings.QuicksandCardID = addCard("Quicksand", strQuicksandDesc, "quicksand_v3_130x180.png", Mod.Settings.QuicksandPiecesNeeded, Mod.Settings.QuicksandPiecesPerTurn, Mod.Settings.QuicksandStartPieces, Mod.Settings.QuicksandCardWeight, Mod.Settings.QuicksandDuration);
-        end
-
-        if Mod.Settings.MonolithEnabled == true then
-                local strMonolithDesc = "Create a special unit that does no damage but cannot be killed. A territory cannot be captured while a Monolith unit resides on it, but the Monolith does not protect any units that are on the territory. All the units residing on the territory can be normally attacked and destroyed, and the Monolith will remain.";
-                if (Mod.Settings.MonolithDuration == -1) then
-                        strMonolithDesc = strMonolithDesc .. "Monoliths never expire.";
-                else
-                        strMonolithDesc = strMonolithDesc .. "Monoliths last " ..Mod.Settings.MonolithDuration .." turn"..plural(Mod.Settings.MonolithDuration) .." before expiring.";
-                end
-                Mod.Settings.MonolithCardID = addCard("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
         end
 
         if Mod.Settings.CardPiecesEnabled == true then
@@ -217,6 +185,36 @@ function createCards_newCards(alert, addCard);
                         alert('Deneutralize cards must apply to natural neutral territories, Neutralized territories by use of a Neutralize card, or both options.');
                 end
                 Mod.Settings.DeneutralizeCardID = addCard("Deneutralize", strDeneutralizeDesc, "deneutralize_greenback2_130x180.png", Mod.Settings.DeneutralizePiecesNeeded, Mod.Settings.DeneutralizePiecesPerTurn, Mod.Settings.DeneutralizeStartPieces, Mod.Settings.DeneutralizeCardWeight);
+        end
+
+        if Mod.Settings.EarthquakeEnabled == true then
+                local strEarthquakeDesc = "Cause an earthquake that damages all territories in a selected bonus for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
+                if (Mod.Settings.EarthquakeDuration == -1) then
+                strEarthquakeDesc = strEarthquakeDesc .. "The effect is permanent.";
+                end
+                Mod.Settings.EarthquakeCardID = addCard("Earthquake", strEarthquakeDesc, "earthquake_130x180.png", Mod.Settings.EarthquakePiecesNeeded, Mod.Settings.EarthquakePiecesPerTurn, Mod.Settings.EarthquakeStartPieces, Mod.Settings.EarthquakeCardWeight, Mod.Settings.EarthquakeDuration);
+        end
+
+        if Mod.Settings.TornadoEnabled == true then
+                local strTornadoDesc = "Cause a tornado to develop on a territory, causing ".. Mod.Settings.TornadoStrength.." damage ";
+                if (Mod.Settings.TornadoDuration == -1) then
+                        strTornadoDesc = strTornadoDesc .. "per turn. The tornado continues permanently.";
+                else
+                        strTornadoDesc = strTornadoDesc .. "for " .. Mod.Settings.TornadoDuration .. " turn" .. plural(Mod.Settings.TornadoDuration) .. ".";
+                end
+                strTornadoDesc = strTornadoDesc .. " The first turn of tornado will do double damage.";
+                Mod.Settings.TornadoCardID = addCard("Tornado", strTornadoDesc, "tornado_130x180.png", Mod.Settings.TornadoPiecesNeeded, Mod.Settings.TornadoPiecesPerTurn, Mod.Settings.TornadoStartPieces, Mod.Settings.TornadoCardWeight, Mod.Settings.TornadoDuration);
+        end
+
+        if Mod.Settings.QuicksandEnabled == true then
+                local strQuicksandDesc = "Transform a territory into quicksand ";
+                if (Mod.Settings.QuicksandDuration == -1) then
+                        strQuicksandDesc = strQuicksandDesc .. "The effect is permanent.";
+                else
+                        strQuicksandDesc = strQuicksandDesc .. "for " .. Mod.Settings.QuicksandDuration .. " turn" .. plural(Mod.Settings.QuicksandDuration) .. ".";
+                end
+                strQuicksandDesc = strQuicksandDesc .. "\n\nAttacks and transfers into the territory can still occur, but none can be executed from the territory while quicksand remains active. FUTURE IMPLEMENTATION: Units caught in quicksand also do "..Mod.Settings.QuicksandAttackDamageGivenModifier.."x less damage to attackers, and sustain "..Mod.Settings.QuicksandDefendDamageTakenModifier.."x more damage when attacked."; --&&& update these numbers
+                Mod.Settings.QuicksandCardID = addCard("Quicksand", strQuicksandDesc, "quicksand_v3_130x180.png", Mod.Settings.QuicksandPiecesNeeded, Mod.Settings.QuicksandPiecesPerTurn, Mod.Settings.QuicksandStartPieces, Mod.Settings.QuicksandCardWeight, Mod.Settings.QuicksandDuration);
         end
 
         if Mod.Settings.AirstrikeEnabled == true then

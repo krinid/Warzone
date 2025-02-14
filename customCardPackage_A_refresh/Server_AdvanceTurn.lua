@@ -1239,14 +1239,20 @@ function Tornado_processEndOfTurn(game, addOrder)
     print("[TORNADO] processEndOfTurn START");
     if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
     for terrID, record in pairs(publicGameData.TornadoData) do
+		local strTerritoryName = tostring(getTerritoryName(terrID, game));
+		print ("[EARTHQUAKE] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.EarthquakeStrength.." damage");
+		local impactedTerritory = WL.TerritoryModification.Create(terrID);
+		impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
+		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado ravages "..strTerritoryName, {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+		addOrder(event, true);
+		--put a special unit here ... but can't at the moment b/c already have 5 special units in this mod! doh
+
          if (record.turnNumberTornadoEnds > 0 and turnNumber >= record.turnNumberTornadoEnds) then
               local impactedTerritory = WL.TerritoryModification.Create(terrID);
-              local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ended", {}, {impactedTerritory});
-              event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-                    game.Map.Territories[terrID].MiddlePointX,
-                    game.Map.Territories[terrID].MiddlePointY,
-                    game.Map.Territories[terrID].MiddlePointX,
-                    game.Map.Territories[terrID].MiddlePointY);
+              print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
+              local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
+              event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
               addOrder(event, true);
               publicGameData.TornadoData[terrID] = nil;
          end
@@ -1273,20 +1279,29 @@ function Earthquake_processEndOfTurn(game, addOrder)
 			impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength;
 			table.insert(modifiedTerritories, impactedTerritory);
 		end
-		local event = WL.GameOrderEvent.Create(record.castingPlayer, "An earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
+
+		--get XY coordinates of the bonus; note this is estimated since it's based on the midpoints of the territories in the bonus (that's all WZ provides)
+		local XYbonusCoords = getXYcoordsForBonus (bonusID, game);
+		--# of map units to add as buffer to min/max X values to zoom/pan on the bonus; do this to increase chance of territories being on screen, since the X/Y calcs WZ provides are midpoints of the territories (and thus the bonuses), not the actual left/right/top/bottom coordiantes
+		local X_buffer = 25; 
+		local Y_buffer = 25;
+
+		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
+		event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
 		addOrder(event, true);
 
 		--publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
          if (record.turnNumberEarthquakeEnds > 0 and turnNumber >= record.turnNumberEarthquakeEnds) then
             local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ended on bonus " .. getBonusName (bonusID, game), {}, {});
-			  --[[event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-				game.Map.Bonuses[bonusID].MiddlePointX,
+			--event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.average_X, XYbonusCoords.average_Y, XYbonusCoords.average_X, XYbonusCoords.average_Y);
+			event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
+			--[[game.Map.Bonuses[bonusID].MiddlePointX,
 				game.Map.Bonuses[bonusID].MiddlePointY,
 				game.Map.Bonuses[bonusID].MiddlePointX,
 				game.Map.Bonuses[bonusID].MiddlePointY);]]
 			addOrder(event, true);
             publicGameData.EarthquakeData[bonusID] = nil;
-         end
+        end
     end
 
 	Mod.PublicGameData = publicGameData;
@@ -1315,7 +1330,7 @@ function Quicksand_processEndOfTurn(game, addOrder)
 			local event = WL.GameOrderEvent.Create(record.castingPlayer, strQuicksandEndsMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-			--publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+			--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
 		end
     end
     Mod.PublicGameData = publicGameData;

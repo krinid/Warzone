@@ -12,9 +12,19 @@ TODOs:
 - issues to resolve before publishing:
 	- Isolation move skip - use jumplocation to show the territory isolation area
 	- Isolation move skip - suppress 1st skip order; no value in it
+	- Pestilence - in player selection list, remove players that have been casted on BY YOU already this turn; can't control by others (even if they put it in, they may cancel it)
 	- @ end of turn, check if the territories for Isolation/Quicksand are missing special unit visual aids and if so, recreate them
 	- ask Fizz to allow negative #'s for specials' power?
-	- PresentSettings updates
+	- separate cards into a few different mods; already have the max 5 special unit images per mod for Isolation, Neutralize, Shield, Monolith, Quicksand, so no room to make special unit images for Tornado, Earthquake, Forest Fire
+		- mod 1: Nuke, Pestilence, Isolation, Airstrike, Shield, Monolith
+		- mod 2: Card Block, Card Pieces, Card Hold (future), Neutralize, Deneutralize
+		- mod 3: Quicksand, Tornado, Earthquake, Forest Fire, ?
+	- Tornado - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
+	- Earthquake - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
+	- Forest Fire - add damage reduction % config item, so it can reduce in damage (or increase) as it spreads
+		- change FF "Duration" to "Spread range"
+	- add a table for "special unit placements"; for visual cue items such as Isolation, Quicksand, Neutralize, etc - where it's just an indicator of the effect, not a controlable unit
+		- this table tracks the units, their IDs and locations, and checks @ end of turn if they are where they should be, and if missing (if destroyed), recreate them; they can't move so no concerns with them being on another territory (exception if something like Swap Territories moves them, etc)
 	- Isolation Special - can be blockaded; then there's no visual indicator; write code to detect this, recreate it & update the appropriate IsolationData record with it
 	- see if can catch "Shield wore off" order; same for Monolith, Isolation, etc; Pestilence has funny count b/c of Warning turn
 	- Pestilence - submit duration+1 as WZ card duration? it'll show up 1 turn early but end on time; or as now, show up early but then end 1 turn early
@@ -162,20 +172,20 @@ function create_card_checkbox_UI_controls (rootParent)
 	CardPiecesCardCheckbox = CreateCheckBox(vertCardPiecesSettingsHeading).SetText("Card Pieces").SetIsChecked(Mod.Settings.CardPiecesEnabled).SetOnValueChanged(function() cardPiecesCheckboxClicked() end).SetInteractable(true);
 	
 	vertTornadoSettingsHeading = CreateVert(MainModUI);
-	CreateLabel(vertTornadoSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
 	TornadoCardCheckbox = CreateCheckBox(vertTornadoSettingsHeading).SetText("Tornado").SetIsChecked(Mod.Settings.TornadoEnabled).SetOnValueChanged(function() tornadoCheckboxClicked() end).SetInteractable(true);
 	
 	vertQuicksandSettingsHeading = CreateVert(MainModUI);
 	QuicksandCardCheckbox = CreateCheckBox(vertQuicksandSettingsHeading).SetText("Quicksand").SetIsChecked(Mod.Settings.QuicksandEnabled).SetOnValueChanged(function() quicksandCheckboxClicked() end).SetInteractable(true);
+
+	vertEarthquakeSettingsHeading = CreateVert(MainModUI);
+	EarthquakeCardCheckbox = CreateCheckBox(vertEarthquakeSettingsHeading).SetText("Earthquake").SetIsChecked(Mod.Settings.EarthquakeEnabled).SetOnValueChanged(function() earthquakeCheckboxClicked() end).SetInteractable(true);
 	
 	vertAirstrikeSettingsHeading = CreateVert(MainModUI);
+	CreateLabel(vertAirstrikeSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
 	AirstrikeCardCheckbox = CreateCheckBox(vertAirstrikeSettingsHeading).SetText("Airstrike").SetIsChecked(Mod.Settings.AirstrikeEnabled).SetOnValueChanged(function() airstrikeCheckboxClicked() end).SetInteractable(true);
 
 	vertForestFireSettingsHeading = CreateVert(MainModUI);
 	ForestFireCardCheckbox = CreateCheckBox(vertForestFireSettingsHeading).SetText("Forest Fire").SetIsChecked(Mod.Settings.ForestFireEnabled).SetOnValueChanged(function() forestFireCheckboxClicked() end).SetInteractable(true);
-
-	vertEarthquakeSettingsHeading = CreateVert(MainModUI);
-	EarthquakeCardCheckbox = CreateCheckBox(vertEarthquakeSettingsHeading).SetText("Earthquake").SetIsChecked(Mod.Settings.EarthquakeEnabled).SetOnValueChanged(function() earthquakeCheckboxClicked() end).SetInteractable(true);
 end
 
 function update_all_card_UI_display()
@@ -282,6 +292,7 @@ function tornadoCheckboxClicked()
         local horzTornadoDuration = CreateHorz(UIcontainer);
         CreateLabel(horzTornadoDuration).SetText("Duration: ");
         TornadoDuration = CreateNumberInputField(horzTornadoDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.TornadoDuration).SetWholeNumbers(true).SetInteractable(true);
+        CreateLabel(horzTornadoDuration).SetText("(use -1 to make Tornados permanent)");
 
 		local horzTornadoStrength = CreateHorz(UIcontainer);
         CreateLabel(horzTornadoStrength).SetText("Strength: ");
@@ -334,11 +345,11 @@ function quicksandCheckboxClicked()
         QuicksandBlockExitFromTerritory = CreateCheckBox(horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory).SetInteractable(true);
         
 		local horzQuicksandDefendMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandDefendMod).SetText("Defend damage modifier: ");
+        CreateLabel(horzQuicksandDefendMod).SetText("FUTURE IMPLEMENTATION - Defend damage modifier: ");
         QuicksandDefendDamageTakenModifier = CreateNumberInputField(horzQuicksandDefendMod).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandDefendDamageTakenModifier).SetWholeNumbers(false).SetInteractable(true);
         
 		local horzQuicksandAttackMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandAttackMod).SetText("Attack damage modifier: ");
+        CreateLabel(horzQuicksandAttackMod).SetText("FUTURE IMPLEMENTATION - Attack damage modifier: ");
         QuicksandAttackDamageGivenModifier = CreateNumberInputField(horzQuicksandAttackMod).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandAttackDamageGivenModifier).SetWholeNumbers(false).SetInteractable(true);
         
 		local horzQuicksandPiecesNeeded = CreateHorz(UIcontainer);
@@ -478,6 +489,7 @@ function neutralizeCheckboxClicked()
 		NeutralizeCardDuration = CreateNumberInputField(horzNeutralizeDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.NeutralizeDuration).SetWholeNumbers(true).SetInteractable(true);
 		CreateLabel(UIcontainer).SetText("(Use -1 to make Neutralize permanent)"); --"; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
 		--is permanent Neutralize capable of creating a situation where a game can't conclude? Commander game, 2 players each have 1 territory only with Commander on it, they Neutralize each other; they are either both eliminated or both play on but can't move b/c Commanders are on Neutral territories
+		--don't think so b/c once they lose their last territories, it's gg; whichever goes to 0 territories first loses
 
 		horzNeutralizeCanUseOnCommander = CreateHorz(UIcontainer);
 		NeutralizeCanUseOnCommander = CreateCheckBox(horzNeutralizeCanUseOnCommander).SetIsChecked(Mod.Settings.NeutralizeCanUseOnCommander).SetInteractable(true).SetText("Can use on Commander");

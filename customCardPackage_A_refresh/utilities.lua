@@ -455,8 +455,45 @@ end
 
 function getBonusName (intBonusID, game)
 	if (intBonusID) == nil then return nil; end
+	if (game==nil) then print ("##game is nil"); end
+	if (game.Map==nil) then print ("##game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("##game.Map.Bonuses is nil"); end
 	return (game.Map.Bonuses[intBonusID].Name);
 end 
+
+--return table with keys X=xvalue, Y=yvalue for a bonus which is the average of its territories' X,Y coords as a best estimate for where the bonus resides on the map
+function getXYcoordsForBonus (bonusID, game)
+	local average_X = 0;
+	local average_Y = 0;
+	local min_X = 0;
+	local max_X = 0;
+	local min_Y = 0;
+	local max_Y = 0;
+	local sum_X = 0;
+	local sum_Y = 0;
+	local count = 0;
+
+	if (game==nil) then print ("@@game is nil"); end
+	if (game.Map==nil) then print ("@@game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
+	print ("@@bonusID==".. bonusID);
+	print ("@@bonusName==".. getBonusName (bonusID, game));
+
+	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
+		count = count + 1;
+		sum_X = sum_X + game.Map.Territories[terrID].MiddlePointX;
+		sum_Y = sum_Y + game.Map.Territories[terrID].MiddlePointY;
+		if (game.Map.Territories[terrID].MiddlePointX < min_X) then min_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointX > max_X) then max_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointY < min_Y) then min_Y = game.Map.Territories[terrID].MiddlePointY; end
+		if (game.Map.Territories[terrID].MiddlePointY > max_Y) then max_Y = game.Map.Territories[terrID].MiddlePointY; end
+	end
+	--take average of all the X/Y coords
+	average_X = sum_X / count;
+	average_Y = sum_Y / count;
+
+	return ({average_X=average_X, average_Y=average_Y, min_X=min_X, max_X=max_X, min_Y=min_Y, max_Y=max_Y});
+end
 
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
