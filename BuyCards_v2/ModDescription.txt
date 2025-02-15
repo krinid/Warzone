@@ -1,0 +1,1 @@
+This mod allows you to make cards purchasable with gold. As such, Commerce mode must be enabled. This mod supports both Regular cards (standard cards built into Warzone) and also Custom cards defined by mods.
