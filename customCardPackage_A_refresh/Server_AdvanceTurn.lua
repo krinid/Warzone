@@ -16,7 +16,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	--local boolHaltCodeExecutionAtEndofTurn = true;
+	local boolHaltCodeExecutionAtEndofTurn = true;
 	if (boolHaltCodeExecutionAtEndofTurn==true) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
@@ -376,6 +376,23 @@ end
 function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+
+	--add an Idle "power up" structure to the territory to signify a Tornado; add 1 to the Idle "power" structure on the target territory
+	--local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+
+	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
+	--print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	--print ("[TORNADO] PRE - game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
+	if (structures == nil) then structures = {}; end;
+	print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	if (structures[WL.StructureType.Power] == nil) then
+		structures[WL.StructureType.Power] = 1;
+	else
+		structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1;
+	end
+
+	impactedTerritory.SetStructuresOpt = structures;
     impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = WL.RectangleVM.Create(
@@ -389,6 +406,8 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     local turnNumber_TornadoExpires = (Mod.Settings.TornadoDuration > 0) and (game.Game.TurnNumber + Mod.Settings.TornadoDuration) or -1;
     publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
     Mod.PublicGameData = publicGameData;
+	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
 function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryID)
@@ -1260,12 +1279,23 @@ function Tornado_processEndOfTurn(game, addOrder)
 		--put a special unit here ... but can't at the moment b/c already have 5 special units in this mod! doh
 
          if (record.turnNumberTornadoEnds > 0 and turnNumber >= record.turnNumberTornadoEnds) then
-              local impactedTerritory = WL.TerritoryModification.Create(terrID);
-              print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
-              local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
-              event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-              addOrder(event, true);
-              publicGameData.TornadoData[terrID] = nil;
+            local impactedTerritory = WL.TerritoryModification.Create(terrID);
+            print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
+			
+			--remove an Idle "power" structure from the territory
+			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Power] == nil) then
+				structures[WL.StructureType.Power] = 0;
+			else
+				structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
+			end
+
+			impactedTerritory.Structures = structures;
+            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
+            event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+            addOrder(event, true);
+            publicGameData.TornadoData[terrID] = nil;
          end
     end
     Mod.PublicGameData = publicGameData;

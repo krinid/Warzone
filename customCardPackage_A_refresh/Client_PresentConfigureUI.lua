@@ -10,6 +10,8 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 
 TODOs:
 - issues to resolve before publishing:
+	- desc for Earthquake - add damage to message
+	- nuke - damage rounding down? 10 taking 25%+5 went to 3 which means 2.5 rounded to 2, then +5=7 to get to 3
 	- Isolation move skip - use jumplocation to show the territory isolation area
 	- Neutralize special - isn't disappearing @ end of duration
 	- add Card Hold - restrict # of cards that can be held for X turns
