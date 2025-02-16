@@ -59,11 +59,11 @@ function displayMenu (game, close)
 			end
 			strMessageToHost = strMessageToHost .. "\n\nDefault prices have been assigned to custom cards - be sure to confirm and change them to align with your goals for this game."
 
-			--Turn #0 = distribution phase
+			--Turn #0 = distribution phase (during Manual Distribution games; else for Auto-Dist games this function is called when it is already turn 1)
 			if (game.Game.TurnNumber == 0) then
-				strMessageToHost = strMessageToHost .."\n\nIf you set them this turn during the Distribution Phase, players will be able to buy cards starting from tun 1. If not, you will have until the end of Turn 1 to finalize the prices, after which they will be automatically finalized with their default values.";
+				strMessageToHost = strMessageToHost .."\n\nIf you set them this turn during the Distribution Phase, players will be able to buy cards starting from tun 1. If not, you will have until the end of Turn 1 to finalize the prices, after which they will be automatically finalized with their default values, but players won't be able to buy cards until turn 2.";
 			else
-				strMessageToHost = strMessageToHost .."\n\nYou must finalize the card prices this turn, else they will be automatically finalized with their default values when the turn advances.";
+				strMessageToHost = strMessageToHost .."\n\nYou must finalize the card prices this turn, else they will be automatically finalized with their default values when the turn advances. Players will be able to buy the cards starting from turn 2.";
 			end
 
 			--originally had a popup displaying alternate message after host applied prices, but just let it be quiet; if the host did the job already, don't harass him anymore with popups
