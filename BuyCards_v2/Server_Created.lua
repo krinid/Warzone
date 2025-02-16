@@ -96,7 +96,11 @@ end
                 elseif (strCardName == "Bomb") then
                     cardPrice = Mod.Settings.BombCardCost;
                 else
-                    cardPrice = defaultCost*(cardConfig.NumPieces/cardConfig.MinimumPiecesPerTurn); --set a default cost of 100 * ratio of (#pieces required/#pieces given each turn) as approximation of the card's worth; host can set manual value before end of T1
+                    if (cardConfig.MinimumPiecesPerTurn<=0) then  --don't divide by 0; modify default price to defaultCost * #piecesRequired
+                        cardPrice = defaultCost*cardConfig.NumPieces;
+                    else --if #piecesGiven per turn >0 then divide by it to get a good estimate for default cost of card; if #piecesGiven per turn==1 then will be the same, and reduce for each additional card piece
+                        cardPrice = defaultCost*(cardConfig.NumPieces/cardConfig.MinimumPiecesPerTurn); --set a default cost of 100 * ratio of (#pieces required/#pieces given each turn) as approximation of the card's worth; host can set manual value before end of T1
+                    end 
                 end 
 
                 cards[cardID] = {Name=strCardName, Price=cardPrice, ID=cardID};
