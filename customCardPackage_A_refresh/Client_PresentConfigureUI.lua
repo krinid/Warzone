@@ -11,6 +11,13 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 TODOs:
 - issues to resolve before publishing:
 	- Isolation move skip - use jumplocation to show the territory isolation area
+	- Neutralize special - isn't disappearing @ end of duration
+	- add Card Hold - restrict # of cards that can be held for X turns
+	- add Conceal - cast fog (light?) on a territory (bonus?) to everyone but self
+	- add Phantom - unit spawns for X turns that clouds vision to others of anything on the same territory it resides on
+	- add Portal/Nydus Canal - create a structure (which building?) for X turns  (or permanent? or make it so territory owner can demolish it [takes 1 turn to do so]) that enables units to travel from 1 portal to another
+	- create table/routines to auto-remove special units after X turns; not specific to any card, any card can use it
+		- also ensures that if the special is removed @ end of turn, it is replaced
 	- Isolation move skip - suppress 1st skip order; no value in it
 	- Pestilence - in player selection list, remove players that have been casted on BY YOU already this turn; can't control by others (even if they put it in, they may cancel it)
 	- @ end of turn, check if the territories for Isolation/Quicksand are missing special unit visual aids and if so, recreate them

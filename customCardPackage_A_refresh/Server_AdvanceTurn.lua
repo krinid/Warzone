@@ -376,7 +376,7 @@ end
 function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-    impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoDamage;
+    impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = WL.RectangleVM.Create(
          game.Map.Territories[targetTerritoryID].MiddlePointX,
@@ -1232,6 +1232,17 @@ function CardBlock_processEndOfTurn(game, addOrder)
     Mod.PublicGameData = publicGameData;
     print("[CARD BLOCK] processEndOfTurn END");
 end
+
+--process actions that occur @ end of turn for various card types
+function processEndOfTurn_Actions(game, addOrder)
+    local publicGameData = Mod.PublicGameData;
+    local turnNumber = tonumber(game.Game.TurnNumber);
+	for _,record in pairs (publicGameData.EndOfTurnData) do
+		--sampleRecord = {turnNumber where action occurs, specials {specialUnitID, terrID where the special exists} table of special units that correlate to the event, card/event name/code for the event, ID# - the index# within the native table for that card/event that this relates to, any other data?}
+		--do something with the data here
+		
+	end 
+end 
 
 function Tornado_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;

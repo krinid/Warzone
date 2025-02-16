@@ -2,13 +2,14 @@ require("utilities");
 require("Client_PresentMenuUI");
 
 function Client_GameOrderCreated (game, gameOrder, skip)
-
-    local strCardTypeBeingPlayed = nil;
-	local cardOrderContentDetails = nil;
-	local publicGameData = Mod.PublicGameData;
+    --local strCardTypeBeingPlayed = nil;
+	--local cardOrderContentDetails = nil;
+	--local publicGameData = Mod.PublicGameData;
 
     print ("[C_GOC] START");
+	print ("[C_GOC] gameOrder proxyType=="..gameOrder.proxyType.."::");
     --UI.Alert ("Checking orders");
+	printObjectDetails (gameOrder, "gameOrder", "C_GOC");
 
 	process_game_order_entry_CardBlock (game,gameOrder,skip);
 	process_game_order_entry_RegularCards (game,gameOrder,skip);
