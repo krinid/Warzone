@@ -128,7 +128,13 @@ function displayMenu (game, close)
 		end 
 		local interactable = ((cardRecord.Price>=1) and (publicGameData.CardData.CardPricesFinalized==true)); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI); end
-		UI.CreateButton(targetUI).SetPreferredWidth(540).SetFlexibleWidth (1).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
+		
+		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
+		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
+			UI.CreateButton(targetUI).SetPreferredWidth(540).SetFlexibleWidth (1).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
+		end 
+
+		--if client player is the host & prices aren't finalized, show a slider to be able to set the card price
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then
 			sliderCardPrices [cardCount] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetPreferredWidth(25).SetFlexibleWidth (1).SetWholeNumbers(true);
 		end
