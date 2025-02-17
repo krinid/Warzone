@@ -1291,7 +1291,7 @@ function Tornado_processEndOfTurn(game, addOrder)
 				structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
 			end
 
-			impactedTerritory.Structures = structures;
+			impactedTerritory.SetStructuresOpt = structures;
             local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
             event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
             addOrder(event, true);
