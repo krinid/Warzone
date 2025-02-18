@@ -21,6 +21,13 @@ TODOs:
 		- Earthquake - no visual; damage is OK, confirm is ends at proper time
 		- Shields - confirm that no damage is taken by units + any damage to attackers
 		- Monolith - confirm that it doesn't protect units but protects territory from being taken
+	- Change back after TEST GAME is complete: ~line 308 in Server_AdvanceTurn.lua:
+						--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
+						--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
+						result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
+						result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
+
 - issues to resolve before publishing:
 	- desc for Earthquake - add damage to message
 	- Quicksand - message "0x damage" - fix the desc
