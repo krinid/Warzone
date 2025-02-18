@@ -265,7 +265,9 @@ end
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
-		--print ("[[  ATTACK // TRANSFER ]] check for Isolation, player "..gameOrder.PlayerID..", TO "..gameOrder.To..", FROM "..gameOrder.From.."::");
+		print ("[[  ATTACK // TRANSFER ]] , player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
+			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
+			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
 		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
@@ -276,41 +278,42 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			--weed out the cases above, then what's left are moves to or from Isolated territories
 		else
 			local strQuicksandSkipOrder_Message="";
-			local boolQuicksandAirliftViolation = false;
+			local boolQuicksandMovementViolation = false;
 			--block moves IN/OUT of the quicksand as per the mod settings
 			if (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since source and target territories have quicksand, and quicksand is configured so you can neither move in or out of quicksand";
-				boolQuicksandAirliftViolation = true;
+				boolQuicksandMovementViolation = true;
 			elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
-				boolQuicksandAirliftViolation = true;
+				boolQuicksandMovementViolation = true;
 			elseif (Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
-				boolQuicksandAirliftViolation = true;
+				boolQuicksandMovementViolation = true;
 			else
 				--arriving here means there are no conditions where the attack/transfer direction is being blocked, so let it proceed
-				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
-
-				--check for legit attack on a quicksand territory; if legit then apply damage factors to attacking & defending armies killed
-				if (Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
-					print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
-					result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
-					result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
-					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-				end
-				--for reference, default settings are:
-				--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
-				--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
-				--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
-		
-		
+				boolQuicksandMovementViolation = false; --this is the default but restating it here for clarity
 			end
-			if (boolQuicksandAirliftViolation==true) then
+			if (boolQuicksandMovementViolation==true) then
 				strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
 				print ("QUICKSAND - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strQuicksandSkipOrder_Message.."::");
 				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strQuicksandSkipOrder_Message, {}, {},{}));
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+			else
+				--order is not a quicksand violation; it may not have anything to do with quicksand; check if order is a legit attack on a quicksanded territory
+				--if legit attack into quicksand then apply damage factors to attacking & defending armies killed
+					if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
+						print ("[QUICKSAND] ATTACK INTO QUICKSAND_________________");
+						--print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+						print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
+						result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
+						result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
+						print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+					end
+					--for reference, default settings are:
+					--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
+					--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
+					--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
+					
 			end
 		end
 		
@@ -433,9 +436,9 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
     --builder.AttackPower = 0;
-    builder.AttackPowerPercentage = 0;
+    --builder.AttackPowerPercentage = 0.5; --0.0 means -100% attack damage; 1.0=regular attack damage; >1.0 means bonus attack damage
     --builder.DefensePower = -50;
-	builder.DefensePowerPercentage = 0;
+	--builder.DefensePowerPercentage = 0.5; --0.0 means -100% defense damage; 1.0=regular defense damage; >1.0 means bonus defense damage
     builder.DamageToKill = 0;
     builder.DamageAbsorbedWhenAttacked = 0;
     --builder.Health = 0;
@@ -758,19 +761,6 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 	--if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then
 		print ("territory already neutral -- do nothing"); --this could happen if another mod or WZ makes the territory neutral after the order as input on client side but before this order processes
 	else
-		-- &&&
-		-- if SpecialUnit object has proxyType == 'Commander' --> Commander
-		--     proxyType == 'CustomSpecialUnit', then also has property modID
-		-- if (Count<=Mod.Settings.PestilenceStrength) and tablelength(terr.NumArmies.SpecialUnits)<1 then
-			--[[function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
-				if order.proxyType == "GameOrderAttackTransfer" and orderResult.IsAttack then
-					if #orderResult.ActualArmies.SpecialUnits > 0 then
-						local dragonBreathDamage = 0;
-						for _, sp in pairs(orderResult.ActualArmies.SpecialUnits) do
-							if sp.proxyType == "CustomSpecialUnit" then
-			]]--					if sp.ModID ~= nil and sp.ModID == 594 and Mod.PublicGameData.DragonBreathAttack[Mod.PublicGameData.DragonNamesIDs[sp.Name]] ~= nil then
-				--					dragonBreathDamage = dragonBreathDamage + Mod.PublicGameData.DragonBreathAttack[Mod.PublicGameData.DragonNamesIDs[sp.Name]]; ]]
-		
 		-- if Neutralize applicability for Commanders or Specal Units is set to False, check for special units
 		local AbortDueToSettingsScope = false;
 		local CommandersPresent = false;

@@ -69,6 +69,8 @@ end
 function showQuicksandData ()
     CreateLabel (MenuWindow).SetText ("\n\nQuicksand data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.QuicksandData));
+    CreateLabel (MenuWindow).SetText ("AttackerDamageTakenModifier: "..Mod.Settings.QuicksandAttackDamageGivenModifier);
+    CreateLabel (MenuWindow).SetText ("DefenderDamageTakenModifier: "..Mod.Settings.QuicksandDefendDamageTakenModifier);
     
     if (tablelength (Mod.PublicGameData.QuicksandData)) == 0 then CreateLabel (MenuWindow).SetText ("QuicksandData is empty"); return; end
 
@@ -84,6 +86,7 @@ function showIsolationData ()
     CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
     
+    CreateLabel (MenuWindow).SetText ("Quicksanded territories:");
     if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then CreateLabel (MenuWindow).SetText ("IsolationData is empty"); return; end
 
     for k,v in pairs (Mod.PublicGameData.IsolationData) do
