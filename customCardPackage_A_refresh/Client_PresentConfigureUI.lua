@@ -9,11 +9,28 @@ Client_GameRefresh (Client_GameRefresh.lua) - whenever the client gets data abou
 Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player clicks the "Build" button (Commerce game)
 
 TODOs:
+- TEST GAME: https://www.warzone.com/MultiPlayer?GameID=40398835
+	- Tested and working: Nuke & Card Block, they're working fine, including showing that Nuke doesn't affect Specials; so we don't need to test those anymore (feel free to cast Nukes but let's not do Card Blocks anymore as it stops us from doing more card tests, lol)
+	- Still to test: Card Pieces, Pestilence
+	- Somewhat tested:
+		- Neutralize - 	confirm that stuff reverts back to normal state after X turns
+		- Deneutralize - We've tested Deneutralize on natural neutrals, and it works fine, but go ahead and test it on a territory that has been neutralized (maybe take over a Commander); I neutralized this territory Ocean 18 so I'll deneutralize that this turn
+		- Isolation - confirm it's blocking movements/airlifts & appropriate messages
+		- Quicksand - confirm it's blocking movements/airlifts & appropriate messages 
+		- Tornados - Idle power structure shows up; confirm it disappears; damage is OK, confirm is ends at proper time
+		- Earthquake - no visual; damage is OK, confirm is ends at proper time
+		- Shields - confirm that no damage is taken by units + any damage to attackers
+		- Monolith - confirm that it doesn't protect units but protects territory from being taken
 - issues to resolve before publishing:
 	- desc for Earthquake - add damage to message
+	- Quicksand - message "0x damage" - fix the desc
 	- nuke - damage rounding down? 10 taking 25%+5 went to 3 which means 2.5 rounded to 2, then +5=7 to get to 3
 	- Isolation move skip - use jumplocation to show the territory isolation area
 	- Neutralize special - isn't disappearing @ end of duration
+	- Pestilence - actually just delay the PlayCard operation until the ACTUAL HIT turn; do the warning in advance, play the card on the appropriate turn to align with Active Cards
+	- Isolation - after playing, dialog stays open - close it down!
+	- Quicksand - for the combat, instead of doing a full manual attack, perhaps can just subtract x% damage from the attacking units & add y% damage to the defending units on the combat record
+	- tornados - multiple tornados on same territory create multiple 'power' structures, but (A) don't do multiple damage hits, (B) only 1 structure is removed @ end; this is b/c it's put into a table by element of that territory, so each overwrites each other to make just 1 entry, hmmmm
 	- add Card Hold - restrict # of cards that can be held for X turns
 	- add Conceal - cast fog (light?) on a territory (bonus?) to everyone but self
 	- add Phantom - unit spawns for X turns that clouds vision to others of anything on the same territory it resides on

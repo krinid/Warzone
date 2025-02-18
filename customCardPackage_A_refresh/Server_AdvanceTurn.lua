@@ -177,7 +177,6 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 				boolQuicksandAirliftViolation = true;
 			else
 				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
-				--strAirliftSkipOrder_Message="Airlift failed due to unknown quicksand conditions";
 				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
 			end
 			
@@ -285,13 +284,27 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			elseif (Mod.Settings.QuicksandBlockEntryIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since target territory has quicksand, and quicksand is configured so you cannot move into quicksand";
 				boolQuicksandAirliftViolation = true;
-			elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+			elseif (Mod.Settings.QuicksandBlockExitFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
 				strQuicksandSkipOrder_Message="Order failed since source territory has quicksand, and quicksand is configured so you cannot move out of quicksand";
 				boolQuicksandAirliftViolation = true;
 			else
-				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
-				--strAirliftSkipOrder_Message="Airlift failed due to unknown quicksand conditions";
+				--arriving here means there are no conditions where the attack/transfer direction is being blocked, so let it proceed
 				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
+
+				--check for legit attack on a quicksand territory; if legit then apply damage factors to attacking & defending armies killed
+				if (Mod.PublicGameData.QuicksandData[gameOrder.From] ~= nil) then
+					print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
+					result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
+					result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
+					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+				end
+				--for reference, default settings are:
+				--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
+				--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
+				--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
+		
+		
 			end
 			if (boolQuicksandAirliftViolation==true) then
 				strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
