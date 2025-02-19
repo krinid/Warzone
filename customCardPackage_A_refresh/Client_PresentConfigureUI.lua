@@ -37,6 +37,7 @@ TODOs:
 - issues to resolve before publishing:
 	- fix function IsPlayerActive - always seems to return false
 	- change Pestilence alert from UI.Alert to a regular popup with "I understand/I'm ready (will popup a notification on Turn Commit but otherwise will leave you alone and not nag-warn you again)" button & "Remind me again in 10 mins" button
+	- erase the pending Pestilence order from eliminated players (but not from players that went AI - don't let them get out of it that easily)
 	--*** rename these (after TEST GAME w/MP/Rex is done) to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
 		--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
 		--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand

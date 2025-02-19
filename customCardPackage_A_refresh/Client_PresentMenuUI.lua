@@ -20,7 +20,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
     TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
-	TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).. " IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing)));
+	TopLabel.SetText (TopLabel.GetText() .. ("\nClient Player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).. " IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing)));
 
 	for k,v in pairs (game.Game.Players) do
 		TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).. " IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing)));
@@ -107,7 +107,7 @@ function showPestilenceData ()
 end 
 
 function showIsolationData ()
-    CreateLabel (MenuWindow).SetText ("\n\nIsolation data:");
+    CreateLabel (MenuWindow).SetText ("\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
     
     CreateLabel (MenuWindow).SetText ("Quicksanded territories:");
