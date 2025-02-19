@@ -35,11 +35,11 @@ function checkForPendingPestilence (clientGame)
 		--if (next (Mod.PublicGameData.PestilenceData[targetPlayerID])) then
 
 		--check if client player has pending Pestilence records
-		if (true) then --Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil) then
+		if (Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil) then
 			local pestilenceDataRecord = Mod.PublicGameData.PestilenceData[targetPlayerID]; --get pestilence record for local client player
 
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
-			local pestilenceDataRecord = {castingPlayer=1,targetPlayer=1058239,PestilenceWarningTurn=clientGame.Game.TurnNumber, PestilenceStartTurn=clientGame.Game.TurnNumber+1, PestilenceEndTurn=clientGame.Game.TurnNumber+2};
+			--local pestilenceDataRecord = {castingPlayer=1,targetPlayer=1058239,PestilenceWarningTurn=clientGame.Game.TurnNumber, PestilenceStartTurn=clientGame.Game.TurnNumber+1, PestilenceEndTurn=clientGame.Game.TurnNumber+2};
 			--for reference: PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
 			--krinid userID=1058239
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
@@ -52,7 +52,6 @@ function checkForPendingPestilence (clientGame)
 			local turnNumber = tonumber (clientGame.Game.TurnNumber);
 
 			local currentTime = clientGame.Game.ServerTime;
-			--pestilence_lastPlayerWarning = "2025-02-19 01:46:16:000";
 			local pestilence_nextPlayerWarning = nil;
 			if (pestilence_lastPlayerWarning == nil) then
 				pestilence_nextPlayerWarning = currentTime; --if hasn't been a previous warning, setup the time to send one asap
