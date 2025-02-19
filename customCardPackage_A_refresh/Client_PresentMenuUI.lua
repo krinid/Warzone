@@ -94,8 +94,10 @@ function showPestilenceData ()
     if (tablelength (Mod.PublicGameData.PestilenceData)) == 0 then CreateLabel (MenuWindow).SetText ("PestilenceData is empty"); return; end
 
     for k,v in pairs (Mod.PublicGameData.PestilenceData) do
-        printObjectDetails (v,"record", "PestilenceData");
-        --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game) ..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
+        --printObjectDetails (v,"record", "PestilenceData");
+        CreateLabel (MenuWindow).SetText ("["..k.."] target " ..v.targetPlayer.."/"..toPlayerName (v.targetPlayer, game)..", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, game)..", warning T"..v.PestilenceWarningTurn..", Start T"..v.PestilenceStartTurn..", End T"..PestilenceEndTurn);
+		--for reference: publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
+
     end
 end 
 
