@@ -28,7 +28,15 @@ TODOs:
 						result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
 						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
+- Implement NOW:
+	- prevent Shield & Monolith from moving (does this interfere with Quicksand/ Isolation? don't think so)
+	- ^^does a skip/substitute added move get processed by Server_TurnAdvcance_Order?
+	- implement new warning timing for Pestilence; once in Client_GameRefresh (or once every 10 mins?) and then once at Client_GameCommit
+
 - issues to resolve before publishing:
+	--*** rename these (after TEST GAME w/MP/Rex is done) to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
+		--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
+		--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
 	- desc for Earthquake - add damage to message
 	- Quicksand - message "0x damage" - fix the desc
 	- nuke - damage rounding down? 10 taking 25%+5 went to 3 which means 2.5 rounded to 2, then +5=7 to get to 3

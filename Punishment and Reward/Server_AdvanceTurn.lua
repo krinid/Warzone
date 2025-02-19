@@ -3,7 +3,17 @@ TODO:
 - implement territory count punishment/rewards
 - implement tracking territory count for X turns (default 10) apply rolling increasing pun/rew for increases/decreases in the past 10 turns; decrease = nerf, increase = buff, no change = small nerf
 - implement Sanction/Reverse Sanction casting limitations; on self YES/NO, on teammate YES/NO
-- anti-card farming
+- anti-card farming --> if own territory @ start of turn, doesn't count as a cap; check if was that player's territory in any of the last 10 turns? maybe this is too punishing? and too compute intensive to check for all captures?
+- punishments = 1PU punishment unit = -5% or -10%?
+- rewards = 1RU reward unit = +10%
+- punishments - each turn w/o attacks = 1 PU, each turn w/o a capture = 1 PU, each turn w/o going up in territories = 1 PU (too punishing?)
+- for each additional in the last 10 turns it's another 0.3 PU
+- >5PU causes -1 from all territories
+- >8PU causes -2 from all territories
+- >10PU causes -5 from all territories
+- >15PU causes -10 from all territories
+- territories won't go from >=1 to neutral, but if already at 0 when the punishment hits, they go will neutral; confirm if using OMS that they will still go to 0 then neutral
+- any kill rate impacts?
 ]]
 
 function Server_AdvanceTurn_End(game, addOrder)
@@ -67,8 +77,6 @@ end
 function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 	local playerID = order.PlayerID;
 	--print ("proxyType=="..order.proxyType);
-    if (order.proxyType == 'GameOrderAttackTransfer' and result.IsAttack) then Attacks[playerID] = true; end
-	if (order.proxyType == 'GameOrderAttackTransfer' and result.IsAttack and result.IsSuccessful) then Captures[playerID] = true; end
 
 	if (order.proxyType=='GameOrderAttackTransfer') then
 		--AttackTeammates boolean:, AttackTransfer AttackTransferEnum (enum):, ByPercent boolean:, From TerritoryID:, NumArmies Armies:, Result GameOrderAttackTransferResult:, To TerritoryID:
@@ -76,12 +84,33 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		--         IsAttack boolean: True if this was an attack, false if it was a transfer., IsNullified boolean:, IsSuccessful boolean: If IsAttack is true and IsSuccessful is true, the territory was captured. If IsAttack is true and IsSuccessful was false, the territory was not captured.
 		--         OffenseLuck Nullable<number>:
 
-		--result.DefendingArmiesKilled.NumArmies=0;
 		print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-			", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
-		result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
-		result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+		--testing order adjustment/replacement; replace an attack order of 10 armies with one for 5 armies
+		if (order.NumArmies.NumArmies==10) then
+			--local numArmies = orderArmies.Subtract(WL.Armies.Create(0, commanders));
+			local newOrder = nil;
+			print ("[TRIP!] "); --..order.ByPercent);
+			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(3), order.AttackTeammates);
+			newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(5), order.AttackTeammates);
+			addOrder(newOrder);
+			skip(WL.ModOrderControl.Skip);
+			return;
+	
+			--if isAttackTransfer then
+			--	newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, numArmies, order.AttackTeammates);
+			--elseif isAirlift then
+			--	newOrder = WL.GameOrderPlayCardAirlift.Create(order.CardInstanceID, order.PlayerID, order.FromTerritoryID, order.ToTerritoryID, numArmies);
+			--end
+		end
+
+		if (result.IsAttack) then Attacks[playerID] = true; end
+		if (result.IsAttack and result.IsSuccessful) then Captures[playerID] = true; end
+
+		--just for testing (actually for CCPA Quicksand)
+		--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
+		--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
 			
 			print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
 			", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");

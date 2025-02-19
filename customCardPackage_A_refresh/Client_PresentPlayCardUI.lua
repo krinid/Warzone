@@ -148,9 +148,6 @@ end
 
 function play_cardPiece_card (game, cardInstance, playCard)
     local publicGameData = Mod.PublicGameData;
-    local cards = getDefinedCardList (game);
-    --delme^^^
-
     local cards = nil;
     CardPieceCardID = cardInstance.CardID; --ensure player doesn't redeem Card Piece cards/pieces; esp if redeem amount is >1 whole card, this results in receiving infinite turn-over-turn card/piece quantities
 

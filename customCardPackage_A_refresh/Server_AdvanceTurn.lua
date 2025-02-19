@@ -146,6 +146,44 @@ function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 	local strCardTypeBeingPlayed = nil;
 	local cardOrderContentDetails = nil;
 	local publicGameData = Mod.PublicGameData;
+
+	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
+	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
+		--check any Special Units in the armies include in the AttackTransfer or Airlift operation
+		local orderArmies = nil;
+		if (gameOrder.proxyType=='GameOrderAttackTransfer') then orderArmies = gameOrder.NumArmies; end
+		if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then orderArmies = gameOrder.Armies; end
+		if (#orderArmies.SpecialUnits >= 1) then --if there are no specials, take no further action, let the order proceed; if there are specials, check if they are one of the immovable types
+			local specialUnitsToRemoveFromOrder = {};
+			for _, unit in pairs(orderArmies.SpecialUnits) do
+				if (unit.proxyType == "CustomSpecialUnit") then --ignore non-custom special units (which I think is just Commanders? Actually maybe the Boss units are non-custom specials too)
+					local strModData = tostring(unit.ModData);
+					print ("[___________special] ModData=="..strModData..", Name=="..unit.Name..", numArmies=="..orderArmies.NumArmies.."::");
+					--print ("ModData contains 'CCPA|Immovable'=="..tostring (startsWith (strModData, "CCPA|Immovable")));
+					if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralize") or (unit.Name == "Quicksand") or (unit.Name == "Isolation") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
+						--some of these cards don't currently have special units, but including them here so if they do, this code is already in place
+						print ("Immovable Special==true --> block movement of this unit!");
+						table.insert(specialUnitsToRemoveFromOrder, unit);
+					end
+				end
+			end
+			if (#specialUnitsToRemoveFromOrder > 0) then --tablelength>0 indicates that CCPA Immovable specials were found
+				local replacementOrder = nil;
+
+				--create new Armies structure with 0 regular armies & the Immovable Specials identified in the specialUnitsToRemoveFromOrder table, then "subtract" it from the Armies structure from the original order (orderArmies)
+				--then assign it to numArmies, then make a new order using newArmies and keep all other aspects of the order the same; handle cases for both Attack/Transfer & Airlift; then skip the original order; result is same order minus the Immovable Specials
+				local numArmies = orderArmies.Subtract(WL.Armies.Create(0, specialUnitsToRemoveFromOrder));
+				print ("Immovable Special==true --> actually remove any specials from the order; numArmies=="..numArmies.NumArmies);
+
+				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, numArmies, gameOrder.AttackTeammates); end
+				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, numArmies); end
+				addOrder (replacementOrder);
+				skip (WL.ModOrderControl.Skip); --skip this order
+				--skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+			end
+		end
+	end
+
 	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
 	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
 	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
@@ -301,23 +339,23 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			else
 				--order is not a quicksand violation; it may not have anything to do with quicksand; check if order is a legit attack on a quicksanded territory
 				--if legit attack into quicksand then apply damage factors to attacking & defending armies killed
-					if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
-						print ("[QUICKSAND] ATTACK INTO QUICKSAND_________________");
-						--print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-						print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
-						--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
-						--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
-						result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
-						result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
-						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
+				if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
+					print ("[QUICKSAND] ATTACK INTO QUICKSAND_________________");
+					--print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
+					--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
+					--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
+					result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
+					result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+					--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
-						print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-					end
-					--for reference, default settings are:
-					--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
-					--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
-					--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
-					
+					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+				end
+				--for reference, default settings are:
+				--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
+				--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
+				--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
+				
 			end
 		end
 		
@@ -452,6 +490,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
+	builder.ModData = "CCPA|Immovable|Quicksand";
+	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
     local specialUnit_Quicksand = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
@@ -465,6 +505,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     if (publicGameData.QuicksandData == nil) then publicGameData.QuicksandData = {}; end
     local turnNumber_QuicksandExpires = (Mod.Settings.QuicksandDuration > 0) and (game.Game.TurnNumber + Mod.Settings.QuicksandDuration) or -1;
     publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+	--publicGameData.ImmovableSpecials[specialUnit_Quicksand.ID] = targetTerritoryID; --use this to make identifying the location of specials easy/quick, don't have to search through each territory to find where it was assigned
+	--publicGameData.Territories_Specials[targetTerritoryID] = specialUnit_Quicksand.ID; --  <--- actually insufficient; 1 territory could have multiple specials; so this would need to be a table - is this required?
 	--local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
 
     Mod.PublicGameData = publicGameData;
