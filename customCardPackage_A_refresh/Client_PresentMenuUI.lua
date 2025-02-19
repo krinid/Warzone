@@ -20,6 +20,11 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
     TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
+	TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).. " IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing)));
+
+	for k,v in pairs (game.Game.Players) do
+		TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).. " IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing)));
+	end
 
 --[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
@@ -52,7 +57,7 @@ function PresentMenuUI_callBack (table)
 end 
 
 function showEarthquakeData ()
-    CreateLabel (MenuWindow).SetText ("\n\nEarthquake data:");
+    CreateLabel (MenuWindow).SetText ("\nEarthquake data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.EarthquakeData));
     for k,v in pairs (Mod.PublicGameData.EarthquakeData) do
         printObjectDetails (v,"record", "EarthquakeData");
@@ -62,7 +67,7 @@ function showEarthquakeData ()
 end
 
 function showCardBlockData ()
-    CreateLabel (MenuWindow).SetText ("\n\nCard Block data:");
+    CreateLabel (MenuWindow).SetText ("\nCard Block data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
     for k,v in pairs (Mod.PublicGameData.CardBlockData) do
         printObjectDetails (v,"record", "CardBlockData");
@@ -72,7 +77,7 @@ function showCardBlockData ()
 end 
 
 function showQuicksandData ()
-    CreateLabel (MenuWindow).SetText ("\n\nQuicksand data:");
+    CreateLabel (MenuWindow).SetText ("\nQuicksand data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.QuicksandData));
     CreateLabel (MenuWindow).SetText ("AttackerDamageTakenModifier: "..Mod.Settings.QuicksandAttackDamageGivenModifier);
     CreateLabel (MenuWindow).SetText ("DefenderDamageTakenModifier: "..Mod.Settings.QuicksandDefendDamageTakenModifier);
@@ -88,7 +93,7 @@ function showQuicksandData ()
 end 
 
 function showPestilenceData ()
-    CreateLabel (MenuWindow).SetText ("\n\nPestilence data:");
+    CreateLabel (MenuWindow).SetText ("\nPestilence data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.PestilenceData));
     
     if (tablelength (Mod.PublicGameData.PestilenceData)) == 0 then CreateLabel (MenuWindow).SetText ("PestilenceData is empty"); return; end
@@ -190,7 +195,7 @@ function showDefinedCards (game)
     for k,v in pairs (cards) do
         strText = strText .. "\n"..v.." / ["..k.."]";
     end
-    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..CardPiecesCardID.."\n";
+    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..CardPiecesCardID;
     TopLabel.SetText (strText.."\n");
 
     --[[for k,v in pairs (cards) do

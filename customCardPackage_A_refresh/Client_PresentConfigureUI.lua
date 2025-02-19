@@ -29,8 +29,13 @@ TODOs:
 						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
 - Implement NOW:
+	- Deneutralize on Neutralized territories doesn't eliminate the Neutralize special unit; which means it probably doesn't pop the Neutralize item off the table? it won't swap ownership b/c terr is no longer neutral, but it should destroy the special as it's no longer relevant
+	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"
+	- dead players still getting "Pestilence" warnings
+	- Quicksand acting like Monoliths
 
 - issues to resolve before publishing:
+	- fix function IsPlayerActive - always seems to return false
 	- change Pestilence alert from UI.Alert to a regular popup with "I understand/I'm ready (will popup a notification on Turn Commit but otherwise will leave you alone and not nag-warn you again)" button & "Remind me again in 10 mins" button
 	--*** rename these (after TEST GAME w/MP/Rex is done) to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
 		--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand

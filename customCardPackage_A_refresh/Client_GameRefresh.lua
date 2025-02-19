@@ -20,6 +20,7 @@ function checkForPendingPestilence (clientGame)
 	--PrintProxyInfo (Mod.PublicGameData.PestilenceData, "a", "b");
 	if (clientGame.Us ~= nil) then --can't check if client doesn't have an associated playerID
 		local targetPlayerID = clientGame.Us.ID; --target player is the current player using the client
+		local isPlayerActive = clientGame.Us.State == WL.GamePlayerState.Playing;
 
 		--[[print ("(not next(Mod.PublicGameData))=="..tostring (not next(Mod.PublicGameData)));
 		print ("(Mod.PublicGameData==nil)=="..tostring (Mod.PublicGameData==nil));
@@ -30,12 +31,12 @@ function checkForPendingPestilence (clientGame)
 		--this function gets called early on, possibly before many game variables are set up, namely initialization of Mod.PublicGameData & Mod.PublicGameData.PestilenceData, in which case just exit the function b/c can't do anything w/o those constructs
 		--actually I believe this is a game bug; it seems to erase Mod.PublicGameData when a mod update is pushed while a game is running
 
-		print ("[CLIENT] checking if client player has pending Pestilence: "..targetPlayerID .."/"..toPlayerName (targetPlayerID, clientGame).."::");
+		print ("[CLIENT] checking if client player has pending Pestilence: "..targetPlayerID .."/"..toPlayerName (targetPlayerID, clientGame)..", isPlayerActive==" ..tostring(isPlayerActive) .."::");
 
 		--if (next (Mod.PublicGameData.PestilenceData[targetPlayerID])) then
 
-		--check if client player has pending Pestilence records
-		if (Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil) then
+		--check if client player has pending Pestilence records and is an active player (ie: don't popup a Pestilence warning if the player is eliminated, this probably means they had a pending Pestilence order at time of elimination and will be continually harassed about it if they peruse the game)
+		if (Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil and isPlayerActive==true) then
 			local pestilenceDataRecord = Mod.PublicGameData.PestilenceData[targetPlayerID]; --get pestilence record for local client player
 
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
@@ -67,7 +68,7 @@ function checkForPendingPestilence (clientGame)
 			print ("NEXT WARNING DISPLAY: "..tostring (pestilence_nextPlayerWarning));
 			print ("CURRENT TIME:         "..currentTime..", dateIsEarlier=="..tostring (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime))).."::");
 
-			if (pestilence_lastPlayerWarning == nil) or (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime))) then
+			if ((pestilence_lastPlayerWarning == nil) or (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime)))) then
 				pestilence_lastPlayerWarning = currentTime;  --track time the warning is displayed to the client player
 
 				--print ("[PESTILENCE PENDING] on player "..tostring(targetPlayerID)..", by "..tostring(castingPlayerID)..", damage=="..Mod.Settings.PestilenceStrength .."::warningTurn=="..PestilenceWarningTurn..", startTurn==".. PestilenceStartTurn..", endTurn=="..PestilenceEndTurn.."::");

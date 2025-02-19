@@ -1404,22 +1404,22 @@ function Quicksand_processEndOfTurn(game, addOrder)
     if (publicGameData.QuicksandData == nil) then print("[QUICKSAND] no data"); return; end
     for terrID, record in pairs(publicGameData.QuicksandData) do
          if (record.turnNumberQuicksandEnds > 0 and turnNumber >= record.turnNumberQuicksandEnds) then
-              local impactedTerritory = WL.TerritoryModification.Create(terrID);
-              impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};  -- adjust as needed to remove the Quicksand indicator
-              local event = WL.GameOrderEvent.Create(record.castingPlayer, "Quicksand effect ended", {}, {impactedTerritory});
-              event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-                    game.Map.Territories[terrID].MiddlePointX,
-                    game.Map.Territories[terrID].MiddlePointY,
-                    game.Map.Territories[terrID].MiddlePointX,
-                    game.Map.Territories[terrID].MiddlePointY);
-              addOrder(event, true);
-              publicGameData.QuicksandData[terrID] = nil;
+			local impactedTerritory = WL.TerritoryModification.Create(terrID);
+			impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};  -- adjust as needed to remove the Quicksand indicator
+			local event = WL.GameOrderEvent.Create(record.castingPlayer, "Quicksand effect ends on "..getTerritoryName  (terrID, game), {}, {impactedTerritory});
+			event.JumpToActionSpotOpt = WL.RectangleVM.Create(
+				game.Map.Territories[terrID].MiddlePointX,
+				game.Map.Territories[terrID].MiddlePointY,
+				game.Map.Territories[terrID].MiddlePointX,
+				game.Map.Territories[terrID].MiddlePointY);
+			addOrder(event, true);
+			publicGameData.QuicksandData[terrID] = nil;
+			--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
 
-			strQuicksandEndsMessage = "Quicksand ends on "..getTerritoryName  (terrID, game);
+			--[[strQuicksandEndsMessage = "Quicksand ends on "..getTerritoryName  (terrID, game);
 			local event = WL.GameOrderEvent.Create(record.castingPlayer, strQuicksandEndsMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-			--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function]]
 		end
     end
     Mod.PublicGameData = publicGameData;
