@@ -18,9 +18,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--if game.game.Settings.Cards == nil then 		print('ClientGame.game.Settings.Cards is nil'); 	end
 
     MenuWindow = rootParent;
-    TopLabel = CreateLabel (rootParent).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public");
---	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
---	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor("#FFFFFF");
+	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
+    TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
 
 --[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
@@ -31,11 +30,17 @@ PlayerID: The ID of the player who invoked this call.
 payload: The data passed as the payload parameter to SendGameCustomMessage. Must be a lua table.
 setReturn: Optionally, a function that sets what data will be returned back to the client. If you wish to return data, pass a table as the sole argument to this function. Not calling this function will result in an empty table being returned.]]
 
+	--this shows all Global Functions! wow
+	--[[for i, v in pairs(_G) do
+		print(i, v);
+	end]]
+
     showDefinedCards (game);
     showCardBlockData ();
     showIsolationData ();
     showQuicksandData ();
-    showEarthquakeData ();    
+    showEarthquakeData ();
+    showPestilenceData ();
 end
 
 function PresentMenuUI_callBack (table)
@@ -79,6 +84,18 @@ function showQuicksandData ()
         CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game) ..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
         --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
         --local QuicksandDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds=turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};---&&&
+    end
+end 
+
+function showPestilenceData ()
+    CreateLabel (MenuWindow).SetText ("\n\nPestilence data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.PestilenceData));
+    
+    if (tablelength (Mod.PublicGameData.PestilenceData)) == 0 then CreateLabel (MenuWindow).SetText ("PestilenceData is empty"); return; end
+
+    for k,v in pairs (Mod.PublicGameData.PestilenceData) do
+        printObjectDetails (v,"record", "PestilenceData");
+        --CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game) ..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
     end
 end 
 
@@ -161,7 +178,7 @@ function showCardBlockData_Nope ()
 end
 
 function showDefinedCards (game)
-    print ("[PresentMenuUI] CARD OVERVIEW");
+    --print ("[PresentMenuUI] CARD OVERVIEW");
     game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
 
     local cards = getDefinedCardList (game);

@@ -114,7 +114,7 @@ function createCards_newCards(alert, addCard);
         print ("START create new cards");
 
         if Mod.Settings.ShieldEnabled == true then
-                local strShieldDesc = "A special unit that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
+                local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
                 if (Mod.Settings.ShieldDuration == -1) then
                     strShieldDesc = strShieldDesc .. "Shields never expire.";
                 else
@@ -125,7 +125,7 @@ function createCards_newCards(alert, addCard);
         end
 
         if Mod.Settings.MonolithEnabled == true then
-                local strMonolithDesc = "Create a special unit that does no damage but cannot be killed. A territory cannot be captured while a Monolith unit resides on it, but the Monolith does not protect any units that are on the territory. All the units residing on the territory can be normally attacked and destroyed, and the Monolith will remain.";
+                local strMonolithDesc = "A special immovable unit deployed to a territory that does no damage but cannot be killed. A territory cannot be captured while a Monolith unit resides on it, but the Monolith does not protect any units that are on the territory. All the units residing on the territory can be normally attacked and destroyed, and the Monolith will remain.";
                 if (Mod.Settings.MonolithDuration == -1) then
                         strMonolithDesc = strMonolithDesc .. "Monoliths never expire.";
                 else

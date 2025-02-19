@@ -29,11 +29,9 @@ TODOs:
 						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
 - Implement NOW:
-	- prevent Shield & Monolith from moving (does this interfere with Quicksand/ Isolation? don't think so)
-	- ^^does a skip/substitute added move get processed by Server_TurnAdvcance_Order?
-	- implement new warning timing for Pestilence; once in Client_GameRefresh (or once every 10 mins?) and then once at Client_GameCommit
 
 - issues to resolve before publishing:
+	- change Pestilence alert from UI.Alert to a regular popup with "I understand/I'm ready (will popup a notification on Turn Commit but otherwise will leave you alone and not nag-warn you again)" button & "Remind me again in 10 mins" button
 	--*** rename these (after TEST GAME w/MP/Rex is done) to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
 		--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
 		--Mod.Settings.QuicksandAttackDamageGivenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
