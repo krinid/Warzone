@@ -138,15 +138,22 @@ function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
-		--skip order is actually done within the function above; the true/false return value is just a singal as to whether to proceed further execution in this function (if false) or not (if true)
+		--skip order is actually done within the function above; the true/false return value is just a signal as to whether to proceed further execution in this function (if false) or not (if true)
 		return; --don't process the rest of the function, else it will still process card plays
 	end
 
-	--process game orders, separated into Regular Cards, Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
-	local strCardTypeBeingPlayed = nil;
+	--[[local strCardTypeBeingPlayed = nil;
 	local cardOrderContentDetails = nil;
-	local publicGameData = Mod.PublicGameData;
+	local publicGameData = Mod.PublicGameData;]]
 
+	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
+	process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
+	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
+	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
+	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
+end
+
+function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
 	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
 	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
 		--check any Special Units in the armies include in the AttackTransfer or Airlift operation
@@ -182,10 +189,6 @@ function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 			end
 		end
 	end
-
-	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
 end
 
 function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)

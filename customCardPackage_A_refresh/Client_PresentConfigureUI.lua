@@ -11,6 +11,7 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 TODOs:
 - TEST GAME: https://www.warzone.com/MultiPlayer?GameID=40398835
 	- Pestilence - if pesti pending then CANCEL 1st Commit, put up a warning, then let them Commit again
+	- all AIRLIFTS throw an error on MOBILE ONLY (gahhhh!)
 	- Tested and working: Nuke & Card Block, they're working fine, including showing that Nuke doesn't affect Specials; so we don't need to test those anymore (feel free to cast Nukes but let's not do Card Blocks anymore as it stops us from doing more card tests, lol)
 	- Still to test: Card Pieces, Pestilence
 	- Somewhat tested:
