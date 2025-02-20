@@ -18,5 +18,4 @@ function Client_GameCommit (clientGame, skipCommit)
     else
         print ("[GAME COMMIT] don't Skip commit");
     end
-    skipCommit (); --skip commit, give player a chance to update moves to account for the Pestilence
 end
