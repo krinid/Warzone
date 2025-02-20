@@ -34,6 +34,7 @@ TODOs:
 - Implement NOW:
 	- Deneutralize on Neutralized territories doesn't eliminate the Neutralize special unit; which means it probably doesn't pop the Neutralize item off the table? it won't swap ownership b/c terr is no longer neutral, but it should destroy the special as it's no longer relevant
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
+	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
 
 - issues to resolve before publishing:
 	- fix function IsPlayerActive - always seems to return false

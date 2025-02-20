@@ -1,7 +1,7 @@
 require("utilities");
 
 function Client_GameRefresh(clientGame)
-	checkForPendingPestilence (clientGame);
+	checkForPendingPestilence (clientGame, false); --false indicates to not forcibly show the popup warning; only do it if it's 1st turn this time or appropriate time has elapsed since last display
 end
 
 function popupPestilenceWarning (clientGame)
@@ -9,7 +9,7 @@ function popupPestilenceWarning (clientGame)
 	--but is this required? tbd
 end
 
-function checkForPendingPestilence (clientGame)
+function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 	--pestilence_lastPlayerWarning variable is used to track warning popups for the local client player, to avoid spamming warnings with every Refresh event
 	--^^don't define as local; leave it as global so the value persists for a given client session instead of resetting to nil each time the function executes
 
@@ -68,7 +68,11 @@ function checkForPendingPestilence (clientGame)
 			print ("NEXT WARNING DISPLAY: "..tostring (pestilence_nextPlayerWarning));
 			print ("CURRENT TIME:         "..currentTime..", dateIsEarlier=="..tostring (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime))).."::");
 
-			if ((pestilence_lastPlayerWarning == nil) or (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime)))) then
+			--there is a pending pestilence for the local client player; display a warning in any of these cases:
+			--(A) boolForceWarningDisplay is set to true (1st press on Commit button during a turn)
+			--(B) if player hasn't been warned yet
+			--(C) if the minimum time to wait before next warning has elapsed
+			if ((pestilence_lastPlayerWarning == nil) or (boolForceWarningDisplay==true) or (dateIsEarlier(dateToTable(pestilence_nextPlayerWarning), dateToTable(currentTime)))) then
 				pestilence_lastPlayerWarning = currentTime;  --track time the warning is displayed to the client player
 
 				--print ("[PESTILENCE PENDING] on player "..tostring(targetPlayerID)..", by "..tostring(castingPlayerID)..", damage=="..Mod.Settings.PestilenceStrength .."::warningTurn=="..PestilenceWarningTurn..", startTurn==".. PestilenceStartTurn..", endTurn=="..PestilenceEndTurn.."::");
@@ -96,10 +100,13 @@ function checkForPendingPestilence (clientGame)
 					UI.Alert (strPestilenceMessage);
 				end
 			end
+			return true; --return True to indicate that there is a pending Pestilence order for the local client player
 		else
 			print ("[CLIENT] no pending Pestilences for "..targetPlayerID .."/".. toPlayerName (targetPlayerID, clientGame));
+			return false; --return False to indicate that there are no pending Pestilence order for the local client player
 		end
 	else
 		print ("[CLIENT] can't acquire Client player object clilentGame.Us.ID");
+		return nil; --indicate inability to decipher whether a pending Pestilence order exists or not; this could happen for non-Active players, spectators of the game, etc
 	end
 end

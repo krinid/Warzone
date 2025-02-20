@@ -14,6 +14,9 @@ TODO:
 - >15PU causes -10 from all territories
 - territories won't go from >=1 to neutral, but if already at 0 when the punishment hits, they go will neutral; confirm if using OMS that they will still go to 0 then neutral
 - any kill rate impacts?
+- city spread - if # of cities on territory == #cities/#terrs (within 10%?) - bonus; if >10% punish?
+- reduce (or eliminate) cities when captured?
+- allow cities to be sold?
 ]]
 
 function Server_AdvanceTurn_End(game, addOrder)
@@ -109,8 +112,8 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		if (result.IsAttack and result.IsSuccessful) then Captures[playerID] = true; end
 
 		--just for testing (actually for CCPA Quicksand)
-		result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
-		result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
+		--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
+		--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
 			
 			print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
 			", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
