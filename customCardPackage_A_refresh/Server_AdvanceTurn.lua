@@ -20,6 +20,45 @@ function Server_AdvanceTurn_End(game, addOrder)
 	if (boolHaltCodeExecutionAtEndofTurn==true) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
+function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
+	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");
+	--skip order if this order is a card play by a player impacted by Card Block
+	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
+		print ("[ORDER] skipped due to CardBlock");
+		--skip order is actually done within the function above; the true/false return value is just a signal as to whether to proceed further execution in this function (if false) or not (if true)
+		return; --don't process the rest of the function, else it will still process card plays
+	end
+
+	--[[local strCardTypeBeingPlayed = nil;
+	local cardOrderContentDetails = nil;
+	local publicGameData = Mod.PublicGameData;]]
+
+	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
+	process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
+	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
+	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
+	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
+
+--if (gameOrder.proxyType=='GameOrderAttackTransfer') then
+--	print ("[[  ATTACK // TRANSFER ]] PREFACE  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
+--[[	", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
+	", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmiesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+	print ("[SPECIALS:]");
+	for k,v in pairs (result.DamageToSpecialUnits) do print ("damage to special "..k..", amount "..v.."::"); end
+
+	--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
+	--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+	result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
+	result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
+
+	print ("  ATTACK // TRANSFER  FINAL player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
+	", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
+	", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmiesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+	print ("[SPECIALS:]");
+	for k,v in pairs (result.DamageToSpecialUnits) do print ("damage to special "..k..", amount "..v.."::"); end
+end]]
+end
+
 function Server_AdvanceTurn_Start(game,addOrder)
 	strArrayModData = {};
 	local strCardTypeBeingPlayed = "";
@@ -131,26 +170,6 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 		end
 	end
 	return false; --if it wasn't flagged by anything above, then it's either not a card play or the player this order is for isn't affected by a CardBlock operation
-end
-
-function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
-	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");
-	--skip order if this order is a card play by a player impacted by Card Block
-	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
-		print ("[ORDER] skipped due to CardBlock");
-		--skip order is actually done within the function above; the true/false return value is just a signal as to whether to proceed further execution in this function (if false) or not (if true)
-		return; --don't process the rest of the function, else it will still process card plays
-	end
-
-	--[[local strCardTypeBeingPlayed = nil;
-	local cardOrderContentDetails = nil;
-	local publicGameData = Mod.PublicGameData;]]
-
-	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
-	process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
-	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
 end
 
 function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
@@ -305,12 +324,17 @@ end
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
-		print ("[[  ATTACK // TRANSFER ]] , player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
+		print ("[[  ATTACK // TRANSFER ]] PRE  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
 			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
 			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
 		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
+
+		--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
+		--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+		--print ("[QUICKSAND] TEMP POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
+		--return;
 
 		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
@@ -343,15 +367,16 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				--if legit attack into quicksand then apply damage factors to attacking & defending armies killed
 				if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
 					print ("[QUICKSAND] ATTACK INTO QUICKSAND_________________");
-					--print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+					print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
 					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackDamageGivenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefendDamageTakenModifier.."::");
-					--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5));
-					--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5));
-					result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
-					result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
+					--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*Mod.Settings.QuicksandAttackDamageGivenModifier+0.5), result.AttackingArmiesKilled.SpecialUnits);
+					--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*Mod.Settings.QuicksandDefendDamageTakenModifier+0.5), result.DefendingArmiesKilled.SpecialUnits);
+					result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
+					result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
+				
 					--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
-					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
 				end
 				--for reference, default settings are:
 				--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
@@ -380,6 +405,9 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strIsolationSkipOrder_Message, {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
+		print ("[[  ATTACK // TRANSFER ]] POST  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
+			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
+			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
 	end
 end
 
@@ -479,12 +507,12 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.Name = 'Quicksand';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
-    --builder.AttackPower = 0;
+    builder.AttackPower = 1;
     --builder.AttackPowerPercentage = 0.5; --0.0 means -100% attack damage; 1.0=regular attack damage; >1.0 means bonus attack damage
-    --builder.DefensePower = -50;
+    builder.DefensePower = 1;
 	--builder.DefensePowerPercentage = 0.5; --0.0 means -100% defense damage; 1.0=regular defense damage; >1.0 means bonus defense damage
-    builder.DamageToKill = 0;
-    builder.DamageAbsorbedWhenAttacked = 0;
+    builder.DamageToKill = 1;
+    builder.DamageAbsorbedWhenAttacked = 1;
     --builder.Health = 0;
     builder.CombatOrder = 10001;
     builder.CanBeGiftedWithGiftCard = false;
@@ -493,6 +521,21 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 	builder.ModData = "CCPA|Immovable|Quicksand";
+
+	--[[local tankPower = 1;
+
+	builder.AttackPower = tankPower;
+	builder.DefensePower = tankPower;
+	builder.CombatOrder = 3415; --defends commanders
+	builder.DamageToKill = tankPower;
+	builder.DamageAbsorbedWhenAttacked = tankPower;
+	builder.CanBeGiftedWithGiftCard = true;
+	builder.CanBeTransferredToTeammate = true;
+	builder.CanBeAirliftedToSelf = true;
+	builder.CanBeAirliftedToTeammate = true;
+	builder.IsVisibleToAllPlayers = false;]]
+
+
 	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
     local specialUnit_Quicksand = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};

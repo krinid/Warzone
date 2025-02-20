@@ -14,6 +14,7 @@ TODOs:
 	- all AIRLIFTS throw an error on MOBILE ONLY (gahhhh!)
 	- Tested and working: Nuke & Card Block, they're working fine, including showing that Nuke doesn't affect Specials; so we don't need to test those anymore (feel free to cast Nukes but let's not do Card Blocks anymore as it stops us from doing more card tests, lol)
 	- Still to test: Card Pieces, Pestilence
+	- put the printObject... line of code that was causing the airlift issue on mobile only (actually maybe standalone too but never web client) & send to Fizzer
 	- Somewhat tested:
 		- Neutralize - 	confirm that stuff reverts back to normal state after X turns
 		- Deneutralize - We've tested Deneutralize on natural neutrals, and it works fine, but go ahead and test it on a territory that has been neutralized (maybe take over a Commander); I neutralized this territory Ocean 18 so I'll deneutralize that this turn
@@ -32,9 +33,7 @@ TODOs:
 
 - Implement NOW:
 	- Deneutralize on Neutralized territories doesn't eliminate the Neutralize special unit; which means it probably doesn't pop the Neutralize item off the table? it won't swap ownership b/c terr is no longer neutral, but it should destroy the special as it's no longer relevant
-	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"
-	- dead players still getting "Pestilence" warnings
-	- Quicksand acting like Monoliths
+	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 
 - issues to resolve before publishing:
 	- fix function IsPlayerActive - always seems to return false
@@ -392,12 +391,14 @@ function quicksandCheckboxClicked()
         QuicksandBlockExitFromTerritory = CreateCheckBox(horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory).SetInteractable(true);
         
 		local horzQuicksandDefendMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandDefendMod).SetText("FUTURE IMPLEMENTATION - Defend damage modifier: ");
+        CreateLabel(horzQuicksandDefendMod).SetText("Defender damage modifier: ");
         QuicksandDefendDamageTakenModifier = CreateNumberInputField(horzQuicksandDefendMod).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandDefendDamageTakenModifier).SetWholeNumbers(false).SetInteractable(true);
+        CreateLabel(UIcontainer).SetText("(Multiplier for the damage to be sustained by defending armies when in quicksand; use 1.0 for no change; default is 1.5 for a 50% increase in damage to defenders)");
         
 		local horzQuicksandAttackMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandAttackMod).SetText("FUTURE IMPLEMENTATION - Attack damage modifier: ");
+        CreateLabel(horzQuicksandAttackMod).SetText("Attack damage modifier: ");
         QuicksandAttackDamageGivenModifier = CreateNumberInputField(horzQuicksandAttackMod).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandAttackDamageGivenModifier).SetWholeNumbers(false).SetInteractable(true);
+        CreateLabel(UIcontainer).SetText("(Multiplier for the damage to be sustained by attacking armies when in quicksand; use 1.0 for no change; default is 0.5 for a 50% decrease in damage to attackers)");
         
 		local horzQuicksandPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzQuicksandPiecesNeeded).SetText("Number of pieces to divide the card into: ");
