@@ -280,7 +280,7 @@ function printObjectDetails(object, strObjectName, strLocationHeader)
 			for key, value in pairs(object.writableKeys) do
 				local propertyValue = object[value]
 				if type(propertyValue) == "table" then
-					print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
+					print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue)) -- *** this is the last line of output that successfully executes
 				else
 					print("  [writablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
 				end

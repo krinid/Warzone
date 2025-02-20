@@ -18,9 +18,10 @@ function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 	--check if the current client user has any pending Pestilences
 	print ("[CLIENT] refresh started - - - - - - - - - - ");
 	--PrintProxyInfo (Mod.PublicGameData.PestilenceData, "a", "b");
-	if (clientGame.Us ~= nil) then --can't check if client doesn't have an associated playerID
+	if (clientGame.Us ~= nil) then --can't check if client doesn't have an associated playerID (ie: isn't an active player, could be a spectator)
 		local targetPlayerID = clientGame.Us.ID; --target player is the current player using the client
 		local isPlayerActive = clientGame.Us.State == WL.GamePlayerState.Playing;
+		local hasCommittedOrders = clientGame.Us.HasCommittedOrders;
 
 		--[[print ("(not next(Mod.PublicGameData))=="..tostring (not next(Mod.PublicGameData)));
 		print ("(Mod.PublicGameData==nil)=="..tostring (Mod.PublicGameData==nil));
@@ -36,7 +37,8 @@ function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 		--if (next (Mod.PublicGameData.PestilenceData[targetPlayerID])) then
 
 		--check if client player has pending Pestilence records and is an active player (ie: don't popup a Pestilence warning if the player is eliminated, this probably means they had a pending Pestilence order at time of elimination and will be continually harassed about it if they peruse the game)
-		if (Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil and isPlayerActive==true) then
+		--don't show popup if player has already committed regardless of time since last warning popup (don't nag player post Commit)
+		if (Mod.PublicGameData.PestilenceData[targetPlayerID] ~= nil and isPlayerActive==true and hasCommittedOrders==false) then
 			local pestilenceDataRecord = Mod.PublicGameData.PestilenceData[targetPlayerID]; --get pestilence record for local client player
 
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 

@@ -9,7 +9,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
     print ("[C_GOC] START");
 	print ("[C_GOC] gameOrder proxyType=="..gameOrder.proxyType.."::");
     --UI.Alert ("Checking orders");
-	--printObjectDetails (gameOrder, "gameOrder", "C_GOC");
+	--printObjectDetails (gameOrder, "gameOrder", "C_GOC"); --*** this LOC causes the WZ generic error when the order passed in is an Airlift order
 
 	process_game_order_entry_CardBlock (game,gameOrder,skip);
 	process_game_order_entry_RegularCards (game,gameOrder,skip);
