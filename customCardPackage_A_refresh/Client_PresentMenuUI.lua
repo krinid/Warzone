@@ -20,13 +20,23 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
     TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
-	TopLabel.SetText (TopLabel.GetText() .. ("\nClient Player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).. " IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing)));
+	TopLabel.SetText (TopLabel.GetText() .. ("\nClient Player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..game.Game.Players[game.Us.ID].State.. " IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing)));
+
+	--TopLabel.SetText (TopLabel.GetText() .. ("\nJORK: "..WL.StandingFogLevel.tostring(WL.StandingFogLevel.Fogged).."::"));
+	--TopLabel.SetText (TopLabel.GetText() .. ("\nJORK: "..WL.GamePlayerState.Playing.tostring(WL.GamePlayerState.Playing).."::"));
+	--TopLabel.SetText (TopLabel.GetText() .. ("\nJORK: "..WL.GamePlayerState.Playing.tostring));
 
 	for k,v in pairs (game.Game.Players) do
 		TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).. " IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing)));
 	end
 
---[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
+	print ("tostring");
+	print (tostring(game.Game.Players[game.Us.ID].State));
+	printObjectDetails (game.Game.Players[game.Us.ID].State, "a", "b");
+	print (tostring(WL.GamePlayerState.Playing));
+	printObjectDetails (WL.GamePlayerState.Playing, "c", "d");
+
+	--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
 Mod security should be applied when working with this Hook
 Arguments:
