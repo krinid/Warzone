@@ -1,6 +1,7 @@
 require("utilities");
 
 function Client_GameRefresh(clientGame)
+	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiative this function
 	checkForPendingPestilence (clientGame, false); --false indicates to not forcibly show the popup warning; only do it if it's 1st turn this time or appropriate time has elapsed since last display
 end
 
@@ -33,8 +34,6 @@ function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 		--actually I believe this is a game bug; it seems to erase Mod.PublicGameData when a mod update is pushed while a game is running
 
 		print ("[CLIENT] checking if client player has pending Pestilence: "..targetPlayerID .."/"..toPlayerName (targetPlayerID, clientGame)..", isPlayerActive==" ..tostring(isPlayerActive) .."::");
-
-		--if (next (Mod.PublicGameData.PestilenceData[targetPlayerID])) then
 
 		--check if client player has pending Pestilence records and is an active player (ie: don't popup a Pestilence warning if the player is eliminated, this probably means they had a pending Pestilence order at time of elimination and will be continually harassed about it if they peruse the game)
 		--don't show popup if player has already committed regardless of time since last warning popup (don't nag player post Commit)

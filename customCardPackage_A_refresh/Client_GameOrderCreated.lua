@@ -11,6 +11,8 @@ function Client_GameOrderCreated (game, gameOrder, skip)
     --UI.Alert ("Checking orders");
 	--printObjectDetails (gameOrder, "gameOrder", "C_GOC"); --*** this LOC causes the WZ generic error when the order passed in is an Airlift order
 
+	if (clientGame.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires submitting an order, which they can't do b/c they're not in the game)
+
 	process_game_order_entry_CardBlock (game,gameOrder,skip);
 	process_game_order_entry_RegularCards (game,gameOrder,skip);
 	process_game_order_entry_CustomCards (game,gameOrder,skip);

@@ -2,6 +2,8 @@ require("utilities");
 require("UI_Events");
 
 function Client_PresentSettingsUI(rootParent)
+	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiate this function
+
 	local UImain = CreateVert (rootParent).SetFlexibleWidth(1);
 
 	if (Mod.Settings.NukeEnabled == true) then

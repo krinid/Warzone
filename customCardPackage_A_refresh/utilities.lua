@@ -373,7 +373,7 @@ end
 
 function WLturnPhases ()
 	--WLturnPhases = {'CardsWearOff', 'Purchase', 'Discards', 'OrderPriorityCards', 'SpyingCards', 'ReinforcementCards', 'Deploys', 'BombCards', 'EmergencyBlockadeCards', 'Airlift', 'Gift', 'Attacks', 'BlockadeCards', 'DiplomacyCards', 'SanctionCards', 'ReceiveCards', 'ReceiveGold'};
-	WLturnPhasesTable = {
+	local WLturnPhasesTable = {
 		['CardsWearOff'] = WL.TurnPhase.CardsWearOff,
 		['Purchase'] = WL.TurnPhase.Purchase,
 		['Discards'] = WL.TurnPhase.Discards,
@@ -393,6 +393,21 @@ function WLturnPhases ()
 		['ReceiveGold'] = WL.TurnPhase.ReceiveGold
 	};
 	return WLturnPhasesTable;
+end
+
+function WLplayerStates ()
+	local WLplayerStatesTable = {
+		[WL.GamePlayerState.Invited] = 'Invited',
+		[WL.GamePlayerState.Playing] = 'Playing',
+		[WL.GamePlayerState.Eliminated] = 'Eliminated',
+		[WL.GamePlayerState.Won] = 'Won',
+		[WL.GamePlayerState.Declined] = 'Declined',
+		[WL.GamePlayerState.RemovedByHost] = 'RemovedByHost',
+		[WL.GamePlayerState.SurrenderAccepted] = 'SurrenderAccepted',
+		[WL.GamePlayerState.Booted] = 'Booted',
+		[WL.GamePlayerState.EndedByVote] = 'EndedByVote'
+	};
+	return WLplayerStatesTable;
 end
 
 --given input parameter of the text friendly name value of the turn phase, return the WZ internal numeric value that represents that turn phase; this # is what must be assigned to orders to properly associate the turn phase of the order

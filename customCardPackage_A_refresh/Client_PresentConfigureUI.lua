@@ -37,6 +37,7 @@ TODOs:
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
 
 - issues to resolve before publishing:
+	- is UI_factions.lua actually required? isn't it just essentially calling a function to call the UI.functions of the same type? just a 1-step unnecessary addition each time?
 	- fix function IsPlayerActive - always seems to return false
 	- change Pestilence alert from UI.Alert to a regular popup with "I understand/I'm ready (will popup a notification on Turn Commit but otherwise will leave you alone and not nag-warn you again)" button & "Remind me again in 10 mins" button
 	- erase the pending Pestilence order from eliminated players (but not from players that went AI - don't let them get out of it that easily)

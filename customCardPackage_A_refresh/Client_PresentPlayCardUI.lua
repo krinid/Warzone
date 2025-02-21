@@ -5,7 +5,9 @@ require("UI_Events");
 function Client_PresentPlayCardUI(game, cardInstance, playCard)
     --when dealing with multiple cards in a single mod, observe game.Settings.Cards[cardInstance.CardID].Name to identify which one was played
     Game = game; --make client game object available globally
-    
+
+	if (clientGame.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires playing a Card, which they can't do b/c they're not in the game)
+
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
     PrintProxyInfo (cardInstance);
