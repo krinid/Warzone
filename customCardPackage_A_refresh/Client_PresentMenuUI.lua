@@ -48,7 +48,7 @@ EndedByVote:]]
 
 	TopLabel.SetText (TopLabel.GetText() .. ("\n\nPlayers in the game:"));
 	for k,v in pairs (game.Game.Players) do
-		TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing)));
+		TopLabel.SetText (TopLabel.GetText() .. ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing)));
 	end
 
 	--[[print ("tostring");
