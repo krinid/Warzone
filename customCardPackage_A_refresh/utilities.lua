@@ -305,64 +305,6 @@ function printObjectDetails(object, strObjectName, strLocationHeader)
 	end
 end
 
---[[function printObjectDetails_ (object, strObjectName, strLocationHeader) --2nd & 3rd params are optional
-	strObjectName = strObjectName or ""; --assign default blank value if not provided; 
-	strLocationHeader = strLocationHeader or ""; --assign default blank value if not provided; 
-	print ("["..strLocationHeader.."] object="..strObjectName.."::");
-	print("[proactive display attempt] value=="..tostring(object));
-	if (object==nil) then
-	  print ("[invalid object] object==nil");
-	  return;
-	elseif (object=={}) then
-	  print ("[invalid object] object=={}");
-	  return;
-	end
-	if type(object)=="table" then
-		if object.readableKeys then --check if readableKeys exists, if not don't loop on that property (else it will throw an error)
-			for key, value in pairs(object.readableKeys) do
-				--print("[R]**key=="..key.."::value=="..value.."::tostring(value)=="..tostring(value).."::");
-
-				-- Display object[value], handling cases where it might be a table
-				local propertyValue = object[value];
-				if type(propertyValue) == "table" then
-					print("[readablekeys_table]key#=="..key..":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue));
-				else
-					print("[readablekeys_value]key#=="..key..":: value==" .. tostring(value) .. ":: value==" .. tostring(propertyValue));
-				end				
-
-			end
-		else
-			print ("[R]**readableKeys DNE");
-		end
-		if object.writableKeys then --check if writableKeys exists, if not don't loop on that property (else it will throw an error)
-			for key, value in pairs(object.writableKeys) do
-				print("[W]!!key=="..key.."::value=="..value.."::tostring(value)=="..tostring(value).."::");
-				--print("[W++]obj property=="..tostring(value)..":: value=="..obj[value]);
-
-				-- Display object[value], handling cases where it might be a table
-				local propertyValue = object[value];
-				local propertyValue = object[value];
-				if type(propertyValue) == "table" then
-					print("[writablekeys_table]key#=="..key..":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue));
-				else
-					print("[writablekeys_value]key#=="..key..":: value==" .. tostring(value) .. ":: value==" .. tostring(propertyValue));
-				end				
-				
-			end    
-		else
-		print ("[W]**writableKeys DNE");
-		end
-	end
-	if type (object)=="table" then
-		for key, value in pairs(object) do
-		print("[base]##key=="..key.."::tostring(value)=="..tostring(value).."::");
-		--print("##key=="..key.."::value=="..value.."::tostring(value)=="..tostring(value).."::");
-		end
-	else
-		print("[not table] value=="..tostring(object));
-	end
-end]]
-
 function startsWith(str, sub)
 	return string.sub(str, 1, string.len(sub)) == sub;
 end

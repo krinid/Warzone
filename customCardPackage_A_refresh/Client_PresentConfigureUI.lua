@@ -10,18 +10,18 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 
 TODOs:
 - TEST GAME: https://www.warzone.com/MultiPlayer?GameID=40398835
-	- Pestilence - if pesti pending then CANCEL 1st Commit, put up a warning, then let them Commit again
-	- all AIRLIFTS throw an error on MOBILE ONLY (gahhhh!)
-	- Tested and working: Nuke & Card Block, they're working fine, including showing that Nuke doesn't affect Specials; so we don't need to test those anymore (feel free to cast Nukes but let's not do Card Blocks anymore as it stops us from doing more card tests, lol)
-	- Still to test: Card Pieces, Pestilence
+	- Tested and working:
+		- Nuke - working fine, including showing that Nuke doesn't affect Specials
+		- Card Block, Card Pieces
+		- Pestilence
+		- Neutralize - works properly, confirmed that stuff reverts back to normal state after X turns
+		- Deneutralize - tested Deneutralize on natural neutrals & neutralized neutrals, have taken over specials including a Commander
+		- Isolation - confirmed it's blocking movements/airlifts & appropriate messages, expires properly, removes the special unit visual
+		- Quicksand - confirmed it's blocking movements/airlifts & appropriate messages, expires properly, removes the special unit visual
+		- Tornados - Idle power structure shows up; confirm it disappears; damage is OK, confirmed it ends at proper time
+		- Earthquake - no visual; damage is OK, confirmed is ends at proper time
 	- put the printObject... line of code that was causing the airlift issue on mobile only (actually maybe standalone too but never web client) & send to Fizzer
 	- Somewhat tested:
-		- Neutralize - 	confirm that stuff reverts back to normal state after X turns
-		- Deneutralize - We've tested Deneutralize on natural neutrals, and it works fine, but go ahead and test it on a territory that has been neutralized (maybe take over a Commander); I neutralized this territory Ocean 18 so I'll deneutralize that this turn
-		- Isolation - confirm it's blocking movements/airlifts & appropriate messages
-		- Quicksand - confirm it's blocking movements/airlifts & appropriate messages 
-		- Tornados - Idle power structure shows up; confirm it disappears; damage is OK, confirm is ends at proper time
-		- Earthquake - no visual; damage is OK, confirm is ends at proper time
 		- Shields - confirm that no damage is taken by units + any damage to attackers
 		- Monolith - confirm that it doesn't protect units but protects territory from being taken
 	- Change back after TEST GAME is complete: ~line 308 in Server_AdvanceTurn.lua:
@@ -32,7 +32,6 @@ TODOs:
 						--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
 - Implement NOW:
-	- Deneutralize on Neutralized territories doesn't eliminate the Neutralize special unit; which means it probably doesn't pop the Neutralize item off the table? it won't swap ownership b/c terr is no longer neutral, but it should destroy the special as it's no longer relevant
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
 

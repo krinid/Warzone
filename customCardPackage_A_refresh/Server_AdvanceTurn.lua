@@ -65,26 +65,9 @@ function Server_AdvanceTurn_Start(game,addOrder)
 	local publicGameData = Mod.PublicGameData;
 	local privateGameData = Mod.PrivateGameData;
 	turnNumber = game.Game.TurnNumber;
-	intTargetTerritory = -1;	
 
 	print ("[Server_AdvanceTurn_Start] -----------------------------------------------------------------");
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
-
-	--process CardBlock data; if there is none, don't even start looping through the players, just skip to the next check
-	if (tablelength (publicGameData.CardBlockData)>0) then
-		for ID,player in pairs (game.ServerGame.Game.PlayingPlayers) do
-			print ("==================================================================\nID="..tostring(ID));
-			--printObjectDetails (player, "a", "b");
-			--local targetPlayerID = player.PlayerID; --same content as pestilenceDataRecord[pestilenceTarget_playerID];
-			local targetPlayerID = ID;
-
-			print ("[CARD BLOCK CHECK] for player "..targetPlayerID..", publicGameData.PestilenceData[targetPlayerID] ~= nil -->"..tostring(publicGameData.CardBlockData[targetPlayerID] ~= nil)); --.."/"..toPlayerName(playerID), game);
-			--print ("[CARD BLOCK CHECK] for player "..playerID.."/"..toPlayerName(playerID), game);
-		end
-	else
-		print ("[CARD BLOCK] no data defined, skip checks");
-	end
-
 
 	process_Neutralize_expirations (game, addOrder); --if there are pending Neutralize orders, check if any expire this turn and if so execute those actions
 	process_Isolation_expirations (game, addOrder);  --if there are pending Isolation orders, check if any expire this turn and if so execute those actions (delete the special unit to identify the Isolated territory)
@@ -280,8 +263,8 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		local modDataContent = split(gameOrder.ModData, "|");
 		--printObjectDetails (gameOrder, "gameOrder", "[TurnAdvance_Order]");
 		print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
-		strCardTypeBeingPlayed = nil;
-		cardOrderContentDetails = nil;
+		strCardTypeBeingPlayed = nil;  --global variable referenced in other functions in this Server Hook
+		cardOrderContentDetails = nil; --global variable referenced in other functions in this Server Hook
 		strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
 		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
 		
@@ -507,12 +490,12 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.Name = 'Quicksand';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
-    builder.AttackPower = 1;
-    --builder.AttackPowerPercentage = 0.5; --0.0 means -100% attack damage; 1.0=regular attack damage; >1.0 means bonus attack damage
-    builder.DefensePower = 1;
-	--builder.DefensePowerPercentage = 0.5; --0.0 means -100% defense damage; 1.0=regular defense damage; >1.0 means bonus defense damage
-    builder.DamageToKill = 1;
-    builder.DamageAbsorbedWhenAttacked = 1;
+    builder.AttackPower = 0;
+    --builder.AttackPowerPercentage = 0.5;  --0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+    builder.DefensePower = 0;
+	--builder.DefensePowerPercentage = 0.5; --0.0 means -100% defense damage (the damage this unit does when attacking); 1.0=regular defense damage; >1.0 means bonus defense damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+    builder.DamageToKill = 0;
+    builder.DamageAbsorbedWhenAttacked = 0;
     --builder.Health = 0;
     builder.CombatOrder = 10001;
     builder.CanBeGiftedWithGiftCard = false;
@@ -521,20 +504,6 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 	builder.ModData = "CCPA|Immovable|Quicksand";
-
-	--[[local tankPower = 1;
-
-	builder.AttackPower = tankPower;
-	builder.DefensePower = tankPower;
-	builder.CombatOrder = 3415; --defends commanders
-	builder.DamageToKill = tankPower;
-	builder.DamageAbsorbedWhenAttacked = tankPower;
-	builder.CanBeGiftedWithGiftCard = true;
-	builder.CanBeTransferredToTeammate = true;
-	builder.CanBeAirliftedToSelf = true;
-	builder.CanBeAirliftedToTeammate = true;
-	builder.IsVisibleToAllPlayers = false;]]
-
 
 	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
     local specialUnit_Quicksand = builder.Build();
@@ -753,7 +722,6 @@ function execute_Pestilence_operation (game, gameOrder, addOrder, pestilenceTarg
 end
 
 function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder, targetTerritoryID)
-	local currentTargetTerritory = nil;
 	print ("[execute DENEUTRALIZE] terr=="..targetTerritoryID..":: =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
 	local currentTargetTerritory = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]; --current state of target territory, can check if it's already neutral, etc
 	local currentTargetOwnerID = currentTargetTerritory.OwnerPlayerID;
@@ -765,12 +733,8 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 	local impactedTerritoryOwnerName = nil;
 	local strArrayModData = split(gameOrder.ModData,'|');
 		--1st element is Deneutralize (don't need it, we already know, we're processing a Deneutralize order)
-	targetTerritoryID = strArrayModData[2];
+	targetTerritoryID = tonumber (strArrayModData[2]); --2nd element is target territory ID; this overwrites the value passed in as the parameter; they should be the same value though
 	impactedTerritoryOwnerID = tonumber (strArrayModData[3]);  --3rd element is new owner (impactedTerritoryOwnerID)
-	--print ("0:"..strArrayModData[0].."::");
-	--[[print ("1:"..strArrayModData[1].."::");
-	print ("2:"..strArrayModData[2].."::");
-	print ("3:"..strArrayModData[3].."::");]]
 
 	print ("[execute DENEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..currentTargetOwnerID.."::newOwner=="..impactedTerritoryOwnerID.."::canTargetNaturalNeutrals=="..tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals) .."::DeneutralizeCanUseOnNeutralizedTerritories=="..tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories).."::");
 
@@ -782,15 +746,37 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		--future: check settings for if can be cast on natural neutrals and/or Neutralized territories
 		local privateGameData = Mod.PrivateGameData; 
 		local neutralizeData = privateGameData.NeutralizeData;
+		print ("[DENEUTRALIZE] @@@--------------------------------------");
+		print ("[DENEUTRALIZE] neutralizeData [targetTerritoryID] == nil) --> ".. tostring (Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil)..", type "..type (targetTerritoryID).."::");
+		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil));
+		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [tonumber(targetTerritoryID)]==nil));
+		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [93]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [93]==nil));
+
+		--[[local frak = Mod.PrivateGameData.NeutralizeData [targetTerritoryID];
+		for k,v in pairs (frak) do
+			print ("     "..k,v);
+		end]]
 		local neutralizeDataRecord = nil;
 		local boolIsNeutralizedTerritory = false; --if ==true -> Neutralized territory; if ==false -> natural neutral
 		local boolSettingsRuleViolation = false;  --abort if Mod settings for application on Natural Neutrals or Neutralized territories don't align to action taken
 		local strSettingsRuleViolationMessage = "";
+		local specialUnitID = nil;
 
-		if neutralizeData [targetTerritoryID] ~= nil then
+		print ("[DENEUTRALIZE] Neutralization data:");
+		for k,v in pairs (Mod.PrivateGameData.NeutralizeData) do
+			print ("[DENEUTRALIZE] ###--------------------------------------");
+			printObjectDetails (v, "record", "NeutralizeData");
+			print ("[DENEUTRALIZE] $$$--------------------------------------");
+			print (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires) .. ", ".. tostring(v.specialUnitID));
+		end
+		--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+
+		if (neutralizeData [targetTerritoryID] ~= nil) then
 			print ("[DENEUTRALIZE] Neutralized territory target")
 			--Neutralized territory; abort if Mod settings don't permit this
 			neutralizeDataRecord = neutralizeData [targetTerritoryID];
+			specialUnitID = neutralizeDataRecord.specialUnitID; --grab ID# of 'Neutralize' special unit so it can be removed from the territory (but not here, we're just checking if it's a Neutralized territory, not changing anything yet)
+			--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
 			boolIsNeutralizedTerritory = true;
 			if (Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) then
 				boolSettingsRuleViolation = true;
@@ -809,22 +795,33 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 
 		--if no violations, then process Deneutralization action
 		if (boolSettingsRuleViolation == false) then
-			--this eliminates this element from the table
-			neutralizeData[targetTerritoryID] = nil;
-			
-			--resave privateGameData
-			privateGameData.NeutralizeData = neutralizeData;
-			Mod.PrivateGameData = privateGameData;
+			--if target territory is a neutralized territory, then remove the data record from NeutralizeData & remove the 'Neutralized' special unit from the territory
+			if (boolIsNeutralizedTerritory == true) then
+				--this eliminates this element from the table
+				neutralizeData[targetTerritoryID] = nil;
+				impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the 'Neutralized' special unit from the territory
+
+				print ("[DENEUTRALIZE] remove special "..specialUnitID.."::");
+				--print ("[DENEUTRALIZE] #specials on target territory: "..#impactedTerritory.NumArmies.SpecialUnits.."::]");
+				--for k,sp in pairs (currentTargetTerritory.NumAries.SpecialUnits) do
+				--	print ("[DENEUTRALIZE] "..k..", special Name: "..sp.Name..", proxyType "..sp.proxyType..", ID "..sp.ID.."::");
+				--end
+					
+				--resave privateGameData
+				privateGameData.NeutralizeData = neutralizeData;
+				Mod.PrivateGameData = privateGameData;
+			end
 
 			--assign the target territory neutral to new owner
 			print ("territory is neutral -- assign to new owner");
 			impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
 			impactedTerritoryOwnerName = toPlayerName (impactedTerritoryOwnerID, game);
+
 			table.insert (modifiedTerritories, impactedTerritory);
 
 			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Deneutralize action
 			local strDeneutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
-			print ("message=="..strDeneutralizeOrderMessage);
+			--print ("message=="..strDeneutralizeOrderMessage);
 			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, strDeneutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
@@ -1000,10 +997,13 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
 			--table.insert (privateGameData.NeutralizeData, neutralizeDataRecord);   --adds new record to table privateGameData.NeutralizeData, but table.insert auto-uses incremental integers for the keys, ie: wasted opportunity, instead assign it directly to the object @ element of the territory ID, then can access it via privateGameData.NeutralizeData[terrID] to get the record back instead of looping through the entire table to find it
 			privateGameData.NeutralizeData [targetTerritoryID] = neutralizeDataRecord;  --save record to privateGameData.NeutralizeData @ element of territory ID, so can reference it later via privateGameData.NeutralizeData[terrID] for easy use
+
 			Mod.PrivateGameData = privateGameData;
 			printObjectDetails (privateGameData.NeutralizeData, "[POST neutralize data]");
 			printObjectDetails (neutralizeDataRecord, "[POST neutralize data record]");
 			print ("POST Neutralize#items="..tablelength(privateGameData.NeutralizeData));
+			print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil));
+
 		end		
 	end
 end
@@ -1011,7 +1011,6 @@ end
 function process_Isolation_expirations (game,addOrder)
 	local publicGameData = Mod.PublicGameData; 
 	local IsolationData = publicGameData.IsolationData;
-	local IsolationDataRecord = nil;
 	print ("[ISOLATION EXPIRATIONS] START");
 	print ("[process_Isolation_expirations]# of Isolation data records=="..tablelength(IsolationData)..", IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
 	--print ("IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
@@ -1033,12 +1032,8 @@ function process_Isolation_expirations (game,addOrder)
 	print ("tablelength (IsolationData)=="..tablelength (IsolationData));
 	if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then print ("IsolationData is empty"); return; end
 
-	for a,IsolationDataRecord in pairs(Mod.PublicGameData.IsolationData) do
-		print ("here's one");
-
+	for _,IsolationDataRecord in pairs(Mod.PublicGameData.IsolationData) do
 		if (IsolationDataRecord.turnNumberIsolationEnds <= game.Game.TurnNumber) then   --do this for ease of testing temporarily; revert later to the line below that is commented out
-		--if (IsolationDataRecord.turnNumberIsolationEnds == game.Game.TurnNumber) then
-				print ("EXPIRES THIS TURN!!");
 			local castingPlayerID = IsolationDataRecord.castingPlayer;     --the player who cast the Isolation action
 			local targetTerritoryID = IsolationDataRecord.territory;       --target territory ID that was Isolationd and now potentially reverting to ownership by a player
 			local targetTerritoryName = game.Map.Territories[targetTerritoryID].Name;
@@ -1092,10 +1087,8 @@ function process_Neutralize_expirations (game,addOrder)
 		return;
 	end
 	
-	for a,neutralizeDataRecord in pairs(neutralizeData) do
-		print ("here's one");
+	for _,neutralizeDataRecord in pairs(neutralizeData) do
 		if (neutralizeDataRecord.turnNumberToRevert <= game.Game.TurnNumber) then   --if expires this turn or earlier (and was somehow missed [this shouldn't happen]), process the expiry
-				print ("EXPIRES THIS TURN!!");
 			local castingPlayerID = neutralizeDataRecord.castingPlayer;     --the player who cast the Neutralize action
 			local targetTerritoryID = neutralizeDataRecord.territory;       --target territory ID that was neutralized and now potentially reverting to ownership by a player
 			local targetTerritoryName = game.Map.Territories[targetTerritoryID].Name;
@@ -1160,6 +1153,7 @@ function process_Neutralize_expirations (game,addOrder)
 
 	--resave privateGameData
 	privateGameData.NeutralizeData = neutralizeData;
+	Mod.PrivateGameData = privateGameData;
 end
 
 function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
