@@ -1,0 +1,12 @@
+{
+    "Lua.diagnostics.globals": [
+        "Mod",
+        "WL",
+        "UI"
+    ],
+    "Lua.diagnostics.disable": [
+        "lowercase-global",
+        "undefined-global",
+        "undefined-field"
+    ]
+}
