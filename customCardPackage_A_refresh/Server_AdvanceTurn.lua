@@ -309,7 +309,9 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
 		print ("[[  ATTACK // TRANSFER ]] PRE  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
 			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
-			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..
+			", AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
+			
 		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
@@ -359,7 +361,17 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				
 					--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
 
-					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
+					--[[
+					--check if the Quicksand visual helper special unit was destroyed (killed)
+					for k,v in pairs (result.DefendingArmiesKilled.SpecialUnits) do
+						print ("[QUICKSAND] special "..k..", "..v.Name..", "..v.ID..", matches QuickSU=="..tostring(v.ID == Mod.PublicGameData.QuicksandData[gameOrder.To].specialUnitID));
+						if (v.ID == Mod.PublicGameData.QuicksandData[gameOrder.To].specialUnitID) then
+							print ("[QUICKSAND] matches - recreate the special");
+						end
+						--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+					end]]
+
+					print ("[QUICKSAND] POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful)..", AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
 				end
 				--for reference, default settings are:
 				--Mod.Settings.QuicksandDefendDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
@@ -390,7 +402,31 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 		end
 		print ("[[  ATTACK // TRANSFER ]] POST  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
 			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
-			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
+			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..
+			", AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
+
+		--[[
+			--check if Quicksand visual Special Unit was destroyed (killed); if the TO territory in the attack has a QuicksandData record & isAttack & isSuccessful are both true, then recreate the special unit, and replace the Quicksand record for this territoryID
+		if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and result.IsAttack==true and result.IsSuccessful==true) then
+			print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
+			--create new Quicksand special unit & apply to the territory
+			local impactedTerritory = WL.TerritoryModification.Create(gameOrder.To);
+			local specialUnit_Quicksand = build_Quicksand_specialUnit (game, gameOrder.To);
+			impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
+			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
+			addOrder(event, false); --important to use 'false' here b/c the Quicksand attack itself
+			--update QuicksandData record to reflect the new special unit ID#
+			local publicGameData = Mod.PublicGameData;
+			local oldQuicksandDataRecord = publicGameData.QuicksandData [gameOrder.To];
+			local newQuicksandDataRecord = {territory = oldQuicksandDataRecord.territory, castingplayer = oldQuicksandDataRecord.castingPlayer, territoryOwner = oldQuicksandDataRecord.territoryOwner, turnNumberQuicksandEnds = oldQuicksandDataRecord.turnNumberQuicksand, specialUnitID = specialUnit_Quicksand.ID}; --recreate QuicksandData record with ID# of the new special unit
+			publicGameData.QuicksandData[gameOrder.To] = newQuicksandDataRecord;
+			--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+			Mod.PublicGameData = publicGameData; --resave public game data
+			print ("[QUICKSAND] special unit killed / OLD    = "..oldQuicksandDataRecord.specialUnitID);
+			print ("[QUICKSAND] special unit killed / NEW    = "..newQuicksandDataRecord.specialUnitID);
+			print ("[QUICKSAND] special unit killed / NEWpub = "..Mod.PublicGameData.QuicksandData[gameOrder.To].specialUnitID);
+		end]]
+
 	end
 end
 
@@ -481,12 +517,9 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
-function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryID)
-    print("[PROCESS QUICKSAND] on territory " .. targetTerritoryID);
-    local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
+--create a new special unit for Quicksand visiblity; used for both initial creation and for recreation if it gets killed by incoming attack
+function build_Quicksand_specialUnit (game, targetTerritoryID)
     local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
-
     builder.Name = 'Quicksand';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
@@ -504,9 +537,39 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 	builder.ModData = "CCPA|Immovable|Quicksand";
+	local specialUnit_Quicksand = builder.Build();
+	return specialUnit_Quicksand;
+end
+
+function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryID)
+    print("[PROCESS QUICKSAND] on territory " .. targetTerritoryID);
+    local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
+    --local builder = build_Quicksand_specialUnit ();
+    --local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
+
+	--[[builder.Name = 'Quicksand';
+    builder.IncludeABeforeName = false;
+    builder.ImageFilename = 'quicksand_v3_specialunit.png';
+    builder.AttackPower = 0;
+    --builder.AttackPowerPercentage = 0.5;  --0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+    builder.DefensePower = 0;
+	--builder.DefensePowerPercentage = 0.5; --0.0 means -100% defense damage (the damage this unit does when attacking); 1.0=regular defense damage; >1.0 means bonus defense damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+    builder.DamageToKill = 0;
+    builder.DamageAbsorbedWhenAttacked = 0;
+    --builder.Health = 0;
+    builder.CombatOrder = 10001;
+    builder.CanBeGiftedWithGiftCard = false;
+    builder.CanBeTransferredToTeammate = false;
+    builder.CanBeAirliftedToSelf = false;
+    builder.CanBeAirliftedToTeammate = false;
+    builder.IsVisibleToAllPlayers = false;
+	builder.ModData = "CCPA|Immovable|Quicksand";]]
 
 	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
-    local specialUnit_Quicksand = builder.Build();
+    local specialUnit_Quicksand = build_Quicksand_specialUnit (game, targetTerritoryID);
+    --local specialUnit_Quicksand = builder.Build();
+	
     impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = WL.RectangleVM.Create(
@@ -1358,7 +1421,7 @@ function Tornado_processEndOfTurn(game, addOrder)
     if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
     for terrID, record in pairs(publicGameData.TornadoData) do
 		local strTerritoryName = tostring(getTerritoryName(terrID, game));
-		print ("[EARTHQUAKE] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.EarthquakeStrength.." damage");
+		print ("[TORNADO] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.EarthquakeStrength.." damage");
 		local impactedTerritory = WL.TerritoryModification.Create(terrID);
 		impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
 		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado ravages "..strTerritoryName, {}, {impactedTerritory});
@@ -1443,7 +1506,8 @@ function Quicksand_processEndOfTurn(game, addOrder)
     print("[QUICKSAND] processEndOfTurn START");
     if (publicGameData.QuicksandData == nil) then print("[QUICKSAND] no data"); return; end
     for terrID, record in pairs(publicGameData.QuicksandData) do
-         if (record.turnNumberQuicksandEnds > 0 and turnNumber >= record.turnNumberQuicksandEnds) then
+        --check if quicksand ends this turn (or earlier but was somehow missed) and if so, pop up the record from QuicksandData & remove the visual Special Unit
+		if (record.turnNumberQuicksandEnds > 0 and turnNumber >= record.turnNumberQuicksandEnds) then
 			local impactedTerritory = WL.TerritoryModification.Create(terrID);
 			impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};  -- adjust as needed to remove the Quicksand indicator
 			local event = WL.GameOrderEvent.Create(record.castingPlayer, "Quicksand effect ends on "..getTerritoryName  (terrID, game), {}, {impactedTerritory});
@@ -1460,6 +1524,39 @@ function Quicksand_processEndOfTurn(game, addOrder)
 			local event = WL.GameOrderEvent.Create(record.castingPlayer, strQuicksandEndsMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function]]
+		else
+			--Quicksand is active but not ending; check if the visual Special Unit is missing (killed); if so, recreate it
+			local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[terrID];
+			print ("[QUICKSAND_PEOT] check special unit; terr.ID=="..terrID..", #specials==".. (#targetTerritory.NumArmies.SpecialUnits)..", seeking "..record.specialUnitID.."::");
+			local boolQuicksandSpecialUnitFound = false;
+			if (#targetTerritory.NumArmies.SpecialUnits >= 1) then
+				for _,specialUnit in pairs (targetTerritory.NumArmies.SpecialUnits) do
+					boolQuicksandSpecialUnitFound = (specialUnit.ID==record.specialUnitID);
+					print ("----special on "..terrID.. "/"..	game.Map.Territories[terrID].Name..", matches seek item=="..tostring(specialUnit.ID==record.specialUnitID).."/"..tostring (boolQuicksandSpecialUnitFound)..", ID "..specialUnit.ID.."::"); --, ", isAttack=="..", isSuccessful=="..);
+					printObjectDetails (specialUnit, "[QPEOT]", "specialUnit details");
+				end
+			end
+			
+			--if the Quicksand special unit wasn't found, recreate it
+			if (boolQuicksandSpecialUnitFound == false) then
+				print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
+				--create new Quicksand special unit & apply to the territory
+				local impactedTerritory = WL.TerritoryModification.Create(terrID);
+				local specialUnit_Quicksand = build_Quicksand_specialUnit (game, terrID);
+				impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
+				local event = WL.GameOrderEvent.Create(record.territoryOwner, "[Quicksand visual recreated]", {}, {impactedTerritory});
+				addOrder(event);
+				--update QuicksandData record to reflect the new special unit ID#
+				local publicGameData = Mod.PublicGameData;
+				local oldQuicksandDataRecord = publicGameData.QuicksandData [terrID];
+				local newQuicksandDataRecord = {territory = oldQuicksandDataRecord.territory, castingplayer = oldQuicksandDataRecord.castingPlayer, territoryOwner = oldQuicksandDataRecord.territoryOwner, turnNumberQuicksandEnds = oldQuicksandDataRecord.turnNumberQuicksand, specialUnitID = specialUnit_Quicksand.ID}; --recreate QuicksandData record with ID# of the new special unit
+				publicGameData.QuicksandData[terrID] = newQuicksandDataRecord;
+				--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+				Mod.PublicGameData = publicGameData; --resave public game data
+				print ("[QUICKSAND] special unit killed / OLD    = "..oldQuicksandDataRecord.specialUnitID);
+				print ("[QUICKSAND] special unit killed / NEW    = "..newQuicksandDataRecord.specialUnitID);
+				print ("[QUICKSAND] special unit killed / NEWpub = "..Mod.PublicGameData.QuicksandData[terrID].specialUnitID);
+			end
 		end
     end
     Mod.PublicGameData = publicGameData;

@@ -87,11 +87,14 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		--         IsAttack boolean: True if this was an attack, false if it was a transfer., IsNullified boolean:, IsSuccessful boolean: If IsAttack is true and IsSuccessful is true, the territory was captured. If IsAttack is true and IsSuccessful was false, the territory was not captured.
 		--         OffenseLuck Nullable<number>:
 
+		-- temp only; skip AI orders
+		if (order.PlayerID<50) then skip(WL.ModOrderControl.Skip); return; end
+
 		print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiaesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 		--testing order adjustment/replacement; replace an attack order of 10 armies with one for 5 armies
-		if (order.NumArmies.NumArmies==10) then
+		--[[if (order.NumArmies.NumArmies==10) then
 			--local numArmies = orderArmies.Subtract(WL.Armies.Create(0, commanders));
 			local newOrder = nil;
 			print ("[TRIP!] "); --..order.ByPercent);
@@ -99,6 +102,38 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 			newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(5), order.AttackTeammates);
 			addOrder(newOrder);
 			skip(WL.ModOrderControl.Skip);
+			return;
+	
+			--if isAttackTransfer then
+			--	newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, numArmies, order.AttackTeammates);
+			--elseif isAirlift then
+			--	newOrder = WL.GameOrderPlayCardAirlift.Create(order.CardInstanceID, order.PlayerID, order.FromTerritoryID, order.ToTerritoryID, numArmies);
+			--end
+		end]]
+
+		if (#order.NumArmies.SpecialUnits>0) then
+			--local numArmies = orderArmies.Subtract(WL.Armies.Create(0, commanders));
+			local newOrder = nil;
+			print ("[TRIP!] _________________________________"); --..order.ByPercent);
+			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(3), order.AttackTeammates);
+			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(order.NumArmies.NumArmies), order.AttackTeammates);
+			--addOrder(newOrder);
+			--skip(WL.ModOrderControl.Skip);
+
+			--remove commander = dies?
+			local impactedTerritory = WL.TerritoryModification.Create(order.From);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
+			local specialUnitID = nil;
+			specialUnitID = order.NumArmies.SpecialUnits[1].ID;
+			print ("terr=="..order.From..", SUID=="..specialUnitID);
+			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the C special unit from the territory
+			--impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
+			--local strDeneutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
+			--print ("message=="..strDeneutralizeOrderMessage);
+			local event = WL.GameOrderEvent.Create(order.PlayerID, "remove C", {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
+			addOrder (event, false); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+			print ("[END]");
+			skip(WL.ModOrderControl.Skip);
+
 			return;
 	
 			--if isAttackTransfer then
