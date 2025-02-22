@@ -30,6 +30,7 @@ TODOs:
 	- Quicksand -- need to apply excess damage to specials
 
 - issues to resolve before publishing:
+	- make cards activate @ end of turns, not at beginning; less cheese
 	- Forest Fire + Airstrike UI not updating Mod.Settings values (hmmmm, naze da!!)
 	- is UI_factions.lua actually required? isn't it just essentially calling a function to call the UI.functions of the same type? just a 1-step unnecessary addition each time?
 	- fix function IsPlayerActive - always seems to return false
@@ -87,6 +88,7 @@ TODOs:
 	
 - issues to deal with in later version:
 	- idea - some way of being "safe" from Forest Fire? use Shield on the territory? or naw?
+	- idea - Shield protects from Nuke? Regular Bombs?
 	- Neutralize - if territory is captured but goes Neutral again, it reverts back to original owner; not sure if this is ok or not; hmmm
 	- need to stop anything else from moving? other specials? tornado? etc
 	- ensure that the "checks" (Pesti/Isolation/CardBlock/etc) aren't running all the time; only do them if there is appropriate data for them (publicGameData) and the card is enabled, else just skip it, certainly don't search for data for every user every turn when it's clear there is none
