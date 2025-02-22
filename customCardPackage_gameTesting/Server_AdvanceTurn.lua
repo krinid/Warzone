@@ -376,7 +376,8 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 					print ("[QUICKSAND] MID AdditionalDamageToSpecials "..intAdditionalDamageToSpecials .."::");
 					if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
 						for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.SpecialUnits) do
-							print ("....special ",k,v.Name,v.ID);
+							--if sp.proxy
+							--if print ("....special ",k,v.Name,v.ID);
 							--table.insert (result.DamageToSpecialUnits, {k, intAdditionalDamageToSpecials});
 							--table.insert (result.DefendingArmiesKilled.SpecialUnits, v.ID);
 							print ("....#size=="..#result.DamageToSpecialUnits.."::");
