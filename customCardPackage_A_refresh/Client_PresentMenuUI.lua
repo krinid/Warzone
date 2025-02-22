@@ -127,7 +127,7 @@ function showIsolationData ()
     CreateLabel (MenuWindow).SetText ("\nIsolation data:");
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
 
-	CreateLabel (MenuWindow).SetText ("Quicksanded territories:");
+	CreateLabel (MenuWindow).SetText ("Isolated territories:");
     if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then CreateLabel (MenuWindow).SetText ("IsolationData is empty"); return; end
 
     for k,v in pairs (Mod.PublicGameData.IsolationData) do

@@ -43,6 +43,25 @@ function displayMenu (game, close)
 	print ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	print ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));
 
+	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
+	CreateLabel (DebugWindow).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
+    CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
+	if (game.Us~=nil) then --a player in the game
+		CreateLabel (DebugWindow).SetText ("\n\nClient player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(game.Us.ID == game.Settings.StartedBy));
+	else
+		--client local player is a Spectator, don't reference game.Us which ==nil
+		CreateLabel (DebugWindow).SetText ("\n\nClient player is Spectator");
+	end
+
+	CreateLabel (DebugWindow).SetText ("\n\nGame host: "..game.Settings.StartedBy.."/".. toPlayerName(game.Settings.StartedBy, game));
+
+	CreateLabel (DebugWindow).SetText ("\n\nPlayers in the game:");
+	for k,v in pairs (game.Game.Players) do
+		local strPlayerIsHost = "";
+		if (k == game.Settings.StartedBy) then strPlayerIsHost = " [HOST]"; end
+		CreateLabel (DebugWindow).SetText ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
+	end
+
 	local cardCount = 0;
 	local strUpdateButtonText = "Update Prices";
 	
