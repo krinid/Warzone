@@ -17,13 +17,10 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
     print ("PLAY CARD="..strCardBeingPlayed.."::");
 
     if (strCardBeingPlayed=="Nuke") then
-        print ("PLAY NUKE"); --nuke
         play_Nuke_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Pestilence") then
-        print ("PLAY PESTI"); --pesti
         play_Pestilence_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Isolation") then
-        print ("PLAY ISO"); --pesti
         play_Isolation_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Neutralize") then
         play_Neutralize_card(game, cardInstance, playCard);
@@ -34,23 +31,32 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
     elseif (strCardBeingPlayed == "Shield") then
         play_Shield_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Card Block") then
-        print ("PLAY CARD BLOCK");
         play_CardBlock_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Earthquake") then
-        print ("PLAY EARTHQUAKE");
         play_Earthquake_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Tornado") then
-        print ("PLAY TORNADO");
         play_Tornado_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Quicksand") then
-        print ("PLAY QUICKSAND");
         play_Quicksand_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Card Piece") then
-        print ("PLAY CARD PIECE");
         play_cardPiece_card (game, cardInstance, playCard)
+    elseif (strCardBeingPlayed=="Airstrike") then
+        print ("PLAY AIRSTRIKE");
+        play_Airstrike_card (game, cardInstance, playCard)
+    elseif (strCardBeingPlayed=="Forest Fire") then
+        print ("PLAY FOREST FIRE");
+        play_ForestFire_card (game, cardInstance, playCard)
     else
         print ("A custom card that the Custom Card Pack A does not handle has been played. card played="..strCardBeingPlayed.."::");
     end
+end
+
+function play_Airstrike_card (game, cardInstance, playCard)
+    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
+end
+
+function play_ForestFire_card (game, cardInstance, playCard)
+    UI.Alert ("Forest Fire card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine be able to start a fire so wild that it keeps spreading each turn, farther and farther - be careful you don't burn your own lands down!");
 end
 
 function CardPiece_CardSelection_clicked (strText, cards, playCard, close)
@@ -122,7 +128,6 @@ end
 
 function play_CardBlock_card(game, cardInstance, playCard)
     local strPrompt = "Select the player you wish to block from playing cards";
-    --UI.Alert ("bugger1");a
     print("[CARD BLOCK] card play clicked, played by=" .. strPlayerName_cardPlayer);
 
     game.CreateDialog(
@@ -145,7 +150,6 @@ function play_CardBlock_card(game, cardInstance, playCard)
         end);
         TargetPlayerClicked_Fizz(strPrompt);
     end);
-    --UI.Alert ("bugger50bbbc");
 end
 
 function play_cardPiece_card (game, cardInstance, playCard)

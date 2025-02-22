@@ -30,6 +30,7 @@ TODOs:
 	- Quicksand -- need to apply excess damage to specials
 
 - issues to resolve before publishing:
+	- Forest Fire + Airstrike UI not updating Mod.Settings values (hmmmm, naze da!!)
 	- is UI_factions.lua actually required? isn't it just essentially calling a function to call the UI.functions of the same type? just a 1-step unnecessary addition each time?
 	- fix function IsPlayerActive - always seems to return false
 	- change Pestilence alert from UI.Alert to a regular popup with "I understand/I'm ready (will popup a notification on Turn Commit but otherwise will leave you alone and not nag-warn you again)" button & "Remind me again in 10 mins" button
@@ -38,10 +39,7 @@ TODOs:
 		--Mod.Settings.QuicksandDefenderDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
 		--Mod.Settings.QuicksandAttackerDamageTakenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
 	- desc for Earthquake - add damage to message
-	- Quicksand - message "0x damage" - fix the desc
-	- nuke - damage rounding down? 10 taking 25%+5 went to 3 which means 2.5 rounded to 2, then +5=7 to get to 3
 	- Isolation move skip - use jumplocation to show the territory isolation area
-	- Neutralize special - isn't disappearing @ end of duration
 	- Pestilence - actually just delay the PlayCard operation until the ACTUAL HIT turn; do the warning in advance, play the card on the appropriate turn to align with Active Cards
 	- Isolation - after playing, dialog stays open - close it down!
 	- Quicksand - for the combat, instead of doing a full manual attack, perhaps can just subtract x% damage from the attacking units & add y% damage to the defending units on the combat record
@@ -88,6 +86,7 @@ TODOs:
 	- Monolith - description not complete; can't be killed is clear but not clear that it doesn't protect units
 	
 - issues to deal with in later version:
+	- idea - some way of being "safe" from Forest Fire? use Shield on the territory? or naw?
 	- Neutralize - if territory is captured but goes Neutral again, it reverts back to original owner; not sure if this is ok or not; hmmm
 	- need to stop anything else from moving? other specials? tornado? etc
 	- ensure that the "checks" (Pesti/Isolation/CardBlock/etc) aren't running all the time; only do them if there is appropriate data for them (publicGameData) and the card is enabled, else just skip it, certainly don't search for data for every user every turn when it's clear there is none

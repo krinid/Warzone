@@ -223,7 +223,7 @@ function createCards_newCards(alert, addCard);
         end
 
         if Mod.Settings.ForestFireEnabled == true then
-                local strForestFireDesc = "Start a forest fire that spreads each turn"; ---&&& add details of FF specs
+                local strForestFireDesc = "Start a forest fire that spreads farther each turn"; ---&&& add details of FF specs
                 Mod.Settings.ForestFireCardID = addCard("Forest Fire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
         end
         print ("END   create new cards");
