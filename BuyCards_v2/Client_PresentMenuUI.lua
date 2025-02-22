@@ -44,23 +44,26 @@ function displayMenu (game, close)
 	print ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));
 
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
-	UI.CreateLabel (DebugWindow).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
+	UI.CreateLabel (DebugWindow).SetText ("- - - - - [DEBUG DATA START] - - - - -");
+	UI.CreateLabel (DebugWindow).SetText ("[DEBUG DATA]");
     UI.CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
 	if (game.Us~=nil) then --a player in the game
-		UI.CreateLabel (DebugWindow).SetText ("\n\nClient player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(game.Us.ID == game.Settings.StartedBy));
+		--UI.CreateLabel (DebugWindow).SetText ("text \n\nClient player");
+		UI.CreateLabel (DebugWindow).SetText ("Client player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(localPlayerIsHost));
 	else
 		--client local player is a Spectator, don't reference game.Us which ==nil
-		UI.CreateLabel (DebugWindow).SetText ("\n\nClient player is Spectator");
+		UI.CreateLabel (DebugWindow).SetText ("Client player is Spectator");
 	end
 
-	UI.CreateLabel (DebugWindow).SetText ("\n\nGame host: "..game.Settings.StartedBy.."/".. toPlayerName(game.Settings.StartedBy, game));
+	UI.CreateLabel (DebugWindow).SetText ("\nGame host: "..game.Settings.StartedBy.."/".. toPlayerName(game.Settings.StartedBy, game));
 
-	UI.CreateLabel (DebugWindow).SetText ("\n\nPlayers in the game:");
+	UI.CreateLabel (DebugWindow).SetText ("\nPlayers in the game:");
 	for k,v in pairs (game.Game.Players) do
 		local strPlayerIsHost = "";
-		if (k == game.Settings.StartedBy) then strPlayerIsHost = " [HOST]"; end
-		UI.CreateLabel (DebugWindow).SetText ("\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
+		if (localPlayerIsHost) then strPlayerIsHost = " [HOST]"; end
+		UI.CreateLabel (DebugWindow).SetText ("   Player "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
 	end
+	UI.CreateLabel (DebugWindow).SetText ("- - - - - [DEBUG DATA END] - - - - -");
 
 	local cardCount = 0;
 	local strUpdateButtonText = "Update Prices";
@@ -166,6 +169,21 @@ end
 function setCardPrice (cardRecord, newCardPrice)
 	print ("set price of "..cardRecord.ID,cardRecord.Name,cardRecord.Price," to new price "..newCardPrice);
 end 
+
+function WLplayerStates ()
+	local WLplayerStatesTable = {
+		[WL.GamePlayerState.Invited] = 'Invited',
+		[WL.GamePlayerState.Playing] = 'Playing',
+		[WL.GamePlayerState.Eliminated] = 'Eliminated',
+		[WL.GamePlayerState.Won] = 'Won',
+		[WL.GamePlayerState.Declined] = 'Declined',
+		[WL.GamePlayerState.RemovedByHost] = 'RemovedByHost',
+		[WL.GamePlayerState.SurrenderAccepted] = 'SurrenderAccepted',
+		[WL.GamePlayerState.Booted] = 'Booted',
+		[WL.GamePlayerState.EndedByVote] = 'EndedByVote'
+	};
+	return WLplayerStatesTable;
+end
 
 function toPlayerName(playerid, game)
 	if (playerid ~= nil) then
