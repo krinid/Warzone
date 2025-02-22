@@ -381,7 +381,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 							--table.insert (result.DamageToSpecialUnits, {k, intAdditionalDamageToSpecials});
 							--table.insert (result.DefendingArmiesKilled.SpecialUnits, v.ID);
 							print ("....#size=="..#result.DamageToSpecialUnits.."::");
-							if (v.Name == "Quicksand") then print ("----removed Quicksand special"); table.insert (newDefendingSpecialsKilled, v); end
+							if (v.proxyType == "CustomSpecialUnit" and v.Name == "Quicksand") then print ("----removed Quicksand special"); table.insert (newDefendingSpecialsKilled, v); end
 						end
 					end
 					--&&& change me back to the 1st two lines! this is for THE TESTING GAME ONLY b/c the original values are 0's!
