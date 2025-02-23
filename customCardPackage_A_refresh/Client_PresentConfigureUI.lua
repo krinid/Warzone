@@ -20,10 +20,11 @@ TODOs:
 		- Quicksand - confirmed it's blocking movements/airlifts & appropriate messages, expires properly, removes the special unit visual
 		- Tornados - Idle power structure shows up; confirm it disappears; damage is OK, confirmed it ends at proper time
 		- Earthquake - no visual; damage is OK, confirmed is ends at proper time
-	- put the printObject... line of code that was causing the airlift issue on mobile only (actually maybe standalone too but never web client) & send to Fizzer
-	- Somewhat tested:
+		- Shields - properly block all incoming damage & do no damage; cannot move
+		- Monolith - properly prevent a territory from capture while protecting no units on that territory
 
 - Implement NOW:
+	- account for attacks by %! in this case, numArmies is the %, and you need to calc yourself actual numarmies = % * armies left on the territory!
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
 	- attacking OUT OF SHIELDS seems to result (in Server_AdvanceTurn_Order) in WZ "order could not be executed"; can't figure out why this happens with Shields but not Monoliths (etc) ... BUT ... was able to block the order and replace w/o the specials in Client_GameOrderCreated and then it processes fine in Server_TurnAdvance_Order
@@ -31,6 +32,7 @@ TODOs:
 
 - issues to resolve before publishing:
 	- make cards activate @ end of turns, not at beginning; less cheese
+	- when moving 
 	- Forest Fire + Airstrike UI not updating Mod.Settings values (hmmmm, naze da!!)
 	- is UI_factions.lua actually required? isn't it just essentially calling a function to call the UI.functions of the same type? just a 1-step unnecessary addition each time?
 	- fix function IsPlayerActive - always seems to return false

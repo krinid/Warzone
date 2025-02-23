@@ -61,7 +61,7 @@ function displayMenu (game, close)
 	for k,v in pairs (game.Game.Players) do
 		local strPlayerIsHost = "";
 		if (localPlayerIsHost) then strPlayerIsHost = " [HOST]"; end
-		UI.CreateLabel (DebugWindow).SetText ("   Player "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
+		UI.CreateLabel (DebugWindow).SetText ("   Player "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. tostring (k == game.Settings.StartedBy));
 	end
 	UI.CreateLabel (DebugWindow).SetText ("- - - - - [DEBUG DATA END] - - - - -");
 

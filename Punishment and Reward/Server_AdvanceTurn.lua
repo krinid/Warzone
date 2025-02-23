@@ -91,7 +91,23 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		if (order.PlayerID<50) then skip(WL.ModOrderControl.Skip); return; end
 
 		print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiaesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+
+		--if Limited MultiAttack is enabled & move is a transfer, cancel the order & magically move the units to the destination - this should overrule the built-in WZ rule to halt transfers
+		if (order.proxyType=='GameOrderAttackTransfer' and result.IsAttack == false and game.ServerGame.LatestTurnStanding.Territories[order.From].OwnerPlayerID == order.PlayerID) then --this is not an attack -> it's a transfer
+			--worry about specials later, just do armies right now
+			local intNumArmiesToTransfer = result.ActualArmies.NumArmies;
+			local fromTerritory = WL.TerritoryModification.Create(order.From);
+			local toTerritory = WL.TerritoryModification.Create(order.To);
+			local modifiedTerritories = {};
+			fromTerritory.AddArmies = -1 * intNumArmiesToTransfer; --remove armies from FROM territory
+			toTerritory.AddArmies   =      intNumArmiesToTransfer; --add armies to TO territory
+			table.insert (modifiedTerritories, fromTerritory);
+			table.insert (modifiedTerritories, toTerritory);
+			local event = WL.GameOrderEvent.Create(order.PlayerID, "code moved "..intNumArmiesToTransfer.." armies from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game), {}, modifiedTerritories);
+			addOrder(event, false);
+			skip(WL.ModOrderControl.Skip); --cancel orig attack, b/c it'd stop the MA operations; hopefully this will let it continue indefinitely
+		end
 
 		--testing order adjustment/replacement; replace an attack order of 10 armies with one for 5 armies
 		--[[if (order.NumArmies.NumArmies==10) then

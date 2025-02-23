@@ -13,7 +13,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 
 	if (game.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires submitting an order, which they can't do b/c they're not in the game)
 
-	process_game_orders_ImmovableSpecialUnits (game,gameOrder,skip);
+	process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 	process_game_order_entry_CardBlock (game,gameOrder,skip);
 	process_game_order_entry_RegularCards (game,gameOrder,skip);
 	process_game_order_entry_CustomCards (game,gameOrder,skip);
@@ -22,7 +22,7 @@ function Client_GameOrderCreated (game, gameOrder, skip)
     print ("[C_GOC] END");
 end
 
-function process_game_orders_ImmovableSpecialUnits (game,gameOrder,skip);
+function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
 	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
 		--check any Special Units in the armies include in the AttackTransfer or Airlift operation
