@@ -360,7 +360,11 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 					if (result.DamageToSpecialUnits=={}) then print ("[QUICKSAND] PRE  {}: 0 damage to specials"); end
 					if (#result.DamageToSpecialUnits==0) then print ("[QUICKSAND] PRE  #==0 : 0 damage to specials"); end
 					print ("[QUICKSAND] PRE killed defending specials; size== "..#result.DefendingArmiesKilled.SpecialUnits.."::");
-					for k,v in pairs (result.DefendingArmiesKilled.SpecialUnits) do print ("[QUICKSAND] PRE killed defending specials "..k..","..v.Name.."/"..v.ID.."::"); end
+					for k,v in pairs (result.DefendingArmiesKilled.SpecialUnits) do
+						if (v.proxyType == "CustomSpecialUnit") then print ("[QUICKSAND] PRE killed defending specials "..k..","..v.Name.."/"..v.ID.."::");
+						else print ("[QUICKSAND] PRE killed defending specials "..k..","..v.proxyType.."/".. v.ID.."::");
+						end
+					end
 					print ("[QUICKSAND] PRE damage to special");
 					for k,v in pairs (result.DamageToSpecialUnits) do print ("[QUICKSAND] PRE damage to special "..k..", amount "..v.."::"); end
 					print ("[QUICKSAND] PRE __fin__");

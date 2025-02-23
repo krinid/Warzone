@@ -45,8 +45,8 @@ function displayMenu (game, close)
 
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
 	UI.CreateLabel (DebugWindow).SetText ("- - - - - [DEBUG DATA START] - - - - -");
-	UI.CreateLabel (DebugWindow).SetText ("[DEBUG DATA]");
     UI.CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
+
 	if (game.Us~=nil) then --a player in the game
 		--UI.CreateLabel (DebugWindow).SetText ("text \n\nClient player");
 		UI.CreateLabel (DebugWindow).SetText ("Client player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(localPlayerIsHost));
@@ -95,7 +95,7 @@ function displayMenu (game, close)
 				UI.CreateLabel (vertHeader).SetText ("You are the game host and card prices have not been updated yet! Update the prices of all cards and click 'Update Prices' when finished.").SetColor ("#FF0000"); -- display in red!
 			else
 				UI.CreateLabel (vertHeader).SetText ("You are the game host. Card prices have been updated already, but you are able to re-update them until the turn advances."); -- display in standard colour
-			end 
+			end
 
 			UpdateButton = UI.CreateButton(vertHeader).SetText (strUpdateButtonText).SetOnClick (
 			function ()
