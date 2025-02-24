@@ -1,0 +1,5 @@
+Adds a Resurrection Card to the game.
+
+If you possess a whole card when your Commander dies, you are not eliminated, and you can play this card at the start of the following turn to resurrect your Commander to a territory of your choice.
+
+You don't need to play the card until your Commander dies.
