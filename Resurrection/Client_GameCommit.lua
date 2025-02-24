@@ -1,9 +1,12 @@
 function Client_GameCommit (clientGame, skipCommit)
     --intCommitButtonPressed_count
     --^^don't make local; keep it global so the count persists during the client session
-    if (intCommitButtonPressed_count==nil) then intCommitButtonPressed_count=0; end --nil -> never pressed yet, this is the first time, so let's set it to 0
+    if (intTurnNumberOfLastClick==nil) then intTurnNumberOfLastClick=clientGame.Game.TurnNumber; end --capture the turn# of the last click, and if turn# has increased, reset the click count so clicks from prior turns don't count towards warnings for successive turns
+    if (intCommitButtonPressed_count==nil or intTurnNumberOfLastClick<clientGame.Game.TurnNumber) then intCommitButtonPressed_count=0; end --nil -> never pressed yet, this is the first time, so let's set it to 0
+    --if (Mod.PublicGameData.ResurrectionData[clientGame.Us.ID] ~= clientGame.Game.TurnNumber) then intCommitButtonPressed_count = 0; end --if the turnNumber has already surpassed the turn where the warning is meant to occur, restart the count (actually this won't ever be useful)
     intCommitButtonPressed_count = intCommitButtonPressed_count + 1; --keep track of # of Commit presses
-    print ("[GAME COMMIT] #presses "..intCommitButtonPressed_count.."::");
+    intTurnNumberOfLastClick = clientGame.Game.TurnNumber;
+    print ("[GAME COMMIT] #presses "..intCommitButtonPressed_count.." ["..tostring(intTurnNumberOfLastClick) .."] ::");
 
     if (clientGame.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires clicking Commit, which they can't do b/c they're not in the game)
 

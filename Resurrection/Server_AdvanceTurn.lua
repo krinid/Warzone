@@ -8,10 +8,13 @@ WORKING:
 - auto-popup in Game_Refresh & Game_Commit
 - if player doesn't deploy or boots - auto-deploy to first player owned territory on the map; if no territories left, then Eliminated
 - ^^ in this case, consume Resurrection card when complete
+- enforce card play only when a Commander dies
+- ^^ unless this setting is enabled
 
 STILL TO DO:
-- disallow multiple Commanders
-- ^^ unless this setting is enabled
+- indicate what territory the C died only
+- adjust popup & suppressor (# of clicks) to be turn based; 1 client session continuing = keeps counting the clicks and never shows alert again (oops) -- do for pesti too?
+- also don't popup if committed already
 ]]
 
 --nothing is done in this function
@@ -139,35 +142,6 @@ function replace_Commander_on_map (game, playerID, territoryID, addOrder, boolCo
 	if (publicGameData.ResurrectionData==nil) then publicGameData.ResurrectionData = {}; end
 	publicGameData.ResurrectionData[playerID] = nil; --clear the Resurrection data for this player
 	Mod.PublicGameData = publicGameData;
-
-	--clear the Resurrection data for this player & resave PublicGameData
-	--[[local publicGameData = Mod.PublicGameData;
-	if (publicGameData.ResurrectionData==nil) then publicGameData.ResurrectionData = {}; end
-	--rawset(publicGameData.ResurrectionData, playerID, nil);
-	--publicGameData.ResurrectionData = {};  --for testing purposes only
-	print ("[check1] "..playerID .. " / "..tostring (publicGameData.ResurrectionData[playerID]));
-	print ("[check2] "..playerID .. " / "..tostring (Mod.PublicGameData.ResurrectionData[playerID]));
-	publicGameData.ResurrectionData[playerID] = nil; --clear the Resurrection data for this player
-	print ("[check3] "..playerID .. " / "..tostring (publicGameData.ResurrectionData[playerID]));
-	Mod.PublicGameData = publicGameData;
-	print ("[check4] "..playerID .. " / "..tostring (Mod.PublicGameData.ResurrectionData[playerID]));
-
-	if (publicGameData.ResurrectionData ~= nil) then
-		for playerID,v in pairs (publicGameData.ResurrectionData) do
-			print ("[RESURRECTION PLACE ON MAP] POST1 user didn't play Resurrection card but has pending Resurrection order;  player "..playerID.."/"..tostring (v));
-		end
-	end
-
-	if (Mod.PublicGameData.ResurrectionData ~= nil) then
-		for playerID,v in pairs (Mod.PublicGameData.ResurrectionData) do
-			print ("[RESURRECTION PLACE ON MAP] POST2 user didn't play Resurrection card but has pending Resurrection order;  player "..playerID.."/"..tostring (v));
-		end
-	end
-    print ("[RESURRECTION PLACE ON MAP] POST3 qty "..#Mod.PublicGameData.ResurrectionData);
-	for playerID,v in pairs (Mod.PublicGameData.ResurrectionData) do
-		print ("[RESURRECTION PLACE ON MAP] POST3 user didn't play Resurrection card but has pending Resurrection order;  player "..playerID.."/"..tostring (v));
-	end]]
-
 end
 
 --this function handles the check to see (A) if a Commander has died, and (B) if the player has a resurrection card
@@ -186,14 +160,16 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 				targetTerritory.RemoveSpecialUnitsOpt = {sp.ID}; --remove the C special unit from the territory
 				table.remove (ArmiesKilled_SpecialUnits, k); --remove the Commander from the list of specials being killed
-				local event = WL.GameOrderEvent.Create (playerID, "Commander was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
-				addOrder (event, false); --add order to remove the Commander from the TO territory
+				local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
+				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 				replacementOrderRequired = true; --rewrite the original order without the dying Commander in place @ end of function
 
 				--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
 				local publicGameData = Mod.PublicGameData;
 				if (publicGameData.ResurrectionData == nil) then publicGameData.ResurrectionData = {}; end
-				publicGameData.ResurrectionData[playerID] = true;
+				--publicGameData.ResurrectionData[playerID] = true;
+				publicGameData.ResurrectionData[playerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
 				Mod.PublicGameData = publicGameData;
 			else
 				print ("[RESURRECTION] player doesn't have Resurrection card - let the Commander die");

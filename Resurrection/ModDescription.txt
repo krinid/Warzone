@@ -3,3 +3,5 @@ Adds a Resurrection Card to the game.
 If you possess a whole card when your Commander dies, you are not eliminated, and you can play this card at the start of the following turn to resurrect your Commander to a territory of your choice.
 
 You don't need to play the card until your Commander dies.
+
+If you fail to play a card on the turn directly after your Commander dies, the mod will choose a territory to resurrect your Commander to.
