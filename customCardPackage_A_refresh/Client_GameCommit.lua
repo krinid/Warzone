@@ -1,5 +1,3 @@
---require 'Client_GameCommit';
-
 function Client_GameCommit (clientGame, skipCommit)
     --intCommitButtonPressed_count
     --^^don't make local; keep it global so the count persists during the client session

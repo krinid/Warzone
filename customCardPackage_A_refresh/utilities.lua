@@ -1,3 +1,4 @@
+--- START of Dutch's functions
 function count(t, func)
 	local c = 0;
 	for _, v in pairs(t) do
@@ -145,8 +146,8 @@ function tablelength(T)
 	for _ in pairs(T) do count = count + 1 end
 	return count
 end
-  
-  function split(inputstr, sep)
+
+function split(inputstr, sep)
 		  if sep == nil then
 				  sep = "%s"
 		  end
@@ -156,7 +157,7 @@ end
 				  i = i + 1
 		  end
 		  return t
-  end
+end
 
 function toPlayerName(playerid, game)
 	if (playerid ~= nil) then
@@ -201,8 +202,25 @@ end
 --- START of DanWL's functions
 --- END of DanWL's functions
 
---- START of krinid's functions
+--- START of Derfellios's functions
+function NotTableEmpty(List)
+	for a,b in pairs(List) do
+		return true
+	end
+	return false
+end
 
+function NotinTable(tbl, item)
+    for key, value in pairs(tbl) do
+        if value == item then 
+			return false 
+		end
+    end
+    return true
+end
+--- END of Derfellios's functions
+
+--- START of krinid's functions
 -- Helper function to convert a table to a string representation
 local function tableToString(tbl, indent)
 	if type(tbl) ~= "table" then

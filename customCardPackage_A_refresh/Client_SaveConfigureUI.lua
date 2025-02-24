@@ -188,7 +188,7 @@ function createCards_newCards(alert, addCard);
         end
 
         if Mod.Settings.EarthquakeEnabled == true then
-                local strEarthquakeDesc = "Cause an earthquake that damages all territories in a selected bonus for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
+                local strEarthquakeDesc = "Invoke an earthquake that causes "..Mod.Settings.EarthquakeStrength.." damage to all territories in a selected bonus for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
                 if (Mod.Settings.EarthquakeDuration == -1) then
                 strEarthquakeDesc = strEarthquakeDesc .. "The effect is permanent.";
                 end

@@ -1,3 +1,6 @@
+--TO DO:
+--it says each turn "Host has finalized prices"?
+
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
 	Game = game;
 	root = rootParent;
@@ -67,7 +70,7 @@ function displayMenu (game, close)
 
 	local cardCount = 0;
 	local strUpdateButtonText = "Update Prices";
-	
+
 	--if local client player is host, allow price changes until end of T1
 	if (publicGameData.CardData.CardPricesFinalized == false) then
 		if (localPlayerIsHost==true) then
@@ -114,7 +117,7 @@ function displayMenu (game, close)
 				publicGameData.CardData.DefinedCards = newCards;
 				game.SendGameCustomMessage ("[waiting for server response]", publicGameData, function () end);
 				UpdateButton.SetText ("Prices have been updated");
-				
+
 				--destroy the existing window & recreate it to refresh the content
 				close (); --close the entire Client_PresentMenuUI window; originally just destroyed the vert container and refreshed it, but the server call to refresh public data took longer than the refresh did, so it didn't recognize the price update operation and nagged the host again
 				--so just close the window and let the player re-open it if they want to go back in
@@ -125,7 +128,7 @@ function displayMenu (game, close)
 		end
 		UI.CreateLabel (vertHeader).SetText (" "); --empty label for visual vertical spacing
 	end
-	
+
 	local vertRegularCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
 	UI.CreateLabel (vertRegularCards).SetText ("Regular cards:").SetColor (getColourCode("subheading"));
 	local vertCustomCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
@@ -140,7 +143,7 @@ function displayMenu (game, close)
 		--custom cards go in the Vert area and are listed at the bottom
 		--if client player is host & cards aren't finalized, then add sliders and use a horizontal layout group to organize the labels & sliders -- but don't use hori groups for non-host players b/c it adds unnecessary vertical space and less buttons fit on a single viewing window
 		local targetUI = vertRegularCards;
-		
+
 		-- this is a custom card; custom cards are >=1000000
 		if (cardRecord.ID >= 1000000) then
 			targetUI = vertCustomCards;
@@ -150,7 +153,7 @@ function displayMenu (game, close)
 		end 
 		local interactable = ((cardRecord.Price>=1) and (publicGameData.CardData.CardPricesFinalized==true)); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI); end
-		
+
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
 			UI.CreateButton(targetUI).SetPreferredWidth(540).SetFlexibleWidth (1).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
@@ -168,7 +171,7 @@ end
 
 function setCardPrice (cardRecord, newCardPrice)
 	print ("set price of "..cardRecord.ID,cardRecord.Name,cardRecord.Price," to new price "..newCardPrice);
-end 
+end
 
 function WLplayerStates ()
 	local WLplayerStatesTable = {
