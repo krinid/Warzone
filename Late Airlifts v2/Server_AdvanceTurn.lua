@@ -15,10 +15,22 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 		executed = true;
 		for _,order in pairs(SkippedAirlifts)do
 			local toowner = game.ServerGame.LatestTurnStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
-			if(toowner ~= WL.PlayerID.Neutral and order.PlayerID == game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID)then
-				if(game.ServerGame.Game.Players[order.PlayerID].Team == game.ServerGame.Game.Players[toowner].Team)then
-					addNewOrder(order);
-				end
+			local fromowner = game.ServerGame.LatestTurnStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
+			
+			--weed odd all scenarios where the airlift would fail and cancel the airlift in those cases (and don't consume the card)
+			boolExecuteAirlift = true;
+			if(toowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if TO territory is neutral
+			if(fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if FROM territory is neutral
+			if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+			if(game.ServerGame.Game.Players[order.PlayerID].Team == game.ServerGame.Game.Players[toowner].Team) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by player sending airlift (or his team)
+			if(game.ServerGame.Game.Players[order.PlayerID].Team == game.ServerGame.Game.Players[fromowner].Team) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by player sending airlift (or his team)
+
+			--if operation hasn't been canceled, execute the airlift & consume the card
+			if(boolExecuteAirlift==true) then
+				addNewOrder(order);
+			else
+			--airlift has been canceled; add a message in game history to inform user why; don't consume the airlift card
+				addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, "Airlift from "..game.Map.Territories[order.From].Name.." to "..game.Map.Territories[order.To].Name.." has been canceled as you no longer own both territories", {}, {},{}));
 			end
 		end
 	end
