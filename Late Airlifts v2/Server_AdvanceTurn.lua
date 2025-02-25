@@ -33,11 +33,12 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 				if(order.PlayerID ~= fromowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 				if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 			end
-	
+
+			print ("[SATE]---------------");
 			print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
 			print ("toowner      ID=="..toowner..", team=="..toownerTeam);
 			print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
-		
+
 			--if operation hasn't been canceled, execute the airlift & consume the card
 			if(boolExecuteAirlift==true) then
 				addNewOrder(order);

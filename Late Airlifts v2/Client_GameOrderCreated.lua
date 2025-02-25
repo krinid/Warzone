@@ -23,6 +23,7 @@ function Client_GameOrderCreated (game, order, skip)
 			if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 		end
 
+		print ("[GOC]---------------");
 		print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
 		print ("toowner      ID=="..toowner..", team=="..toownerTeam);
 		print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
