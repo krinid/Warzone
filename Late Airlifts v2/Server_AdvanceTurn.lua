@@ -30,7 +30,7 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 				addNewOrder(order);
 			else
 			--airlift has been canceled; add a message in game history to inform user why; don't consume the airlift card
-				addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, "Airlift from "..game.Map.Territories[order.From].Name.." to "..game.Map.Territories[order.To].Name.." has been canceled as you no longer own both territories", {}, {},{}));
+				addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, "Airlift from "..game.Map.Territories[order.FromTerritoryID].Name.." to "..game.Map.Territories[order.ToTerritoryID].Name.." has been canceled as you no longer own both territories", {}, {},{}));
 			end
 		end
 	end
