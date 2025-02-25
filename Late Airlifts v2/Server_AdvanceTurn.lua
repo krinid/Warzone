@@ -18,12 +18,12 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 			local fromowner = game.ServerGame.LatestTurnStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
 			
 			--weed odd all scenarios where the airlift would fail and cancel the airlift in those cases (and don't consume the card)
-			boolExecuteAirlift = true;
+			local boolExecuteAirlift = true;
 			if(toowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if TO territory is neutral
 			if(fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if FROM territory is neutral
-			if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
-			if(game.ServerGame.Game.Players[order.PlayerID].Team == game.ServerGame.Game.Players[toowner].Team) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by player sending airlift (or his team)
-			if(game.ServerGame.Game.Players[order.PlayerID].Team == game.ServerGame.Game.Players[fromowner].Team) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by player sending airlift (or his team)
+			--if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+			if(game.ServerGame.Game.Players[order.PlayerID].Team ~= game.ServerGame.Game.Players[toowner].Team) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by player sending airlift (or his team)
+			if(game.ServerGame.Game.Players[order.PlayerID].Team ~= game.ServerGame.Game.Players[fromowner].Team) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by player sending airlift (or his team)
 
 			--if operation hasn't been canceled, execute the airlift & consume the card
 			if(boolExecuteAirlift==true) then
