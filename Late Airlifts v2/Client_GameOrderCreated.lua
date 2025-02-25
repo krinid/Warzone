@@ -15,7 +15,7 @@ function Client_GameOrderCreated (game, order, skip)
 		if (fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if FROM territory is neutral
 
 		--if player is on a team, check if TO and FROM territories belong to the same team, if so allow airlift, if not cancel it
-		if (orderplayerTeam) >0 then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
+		if (orderplayerTeam >=0) then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
 			if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
 			if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
 		else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
