@@ -3,9 +3,8 @@ function Client_GameOrderCreated (game, order, skip)
 	if (order.proxyType=='GameOrderPlayCardAirlift') then
 		UI.Alert ("[LATE AIRLIFTS]\nAirlifts occur at the END OF A TURN (not the beginning) in this game.\n\nIf you no longer own the territory at that time, the airlift will not occur.");
 
-
 		local toowner = game.LatestStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
-		local fromowner = game.LatestStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
+		local fromowner = game.LatestStanding.Territories[order.FromTerritoryID].OwnerPlayerID;
 		local orderplayerTeam = game.Game.Players[order.PlayerID].Team;
 		local toownerTeam = game.Game.Players[toowner].Team;
 		local fromownerTeam = game.Game.Players[fromowner].Team;
@@ -20,7 +19,8 @@ function Client_GameOrderCreated (game, order, skip)
 			if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
 			if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
 		else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
-			if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+			if(order.PlayerID ~= fromowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+			if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 		end
 
 		print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);

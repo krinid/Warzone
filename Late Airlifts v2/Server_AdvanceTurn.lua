@@ -30,9 +30,10 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 				if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
 				if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
 			else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
-				if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+				if(order.PlayerID ~= fromowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+				if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 			end
-
+	
 			print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
 			print ("toowner      ID=="..toowner..", team=="..toownerTeam);
 			print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
