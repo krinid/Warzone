@@ -1,6 +1,6 @@
 function Client_PresentConfigureUI(rootParent)
 	UIcontainer = rootParent;
-	UI.CreateLabel (UIcontainer).SetFlexibleWidth (1).SetFlexibleWidth (1).SetText ("Creates a 'Resurrection' card whereby if you possess a whole card when your Commander dies, you can resurrect your Commander to a territory of your choice at the start of the next turn.");
+	--UI.CreateLabel (UIcontainer).SetFlexibleWidth (1).SetFlexibleWidth (1).SetText ("Creates a 'Resurrection' card whereby if you possess a whole card when your Commander dies, you can resurrect your Commander to a territory of your choice at the start of the next turn.");
 
 	if (Mod.Settings.ResurrectionDisableCardPlayUntilCommanderDies == nil) then Mod.Settings.ResurrectionDisableCardPlayUntilCommanderDies = true; end --indicates that Resurrection can't be played until a Commander actually dies; if set to False, then a player can create a Commander even if their existing Commander(s) haven't died, so long as they posses a Resurrection wholecard
 	ResurrectionDisableCardPlayUntilCommanderDies = UI.CreateCheckBox(UIcontainer).SetFlexibleWidth (1).SetIsChecked(Mod.Settings.ResurrectionDisableCardPlayUntilCommanderDies).SetInteractable(true).SetText("Only usable when Commander dies");
