@@ -27,9 +27,11 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 
 			--if player is on a team, check if TO and FROM territories belong to the same team, if so allow airlift, if not cancel it
 			if (orderplayerTeam) >0 then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
+				print ("[TEAMS]");
 				if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
 				if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
 			else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
+				print ("[SOLO / NO TEAMS]");
 				if(order.PlayerID ~= fromowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 				if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
 			end
