@@ -6,20 +6,28 @@ function Client_GameOrderCreated (game, order, skip)
 
 		local toowner = game.LatestStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
 		local fromowner = game.LatestStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
-
-		print ("order player ID=="..order.PlayerID..", team=="..game.Game.Players[order.PlayerID].Team);
-		print ("toowner      ID=="..toowner..", team=="..game.Game.Players[toowner].Team);
-		print ("fromowner    ID=="..fromowner..", team=="..game.Game.Players[fromowner].Team);
+		local orderplayerTeam = game.Game.Players[order.PlayerID].Team;
+		local toownerTeam = game.Game.Players[toowner].Team;
+		local fromownerTeam = game.Game.Players[fromowner].Team;
 
 		--weed odd all scenarios where the airlift would fail and cancel the airlift in those cases (and don't consume the card)
 		local boolExecuteAirlift = true;
-		if(toowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if TO territory is neutral
-		if(fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if FROM territory is neutral
-		--if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
-		if(game.Game.Players[order.PlayerID].Team ~= game.Game.Players[toowner].Team) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by player sending airlift (or his team)
-		if(game.Game.Players[order.PlayerID].Team ~= game.Game.Players[fromowner].Team) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by player sending airlift (or his team)
+		if (toowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if TO territory is neutral
+		if (fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false; end --cancel order if FROM territory is neutral
 
-		--if operation hasn't been canceled, execute the airlift & consume the card
+		--if player is on a team, check if TO and FROM territories belong to the same team, if so allow airlift, if not cancel it
+		if (orderplayerTeam) >0 then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
+			if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
+			if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
+		else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
+			if(order.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
+		end
+
+		print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
+		print ("toowner      ID=="..toowner..", team=="..toownerTeam);
+		print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
+
+			--if operation hasn't been canceled, execute the airlift & consume the card
 		if(boolExecuteAirlift==true) then
 			print ("AIRLIFT YES");
 			--addNewOrder(order);
