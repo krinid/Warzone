@@ -24,7 +24,8 @@ TODOs:
 		- Monolith - properly prevent a territory from capture while protecting no units on that territory
 
 - Implement NOW:
-	- account for attacks by %! in this case, numArmies is the %, and you need to calc yourself actual numarmies = % * armies left on the territory!
+	- for every 'intercept click' use, ensure that the dialog hasn't been closed before trying to access the object it tried to 
+- account for attacks by %! in this case, numArmies is the %, and you need to calc yourself actual numarmies = % * armies left on the territory!
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
 	- attacking OUT OF SHIELDS seems to result (in Server_AdvanceTurn_Order) in WZ "order could not be executed"; can't figure out why this happens with Shields but not Monoliths (etc) ... BUT ... was able to block the order and replace w/o the specials in Client_GameOrderCreated and then it processes fine in Server_TurnAdvance_Order
@@ -58,9 +59,10 @@ TODOs:
 	- @ end of turn, check if the territories for Isolation/Quicksand are missing special unit visual aids and if so, recreate them
 	- ask Fizz to allow negative #'s for specials' power?
 	- separate cards into a few different mods; already have the max 5 special unit images per mod for Isolation, Neutralize, Shield, Monolith, Quicksand, so no room to make special unit images for Tornado, Earthquake, Forest Fire
-		- mod 1: Nuke, Pestilence, Isolation, Airstrike, Shield, Monolith
-		- mod 2: Card Block, Card Pieces, Card Hold (future), Neutralize, Deneutralize
-		- mod 3: Quicksand, Tornado, Earthquake, Forest Fire, ?
+		- mod 1: Nuke, Pestilence, Isolation, Airstrike
+		- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Portal
+		- mod 3: Card Block, Card Piece, Card Hold (future)
+		- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, ?
 	- Tornado - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
 	- Earthquake - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
 	- Forest Fire - add damage reduction % config item, so it can reduce in damage (or increase) as it spreads

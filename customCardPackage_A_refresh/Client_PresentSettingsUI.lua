@@ -176,7 +176,7 @@ function Client_PresentSettingsUI(rootParent)
 
     if (Mod.Settings.TornadoEnabled == true) then
         CreateLabel(UImain).SetText("\n[TORNADO]").SetColor(getColourCode("card play heading"));
-        CreateLabel(UImain).SetText("Summon a fierce tornado to damage a territory. The first turn of tornado does double damage.");
+        CreateLabel(UImain).SetText("Summon a tornado to damage a territory. The first turn of tornado does double damage.");
         CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.TornadoDuration);
         CreateLabel(UImain).SetText("Strength: " .. Mod.Settings.TornadoStrength);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.TornadoPiecesNeeded);
