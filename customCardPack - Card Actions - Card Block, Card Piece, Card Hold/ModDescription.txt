@@ -1,5 +1,1 @@
-Makes 14 new custom cards available for use.
-
-Pestilence, Nuke, Isolation, Shield, Monolith
-Neutralize, Deneutralize, Card Block, Card Pieces
-Tornado, Quicksand, Earthquake, Forest Fire, Airstrike
+Adds custom cards Card Block, Card Pieces & Card Hold
