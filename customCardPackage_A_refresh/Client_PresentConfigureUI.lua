@@ -26,6 +26,7 @@ TODOs:
 - Implement NOW:
 	- for every 'intercept click' use, ensure that the dialog hasn't been closed before trying to access the object it tried to 
 	- add checks for bad values (negative #'s, etc) for card settings; eg: # of pieces to divide card into as 0 = WZ divide by 0 error! but negative #'s don't make sense either
+	- remove 'mod skipped' order from Card Block blocked card plays (use Suppress) b/c we're adding a customized/better skip order message
 - account for attacks by %! in this case, numArmies is the %, and you need to calc yourself actual numarmies = % * armies left on the territory!
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
