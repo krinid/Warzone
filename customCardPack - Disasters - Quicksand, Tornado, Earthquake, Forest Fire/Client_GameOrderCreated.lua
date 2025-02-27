@@ -66,7 +66,7 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 end
 
 --check if player is playing a card and is impacted by CardBlock; skip the order if so
-function process_game_order_entry_CardBlock (game,gameOrder,result,skip,addOrder)
+function process_game_order_entry_CardBlock (game,gameOrder,skip)
     --check if order is a card play (could be regular or custom card)
     if startsWith (gameOrder.proxyType, 'GameOrderPlayCard') == true then
         print ("[CARD PLAY]");
