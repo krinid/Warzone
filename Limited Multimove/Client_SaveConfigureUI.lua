@@ -1,35 +1,37 @@
 
 function Client_SaveConfigureUI(alert)
+	local defaultValue = 5;
 	Mod.Settings.MoveLimit = InputMoveLimit.GetValue();
 	if( Mod.Settings.MoveLimit == nil)then
-		Mod.Settings.MoveLimit = 5;
+		Mod.Settings.MoveLimit = defaultValue;
 	end
-	if( Mod.Settings.MoveLimit < 0)then
-		alert('If you can explain me what you understand under negative moves, I will add it.');
+	if( Mod.Settings.MoveLimit < -1)then
+		alert('If you have a good idea for what negative moves could mean in a game, chat me up & I might add it in.');
 	end
 	if( Mod.Settings.MoveLimit > 100000)then
-		alert('The number is too big.');
+		alert('The number is too big. Use -1 for unlimited multimoves.');
 	end
 
-	Mod.Settings.AttackLimit = InputAttackLimit.GetValue();
+	-- for potential future use only:
+	--[[Mod.Settings.AttackLimit = InputAttackLimit.GetValue();
 	if( Mod.Settings.AttackLimit == nil)then
-		Mod.Settings.AttackLimit = 5;
+		Mod.Settings.AttackLimit = defaultValue;
 	end
-	if( Mod.Settings.AttackLimit < 0)then
-		alert('If you can explain me what you understand under negative transfers, I will add it.');
+	if( Mod.Settings.AttackLimit < -1)then
+		alert('If you have a good idea for what negative moves could mean in a game, chat me up & I might add it in.');
 	end
 	if( Mod.Settings.AttackLimit > 100000)then
-		alert('The number is too big.');
+		alert('The number is too big. Use -1 for unlimited multi-attacks.');
 	end
 
 	Mod.Settings.TransferLimit = InputTransferLimit.GetValue();
 	if( Mod.Settings.TransferLimit == nil)then
-		Mod.Settings.TransferLimit = 5;
+		Mod.Settings.TransferLimit = defaultValue;
 	end
-	if( Mod.Settings.TransferLimit < 0)then
-		alert('If you can explain me what you understand under negative transfers, I will add it.');
+	if( Mod.Settings.TransferLimit < -1)then
+		alert('If you have a good idea for what negative moves could mean in a game, chat me up & I might add it in.');
 	end
 	if( Mod.Settings.TransferLimit > 100000)then
-		alert('The number is too big.');
-	end
+		alert('The number is too big. Use -1 for unlimited multi-transfers.');
+	end]]
 end
