@@ -8,9 +8,10 @@ function Client_PresentConfigureUI(rootParent)
 		"The recommended setting is using 'Multi-move' which sets a common limit for all orders regardless of whether they are attacks or transfers. However, it is possible to set separate limits for multi-attacks and multi-transfers."..
 		"\n\nAfter units have made the maximum number of moves, they will remain stationary until the following turn.");]]
 
-	UI.CreateLabel(UIcontainer).SetText("Enables ability for armies and special units to execute continuous attacks and transfers within a single turn. This mod requires 'multi-attack' to be enabled.");
+	--[[UI.CreateLabel(UIcontainer).SetText("Enables ability for armies and special units to execute continuous attacks and transfers within a single turn. This mod requires 'multi-attack' to be enabled.");
 	UI.CreateLabel(UIcontainer).SetText("\nStandard Warzone multi-attack enables limitless attacks (attack or capture of an enemy territory or neutral territory) but doesn't permit multi-transfers. Transferring units to your own territory halts all further movement by those units for that turn.");
-	UI.CreateLabel(UIcontainer).SetText("\nLimited Multimoves combines multi-attack and with new multi-transfer functionality, and applies a movement count limitation that can be done by units during a single turn. The limit applies to all attack and transfer orders. Once units have consumed their move allocation, they will remain stationary until the following turn.");
+	UI.CreateLabel(UIcontainer).SetText("\nLimited Multimoves combines multi-attack and with new multi-transfer functionality, and applies a movement count limitation that can be done by units during a single turn. The limit applies to all attack and transfer orders. Once units have consumed their move allocation, they will remain stationary until the following turn.");]]
+	--^^ don't need to display this b/c it exists in the Mod Description text file which automatically gets displayed here before anything other UI settings
 			
 	--[[UI.CreateLabel(UIcontainer).SetText("This mod requires multi-attack to be enabled in the game settings to function.\n\nThis mod puts a limit on the number of attack and transfer orders armies can partake in. Notably this allows armies to repeatedly transfer "..
 		"within territories you own up to the limit you set.\n\nAfter units have made the maximum number of moves regardless of whether they are attacks or transfers, they will remain stationary until the following turn.");]]
