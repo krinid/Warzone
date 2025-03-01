@@ -96,7 +96,7 @@ function process_game_order_entry_CustomCards (game,gameOrder,skip)
 		strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
 		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
 		
-		print ("[C_GOC] cardType=="..strCardTypeBeingPlayed.."::cardOrderContent=="..tostring(cardOrderContentDetails));
+		print ("[C_GOC] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
 		if (strCardTypeBeingPlayed == "Nuke") then
 			--execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Isolation" then

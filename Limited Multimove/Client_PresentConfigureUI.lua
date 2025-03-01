@@ -31,11 +31,12 @@ function Client_PresentConfigureUI(rootParent)
 	local horz = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth (1);
 	UI.CreateLabel(horz).SetText('Limit for MULTI-MOVES: ').SetColor (getColourCode("card play heading"));
 	InputMoveLimit = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.MoveLimit);
-	UI.CreateLabel(UIcontainer).SetText("• use -1 for limitless # of moves (same as standard Multi-Attack setting for attacks but also permits unlimited Multi-Transfers throughout your own territories)").SetFlexibleWidth (1);
+	UI.CreateLabel(UIcontainer).SetText("  [RECOMMENDED]").SetFlexibleWidth (1).SetColor (getColourCode("subheading"));
+	UI.CreateLabel(UIcontainer).SetText("• use 2 or higher to set the limit for # of moves").SetFlexibleWidth (1);
+	UI.CreateLabel(UIcontainer).SetText("\n• use -1 for unlimited moves [not recommended] - same as standard Multi-Attack setting for attacks but also permits unlimited Multi-Transfers throughout your own territories").SetFlexibleWidth (1);
 	UI.CreateLabel(UIcontainer).SetText("• use 0 to disable transfers altogether [not recommended] - this results in not being able to execute any attacks or transfers, so you will need to rely on cards or some type of mod functionality to make attacks").SetFlexibleWidth (1);
-	UI.CreateLabel(UIcontainer).SetText("• use 1 for standard Warzone behaviour)").SetFlexibleWidth (1);
-	UI.CreateLabel(UIcontainer).SetText("• use 2 or higher to set the limit for # of moves [RECOMMENDED]").SetFlexibleWidth (1);
-
+	UI.CreateLabel(UIcontainer).SetText("• use 1 for standard Warzone behaviour [not recommended]- in this case, this mod isn't required, this is standard Warzone functionality with multi-attack disabled").SetFlexibleWidth (1);
+	
 	--[[local horz = UI.CreateHorizontalLayoutGroup(UIcontainer);
 	UI.CreateLabel(horz).SetText('Limit for MULTI-ATTACKS: ').SetColor (getColourCode("card play heading"));
 	InputAttackLimit = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AttackLimit).SetInteractable(false);

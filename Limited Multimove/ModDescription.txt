@@ -1,5 +1,5 @@
 Enables ability for armies and special units to execute continuous attacks and transfers within a single turn. This mod requires 'multi-attack' to be enabled.
 
-Standard Warzone multi-attack enables limitless attacks (attack or capture of an enemy territory or neutral territory) but doesn't permit multi-transfers. Transferring units to your own territory halts all further movement by those units for that turn.
+Standard Warzone multi-attack enables unlimited attacks (attack or capture of an enemy territory or neutral territory) but doesn't permit multi-transfers. Transferring units to your own territory halts all further movement by those units for that turn.
 
 'Limited Multimoves' combines multi-attack and with new multi-transfer functionality, and applies a movement count limitation that can be done by units during a single turn. The limit applies to all attack and transfer orders. Once units have consumed their move allocation, they will remain stationary until the following turn.
