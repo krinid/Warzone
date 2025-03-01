@@ -247,7 +247,7 @@ function create_card_checkbox_UI_controls (rootParent)
 	if (activeModules["Forest Fire"] == true) then
 		vertForestFireSettingsHeading = CreateVert(MainModUI);
 		CreateLabel(vertForestFireSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
-		ForestFireCardCheckbox = CreateCheckBox(vertForestFireSettingsHeading).SetText("Forest Fire").SetIsChecked(Mod.Settings.ForestFireEnabled).SetOnValueChanged(function() forestFireCheckboxClicked() end).SetInteractable(true);
+		ForestFireCardCheckbox = CreateCheckBox(vertForestFireSettingsHeading).SetText("Forest Fire").SetIsChecked(Mod.Settings.ForestFireEnabled).SetOnValueChanged(function() forestFireCheckboxClicked() end).SetInteractable(false);
 	end
 end
 
