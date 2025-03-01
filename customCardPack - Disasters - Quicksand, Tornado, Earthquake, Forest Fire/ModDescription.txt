@@ -2,7 +2,7 @@ Adds custom cards Tornado, Quicksand, Earthquake & Forest Fire
 
 Tornado - Cause a tornado to develop on a territory, causing damage to it for some # of turns
 
-Quicksand - Transform a territory into quicksand for some # of turns; units in the quicksand cannot move off the territory, and take increased damage from attackers, and do reduced damage to attackers
+Quicksand - Transform a territory into quicksand for some # of turns; units in the quicksand cannot move off the territory, take increased damage from attackers, and do reduced damage to attackers
 
 Earthquake - Cause an earthquake to develop on a bonus, damaging each territory in the bonus for some # of turns
 

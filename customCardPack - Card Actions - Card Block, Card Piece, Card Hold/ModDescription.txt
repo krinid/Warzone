@@ -2,4 +2,4 @@ Adds custom cards Card Block, Card Pieces
 
 Card Block - Prevents a player from being able to play cards for some # of turns
 
-Card Pieces - Redeem this card for some # of whole cards and card pieces of a card type of your choice
+Card Pieces - Play this card to acquire some # of whole cards and card pieces of a card type of your choice
