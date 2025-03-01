@@ -1,1 +1,7 @@
 Adds custom cards Nuke, Pestilence & Isolation
+
+Nuke - Launch a nuke at any territory on the map; this is the epicenter which does the most damage, and the impact spreads to bordering territories
+
+Pestilence - Target a player to cause damage to all their territories for some # of turns
+
+Isolation - Causes a territory to become unable to move units in or out of it for some # of turns

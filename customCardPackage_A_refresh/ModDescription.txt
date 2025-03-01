@@ -1,5 +1,29 @@
-Makes 14 new custom cards available for use.
+Makes 14 new custom cards available for use:
 
-Pestilence, Nuke, Isolation, Shield, Monolith
-Neutralize, Deneutralize, Card Block, Card Pieces
-Tornado, Quicksand, Earthquake, Forest Fire, Airstrike
+Nuke - Launch a nuke at any territory on the map; this is the epicenter which does the most damage, and the impact spreads to bordering territories
+
+Pestilence - Target a player to cause damage to all their territories for some # of turns
+
+Isolation - Causes a territory to become unable to move units in or out of it for some # of turns
+
+Shield - Create a shield that protects all units on the territory from regular attack damage; attackers are entirely repelled, theirs attacks do no damage, and they take no defense damage from units on the territory
+
+Monolith - Erect a monolith that prevents a territory from being captured; it does not protect any units on the territory, but it cannot be captured while the monolith is present
+
+Neutralize - Cause a territory to turn to neutral for some # of turns, after which it will revert ownership to its former owner
+
+Deneutralize - Claim possession of a neutral territory
+
+Card Block - Prevents a player from being able to play cards for some # of turns
+
+Card Pieces - Redeem this card for some # of whole cards and card pieces of a card type of your choice
+
+Card Hold - Causes a player to temporarily reduce the # of card pieces a player can hold
+
+Tornado - Cause a tornado to develop on a territory, causing damage to it for some # of turns
+
+Quicksand - Transform a territory into quicksand for some # of turns; units in the quicksand cannot move off the territory, and take increased damage from attackers, and do reduced damage to attackers
+
+Earthquake - Cause an earthquake to develop on a bonus, damaging each territory in the bonus for some # of turns
+
+Forest Fire - Start a fire that spreads slowly each turn, doing damage to each territory it spreads to
