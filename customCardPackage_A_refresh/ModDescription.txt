@@ -16,9 +16,9 @@ Deneutralize - Claim possession of a neutral territory
 
 Card Block - Prevents a player from being able to play cards for some # of turns
 
-Card Pieces - Play this card to acquire some # of whole cards and card pieces of a card type of your choice
+Card Pieces - Redeem this card for some # of whole cards and card pieces of a card type of your choice
 
-Card Hold - Causes a player to temporarily reduce the # of card pieces a player can hold
+Card Hold - Temporarily reduces the # of cards a player can hold
 
 Tornado - Cause a tornado to develop on a territory, causing damage to it for some # of turns
 

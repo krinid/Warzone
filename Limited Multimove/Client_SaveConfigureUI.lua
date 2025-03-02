@@ -8,8 +8,8 @@ function Client_SaveConfigureUI(alert)
 	if( Mod.Settings.MoveLimit < -1)then
 		alert('If you have a good idea for what negative moves could mean in a game, chat me up & I might add it in.');
 	end
-	if( Mod.Settings.MoveLimit > 100000)then
-		alert('The number is too big. Use -1 for unlimited multimoves.');
+	if( Mod.Settings.MoveLimit > 1000)then
+		alert('1000+ is too high; use -1 for unlimited or enter a reasonable limit.');
 	end
 
 	-- for potential future use only:
