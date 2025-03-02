@@ -1,6 +1,8 @@
 
 function Client_SaveConfigureUI(alert)
-  	
+	if (game.Settings.CommerceGame == false) then
+		alert("The 'Buy Cards v2' mod requires Commerce in order to function. Please enable Commerce game in game settings or unselect this mod.");
+	end
 	Mod.Settings.ReinforcementCardCost = ReinforcementCardCostinput.GetValue();
 	if(Mod.Settings.ReinforcementCardCost > 100000 or Mod.Settings.ReinforcementCardCost < 0)then
 		alert("Reinforcement card cost is invalid");

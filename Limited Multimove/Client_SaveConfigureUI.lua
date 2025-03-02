@@ -6,10 +6,13 @@ function Client_SaveConfigureUI(alert)
 		Mod.Settings.MoveLimit = defaultValue;
 	end
 	if( Mod.Settings.MoveLimit < -1)then
-		alert('If you have a good idea for what negative moves could mean in a game, chat me up & I might add it in.');
+		alert('[Limited Multimoves] If you have a clever idea for how negative moves might be implemented in a meaningful way in a game, chat me up & I might add it in.');
 	end
 	if( Mod.Settings.MoveLimit > 1000)then
-		alert('1000+ is too high; use -1 for unlimited or enter a reasonable limit.');
+		alert('[Limited Multimoves] 1000+ is too a high a limit; use -1 for unlimited or enter a reasonable limit.');
+	end
+	if (game.Settings.MultiAttack == false) then
+		alert("[Limited Multimoves] Multi-Attack must be enabled for this mod to function. Please enable Multi-Attack in game settings or unselect this mod.");
 	end
 
 	-- for potential future use only:
