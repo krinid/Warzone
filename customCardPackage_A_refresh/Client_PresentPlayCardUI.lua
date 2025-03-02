@@ -244,6 +244,7 @@ function EarthquakeTargetSelected(bonusDetails)
     print("[EARTHQUAKE] target player selected: " .. targetPlayerName);
     playCard(strPlayerName_cardPlayer .. " invokes Earthquake on " .. targetPlayerName, 'Earthquake|' .. targetPlayerID, WL.TurnPhase.Gift);]]
     local strLabelText = "";
+    if (UI.IsDestroyed(labelEarthquake_BonusTerrList)) then return; end --if the button is destroyed, the dialog is closed, so don't do anything
     labelEarthquake_BonusTerrList.SetText ("");
     strLabelText = "\nTerritories in bonus:\n\n";
     Earthquake_PlayCardButton.SetInteractable(true);
@@ -605,6 +606,66 @@ function play_Nuke_card(game, cardInstance, playCard)
     end);
 end
 
+function play_Airstrike_card(game, cardInstance, playCard)
+    TargetTerritoryID = nil;
+    TargetTerritoryName = nil;
+    SourceTerritoryID = nil;
+    SourceTerritoryName = nil;
+    intArmiesToSend = 0;
+
+    game.CreateDialog(
+    function(rootParent, setMaxSize, setScrollable, game, close)
+        setMaxSize(400, 300);
+        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        CreateLabel (vert).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
+
+        SourceTerritoryBtn = UI.CreateButton(vert).SetText("Select Source Territory").SetOnClick(SourceTerritoryClicked);
+        SourceTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        SourceTerritorySelectButton_Clicked("Select the territory you wish to attack from"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+        
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        --TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(
+        function() 
+            --check for CANCELED request, ie: no territory selected
+            if (TargetTerritoryID == nil) then
+                UI.Alert("No territory selected. Please select a territory");
+                return;
+            end
+            intArmiesToSend = 1000; --hardcoded for now, but should be a user input field in the future
+            print ("[AIRSTRIKE] ".. strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."::");
+            if (playCard(strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend --[[, intImplementationPhase]])) then
+                close();
+            end
+        end);
+    end);
+end
+
+function SourceTerritorySelectButton_Clicked(strLabelText) --SourceTerritoryInstructionLabel, SourceTerritoryBtn)
+	UI.InterceptNextTerritoryClick(SourceTerritoryClicked);
+	if strLabelText ~= nil then SourceTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
+	SourceTerritoryBtn.SetInteractable(false);
+end
+
+function SourceTerritoryClicked(terrDetails)
+	if (UI.IsDestroyed (SourceTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable
+	SourceTerritoryBtn.SetInteractable(true);
+
+	if (terrDetails == nil) then
+		--The click request was cancelled.   Return to our default state.
+		SourceTerritoryInstructionLabel.SetText("");
+		SourceTerritoryID = nil;
+        SourceTerritoryName = nil;
+	else
+		--Territory was clicked, remember its ID
+		SourceTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
+		SourceTerritoryID = terrDetails.ID;
+        SourceTerritoryName = terrDetails.Name;
+	end
+end
+
 function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
@@ -612,7 +673,8 @@ function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel,
 end
 
 function TerritoryClicked(terrDetails)
-	TargetTerritoryBtn.SetInteractable(true);
+	if (UI.IsDestroyed (TargetTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable
+    TargetTerritoryBtn.SetInteractable(true);
 
 	if (terrDetails == nil) then
 		--The click request was cancelled.   Return to our default state.

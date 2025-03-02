@@ -1,5 +1,9 @@
 --[[
 STILL TO DO:
+- odd behaviour when:
+	- a Transfer is done to territory with 0 units, then an Attack; if on Neutral then WZ error occurs; if on enemy then a TRANSFER (not attack!) occurs
+	- a Transfer is done to territory with 1+ units, then an Attack; the resultant attack damage was only for the units that were on the territory at the start of the turn, not the units that transferred in --- but if the order is mixed up, then
+	  sometimes it works; haven't been able to figure out the criteria for success vs failure, hmmm!
 - test with various specials, notably along the path, not included from beginning of a movement changing
 - test with fixed # inputs
 - test with %'s other than 100%

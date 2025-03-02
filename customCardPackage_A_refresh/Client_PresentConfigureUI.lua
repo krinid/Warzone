@@ -699,7 +699,7 @@ function airstrikeCheckboxClicked()
 
 		local horzAirstrikeCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzAirstrikeCardWeight).SetText("Card weight: ");
-		AirstrikeCardWeight = CreateNumberInputField(horzAirstrikeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		AirstrikeCardWeight = CreateNumberInputField(horzAirstrikeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 	print("Airstrike card checkbox clicked")
 end
@@ -1276,7 +1276,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.DeneutralizeCardWeight = DeneutralizeCardWeight.GetValue();
 	end
 
-	if (not UI.IsDestroyed (AirstrikeSettingsDetails)) then
+	if (not UI.IsDestroyed (vertAirstrikeSettingsDetails)) then
 		Mod.Settings.AirstrikeCanTargetNeutrals = AirstrikeCanTargetNeutrals.GetIsChecked();
 		Mod.Settings.AirstrikeCanTargetPlayers = AirstrikeCanTargetPlayers.GetIsChecked();
 		Mod.Settings.AirstrikeCanTargetFoggedTerritories = AirstrikeCanTargetFoggedTerritories.GetIsChecked();
@@ -1285,7 +1285,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.AirstrikeCardWeight = AirstrikeCardWeight.GetValue();
 	end
 
-	if (not UI.IsDestroyed (ForestFireSettingsDetails)) then
+	if (not UI.IsDestroyed (vertForestFireSettingsDetails)) then
 		Mod.Settings.ForestFireDuration = ForestFireCardDuration.GetValue();
 		Mod.Settings.ForestFirePiecesNeeded = ForestFireCardPiecesNeeded.GetValue();
 		Mod.Settings.ForestFireStartPieces = ForestFireCardStartPieces.GetValue();
