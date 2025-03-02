@@ -11,9 +11,9 @@ function Client_SaveConfigureUI(alert)
 	if( Mod.Settings.MoveLimit > 1000)then
 		alert('[Limited Multimoves] 1000+ is too a high a limit; use -1 for unlimited or enter a reasonable limit.');
 	end
-	if (game.Settings.MultiAttack == false) then
+	--[[if (game.Settings.MultiAttack == false) then
 		alert("[Limited Multimoves] Multi-Attack must be enabled for this mod to function. Please enable Multi-Attack in game settings or unselect this mod.");
-	end
+	end]] --would be nice to be able to do this but game doesn't exist yet! Can't access Settings of a game that hasn't been started yet
 
 	-- for potential future use only:
 	--[[Mod.Settings.AttackLimit = InputAttackLimit.GetValue();
