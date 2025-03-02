@@ -99,7 +99,8 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- So far ... I can detect the case when the glitch will happen but can't fix it, even by recreating the order with the same # of armies & specials, even if forcing it to an Attack Only setting
 
 	--check for case of FROM=order player, TO=another player (not same team) but IsAttack=false; this causes either a WZ error (if TO territory is neutral) or a transfer to the enemy (if TO territory is owned by an enemy player)
-	if (result.IsAttack==false and FROMowner == order.PlayerID and TOowner ~= order.PlayerID) then
+	if (false) then --(result.IsAttack==false and FROMowner == order.PlayerID and TOowner ~= order.PlayerID) then
+	--^^ don't process this right now, just skip it - Fizz is working on this
 		if (problematicOrderCount==nil) then problematicOrderCount = 0; end
 		problematicOrderCount = problematicOrderCount + 1;
 		--print ("PROBLEMATIC ... FizzGlitch conditions detected; we need a WZ bug fix for this"); --; count=="..problematicOrderCount);  <-- recreating the order had no impact, IsAttack==false every time  :(  ... we need Fizz to fix this
