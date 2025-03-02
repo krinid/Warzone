@@ -177,9 +177,9 @@ function createCards_newCards(alert, addCard);
                 if ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == true) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == true)) then
                         strDeneutralizeDesc = strDeneutralizeDesc .. "This can be done on either natural neutral territories, or territories that were Neutralized (used a Neutralize card).";
                 elseif ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == true) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false)) then
-                        strDeneutralizeDesc = strDeneutralizeDesc .. "This can only be done on natural neutral territories (started as neutrals, were blockaded, etc).";
-                elseif ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == true)) then
                         strDeneutralizeDesc = strDeneutralizeDesc .. "This can only be done on territories that were Neutralized (used a Neutralize card).";
+                elseif ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == true)) then
+                        strDeneutralizeDesc = strDeneutralizeDesc .. "This can only be done on natural neutral territories (started as neutrals, were blockaded, etc).";
                 else
                         --this means both settings are false, which doesn't make sense, the card would never be able to be played; spawn error and cancel
                         alert('Deneutralize cards must apply to natural neutral territories, Neutralized territories by use of a Neutralize card, or both options.');
