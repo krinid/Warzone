@@ -3,7 +3,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     UIcontainer = UI.CreateVerticalLayoutGroup (rootParent);
     UI.CreateLabel (UIcontainer).SetText ("Resurrection whole cards & pieces:");
     print ("---PresentMenu---");
-    game.SendGameCustomMessage ("[waiting for server response]", {action="do nothing_just force a refresh"}, PresentMenuUI_callBack);
+    if (game.Us ~= nil) then game.SendGameCustomMessage ("[waiting for server response]", {action="do nothing_just force a refresh"}, PresentMenuUI_callBack); end
 
     for k,cardRecord in pairs (game.LatestStanding.Cards) do
         --UI.CreateLabel (UIcontainer).SetText ("Player "..k);
