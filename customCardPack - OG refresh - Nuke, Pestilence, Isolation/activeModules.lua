@@ -2,8 +2,8 @@
 activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true};
     --future: activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true, ["Airstrike"]=true};
 --activeModules = {["Shield"]=true, ["Monolith"]=true, ["Neutralize"]=true, ["Deneutralize"]=true};
---activeModules = {["Card Block"]=true, ["Card Piece"]=true};
-    --future: activeModules = {["Card Block"]=true, ["Card Piece"]=true, ["Card Hold"]=true};
+--activeModules = {["Card Block"]=true, ["Card Pieces"]=true};
+    --future: activeModules = {["Card Block"]=true, ["Card Pieces"]=true, ["Card Hold"]=true};
 --activeModules = {["Quicksand"]=true, ["Tornado"]=true, ["Earthquake"]=true, ["Forest Fire"]=true};
 
 --Rough mod plan:
