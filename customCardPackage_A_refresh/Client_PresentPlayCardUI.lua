@@ -77,13 +77,13 @@ function CardPiece_cardType_selected (cardRecord, playCard, close)
 	print ("CardPiece_cardType selected=="..tostring(cardRecord));
 	print ("CardPiece_cardType selected:: name=="..cardRecord.cardID.."::value=="..cardRecord.cardName.."::");
 	printObjectDetails (cardRecord, "selected card record", "card piece card selection");
-	
+
     --don't allow using Card Piece card to receive Card Piece cards/pieces (to avoid looping/increasing amounts/infinite cards)
     if (cardRecord.cardID == CardPieceCardID) then
         UI.Alert ("Card Pieces card cannot be used to redeem Card Pieces cards or pieces. Choose a different card type.");
     end
 
-    if (not UI.IsDestroyed (TargetCardButton)) then TargetCardButton.SetText (cardRecord.cardName); end
+    if (not (UI.IsDestroyed (TargetCardButton))) then TargetCardButton.SetText (cardRecord.cardName); end
     local strPlayCardPieceMsg = strPlayerName_cardPlayer .. " redeems a Card Piece card to receive "..cardRecord.cardName.." cards/pieces";
     playCard(strPlayCardPieceMsg, 'Card Piece|' .. cardRecord.cardID, WL.TurnPhase.Discards);
     print ("[PLAY Card Piece] "..strPlayCardPieceMsg.." // "..'Card Piece|' .. cardRecord.cardID);
