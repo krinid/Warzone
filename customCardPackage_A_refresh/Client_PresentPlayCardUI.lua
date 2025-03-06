@@ -83,7 +83,7 @@ function CardPiece_cardType_selected (cardRecord, playCard, close)
         UI.Alert ("Card Pieces card cannot be used to redeem Card Pieces cards or pieces. Choose a different card type.");
     end
 
-    TargetCardButton.SetText (cardRecord.cardName);
+    if (not UI.IsDestroyed (TargetCardButton)) then TargetCardButton.SetText (cardRecord.cardName); end
     local strPlayCardPieceMsg = strPlayerName_cardPlayer .. " redeems a Card Piece card to receive "..cardRecord.cardName.." cards/pieces";
     playCard(strPlayCardPieceMsg, 'Card Piece|' .. cardRecord.cardID, WL.TurnPhase.Discards);
     print ("[PLAY Card Piece] "..strPlayCardPieceMsg.." // "..'Card Piece|' .. cardRecord.cardID);
