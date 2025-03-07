@@ -93,6 +93,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
+	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
 
 	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -167,6 +168,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			--if units have transferred into the FROM territory, then the map1 value for the FROM territory is irrelevant, it's only important when groups of armies mix that we use the lowest of the two map1 values
 			boolProcessOrder = true;
 			result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
+			--the result structure auto-updates to reflect proper AttackPower & DefensePower values, so use these below for attacks!
 
 			---if Transfer, use min Map1 value of FROM & TO territories, b/c order player owns To and it might already have less move allocations less than From-1
 			---if Attack, ignore TO territory map value b/c that's the value for another player (or a neutral)
@@ -179,6 +181,12 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 			--if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
 			if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
+
+			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'used armies' to mods)
+			if (result.IsAttack==true) then
+				result.AttackingArmiesKilled = WL.Armies.Create (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate, {});
+				result.DefendingArmiesKilled = WL.Armies.Create (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate, {});
+			end
 
 			--COMMENT FOR BELOW: map3 isn't used at this point; perhaps it could be but I think the current state is likely the best while keeping it simple (ie: not tracking the # of moves for every separate group of units and then having the user indicate which groups are moving where)
 			--if there are no movement allocations left on the TO territory, add them to map3 to indicate that they can't move anymore
@@ -303,10 +311,14 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	end
 
 	print ("- - - - - - - - - - - - - - - - - - - - - POST");
-	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful));
+	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer));
+	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("NumArmies "..order.NumArmies.NumArmies..", #specials "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
 	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
+	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
+	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower);
+
 end
 
 function genereateSkipMessage (order, game)

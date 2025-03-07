@@ -314,9 +314,9 @@ function execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderConten
 	targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
 
 	--these don't exist on Territories object, only as part of (I think) order.AttackPower & result.ActualArmies.AttackPower -- something like that
-	--local sourceAttackPower = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].AttackPower;
-	--local targetDefensePower = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].DefensePower;
-	--print ("FROM attackPower=="..sourceAttackPower..", TO defensePower=="..targetDefensePower.."::");
+	local sourceAttackPower = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower;
+	local targetDefensePower = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower;
+	print ("FROM attackPower=="..sourceAttackPower..", TO defensePower=="..targetDefensePower.."::");
 	--attempt to create Attack order on non-bordering FROM/TO -- it fails, so commented out:
 	--reference: WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, NumArmies table, order.AttackTeammates);
 	--local NumArmies = WL.Armies.Create(1000, {});
