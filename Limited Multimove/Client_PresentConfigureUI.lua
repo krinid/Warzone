@@ -33,7 +33,7 @@ function Client_PresentConfigureUI(rootParent)
 	InputMoveLimit = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.MoveLimit);
 	UI.CreateLabel(UIcontainer).SetText("  [RECOMMENDED]").SetFlexibleWidth (1).SetColor (getColourCode("subheading"));
 	UI.CreateLabel(UIcontainer).SetText("• use 2 or higher to set the limit for # of moves").SetFlexibleWidth (1);
-	UI.CreateLabel(UIcontainer).SetText("\n[NOT RECOMMENDED]").SetFlexibleWidth (1).SetColor (getColourCode("subheading"));
+	UI.CreateLabel(UIcontainer).SetText("\n  [NOT RECOMMENDED]").SetFlexibleWidth (1).SetColor (getColourCode("subheading"));
 	UI.CreateLabel(UIcontainer).SetText("• use -1 for unlimited moves [not recommended] - same as standard Multi-Attack setting for attacks but also permits unlimited Multi-Transfers throughout your own territories").SetFlexibleWidth (1);
 	UI.CreateLabel(UIcontainer).SetText("• use 0 to disable transfers altogether [not recommended] - this results in not being able to execute any attacks or transfers, so you will need to rely on cards or some type of mod functionality to make attacks").SetFlexibleWidth (1);
 	UI.CreateLabel(UIcontainer).SetText("• use 1 for standard Warzone behaviour [not recommended]- in this case, this mod isn't required, this is standard Warzone functionality with multi-attack disabled").SetFlexibleWidth (1);
