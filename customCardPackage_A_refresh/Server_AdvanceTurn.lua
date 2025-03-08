@@ -16,7 +16,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	--local boolHaltCodeExecutionAtEndofTurn = true;
+	local boolHaltCodeExecutionAtEndofTurn = true;
 	if (boolHaltCodeExecutionAtEndofTurn==true) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
@@ -284,7 +284,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif strCardTypeBeingPlayed == "Deneutralize" then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Airstrike" then
-			execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails);
+			--execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
 		elseif strCardTypeBeingPlayed == "Card Piece" then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Forest Fire" then
@@ -304,14 +304,14 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 	end
 end
 
-function execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails)
+function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails)
 	--Airstrike details go here
 	local modDataContent = split(gameOrder.ModData, "|");
 	--printObjectDetails (gameOrder, "gameOrder", "[TurnAdvance_Order]");
 	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
 	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
-	sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
-	targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
+	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
+	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
 
 	--these don't exist on Territories object, only as part of (I think) order.AttackPower & result.ActualArmies.AttackPower -- something like that
 	local sourceAttackPower = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower;
@@ -323,6 +323,199 @@ function execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderConten
 	--local airstrikeOrder = WL.GameOrderAttackTransfer.Create (gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, NumArmies, false);
 	--addOrder (airstrikeOrder);
 
+	for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		print ("@@@ "..terr.ID.."/"..game.Map.Territories [terr.ID].Name,terr.NumArmies.AttackPower);
+	end
+
+	--local strWhatToDo = "SU_prep";
+	--local strWhatToDo = "do_airstrike";
+
+	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
+	if (strWhatToDo == "SU_prep") then
+		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
+		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 0.25, 0.25, 5, 0, 10, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 0.75, 0.75, 5, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 0, 10, 15000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 10, 0, 4000, true, true, true, true, true, nil);
+
+		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
+		build_specialUnit (game, addOrder, targetTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 0.25, 0.25, 5, 0, 10, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 0.50, 0.50, 5, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 0.75, 0.75, 5, 10, 0, 4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.50, 1.50, 5, 0, 10, 15000, true, true, true, true, true, nil);
+	else
+		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
+		process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+	end
+
+end
+
+--create a new special unit
+function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilename, AttackPower, DefensePower, AttackPowerPercentage, DefensePowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, Health, CombatOrder, CanBeGiftedWithGiftCard, CanBeTransferredToTeammate, CanBeAirliftedToSelf, CanBeAirliftedToTeammate, IsVisibleToAllPlayers, ModData)
+    local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
+	builder.Name = Name;
+	builder.IncludeABeforeName = false;
+	builder.ImageFilename = ImageFilename;
+	if (AttackPower ~= nil) then builder.AttackPower = AttackPower; else builder.AttackPower = 0; end
+	if (AttackPowerPercentage ~= nil) then builder.AttackPowerPercentage = AttackPowerPercentage; else --[[builder.AttackPowerPercentage = 1.0;]] end
+	if (DefensePower ~= nil) then builder.DefensePower = DefensePower; else builder.DefensePower = 0; end
+	if (DefensePowerPercentage ~= nil) then builder.DefensePowerPercentage = DefensePowerPercentage; else --[[builder.DefensePowerPercentage = 0;]] end
+	if (DamageToKill ~= nil) then builder.DamageToKill = DamageToKill; else builder.DamageToKill = 0; end
+	if (DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = DamageAbsorbedWhenAttacked; --[[else builder.DamageAbsorbedWhenAttacked = 0;]] end
+	if (Health ~= nil) then builder.Health = Health; else builder.Health = 0; end
+	if (CombatOrder ~= nil) then builder.CombatOrder = CombatOrder; else builder.CombatOrder = 0; end
+	if (CanBeGiftedWithGiftCard ~= nil) then builder.CanBeGiftedWithGiftCard = CanBeGiftedWithGiftCard; else builder.CanBeGiftedWithGiftCard = false; end
+	if (CanBeTransferredToTeammate ~= nil) then builder.CanBeTransferredToTeammate = CanBeTransferredToTeammate; else builder.CanBeTransferredToTeammate = false; end
+	if (CanBeAirliftedToSelf ~= nil) then builder.CanBeAirliftedToSelf = CanBeAirliftedToSelf; else builder.CanBeAirliftedToSelf = false; end
+	if (CanBeAirliftedToTeammate ~= nil) then builder.CanBeAirliftedToTeammate = CanBeAirliftedToTeammate; else builder.CanBeAirliftedToTeammate = false; end
+	if (IsVisibleToAllPlayers ~= nil) then builder.IsVisibleToAllPlayers = IsVisibleToAllPlayers; else builder.IsVisibleToAllPlayers = false; end
+	if (ModData ~= nil) then builder.ModData = ModData; else builder.ModData = ""; end
+
+	local specialUnit = builder.Build();
+	local terrMod = WL.TerritoryModification.Create(targetTerritoryID)
+	terrMod.AddSpecialUnits = {specialUnit}
+	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}))
+	return specialUnit;
+end
+
+--process a manual attack sequence from AttackOrder [type NumArmies] on DefendingTerritory [type Territory] with respect to Specials & armies
+--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
+--also treat Specials properly with respect to their specs, notably damage required to kill, health, attack/damage properties, etc
+--return value is the result with updated AttackingArmiesKilled & DefendingArmiesKilled values
+--also need some way of indicating overall success separately b/c can't change some properties of the result object directly
+function process_manual_attack (game, AttackingArmies, DefendingTerritory, result)
+	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
+	local newResult = result;
+	local DefendingArmies = DefendingTerritory.NumArmies;
+
+	local sortedAttackerSpecialUnits = {};
+	local sortedDefenderSpecialUnits = {};
+	local totalAttackerAttackPowerPercentage = 1.0;
+	local totalAttackerDefensePowerPercentage = 1.0;
+	local totalDefenderAttackPowerPercentage = 1.0;
+	local totalDefenderDefensePowerPercentage = 1.0;
+
+	print ("[MANUAL ATTACK!] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AAPower "..AttackingArmies.AttackPower..", DDPower "..DefendingTerritory.NumArmies.DefensePower);
+
+	--this doesn't work; the AttackingArmies.SpecialUnits table is likely not totally compliant; it needs to be a sequential array table, not a key-value table
+	--table.sort(sortedAttackingArmies.SpecialUnits, function(a, b) print ("COMPARE "..a.CombatOrder..", ".. b.CombatOrder..", "..tostring(a.CombatOrder < b.CombatOrder)); return (a.CombatOrder < b.CombatOrder); end);
+
+	--instead, rebuild AttackingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
+	for _, unit in pairs(AttackingArmies.SpecialUnits) do
+		table.insert(sortedAttackerSpecialUnits, unit);
+		if (unit.proxyType == "CustomSpecialUnit") then
+			--if (unit.AttackPowerPercentage ~= nil) then totalAttackerAttackPowerPercentage = totalAttackerAttackPowerPercentage * unit.AttackPowerPercentage; end
+			--if (unit.DefensePowerPercentage ~= nil) then totalAttackerDefensePowerPercentage = totalAttackerDefensePowerPercentage * unit.DefensePowerPercentage; end
+			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
+				--print ("SPECIAL ATTACKER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
+		end
+	end
+	table.sort(sortedAttackerSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
+
+	--instead, rebuild DefendingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
+	for _, unit in pairs(DefendingArmies.SpecialUnits) do
+		table.insert(sortedDefenderSpecialUnits, unit);
+		if (unit.proxyType == "CustomSpecialUnit") then
+			--if (unit.AttackPowerPercentage ~= nil) then print ("APP "..unit.Name,totalDefenderAttackPowerPercentage,unit.AttackPowerPercentage); totalDefenderAttackPowerPercentage = totalDefenderAttackPowerPercentage * unit.AttackPowerPercentage; end
+			--if (unit.DefensePowerPercentage ~= nil) then print ("DPP "..unit.Name,totalDefenderDefensePowerPercentage,unit.DefensePowerPercentage); totalDefenderDefensePowerPercentage = totalDefenderDefensePowerPercentage * unit.DefensePowerPercentage; end
+			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
+			--print ("SPECIAL DEFENDER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
+		end
+	end
+	table.sort(sortedDefenderSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
+
+	local AttackPower = AttackingArmies.AttackPower;
+	print ("=========================="..AttackingArmies.AttackPower);
+	local DefensePower = DefendingTerritory.NumArmies.DefensePower;
+	local AttackDamage = math.floor (AttackPower * game.Settings.OffenseKillRate * totalAttackerAttackPowerPercentage + 0.5);
+	local DefenseDamage = math.floor (DefensePower * game.Settings.DefenseKillRate * totalDefenderDefensePowerPercentage + 0.5);
+	--local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
+	--local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
+
+	print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
+	apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, newResult);
+	print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
+	apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, newResult);
+
+	--make below into a function
+	--to handle with both Attacking Armies taking Defense Damage, and also Defending Armies taking Attack Damage
+end
+
+function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, newResult)
+	local remainingDamage = totalDamage;
+	local boolArmiesProcessed = false;
+	local remainingArmies = armyCount;
+
+	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
+	print ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
+	for k,v in ipairs (sortedSpecialUnits) do
+		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
+		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
+		print ("SPECIAL "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder);
+
+		if (v.proxyType == "CustomSpecialUnit") then
+			print ("SPECIAL name "..v.Name..", ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DefensePower..", SPECIAL APower% "..v.AttackPowerPercentage..
+			", DPower% "..v.DefensePowerPercentage..", SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health);
+		end
+
+		--apply damage to this Special b/c combat order is <0 or armies have been processed already
+		if (boolArmiesProcessed==true or v.CombatOrder <0) then
+			print ("damage applied to Special");
+			if (v.proxyType=="Commander") then
+				if (remainingDamage >=7) then print ("COMMANDER dies");
+				else print ("COMMANDER survives, not enough damage done");
+				end
+			elseif (v.proxyType=="CustomSpecialUnit") then
+				if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+				if (v.Health ~= nil) then
+					if (v.Health == 0) then print ("SPECIAL already dead w/0 health, kill it/remove it");
+					elseif (remainingDamage >= v.Health) then remainingDamage = remainingDamage - v.Health; print ("SPECIAL dies, health "..v.Health.. "remaining damage "..remainingDamage);
+					else
+						--apply damage to special of amount remainingDamage
+						print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
+						remainingDamage = 0;
+					end
+				else
+					if (remainingDamage > v.DamageToKill) then remainingDamage = remainingDamage - v.DamageToKill; print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+					else
+						--apply damage to special of amount remainingDamage
+						print ("SPECIAL survives but damage to kill by "..remainingDamage.." to "..v.DamageToKill-remainingDamage);
+						remainingDamage = 0;
+					end
+				end
+			end
+		else
+			--apply damage to armies
+			if (remainingDamage >= remainingArmies) then remainingDamage = remainingDamage - remainingArmies; remainingArmies = 0; print ("all armies die, remaining damage "..remainingDamage);
+			else
+				--apply damage to armies of amount remainingDamage
+				print ("army damage, "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage);
+				remainingArmies = remainingArmies - remainingDamage;
+				remainingDamage = 0;
+				boolArmiesProcessed = true;
+			end
+		end
+	end
+end
+
+function applyDamageToSpecials (intDamage, Specials, result)
+	local remainingDamage = intDamage;
+	for k,v in pairs (Specials) do
+		if (remainingDamage > 0) then
+			--if the Special is still alive, apply damage to it
+			local SpecialHealth = v.Health;
+			if (SpecialHealth > 0) then
+				local SpecialDamage = math.min (SpecialHealth, remainingDamage);
+				remainingDamage = remainingDamage - SpecialDamage;
+				result = WL.Armies.Create (result.NumArmies + SpecialDamage, result.SpecialUnits);
+			end
+		end
+	end
+	return result;
 
 end
 
@@ -639,7 +832,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	builder.DefensePowerPercentage = 0;
     builder.DamageToKill = 9999999;
     builder.DamageAbsorbedWhenAttacked = 9999999;
-    builder.CombatOrder = -10000; --before armies (which are 0)
+    builder.CombatOrder = -99999; --before armies (which are 0); make this is a significantly low # (high negative #) to reasonably be the first unit in combat order (lowest #) on a territory to protect all units
     builder.CanBeGiftedWithGiftCard = false;
 	builder.CanBeGiftedWithGiftCard = true;
     builder.CanBeTransferredToTeammate = false;
@@ -701,7 +894,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.DamageToKill = 9999999;
 		builder.DamageAbsorbedWhenAttacked = 9999999;
 		--builder.Health = 99999999999999;
-		builder.CombatOrder = 10011; --doesn't protect Commander
+		builder.CombatOrder = 99999; --doesn't protect Commander which is 10000; make a significantly high # to reasonably be 'the last unit' in combat order (highest #) on a territory so it does not protect any units
 		builder.CanBeGiftedWithGiftCard = false;
 		builder.CanBeGiftedWithGiftCard = true;
 		builder.CanBeTransferredToTeammate = false;

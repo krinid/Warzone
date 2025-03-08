@@ -35,6 +35,10 @@ TODOs:
 
 - issues to resolve before publishing:
 	- make cards activate @ end of turns, not at beginning; less cheese
+	- Pestilence - structures prevent going neutral?
+	- new Cards/SUs - "Fortune" new Special that gives +x% attack bonus for some # of turns; make it a special that absorbs 0, takes 1 damage, does 0 damage, high combat order but before Monolith
+	- new Cards/SUs - "Favour" new Special that gives +x% defense bonus for some # of turns; make it a special that absorbs 0, takes 1 damage, does 0 damage, high combat order but before Monolith
+	- new mod - "Fortune favours the bold" grants +x% attack power & +y% defense power in all battles that a Commander takes part in (permanent)
 	- when moving 
 	- Forest Fire + Airstrike UI not updating Mod.Settings values (hmmmm, naze da!!)
 	- is UI_factions.lua actually required? isn't it just essentially calling a function to call the UI.functions of the same type? just a 1-step unnecessary addition each time?
@@ -67,6 +71,8 @@ TODOs:
 		- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, ?
 		- mod 5: Resurrection
 		- mod 6: Portal - enable options to play it as a card and also as a purchase
+		- mod 7: Fortune & Favour
+		- mod 8: Fortune Favours the Bold! (for Commanders - no cards, no additional specials) - works well w/Resurrection
 	- Tornado - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
 	- Earthquake - add damage reduction % config item, so can make it a permanent tornado that slowly fades away over time
 	- Forest Fire - add damage reduction % config item, so it can reduce in damage (or increase) as it spreads
@@ -173,11 +179,6 @@ function create_card_checkbox_UI_controls (rootParent)
 	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
 	require ("activeModules"); --load the code to 
 	if activeModules==nil then activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true, ["Shield"]=true, ["Monolith"]=true}; end --if not specified from activeModules.lua, just default to a small subset of cards
-	-- Rough mod plan:
-	-- mod 1: Nuke, Pestilence, Isolation, Airstrike
-	-- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Portal
-	-- mod 3: Card Block, Card Piece, Card Hold (future)
-	-- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, ?
 
 	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 

@@ -14,7 +14,7 @@ STILL TO DO:
 
 function Server_AdvanceTurn_End(game, addNewOrder)
 	--uncomment the below line to forcibly halt execution for troubleshooting purposes
-	--print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
+	print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
 	print ("[GRACEFUL END OF TURN EXECUTION]");
 end
 
@@ -113,7 +113,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		--try recreating the order from current state, see if it becomes a proper Attack
 		local newNumArmiesCountFG = order.NumArmies.NumArmies;
 		local newSpecialsFG = order.NumArmies.SpecialUnits;
-		local newNewArmiesStructureFG = WL.Armies.Create(newNumArmiesCountFG, newSpecialsFG);
+		local newArmiesStructureFG = WL.Armies.Create(newNumArmiesCountFG, newSpecialsFG);
 
 		--[[if (not order.ByPercent) then
 			--order is a straight fixed # of armies
@@ -128,8 +128,8 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		if (false) then --(problematicOrderCount==1) then
 		--if (problematicOrderCount==1) then
 				--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, order.NumArmies, order.AttackTeammates);
-			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, newNewArmiesStructureFG, order.AttackTeammates);
-			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, newNewArmiesStructureFG, false);
+			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, newArmiesStructureFG, order.AttackTeammates);
+			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, newArmiesStructureFG, false);
 			addNewOrder (replacementOrder);
 			print ("[RECREATE & SKIP ORDER]");
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
@@ -142,8 +142,9 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			--toriaezu_stop_execution();  --forcibly halt execution for troubleshooting purposes
 			local strSkipOrderMessage = "[FizzGlitch condition] Order skipped to avoid WZ error or transfer to enemy [requires WZ bug fix]; Original order: " ..genereateSkipMessage (order, game);
 			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
-			print ("[SKIP ORDER]");
+			process_manual_attack (game, newArmiesStructureFG, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
+			--skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
+			--print ("[SKIP ORDER]");
 			return; --skip rest of this function, skip this order b/c it can't be implemented until the WZ bug is fixed
 		end
 		--toriaezu_stop_execution();
@@ -318,6 +319,91 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower);
+end
+
+--process a manual attack sequence from AttackOrder [type NumArmies] on DefendingTerritory [type Territory] with respect to Specials & armies
+--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
+--also treat Specials properly with respect to their specs, notably damage required to kill, health, attack/damage properties, etc
+--return value is the result with updated AttackingArmiesKilled & DefendingArmiesKilled values
+--also need some way of indicating overall success separately b/c can't change some properties of the result object directly
+function process_manual_attack (game, AttackingArmies, DefendingTerritory, result)
+	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
+	local newResult = result;
+	local AttackPower = AttackingArmies.AttackPower;
+	local DefensePower = DefendingTerritory.NumArmies.DefensePower;
+	local AttackDamage = AttackPower * game.Settings.OffenseKillRate;
+	local DefenseDamage = DefensePower * game.Settings.DefenseKillRate;
+	local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
+	local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
+
+	local boolArmiesProcessed = false;
+
+	print ("[MANUAL ATTACK] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits);
+	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
+	for k,v in pairs (AttackingArmies.SpecialUnits) do
+		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
+		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
+		print ("SPECIAL type "..v.proxyType.. ", combat order "..v.CombatOrder);
+
+		if (v.proxyType == "CustomSpecialUnit") then
+			print ("SPECIAL name "..v.Name..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DamagePower);
+			print ("SPECIAL APower "..v.AttackPower..", DPower "..v.DamagePower);
+			print ("SPECIAL health "..v.Health);
+			print ("SPECIAL APower% "..v.AttackPowerPercentage..", DPower% "..v.DamagePowerP);
+			print ("SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health);
+		end
+
+		--apply damage to this Special b/c combat order is <0 or armies have been processed already
+		if (boolArmiesProcessed==true or v.CombatOrder <0) then
+			print ("damage applied to Special");
+		else
+			--apply damage to armies
+			print ("damage applied to Armies");
+			boolArmiesProcessed = true;
+		end
+
+		--if (boolArmiesProcessed==false) then
+		--v.Name..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DamagePower);
+		--[[if (v.proxyType == "Commander") then
+			--Commanders have a combat order of 10,000, so process them first
+			if (remainingDefenseDamage > 0) then
+				--if the Commander is still alive, apply damage to it
+				local CommanderHealth = v.Health;
+				if (CommanderHealth > 0) then
+					local CommanderDamage = math.min (CommanderHealth, remainingDefenseDamage);
+					remainingDefenseDamage = remainingDefenseDamage - CommanderDamage;
+					newResult.DefendingArmiesKilled = WL.Armies.Create (newResult.DefendingArmiesKilled.NumArmies + CommanderDamage, newResult.DefendingArmiesKilled.SpecialUnits);
+				end
+			end
+		elseif (v.proxyType == "CustomSpecialUnit") then
+			--CustomSpecialUnits have a combat order of 0, so process them after Commanders
+			if (remainingDefenseDamage > 0) then
+				--if the CustomSpecialUnit is still alive, apply damage to it
+				local SpecialHealth = v.Health;
+				if (SpecialHealth > 0) then
+					local SpecialDamage = math.min (SpecialHealth, remainingDefenseDamage);
+					remainingDefenseDamage = remainingDefenseDamage - SpecialDamage;
+					newResult.DefendingArmiesKilled = WL.Armies.Create (newResult.DefendingArmiesKilled.NumArmies + SpecialDamage, newResult.DefendingArmiesKilled.SpecialUnits);
+				end
+			end
+		end]]
+	end
+end
+
+function applyDamageToSpecials (intDamage, Specials, result)
+	local remainingDamage = intDamage;
+	for k,v in pairs (Specials) do
+		if (remainingDamage > 0) then
+			--if the Special is still alive, apply damage to it
+			local SpecialHealth = v.Health;
+			if (SpecialHealth > 0) then
+				local SpecialDamage = math.min (SpecialHealth, remainingDamage);
+				remainingDamage = remainingDamage - SpecialDamage;
+				result = WL.Armies.Create (result.NumArmies + SpecialDamage, result.SpecialUnits);
+			end
+		end
+	end
+	return result;
 
 end
 
