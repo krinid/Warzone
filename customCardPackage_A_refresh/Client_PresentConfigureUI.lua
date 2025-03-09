@@ -24,6 +24,7 @@ TODOs:
 		- Monolith - properly prevent a territory from capture while protecting no units on that territory
 - Implement NOW:
 	- Tornado not expiring?
+	- Card Block expired notification order is assigned to CASTING PLAYER, so casting player sees the order note not the player it was cast on
 	- Quicksand routine running for non-quicksand impacted territories? is it actually doing anything?
 	- for every 'intercept click' use, ensure that the dialog hasn't been closed before trying to access the object it tried to 
 	- add checks for bad values (negative #'s, etc) for card settings; eg: # of pieces to divide card into as 0 = WZ divide by 0 error! but negative #'s don't make sense either
