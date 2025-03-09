@@ -11,6 +11,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 	Monolith_processEndOfTurn (game, addOrder);
 	CardBlock_processEndOfTurn (game, addOrder);
     Quicksand_processEndOfTurn(game, addOrder);
+	process_Neutralize_expirations (game, addOrder); --if there are pending Neutralize orders, check if any expire this turn and if so execute those actions
+	process_Isolation_expirations (game, addOrder);  --if there are pending Isolation orders, check if any expire this turn and if so execute those actions (delete the special unit to identify the Isolated territory)
 
 	print ("[S_AT_E]::func END");
 
@@ -22,7 +24,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 end
 
 function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
-	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");
+	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
@@ -30,34 +32,11 @@ function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 		return; --don't process the rest of the function, else it will still process card plays
 	end
 
-	--[[local strCardTypeBeingPlayed = nil;
-	local cardOrderContentDetails = nil;
-	local publicGameData = Mod.PublicGameData;]]
-
 	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
 	process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
 	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
 	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
 	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
-
---if (gameOrder.proxyType=='GameOrderAttackTransfer') then
---	print ("[[  ATTACK // TRANSFER ]] PREFACE  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
---[[	", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
-	", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmiesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-	print ("[SPECIALS:]");
-	for k,v in pairs (result.DamageToSpecialUnits) do print ("damage to special "..k..", amount "..v.."::"); end
-
-	--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5));
-	--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
-	result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
-	result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
-
-	print ("  ATTACK // TRANSFER  FINAL player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
-	", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
-	", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmiesKilled=="..result.DefendingArmiesKilled.NumArmies.."::");
-	print ("[SPECIALS:]");
-	for k,v in pairs (result.DamageToSpecialUnits) do print ("damage to special "..k..", amount "..v.."::"); end
-end]]
 end
 
 function Server_AdvanceTurn_Start(game,addOrder)
@@ -69,9 +48,6 @@ function Server_AdvanceTurn_Start(game,addOrder)
 
 	print ("[Server_AdvanceTurn_Start] -----------------------------------------------------------------");
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
-
-	process_Neutralize_expirations (game, addOrder); --if there are pending Neutralize orders, check if any expire this turn and if so execute those actions
-	process_Isolation_expirations (game, addOrder);  --if there are pending Isolation orders, check if any expire this turn and if so execute those actions (delete the special unit to identify the Isolated territory)
 
 	--change this FROM: loop through all players then loop through all orders they have
 	--              TO: just loop through all orders and check playerID against various conditions
@@ -100,6 +76,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 	local targetPlayerID = gameOrder.PlayerID;
 
 	--if CardBlock isn't in use, just return false
+	if (Mod.Settings.ActiveModules.Tornado ~= true) then return false; end --if module is not active, just return false
 	if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
 	--if there is no CardBlock data, just return false
@@ -143,8 +120,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 					--regular card, nothing special to do, just skip the card
 					print ("[CARD PLAY BLOCKED] regular card==" .. strCardName);
 				end
-				
-				--
+
 				strCardBlockSkipOrder_Message = "Skipping order to play ".. strCardName.. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
 				print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
 				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}));
@@ -270,33 +246,33 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
 		
 		print ("[S_AT_O] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
-		if (strCardTypeBeingPlayed == "Nuke") then
+		if (strCardTypeBeingPlayed == "Nuke" and Mod.Settings.ActiveModules.Nuke == true) then
 			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Isolation" then
+		elseif (strCardTypeBeingPlayed == "Isolation" and Mod.Settings.ActiveModules.Isolation == true) then
 			execute_Isolation_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Pestilence" then
+		elseif (strCardTypeBeingPlayed == "Pestilence" and Mod.Settings.ActiveModules.Pestilence == true) then
 			execute_Pestilence_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Shield") then
+		elseif (strCardTypeBeingPlayed == "Shield" and Mod.Settings.ActiveModules.Shield == true) then
 			execute_Shield_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Monolith" then
+		elseif (strCardTypeBeingPlayed == "Monolith" and Mod.Settings.ActiveModules.Monolith == true) then
 			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
-		elseif strCardTypeBeingPlayed == "Neutralize" then
+		elseif (strCardTypeBeingPlayed == "Neutralize" and Mod.Settings.ActiveModules.Neutralize == true) then
 			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Deneutralize" then
+		elseif (strCardTypeBeingPlayed == "Deneutralize" and Mod.Settings.ActiveModules.Deneutralize == true) then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Airstrike" then
+		elseif (strCardTypeBeingPlayed == "Airstrike" and Mod.Settings.ActiveModules.Airstrike == true) then
 			execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
-		elseif strCardTypeBeingPlayed == "Card Piece" then
+		elseif (strCardTypeBeingPlayed == "Card Piece" and Mod.Settings.ActiveModules.CardPieces == true) then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Forest Fire" then
+		elseif (strCardTypeBeingPlayed == "Forest Fire" and Mod.Settings.ActiveModules.ForestFire == true) then
 			--Forest Fire details go here
-		elseif strCardTypeBeingPlayed == "Card Block" then
+		elseif (strCardTypeBeingPlayed == "Card Block" and Mod.Settings.ActiveModules.CardBlock == true) then
 			execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Earthquake" then
+		elseif (strCardTypeBeingPlayed == "Earthquake" and Mod.Settings.ActiveModules.Earthquake == true) then
 			execute_Earthquake_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Tornado" then
+		elseif (strCardTypeBeingPlayed == "Tornado" and Mod.Settings.ActiveModules.Tornado == true) then
 			execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Quicksand" then
+		elseif (strCardTypeBeingPlayed == "Quicksand" and Mod.Settings.ActiveModules.Quicksand == true) then
 			execute_Quicksand_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		else
 			--custom card play not handled by this mod; could be an error, or a card from another mod
@@ -351,9 +327,73 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
 	else
 		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
-		process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
-	end
+		local airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+		--airstrikeResult.AttackerResult is armies object for attacker
+		--airstrikeResult.DefenderResult is armies object for defender
+		--airstrikeResult.IsSuccessful is boolean indicating if the attack was successful, and thus whether:
+			--(A) attacker wins, defender units are wiped out, the attacker should move into the target territory and take ownership of it
+			--(B) attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
+		if (airstrikeResult.IsSuccessful == true) then
+			--attacker wins, move into target territory and take ownership of it
+			print ("[AIRSTRIKE] attacker wins, move into target territory and take ownership of it");
+			-- Move surviving attacking units to target territory and change ownership to attacker
+			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+			targetTerritory.SetOwnerOpt = gameOrder.PlayerID;
+			targetTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
+			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove Defender killed Specials from the source territory
 
+			--max 4 Specials at a time can be applied to a territory in 1 game order, so if >4, break it up into multiple orders
+			if (#airstrikeResult.AttackerResult.SurvivingSpecials <= 4) then
+				targetTerritory.AddSpecialUnits = airstrikeResult.AttackerResult.SurvivingSpecials;
+				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, territory captured", {}, {targetTerritory}));
+			else
+				local intCountSpecials = 0;
+				local next4Specials = {};
+				for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do
+					intCountSpecials = intCountSpecials + 1;
+					print (k,v.proxyType);
+					table.insert(next4Specials, v);
+					if (intCountSpecials % 4 == 0 or intCountSpecials == #airstrikeResult.AttackerResult.SurvivingSpecials) then --if divisible by 4 or this is the last element, add the next 4/all remaining specials to the territory
+						targetTerritory.AddSpecialUnits = next4Specials;
+						if (intCountSpecials == 4) then
+							addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, territory captured", {}, {targetTerritory}));
+							next4Specials = {};
+						else
+							addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful - adding Special Units", {}, {targetTerritory}));
+							next4Specials = {};
+							targetTerritory = WL.TerritoryModification.Create(targetTerritoryID); --recreate the territory to add up to 4 more specials to it
+						end
+					end
+				end
+			end
+
+			-- Remove attacking units from source territory
+			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
+			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
+
+			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do print ("---"..k,v,v.ID); table.insert(specialsToRemove, v.ID); end
+			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
+			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
+		else
+			--attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
+			print ("[AIRSTRIKE] attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it");
+			-- Update source territory with remaining attacking units
+			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
+			--sourceTerritory.NumArmies = airstrikeResult.AttackerResult;  --   <--- this doesn't work, NumArmies not writable
+			sourceTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
+			sourceTerritory.RemoveSpecialUnitsOpt = airstrikeResult.AttackerResult.KilledSpecials;
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in source territory", {}, {sourceTerritory}));
+
+			-- Update target territory with remaining defending units
+			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+			--targetTerritory.NumArmies = airstrikeResult.DefenderResult.RemainingArmies;
+			targetTerritory.SetArmiesTo = airstrikeResult.DefenderResult.RemainingArmies;
+			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials;
+
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in target territory", {}, {targetTerritory}));
+		end
+	end
 end
 
 --create a new special unit
@@ -391,7 +431,6 @@ end
 --also need some way of indicating overall success separately b/c can't change some properties of the result object directly
 function process_manual_attack (game, AttackingArmies, DefendingTerritory, result)
 	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
-	local newResult = result;
 	local DefendingArmies = DefendingTerritory.NumArmies;
 
 	local sortedAttackerSpecialUnits = {};
@@ -442,18 +481,35 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
-	apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, newResult);
+	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage);
 	print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, newResult);
-
-	--make below into a function
-	--to handle with both Attacking Armies taking Defense Damage, and also Defending Armies taking Attack Damage
+	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage);
+	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
+	print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies ..", #specials "..#defenderResult.SurvivingSpecials..", #killedSpecials "..#defenderResult.KilledSpecials);
+	print ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies ..", #specials "..#attackerResult.SurvivingSpecials..", #killedSpecials "..#attackerResult.KilledSpecials);
+	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0) then
+		--defender is eliminated, attacker wins
+		boolAttackSuccessful = true;
+		print ("[ATTACK SUCCESSFUL] attacker wins, defender is wiped out from target territory");
+	else
+		--defender survives, attacker may have lost some units
+		print ("[ATTACK UNSUCCESSFUL] attacker unsuccessful, defender survives in target territory");
+	end
+	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful});
 end
 
-function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, newResult)
+--process damage quantity 'totalDamage' to the Specials in table 'sortedSpecialUnits' and the armies in 'armyCount'
+--Specials are already stored in table in order of their CombatOrder
+--the combo of (sortedSpecialUnits+armyCount) is either the Attacker and totalDamage is damage from defender units, or the combo is the Defender and totalDamage is damage from attacker units
+--this function will be called once for each case, once for the Attacker and once for the Defender
+function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage)
 	local remainingDamage = totalDamage;
 	local boolArmiesProcessed = false;
 	local remainingArmies = armyCount;
+	local survivingSpecials = {};
+	local killedSpecials = {};
+
+	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType="|dummyPlaceholder|applyDamageToArmies"}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
 	print ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
@@ -461,10 +517,16 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
 		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
 		print ("[[[[SPECIAL]]]] "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder..", remaining damage "..remainingDamage);
+		local boolCurrentSpecialSurvives = true;
 
 		if (v.proxyType == "CustomSpecialUnit") then
-			print ("CUSTOM SPECIAL name '"..v.Name.."', ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DefensePower..", SPECIAL APower% "..v.AttackPowerPercentage..
-			", DPower% "..v.DefensePowerPercentage..", SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health..", remaining damage "..remainingDamage);
+			print ("CUSTOM SPECIAL name '"..v.Name.."', ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..tostring(v.Health)..", attack "..tostring(v.AttackPower)..", damage "..tostring(v.DefensePower)..", SPECIAL APower% "..tostring(v.AttackPowerPercentage)..
+			", DPower% "..tostring(v.DefensePowerPercentage)..", SPECIAL DmgAbsorb "..tostring(v.DamageAbsorbedWhenAttacked)..", DmgToKill "..tostring(v.DamageToKill)..", Health "..tostring(v.Health)..", remaining damage "..remainingDamage);
+		elseif (v.proxyType == "|dummyPlaceholder|applyDamageToArmies") then
+			print ("DUMMY PLACEHOLDER for armies, remaining damage "..remainingDamage..", armies damage processed already? "..tostring(boolArmiesProcessed));
+			boolCurrentSpecialSurvives = false; --don't add this to the survivingSpecials table
+			--don't do anything other than let the loop continue 1 last iteration to apply damage to the armies
+			--this item has CombatOrder==0 but it is placed last into the table just to ensure that at least 1 element has >0 CombatOrder so that the loop will process damage on the armies if there is remainingDamage left
 		end
 
 		--if there's no more damage to apply, skip the code to apply any further damage; could also use 'break' to exit the loop		
@@ -475,11 +537,11 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 				--apply damage to armies
 				if (remainingDamage >= remainingArmies) then
 					remainingDamage = remainingDamage - remainingArmies; 
-					remainingArmies = 0; 
-					print ("all armies die, remaining damage "..remainingDamage);
+					remainingArmies = 0;
+					print ("[[[[ARMY DAMAGE]]]] all armies die, remaining damage "..remainingDamage);
 				else
 					--apply damage to armies of amount remainingDamage
-					print ("army damage, "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
+					print ("[[[[ARMY DAMAGE]]]] "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
 					remainingArmies = remainingArmies - remainingDamage;
 					remainingDamage = 0;
 				end
@@ -491,14 +553,24 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			if (remainingDamage > 0) then
 				print ("damage applied to Special");
 				if (v.proxyType=="Commander") then
-					if (remainingDamage >=7) then print ("COMMANDER dies"); remainingDamage = remainingDamage - 7; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
-					else print ("COMMANDER survives, not enough damage done"); remainingDamage = 0; --commander survives, no more attacks to occur
+					if (remainingDamage >=7) then
+						print ("COMMANDER dies");
+						remainingDamage = remainingDamage - 7;
+						boolCurrentSpecialSurvives = false; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
+					else
+						print ("COMMANDER survives, not enough damage done");
+						remainingDamage = 0; --commander survives, no more attacks to occur
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
 					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
 					if (v.Health ~= nil) then
-						if (v.Health == 0) then print ("SPECIAL already dead w/0 health, kill it/remove it");
-						elseif (remainingDamage >= v.Health) then remainingDamage = remainingDamage - v.Health; print ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
+						if (v.Health == 0) then
+							print ("SPECIAL already dead w/0 health, kill it/remove it");
+							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
+						elseif (remainingDamage >= v.Health) then
+							remainingDamage = remainingDamage - v.Health;
+							print ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
+							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
 						else
 							--apply damage to special of amount remainingDamage
 							print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
@@ -516,7 +588,25 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			end
 		end
 		if (remainingDamage<=0) then print ("[damage remaining is "..remainingDamage.."]"); end
+
+		--the Special being analyzed this iteration through loop has already DIED or SURVIVED by this opint, add to survivingSpecials table if it survived
+		if (boolCurrentSpecialSurvives == true) then print ("SPECIAL survived"); table.insert (survivingSpecials, v); --only add the Special to the survivingSpecials table if it survives the attack
+		else
+			print ("SPECIAL died");
+			if (v.proxyType ~= "|dummyPlaceholder|applyDamageToArmies") then table.insert (killedSpecials, v.ID); end --only add the Special to the killedSpecials table if it dies, ignore the dummy placeholder
+		end
 	end
+
+	print ("[FINAL RESULT] remaining damage "..remainingDamage..", remaining armies "..remainingArmies.. ", #survivingSpecials "..#survivingSpecials);
+	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials};
+	return damageResult;
+
+	--reference
+	--[[local impactedTerritory = WL.TerritoryModification.Create(terrID);
+	local modifiedTerritories = {};
+	impactedTerritory.RemoveSpecialUnitsOpt = {shieldDataRecord.specialUnitID};
+	table.insert(modifiedTerritories, impactedTerritory);]]
+
 end
 
 function applyDamageToSpecials (intDamage, Specials, result)
@@ -543,8 +633,8 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
 			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..
 			", AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
-			
-		--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
+
+			--print ("...Mod.PublicGameData.IsolationData == nil -->".. tostring (Mod.PublicGameData.IsolationData == nil));
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.To] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.To] == nil)); end;
 		--if Mod.PublicGameData.IsolationData ~= nil then print (".....Mod.PublicGameData.IsolationData[gameOrder.From] == nil -->".. tostring (Mod.PublicGameData.IsolationData[gameOrder.From] == nil)); end;
 
@@ -556,7 +646,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
-			--weed out the cases above, then what's left are moves to or from Isolated territories
+			--weed out the cases above, then what's left are moves to or from territories impacted by Quicksand
 		else
 			local strQuicksandSkipOrder_Message="";
 			local boolQuicksandMovementViolation = false;
@@ -612,7 +702,6 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 					print ("[QUICKSAND] MID AdditionalDamageToSpecials "..intAdditionalDamageToSpecials .."::");
 					if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
 						for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.SpecialUnits) do
-							--if sp.proxy
 							--if print ("....special ",k,v.Name,v.ID);
 							--table.insert (result.DamageToSpecialUnits, {k, intAdditionalDamageToSpecials});
 							--table.insert (result.DefendingArmiesKilled.SpecialUnits, v.ID);
@@ -640,10 +729,10 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				--Mod.Settings.QuicksandDefenderDamageTakenModifier = 1.5; --increase damage taken by defender 50% while in quicksand
 				--Mod.Settings.QuicksandAttackerDamageTakenModifier = 0.5; --reduce damage given by defender 50% while in quicksand
 				--*** rename these to QuicksandDefenderDamageTakenModifier & QuicksandAttackerDamageGivenModifier so it's clear how it applies to the 'result' of an order
-				
+
 			end
 		end
-		
+
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
@@ -667,37 +756,14 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			", numArmies "..gameOrder.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..", isSuccessful "..tostring(result.IsSuccessful)..
 			", AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..
 			", AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
-			for k,v in pairs (result.DamageToSpecialUnits) do print ("[QUICKSAND] POST damage to special "..k..", amount "..v.."::"); end
+			--[[for k,v in pairs (result.DamageToSpecialUnits) do print ("[QUICKSAND] POST damage to special "..k..", amount "..v.."::"); end
 			print ("[QUICKSAND] result.DamageToSpecialUnits==nil --> ".. tostring (result.DamageToSpecialUnits==nil)..", size=="..tostring(#result.DamageToSpecialUnits)..", type==".. type(result.DamageToSpecialUnits).."::");
 			if (result.DamageToSpecialUnits==nil) then print ("[QUICKSAND] POST nil: 0 damage to specials"); end
 			if (result.DamageToSpecialUnits=={}) then print ("[QUICKSAND] POST  {}: 0 damage to specials"); end
 			if (#result.DamageToSpecialUnits==0) then print ("[QUICKSAND] POST  #==0 : 0 damage to specials"); end
 			print ("[QUICKSAND] POST damage to special "); 
 			for k,v in pairs (result.DamageToSpecialUnits) do print ("[QUICKSAND] POST damage to special "..k..", amount "..v.."::"); end
-			print ("[QUICKSAND] POST __fin__");
-
-		--[[
-			--check if Quicksand visual Special Unit was destroyed (killed); if the TO territory in the attack has a QuicksandData record & isAttack & isSuccessful are both true, then recreate the special unit, and replace the Quicksand record for this territoryID
-		if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil and result.IsAttack==true and result.IsSuccessful==true) then
-			print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
-			--create new Quicksand special unit & apply to the territory
-			local impactedTerritory = WL.TerritoryModification.Create(gameOrder.To);
-			local specialUnit_Quicksand = build_Quicksand_specialUnit (game, gameOrder.To);
-			impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
-			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
-			addOrder(event, false); --important to use 'false' here b/c the Quicksand attack itself
-			--update QuicksandData record to reflect the new special unit ID#
-			local publicGameData = Mod.PublicGameData;
-			local oldQuicksandDataRecord = publicGameData.QuicksandData [gameOrder.To];
-			local newQuicksandDataRecord = {territory = oldQuicksandDataRecord.territory, castingplayer = oldQuicksandDataRecord.castingPlayer, territoryOwner = oldQuicksandDataRecord.territoryOwner, turnNumberQuicksandEnds = oldQuicksandDataRecord.turnNumberQuicksand, specialUnitID = specialUnit_Quicksand.ID}; --recreate QuicksandData record with ID# of the new special unit
-			publicGameData.QuicksandData[gameOrder.To] = newQuicksandDataRecord;
-			--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
-			Mod.PublicGameData = publicGameData; --resave public game data
-			print ("[QUICKSAND] special unit killed / OLD    = "..oldQuicksandDataRecord.specialUnitID);
-			print ("[QUICKSAND] special unit killed / NEW    = "..newQuicksandDataRecord.specialUnitID);
-			print ("[QUICKSAND] special unit killed / NEWpub = "..Mod.PublicGameData.QuicksandData[gameOrder.To].specialUnitID);
-		end]]
-
+			print ("[QUICKSAND] POST __fin__");]]
 	end
 end
 
@@ -845,19 +911,20 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'shield_special unit_clearback.png';
     builder.AttackPower = 0;
-    builder.DefensePower = 0;
+	builder.AttackPowerPercentage = 0;
+	builder.DefensePower = 0;
 	builder.DefensePowerPercentage = 0;
     builder.DamageToKill = 9999999;
     builder.DamageAbsorbedWhenAttacked = 9999999;
     builder.CombatOrder = -99999; --before armies (which are 0); make this is a significantly low # (high negative #) to reasonably be the first unit in combat order (lowest #) on a territory to protect all units
-    builder.CanBeGiftedWithGiftCard = false;
+    --builder.CanBeGiftedWithGiftCard = false;
 	builder.CanBeGiftedWithGiftCard = true;
     builder.CanBeTransferredToTeammate = false;
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 
-	print ("Mod.Settings.ShieldDescription=="..tostring (Mod.Settings.ShieldDescription));
+	--print ("Mod.Settings.ShieldDescription=="..tostring (Mod.Settings.ShieldDescription));
 	local strShieldDesc = tostring (Mod.Settings.ShieldDescription);
 	local recordUnitDesc = {UnitDescription = strShieldDesc};
 	local recordEssentials = {Essentials = recordUnitDesc};
@@ -907,12 +974,14 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.IncludeABeforeName = false;
 		builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels
 		builder.AttackPower = 0;
+		builder.AttackPowerPercentage = 0;
 		builder.DefensePower = 0;
+		builder.DefensePowerPercentage = 0;
 		builder.DamageToKill = 9999999;
 		builder.DamageAbsorbedWhenAttacked = 9999999;
 		--builder.Health = 99999999999999;
 		builder.CombatOrder = 99999; --doesn't protect Commander which is 10000; make a significantly high # to reasonably be 'the last unit' in combat order (highest #) on a territory so it does not protect any units
-		builder.CanBeGiftedWithGiftCard = false;
+		--builder.CanBeGiftedWithGiftCard = false;
 		builder.CanBeGiftedWithGiftCard = true;
 		builder.CanBeTransferredToTeammate = false;
 		builder.CanBeAirliftedToSelf = false;
@@ -945,7 +1014,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		end
 		print ("expire turn#="..turnNumber_MonolithExpires.."::duration=="..Mod.Settings.MonolithDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."::");
 		--even if Monolith duration==0, still make a note of the details of the Monolith action - probably not required though
-		local MonolithDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberMonolithEnds=turnNumber_MonolithExpires, specialUnitID=specialUnit_Monolith.ID};---&&&
+		local MonolithDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberMonolithEnds=turnNumber_MonolithExpires, specialUnitID=specialUnit_Monolith.ID};
 		table.insert (privateGameData.MonolithData, MonolithDataRecord);
 		Mod.PrivateGameData = privateGameData;
 		--printObjectDetails (MonolithDataRecord, "[POST Monolith data record]");
@@ -971,7 +1040,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	builder.DefensePower = 0;
 	builder.DamageToKill = 0;
 	builder.DamageAbsorbedWhenAttacked = 0;
-	builder.Health = 0;
+	--builder.Health = 0;
 	builder.CombatOrder = 10001; --doesn't protect Commander
 	builder.CanBeGiftedWithGiftCard = false;
 	builder.CanBeTransferredToTeammate = false;
@@ -1007,7 +1076,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	end
 	print ("expire turn#="..turnNumber_IsolationExpires.."::duration=="..Mod.Settings.IsolationDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."::");
 	--even if Isolation duration==0, still make a note of the details of the Isolation action - probably not required though
-	local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
+	local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};
 	publicGameData.IsolationData [targetTerritoryID] = IsolationDataRecord; --do it as a non-contiguous array so can be referenced later as (publicGameData.IsolationData [targetTerritoryID] ~= nil) to identify if Isolation impacts a given territory
 	--table.insert (publicGameData.IsolationData, IsolationDataRecord);  --don't use this method, as it wastes the key by making it an auto-incrementing integer, rather than something meaningful like the territory ID
 	Mod.PublicGameData = publicGameData;
@@ -1228,11 +1297,11 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			end
 
 			strNeutralizeSkipOrderMessage = "Neutralize action skipped due to presence of a " .. strNeutralizeSkipOrderMessage .. " on target territory "..targetTerritoryName;
-			
+
 			print ("NEUTRALIZATION - skipOrder - playerID="..gameOrder.PlayerID.. "::territory="..targetTerritoryID .."/"..targetTerritoryName.."::"..strNeutralizeSkipOrderMessage.."::");
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strNeutralizeSkipOrderMessage, {}, {},{}));
 			skip(WL.ModOrderControl.Skip);
-	
+
 		else
 			print ("PROCESS THIS Neutralize");
 
@@ -1245,7 +1314,7 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			builder.DefensePower = 0;
 			builder.DamageToKill = 0;
 			builder.DamageAbsorbedWhenAttacked = 0;
-			builder.Health = 0;
+			--builder.Health = 0;
 			builder.CombatOrder = 10001; --doesn't protect Commander
 			builder.CanBeGiftedWithGiftCard = false;
 			builder.CanBeTransferredToTeammate = false;
@@ -1281,21 +1350,21 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			impactedTerritory.SetOwnerOpt=WL.PlayerID.Neutral; --make the target territory neutral
 			impactedTerritory.AddSpecialUnits = {specialUnit_Neutralize}; --add special unit
 			table.insert (modifiedTerritories, impactedTerritory);
-			printObjectDetails (specialUnit_Neutralize, "Neutralize specialUnit", "Neutralize"); --show contents of the Neutralize special unit -- &&&
-			
+			printObjectDetails (specialUnit_Neutralize, "Neutralize specialUnit", "Neutralize"); --show contents of the Neutralize special unit
+
 			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Neutralize action
 			local strNeutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' neutralized ' .. targetTerritoryName;
 			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, strNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
-			
+
 			--save data in Mod.PublicGameData so the territory can be reverted to normal state later
 			local privateGameData = Mod.PrivateGameData;
 			--local neutralizeData = privateGameData.NeutralizeData;
 			local turnNumber_NeutralizationExpires = -1;
 			print ("PRE  Neutralize#items="..tablelength(privateGameData.NeutralizeData));
 			printObjectDetails (privateGameData.NeutralizeData, "[PRE  neutralize data]", "Execute neutralize operation");
-			
+
 			if (Mod.Settings.NeutralizeDuration==0) then  --if Neutralization duration is Permanent (don't auto-revert), set expiration turn to -1
 				turnNumber_NeutralizationExpires = -1; 
 			else --otherwise, set expire turn as current turn # + card Duration
@@ -1314,13 +1383,18 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			print ("POST Neutralize#items="..tablelength(privateGameData.NeutralizeData));
 			print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil));
 
-		end		
+		end
 	end
 end
 
 function process_Isolation_expirations (game,addOrder)
 	local publicGameData = Mod.PublicGameData; 
 	local IsolationData = publicGameData.IsolationData;
+
+	if (Mod.Settings.ActiveModules.Isolation ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.IsolationEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	--case of Isolation Duration==-1 (permanent) is handled below, don't exit function here
+
 	print ("[ISOLATION EXPIRATIONS] START");
 	print ("[process_Isolation_expirations]# of Isolation data records=="..tablelength(IsolationData)..", IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
 	--print ("IsolationData==nil -->"..tostring(publicGameData.IsolationData==nil).."::");
@@ -1380,7 +1454,11 @@ function process_Neutralize_expirations (game,addOrder)
 	local neutralizeData = privateGameData.NeutralizeData;
 	local neutralizeDataRecord = nil;
 	local numNeutralizeActionsPending = tablelength(privateGameData.NeutralizeData);
-	
+
+	if (Mod.Settings.ActiveModules.Neutralize ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.NeutralizeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	--neutralize duration -1 (permanent) case is handled below, don't exit function here
+
 	print ("[process_Neutralize_expirations]# of neutralize data records=="..numNeutralizeActionsPending..", neutralizeData==nil -->"..tostring(privateGameData.NeutralizeData==nil).."::");
 	--print ("neutralizeData==nil -->"..tostring(privateGameData.NeutralizeData==nil).."::");
 	--print ("neutralizeData=={} -->"..tostring(privateGameData.NeutralizeData=={}).."::");
@@ -1396,7 +1474,7 @@ function process_Neutralize_expirations (game,addOrder)
 		print ("NEUTRALIZE is Permanent! Do not expire, do not delete the Special Unit");
 		return;
 	end
-	
+
 	for _,neutralizeDataRecord in pairs(neutralizeData) do
 		if (neutralizeDataRecord.turnNumberToRevert <= game.Game.TurnNumber) then   --if expires this turn or earlier (and was somehow missed [this shouldn't happen]), process the expiry
 			local castingPlayerID = neutralizeDataRecord.castingPlayer;     --the player who cast the Neutralize action
@@ -1405,7 +1483,7 @@ function process_Neutralize_expirations (game,addOrder)
 			local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]; --current state of target territory, can check if it's already owned by someone else, etc
 			local territoryOwnerID_former = neutralizeDataRecord.territoryOwner;  --owner of the territory @ time of Neutralize invocation (may be different now); if territory is neutral, revert owner back to this player
 			local territoryOwnerID_current = targetTerritory.OwnerPlayerID;  --actual current owner of the territory; ==0 indicate neutral (ok to revive), ~=0 indicates someone else owns it now (don't revive it)
-	
+
 			print ("[check REVERT NEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..territoryOwnerID_current.."::formerOwner=="..territoryOwnerID_former);
 
 			if (territoryOwnerID_current ~= WL.PlayerID.Neutral) then
@@ -1418,11 +1496,11 @@ function process_Neutralize_expirations (game,addOrder)
 				print ("[EXECUTE Neutralize revert]");
 				local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 				local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
-				
+
 				--contents of neutralizeDataRecord are: {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
 				impactedTerritory.RemoveSpecialUnitsOpt = {neutralizeDataRecord.specialUnitID}; --remove the Neutralize special unit from the territory; no error occurs if object is already destroyed
 
-				--[[  --get Neutralize special ---&&&
+				--[[  --get Neutralize special ---
 				print ("#targetTerritory.NumArmies.SpecialUnits==".. #targetTerritory.NumArmies.SpecialUnits.."::");
 				if (#targetTerritory.NumArmies.SpecialUnits >= 1) then --territory has 1+ special units
 					for key, sp in pairs(targetTerritory.NumArmies.SpecialUnits) do
@@ -1441,19 +1519,19 @@ function process_Neutralize_expirations (game,addOrder)
 						end
 					end
 				end]]
-				
+
 				impactedTerritory.SetOwnerOpt=territoryOwnerID_former;
 				table.insert (modifiedTerritories, impactedTerritory);
-		
+
 				local territoryOwnerName_former = toPlayerName (territoryOwnerID_current);
 				local strRevertNeutralizeOrderMessage = targetTerritoryName ..' reverted from neutral to owned by ' .. territoryOwnerName_former;
 				local event = WL.GameOrderEvent.Create(territoryOwnerID_former, strRevertNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 				addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-				
+
 				--pop off this item from the Neutralize table!
 				neutralizeData[targetTerritoryID] = nil; --this eliminates this element from the table
-			
+
 			end
 		else
 			print ("expiry not yet");
@@ -1637,6 +1715,10 @@ end
 function CardBlock_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
+	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if Pestilence module is not active, skip everything, just return
+	if (Mod.Settings.CardBlockEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.CardBlockDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
     print("[CARD BLOCK] processEndOfTurn START");
     if (publicGameData.CardBlockData == nil) then print("[CARD BLOCK] no data"); return; end
     for key, record in pairs(publicGameData.CardBlockData) do
@@ -1664,7 +1746,11 @@ end
 function Tornado_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-    print("[TORNADO] processEndOfTurn START");
+	if (Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.TornadoEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.TornadoDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+	print("[TORNADO] processEndOfTurn START");
     if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
     for terrID, record in pairs(publicGameData.TornadoData) do
 		local strTerritoryName = tostring(getTerritoryName(terrID, game));
@@ -1703,7 +1789,11 @@ end
 function Earthquake_processEndOfTurn(game, addOrder)
 	local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-    print("[EARTHQUAKE] processEndOfTurn START");
+	if (Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.EarthquakeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.EarthquakeDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+	print("[EARTHQUAKE] processEndOfTurn START");
     if (publicGameData.EarthquakeData == nil) then print("[EARTHQUAKE] no data"); return; end --if no Earthquake data, skip everything, just return
 
 	for bonusID, record in pairs(publicGameData.EarthquakeData) do
@@ -1750,7 +1840,12 @@ end
 function Quicksand_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-    print("[QUICKSAND] processEndOfTurn START");
+
+	if (Mod.Settings.ActiveModules.Quicksand ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.QuicksandEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.QuicksandDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+	print("[QUICKSAND] processEndOfTurn START");
     if (publicGameData.QuicksandData == nil) then print("[QUICKSAND] no data"); return; end
     for terrID, record in pairs(publicGameData.QuicksandData) do
         --check if quicksand ends this turn (or earlier but was somehow missed) and if so, pop up the record from QuicksandData & remove the visual Special Unit
@@ -1811,9 +1906,14 @@ function Quicksand_processEndOfTurn(game, addOrder)
     print("[QUICKSAND] processEndOfTurn END");
 end
 
+--remove expired Shield Specials
 function Shield_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
+
+	if (Mod.Settings.ActiveModules.Shield ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ShieldEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.ShieldDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
     print("[SHIELD] processEndOfTurn START");
     if (privateGameData.ShieldData == nil) then print("[SHIELD] no Shield data"); return; end
@@ -1852,10 +1952,15 @@ function Shield_processEndOfTurn(game, addOrder)
     Mod.PrivateGameData = privateGameData;
 end
 
+--remove expired Monolith Specials
 function Monolith_processEndOfTurn (game, addOrder)
 	local privateGameData = Mod.PrivateGameData;
 	local turnNumber = tonumber (game.Game.TurnNumber);
 
+	if (Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.MonolithEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.MonolithDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+	
 	print ("[MONOLITH] processEndOfTurn START");
 	if (privateGameData.MonolithData == nil) then print ("[MONOLIGHT] no Monolith data"); return; end
 
@@ -1918,6 +2023,10 @@ end
 
 function Pestilence_processEndOfTurn (game, addOrder)
 	local publicGameData = Mod.PublicGameData;
+
+	if (Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence module is not active, skip everything, just return
+	if (Mod.Settings.PestilenceEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.PestilenceDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
 	--print ("(game.ServerGame.Game.PlayingPlayers) ~= nil =="..tostring(((game.ServerGame.Game.PlayingPlayers) ~= nil)));
 
@@ -1993,7 +2102,8 @@ function Pestilence_processEndOfTurn (game, addOrder)
 
 				--if this is final turn of pestilence, pop the record off the table; else leave the record in to be reevalauated and applied next turn
 				if (turnNumber >= PestilenceEndTurn) then
-					print ("[PESTILENCE] duration complete for "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game));
+					print ("[PESTILENCE] duration complete, pestilence ends for "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game));
+					addOrder (WL.GameOrderEvent.Create(targetPlayerID, "Pestilence ends for "..toPlayerName(targetPlayerID, game), nil, nil));
 					publicGameData.PestilenceData [targetPlayerID] = nil;
 				else
 					print ("[PESTILENCE] not finished yet! more to come "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game));

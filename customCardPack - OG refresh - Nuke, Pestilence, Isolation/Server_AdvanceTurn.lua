@@ -284,7 +284,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif strCardTypeBeingPlayed == "Deneutralize" then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Airstrike" then
-			--Airstrike details go here
+			execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails);
 		elseif strCardTypeBeingPlayed == "Card Piece" then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Forest Fire" then
@@ -302,6 +302,28 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 			--do nothing
 		end
 	end
+end
+
+function execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails)
+	--Airstrike details go here
+	local modDataContent = split(gameOrder.ModData, "|");
+	--printObjectDetails (gameOrder, "gameOrder", "[TurnAdvance_Order]");
+	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
+	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
+	sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
+	targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
+
+	--these don't exist on Territories object, only as part of (I think) order.AttackPower & result.ActualArmies.AttackPower -- something like that
+	local sourceAttackPower = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].AttackPower;
+	local targetDefensePower = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].DefensePower;
+	print ("FROM attackPower=="..sourceAttackPower..", TO defensePower=="..targetDefensePower.."::");
+	--attempt to create Attack order on non-bordering FROM/TO -- it fails, so commented out:
+	--reference: WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, NumArmies table, order.AttackTeammates);
+	--local NumArmies = WL.Armies.Create(1000, {});
+	--local airstrikeOrder = WL.GameOrderAttackTransfer.Create (gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, NumArmies, false);
+	--addOrder (airstrikeOrder);
+
+
 end
 
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)

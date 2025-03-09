@@ -22,11 +22,25 @@ TODOs:
 		- Earthquake - no visual; damage is OK, confirmed is ends at proper time
 		- Shields - properly block all incoming damage & do no damage; cannot move
 		- Monolith - properly prevent a territory from capture while protecting no units on that territory
-
 - Implement NOW:
+	- Tornado not expiring?
+	- Quicksand routine running for non-quicksand impacted territories? is it actually doing anything?
 	- for every 'intercept click' use, ensure that the dialog hasn't been closed before trying to access the object it tried to 
 	- add checks for bad values (negative #'s, etc) for card settings; eg: # of pieces to divide card into as 0 = WZ divide by 0 error! but negative #'s don't make sense either
 	- remove 'mod skipped' order from Card Block blocked card plays (use Suppress) b/c we're adding a customized/better skip order message
+	- create own Unit Inspector; add to my mods
+	- dupe card plays when multiple mods in use -- the both process redeems/blocks/earthquakes/etc -- oops!
+	- Monolith
+		- -1 duration value seems to sometimes not always cause it to expire right away? 1st one seems to fine, others after that not so much? (doesn't make sense)
+		- likely related to -1 duration, spends a lot of time (?) searching for the unit - maybe it's trying to expire it? output appears from the fsu function (find special unit)
+	- Airstrike
+		- apply checks to ensure only selecting source as own territory
+		- include some kind of code to handle Commanders dying - eliminate the player? what about if Resurrection is in play? (hmmm) -- could potentially write an attack (a transfer?) that forcibly kills Commander, to trigger Resurrection?
+		- include code for other built-in Specials (Boss, etc) - it handles Custom SUs & Commanders ok but bosses aren't included
+			- swipe the code from Essentials / Unit Inspector, it's all there (manual coding + pulling some fields)
+		- implement the check to allow/deny for Airlifts to fogged territories/neutrals/played owned territories/target Commanders/Specials
+		- Airstrike Play Card dialog - clicking Select Source Territory again doesn't work; need to close & reopen the dialog
+	
 - account for attacks by %! in this case, numArmies is the %, and you need to calc yourself actual numarmies = % * armies left on the territory!
 	- add "on <location name>" for messages like "Shield expired", change to "Shield expired on North Brazil"; the camera focus isn't always clear enough
 	- captured Quicksand territories lose the Special Unit indicator; recreate it; do it as part of Server_TurnAdvance_Order, not @ _End, so it comes back right away and looks accurate for the remainder of the turn
@@ -164,10 +178,16 @@ require("UI_Events");
 require("utilities");
 
 function Client_PresentConfigureUI(rootParent)
+	loadActiveModules(); --load the code to identify which cards are active for this mod
 	setDefaultValues(); --set defaults for Mod.Settings values if they don't have values already from previous invocation/saved template/etc
 	create_card_checkbox_UI_controls (rootParent); --create checkboxes, 1 for each Card to enable/disable appropriately
 	update_all_card_UI_display();
 	updateModSettingsFromUI(); -- update Mod.Settings values with UI values if the UIs are enabled/populated
+end
+
+function loadActiveModules ()
+	require ("activeModules"); --load the code to identify which cards are active for this mod
+	if activeModules==nil then activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true, ["Shield"]=true, ["Monolith"]=true}; end --if not specified from activeModules.lua, just default to a small subset of cards
 end
 
 function create_card_checkbox_UI_controls (rootParent)
@@ -177,9 +197,6 @@ function create_card_checkbox_UI_controls (rootParent)
     DestroyWindow();
 
 	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
-	require ("activeModules"); --load the code to 
-	if activeModules==nil then activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true, ["Shield"]=true, ["Monolith"]=true}; end --if not specified from activeModules.lua, just default to a small subset of cards
-
 	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 
 	if (activeModules["Nuke"] == true) then
@@ -572,7 +589,6 @@ function monolithCheckboxClicked()
 end
 
 function neutralizeCheckboxClicked()
-	--local win = "neutralizeCheckboxClicked";
 	if (NeutralizeCardCheckbox==nil) then return; end --Neutralize card isn't activated for this mod, don't process anything
 
 	Mod.Settings.NeutralizeEnabled = NeutralizeCardCheckbox.GetIsChecked();
@@ -616,26 +632,18 @@ function neutralizeCheckboxClicked()
 		CreateLabel(horzNeutralizeCardWeight).SetText("Card weight: ");
 		NeutralizeCardWeight = CreateNumberInputField(horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
-	print("Neutralize card checkbox clicked")
 end
 
 function deneutralizeCheckboxClicked()
-	--local win = "deneutralizeCheckboxClicked";
 	if (DeneutralizeCardCheckbox==nil) then return; end --Deneutralize card isn't activated for this mod, don't process anything
 
 	Mod.Settings.DeneutralizeEnabled = DeneutralizeCardCheckbox.GetIsChecked();
-	print("DeneutralizeEnabled==" .. tostring(Mod.Settings.DeneutralizeEnabled) .. "::");
-	print("Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories==" .. tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories) .. "::");
-
 	if (DeneutralizeCardCheckbox.GetIsChecked() == false) then
-		print("clear Deneutralize settings from UI");
 
 		if (vertDeneutralizeSettingsDetails ~= nil) then
-			print("destroy Deneutralize UI items");
 			updateModSettingsFromUI();
 			UI.Destroy(vertDeneutralizeSettingsDetails);
 		else
-			print("DON'T destroy Deneutralize UI items");
 		end
 	else
 		vertDeneutralizeSettingsDetails = CreateVert(vertDeneutralizeSettingsHeading);
@@ -672,8 +680,6 @@ function deneutralizeCheckboxClicked()
 		CreateLabel(horzDeneutralizeCardWeight).SetText("Card weight: ");
 		DeneutralizeCardWeight = CreateNumberInputField(horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
-	print("Deneutralize card checkbox clicked")
-	print("Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories==" .. tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories) .. "::");
 end
 
 function cardPiecesCheckboxClicked()
@@ -804,22 +810,16 @@ function forestFireCheckboxClicked()
 end
 
 function nukeCheckboxClicked ()
-	local win = "nukeCheckboxClicked";
-	print ("nukeCheckboxClicked");
-
 	Mod.Settings.NukeEnabled = NukeCardCheckbox.GetIsChecked();
 
 	if (Mod.Settings.NukeEnabled==false) then
 		--clear Nuke settings from UI
-		print ("clear Nuke settings from UI");
 
 		if (vertNukeSettingsDetails ~= nil) then
-			print ("destroy Nuke UI items");
 			updateModSettingsFromUI(); -- before destroying UI, update Mod.Settings with latest UI values
 			--DestroyWindow ("vertNukeSettingsDetails");
 			UI.Destroy (vertNukeSettingsDetails); --destroy the UI container that contains all Nuke settings
 		else
-			print ("DON'T destroy Nuke UI items");
 		end
 	else
 		vertNukeSettingsDetails = CreateVert(vertNukeSettingsHeading);
@@ -990,33 +990,18 @@ function Nuke_turnPhase_selected (turnPhase)
 end
 
 function isolationCheckboxClicked()
-	local win = "isolationConfig";
-
-	print("isolationCheckboxClicked");
-
 	updateModSettingsFromUI();
-	print("[ums kanryou]");
-
 	Mod.Settings.IsolationEnabled = IsolationCardCheckbox.GetIsChecked();
-
-	print("icc post IsolationDuration==" .. Mod.Settings.IsolationDuration .. "::");
-	print("icc post IsolationNumPiecesNeeded==" .. Mod.Settings.IsolationPiecesNeeded .. "::");
-	print("icc post IsolationStartingCardPieceQty==" .. Mod.Settings.IsolationStartPieces .. "::");
 
 	if (IsolationCardCheckbox.GetIsChecked() == false) then
 		--clear Isolation settings from UI
-		print("clear Isolation settings from UI");
-
 		if (vertIsolationSettingsDetails ~= nil) then
-			print("destroy ISO UI items");
 			updateModSettingsFromUI(); -- before destroying UI, update Mod.Settings with latest UI values
 			UI.Destroy(vertIsolationSettingsDetails); -- destroy UI container containing all Isolation settings
 		else
-			print("DON'T destroy ISO UI items");
 		end
 	else
 		--show Isolation settings in UI
-		print("show ISO settings in UI");
 		vertIsolationSettingsDetails = CreateVert(vertIsolationSettingsHeading);
 		UIcontainer = vertIsolationSettingsDetails;
 
@@ -1040,7 +1025,7 @@ function isolationCheckboxClicked()
 end
 
 function setDefaultValues()
-	print ("SET DEFAULT VALUES] START");
+	--print ("[SET DEFAULT VALUES] START");
 	--print ("sdv settings.PestCardIn1=="..tostring(Mod.Settings.PestilenceEnabled));
 	--print ("sdv settings.PestCardStrength1=="..tostring(Mod.Settings.PestilenceStrength));
 	--print ("sdv Mod.Settings.PestilenceEnabled1.5=="..tostring(Mod.Settings.PestilenceEnabled));
@@ -1206,11 +1191,12 @@ function setDefaultValues()
 		Mod.Settings.ForestFireCardWeight = 1.0;
 	end
 
-	print ("SET DEFAULT VALUES] END");
+	--print ("SET DEFAULT VALUES] END");
 end
 
 --update Mod.Settings values with the values in the UI controls; check if the controls are present, and if so grab the values (else don't, b/c values will be nil and will generate error)
 function updateModSettingsFromUI()
+	--update Pestilence settings
 	if (not UI.IsDestroyed (vertPestiSettingsDetails)) then   --if the UI for Pestilence settings is up, capture the values into Mod.Settings (in case the UI elements are destroyed)
 		Mod.Settings.PestilenceDuration = PestilenceDuration.GetValue();
 		Mod.Settings.PestilenceStrength = PestCardStrength.GetValue();
@@ -1220,7 +1206,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.PestilenceCardWeight = PestilenceCardWeight.GetValue();
 	end
 
-	--if ShieldCardCheckbox.GetIsChecked() then
+	--update Shield settings
 	if (not UI.IsDestroyed (vertShieldSettingsDetails)) then
         Mod.Settings.ShieldDuration = ShieldDuration.GetValue();
         Mod.Settings.ShieldPiecesNeeded = ShieldPiecesNeeded.GetValue();
@@ -1279,7 +1265,6 @@ function updateModSettingsFromUI()
 
     -- Update Quicksand settings
     if (not UI.IsDestroyed (vertQuicksandSettingsDetails)) then
-	--if vertQuicksandSettingsDetails ~= nil then
 		Mod.Settings.QuicksandDuration = QuicksandDuration.GetValue();
         Mod.Settings.QuicksandBlockEntryIntoTerritory = QuicksandBlockEntryIntoTerritory.GetIsChecked();
         Mod.Settings.QuicksandBlockAirliftsIntoTerritory = QuicksandBlockAirliftsIntoTerritory.GetIsChecked();
@@ -1294,7 +1279,6 @@ function updateModSettingsFromUI()
     end
 
 	if (UI.IsDestroyed (vertNukeSettingsDetails) == false) then   --if the UI for Nuke settings is up, capture the values into Mod.Settings (in case the UI elements are destroyed)
-	--if vertNukeSettingsDetails ~= nil then   --if the UI for Nuke settings is up, capture the values into Mod.Settings (in case the UI elements are destroyed)
 		Mod.Settings.NukeCardMainTerritoryDamage = NukeCardMainTerritoryDamage.GetValue ();
 		Mod.Settings.NukeCardMainTerritoryFixedDamage = NukeCardMainTerritoryFixedDamage.GetValue();
 		Mod.Settings.NukeCardConnectedTerritoryFixedDamage = NukeCardConnectedTerritoryFixedDamage.GetValue();
@@ -1361,26 +1345,17 @@ function updateModSettingsFromUI()
 end
 
 function pestilenceCheckboxClicked()
-	local win = "pestilenceCheckboxClicked";
-	print("pestilenceCheckboxClicked");
-
 	Mod.Settings.PestilenceEnabled = PestilenceCheckbox.GetIsChecked();
 
 	if (PestilenceCheckbox.GetIsChecked() == false) then
-		print("clear Pesti settings from UI");
-
 		if (vertPestiSettingsDetails ~= nil) then
-			print("destroy Pesti UI items");
 			updateModSettingsFromUI();
 			UI.Destroy(vertPestiSettingsDetails);
 		else
-			print("DON'T destroy Pesti UI items");
 		end
 	else
-		print("create vert");
 		vertPestiSettingsDetails = CreateVert(vertPestiSettingsHeading);
 		UIcontainer = vertPestiSettingsDetails;
-		print("create hori");
 
 		horzPestilenceDuration = CreateHorz(UIcontainer);
 		CreateLabel(horzPestilenceDuration).SetText("Duration: ");
@@ -1408,5 +1383,4 @@ function pestilenceCheckboxClicked()
 		PestilenceCardWeight=1.0;Mod.Settings.PestilenceCardWeight=1.0;
 		PestilenceCardWeight = CreateNumberInputField(horzPestilenceWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
-	print("Pestilence card checkbox clicked")
 end

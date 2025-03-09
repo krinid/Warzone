@@ -606,7 +606,7 @@ function play_Nuke_card(game, cardInstance, playCard)
     end);
 end
 
-function play_Airstrike_card(game, cardInstance, playCard)
+function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
     TargetTerritoryID = nil;
     TargetTerritoryName = nil;
     SourceTerritoryID = nil;
