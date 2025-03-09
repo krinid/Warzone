@@ -16,7 +16,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	local boolHaltCodeExecutionAtEndofTurn = true;
+	--local boolHaltCodeExecutionAtEndofTurn = true;
 	local intHaltOnTurnNumber = 2;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
