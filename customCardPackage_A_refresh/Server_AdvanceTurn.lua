@@ -17,7 +17,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
 	local boolHaltCodeExecutionAtEndofTurn = true;
-	if (boolHaltCodeExecutionAtEndofTurn==true) then endEverythingHereToHelpWithTesting(); ForNow(); end
+	local intHaltOnTurnNumber = 2;
+	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
 function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
@@ -284,7 +285,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif strCardTypeBeingPlayed == "Deneutralize" then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Airstrike" then
-			--execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
+			execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
 		elseif strCardTypeBeingPlayed == "Card Piece" then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Forest Fire" then
@@ -323,30 +324,31 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 	--local airstrikeOrder = WL.GameOrderAttackTransfer.Create (gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, NumArmies, false);
 	--addOrder (airstrikeOrder);
 
-	for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+	--[[for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
 		print ("@@@ "..terr.ID.."/"..game.Map.Territories [terr.ID].Name,terr.NumArmies.AttackPower);
-	end
+	end]]
 
-	--local strWhatToDo = "SU_prep";
+	--used for debugging/testing purposes
+	local strWhatToDo = "SU_prep";
 	--local strWhatToDo = "do_airstrike";
 
 	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
-	if (strWhatToDo == "SU_prep") then
+	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then
 		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
-		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 0.25, 0.25, 5, 0, 10, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 0.75, 0.75, 5, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, sourceTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, sourceTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 0, 10, 15000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, sourceTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 10, 0, 4000, true, true, true, true, true, nil);
 
 		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
 		build_specialUnit (game, addOrder, targetTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 0.25, 0.25, 5, 0, 10, -4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 0.50, 0.50, 5, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, targetTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 0.75, 0.75, 5, 10, 0, 4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.50, 1.50, 5, 0, 10, 15000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
 	else
 		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
 		process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
@@ -436,10 +438,13 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
 	--local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
 
-	print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, newResult);
+	--aply damage to Specials & armies of each Defender & Attacker; 
+
+	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
 	apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, newResult);
+	print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
+	apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, newResult);
 
 	--make below into a function
 	--to handle with both Attacking Armies taking Defense Damage, and also Defending Armies taking Attack Damage
@@ -455,50 +460,62 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	for k,v in ipairs (sortedSpecialUnits) do
 		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
 		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
-		print ("SPECIAL "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder);
+		print ("[[[[SPECIAL]]]] "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder..", remaining damage "..remainingDamage);
 
 		if (v.proxyType == "CustomSpecialUnit") then
-			print ("SPECIAL name "..v.Name..", ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DefensePower..", SPECIAL APower% "..v.AttackPowerPercentage..
-			", DPower% "..v.DefensePowerPercentage..", SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health);
+			print ("CUSTOM SPECIAL name '"..v.Name.."', ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DefensePower..", SPECIAL APower% "..v.AttackPowerPercentage..
+			", DPower% "..v.DefensePowerPercentage..", SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health..", remaining damage "..remainingDamage);
 		end
 
-		--apply damage to this Special b/c combat order is <0 or armies have been processed already
-		if (boolArmiesProcessed==true or v.CombatOrder <0) then
-			print ("damage applied to Special");
-			if (v.proxyType=="Commander") then
-				if (remainingDamage >=7) then print ("COMMANDER dies");
-				else print ("COMMANDER survives, not enough damage done");
-				end
-			elseif (v.proxyType=="CustomSpecialUnit") then
-				if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
-				if (v.Health ~= nil) then
-					if (v.Health == 0) then print ("SPECIAL already dead w/0 health, kill it/remove it");
-					elseif (remainingDamage >= v.Health) then remainingDamage = remainingDamage - v.Health; print ("SPECIAL dies, health "..v.Health.. "remaining damage "..remainingDamage);
-					else
-						--apply damage to special of amount remainingDamage
-						print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
-						remainingDamage = 0;
-					end
+		--if there's no more damage to apply, skip the code to apply any further damage; could also use 'break' to exit the loop		
+		--first check if CombatOrder indicates that it's time to apply damage to armies, then apply damage to Specials thereafter if damage is remaining
+		--1 iteration through loop can apply damage to both armies and then 1 Special (the current Special being iterated on in the loop representing the current element of the table being looped through)
+		if (remainingDamage >0) then
+			if (boolArmiesProcessed==true or v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
+				--apply damage to armies
+				if (remainingDamage >= remainingArmies) then
+					remainingDamage = remainingDamage - remainingArmies; 
+					remainingArmies = 0; 
+					print ("all armies die, remaining damage "..remainingDamage);
 				else
-					if (remainingDamage > v.DamageToKill) then remainingDamage = remainingDamage - v.DamageToKill; print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
-					else
-						--apply damage to special of amount remainingDamage
-						print ("SPECIAL survives but damage to kill by "..remainingDamage.." to "..v.DamageToKill-remainingDamage);
-						remainingDamage = 0;
-					end
+					--apply damage to armies of amount remainingDamage
+					print ("army damage, "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
+					remainingArmies = remainingArmies - remainingDamage;
+					remainingDamage = 0;
 				end
-			end
-		else
-			--apply damage to armies
-			if (remainingDamage >= remainingArmies) then remainingDamage = remainingDamage - remainingArmies; remainingArmies = 0; print ("all armies die, remaining damage "..remainingDamage);
-			else
-				--apply damage to armies of amount remainingDamage
-				print ("army damage, "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage);
-				remainingArmies = remainingArmies - remainingDamage;
-				remainingDamage = 0;
 				boolArmiesProcessed = true;
 			end
+
+			--damage to armies may have occurred already depending on CombatOrder value of current special, and this may have depleted all remaining damage
+			--if there's still damage to apply, apply it to this Special
+			if (remainingDamage > 0) then
+				print ("damage applied to Special");
+				if (v.proxyType=="Commander") then
+					if (remainingDamage >=7) then print ("COMMANDER dies"); remainingDamage = remainingDamage - 7; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
+					else print ("COMMANDER survives, not enough damage done"); remainingDamage = 0; --commander survives, no more attacks to occur
+					end
+				elseif (v.proxyType=="CustomSpecialUnit") then
+					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+					if (v.Health ~= nil) then
+						if (v.Health == 0) then print ("SPECIAL already dead w/0 health, kill it/remove it");
+						elseif (remainingDamage >= v.Health) then remainingDamage = remainingDamage - v.Health; print ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
+						else
+							--apply damage to special of amount remainingDamage
+							print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
+							remainingDamage = 0;
+						end
+					else
+						if (remainingDamage > v.DamageToKill) then remainingDamage = remainingDamage - v.DamageToKill; print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+						else
+							--apply damage to special of amount remainingDamage
+							print ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
+							remainingDamage = 0;
+						end
+					end
+				end
+			end
 		end
+		if (remainingDamage<=0) then print ("[damage remaining is "..remainingDamage.."]"); end
 	end
 end
 
@@ -1039,11 +1056,11 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		--future: check settings for if can be cast on natural neutrals and/or Neutralized territories
 		local privateGameData = Mod.PrivateGameData; 
 		local neutralizeData = privateGameData.NeutralizeData;
-		print ("[DENEUTRALIZE] @@@--------------------------------------");
+		--[[print ("[DENEUTRALIZE] --------------------------------------");
 		print ("[DENEUTRALIZE] neutralizeData [targetTerritoryID] == nil) --> ".. tostring (Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil)..", type "..type (targetTerritoryID).."::");
 		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil));
 		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [tonumber(targetTerritoryID)]==nil));
-		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [93]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [93]==nil));
+		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [93]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [93]==nil));]]
 
 		--[[local frak = Mod.PrivateGameData.NeutralizeData [targetTerritoryID];
 		for k,v in pairs (frak) do

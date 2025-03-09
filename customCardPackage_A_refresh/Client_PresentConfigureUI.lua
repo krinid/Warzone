@@ -699,7 +699,7 @@ function cardPiecesCheckboxClicked()
 		CardPiecesDetailsline6 = CreateHorz(UIcontainer);
 
 		CreateLabel(CardPiecesDetailslineCardDesc).SetText("This card will grant you cards or pieces of other cards used in the game. It cannot be played to receive cards or pieces of the Card Piece card itself.\n");
-		CreateLabel(CardPiecesDetailsline1).SetText("[FOR THE CARDS RECEIVED WHEN PLAYING a Card Piece card]");
+		CreateLabel(CardPiecesDetailsline1).SetText("[FOR THE CARDS RECEIVED WHEN PLAYING a Card Piece card]").SetColor(getColourCode ("subheading"));
 
 		CreateLabel(CardPiecesDetailsline2).SetText("   Number of whole cards to grant: ");
 		CardPiecesNumWholeCardsToGrant = CreateNumberInputField(CardPiecesDetailsline2).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumWholeCardsToGrant).SetWholeNumbers(true).SetInteractable(true);
@@ -707,7 +707,7 @@ function cardPiecesCheckboxClicked()
 		CreateLabel(CardPiecesDetailsline3).SetText("   Number of card pieces to grant:  ");
 		CardPiecesNumCardPiecesToGrant = CreateNumberInputField(CardPiecesDetailsline3).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumCardPiecesToGrant).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(CardPiecesDetailsline4).SetText("[FOR COLLECTING the Card Piece card itself]");
+		CreateLabel(CardPiecesDetailsline4).SetText("[FOR COLLECTING the Card Piece card itself]").SetColor(getColourCode ("subheading"));
 
 		CreateLabel(CardPiecesDetailsline5).SetText("   Pieces needed to form a whole card: ");
 		CardPiecesPiecesNeeded = CreateNumberInputField(CardPiecesDetailsline5).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
@@ -751,8 +751,9 @@ function airstrikeCheckboxClicked()
 		if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
 		AirstrikeDeploymentYield = CreateNumberInputField(horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
 		CreateLabel(UIcontainer).SetText("• % of units that survive deployment from the plane and parachuting to the territory; the rest are considered to be shot out of the air on the way down");
-		CreateLabel(UIcontainer).SetText("• 100% means that all units sent survive deployment and partipate in the attack");
-		CreateLabel(UIcontainer).SetText("• 75% means that half of the units partipate in the attack, 25% die without contributing to the attack");
+		CreateLabel(UIcontainer).SetText("• 100% means that all units sent partipate in the attack");
+		CreateLabel(UIcontainer).SetText("• 75% means that 75% of the units partipate in the attack, 25% die during deployment without contributing to the attack");
+		CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting; no Special Units die during deployment");
 		CreateLabel(UIcontainer).SetText(" ");
 
 		horz = CreateHorz(UIcontainer);
@@ -829,12 +830,13 @@ function nukeCheckboxClicked ()
 		--UIcontainer = CreateVert(CreateHorz(CreateHorz(CreateHorz(CreateHorz(vertNukeSettingsDetails)))));
 
 		CreateLabel (UIcontainer).SetText ("Launch a nuke at any territory on the map. Requires neither proximity nor visibility to the territory. Configure damage for the epicenter and the blast range to extend outward from the epicenter.")
-		horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]");
-		vertA = CreateVert (horzNukeCardMainTerritoryDamage);
+		--horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
+		horzNukeCardMainTerritoryDamage = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth(1);
+		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.5);
+		vertA = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.25);
 		CreateLabel(vertA).SetText("Damage (%): ");
 		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-		vertB = CreateVert (horzNukeCardMainTerritoryDamage);
+		vertB = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.5);
 		CreateLabel(vertB).SetText("Fixed damage: ");
 		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
 

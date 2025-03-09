@@ -663,6 +663,7 @@ function SourceTerritoryClicked(terrDetails)
 		SourceTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		SourceTerritoryID = terrDetails.ID;
         SourceTerritoryName = terrDetails.Name;
+        TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 	end
 end
 
