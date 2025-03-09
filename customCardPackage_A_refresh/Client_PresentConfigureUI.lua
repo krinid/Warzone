@@ -24,6 +24,10 @@ TODOs:
 		- Monolith - properly prevent a territory from capture while protecting no units on that territory
 - Implement NOW:
 	- Tornado not expiring?
+	- expand Module checks into:
+		- code for Quicksand/Isolation in process_game_orders_AttackTransfers
+		- GOC, GameCommit, Game Refresh files, Game custom message, ?start game?, 
+		- game refresh file
 	- Card Block expired notification order is assigned to CASTING PLAYER, so casting player sees the order note not the player it was cast on
 	- Quicksand routine running for non-quicksand impacted territories? is it actually doing anything?
 	- for every 'intercept click' use, ensure that the dialog hasn't been closed before trying to access the object it tried to 
