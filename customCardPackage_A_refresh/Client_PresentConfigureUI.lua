@@ -834,7 +834,7 @@ function nukeCheckboxClicked ()
 		horzNukeCardMainTerritoryDamage = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth(1);
 		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.5);
 		vertA = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.25);
-		CreateLabel(vertA).SetText("Damage (%): ");
+		CreateLabel(vertA).SetText("Damage (%): *");
 		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
 		vertB = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.25);
 		CreateLabel(vertB).SetText("Fixed damage: ");
