@@ -1,6 +1,6 @@
 function Client_GameCommit (clientGame, skipCommit)
     --only prevent Commits if Pestilence is pending; if Pestilence module isn't active, just skip this entirely
-    if (Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence isn't active for this mod, do nothing, just return
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence isn't active for this mod, do nothing, just return
 
     --intCommitButtonPressed_count
     --^^don't make local; keep it global so the count persists during the client session

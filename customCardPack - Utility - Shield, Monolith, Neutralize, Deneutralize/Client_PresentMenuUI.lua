@@ -18,11 +18,20 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
     TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
     local moduleCount = 0;
-    for k,v in pairs (Mod.Settings.ActiveModules) do
-        moduleCount = moduleCount + 1;
-        if (moduleCount > 1) then TopLabel.SetText (TopLabel.GetText() ..", "); end
-        TopLabel.SetText (TopLabel.GetText() ..k);
+    if (Mod.Settings.ActiveModules ~= nil) then
+        for k,v in pairs (Mod.Settings.ActiveModules) do
+            moduleCount = moduleCount + 1;
+            if (moduleCount > 1) then TopLabel.SetText (TopLabel.GetText() ..", "); end
+            TopLabel.SetText (TopLabel.GetText() ..k);
+        end
+    else
+        TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
     end
+
+    --debugging test criteria; for games where Mod.Settings.ActiveModules is properly defined, this should print JUMBO, then PUCHI, then JUMBO, and none cause an error/halt execution
+   	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+    if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+    if (Mod.Settings.ERROROUT == nil or Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
 
     TopLabel.SetText (TopLabel.GetText() .. ("\n\nServer time: "..game.Game.ServerTime));
 	if (game.Us~=nil) then --a player in the game
@@ -56,11 +65,11 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 	end]]
 
     showDefinedCards (game);
-    if (Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
-    if (Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
-    if (Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
-    if (Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
-    if (Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 end
 
@@ -158,8 +167,9 @@ function showDefinedCards (game)
     for k,v in pairs (cards) do
         strText = strText .. "\n"..v.." / ["..k.."]";
     end
+
     strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
-    if (Mod.Settings.ActiveModules.CardPieces == true) then strText = TopLabel.GetText() .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = TopLabel.GetText() .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
     TopLabel.SetText (strText.."\n");
 end
 

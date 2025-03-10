@@ -76,7 +76,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 	local targetPlayerID = gameOrder.PlayerID;
 
 	--if CardBlock isn't in use, just return false
-	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end --if module is not active, just return false
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end --if module is not active, just return false
 	if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
 	--if there is no CardBlock data, just return false
@@ -246,33 +246,33 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
 		
 		print ("[S_AT_O] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
-		if (strCardTypeBeingPlayed == "Nuke" and Mod.Settings.ActiveModules.Nuke == true) then
+		if (strCardTypeBeingPlayed == "Nuke" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then
 			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Isolation" and Mod.Settings.ActiveModules.Isolation == true) then
+		elseif (strCardTypeBeingPlayed == "Isolation" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Isolation == true)) then
 			execute_Isolation_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Pestilence" and Mod.Settings.ActiveModules.Pestilence == true) then
+		elseif (strCardTypeBeingPlayed == "Pestilence" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true)) then
 			execute_Pestilence_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Shield" and Mod.Settings.ActiveModules.Shield == true) then
+		elseif (strCardTypeBeingPlayed == "Shield" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true)) then
 			execute_Shield_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Monolith" and Mod.Settings.ActiveModules.Monolith == true) then
+		elseif (strCardTypeBeingPlayed == "Monolith" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true)) then
 			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
-		elseif (strCardTypeBeingPlayed == "Neutralize" and Mod.Settings.ActiveModules.Neutralize == true) then
+		elseif (strCardTypeBeingPlayed == "Neutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true)) then
 			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Deneutralize" and Mod.Settings.ActiveModules.Deneutralize == true) then
+		elseif (strCardTypeBeingPlayed == "Deneutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Deneutralize == true)) then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Airstrike" and Mod.Settings.ActiveModules.Airstrike == true) then
+		elseif (strCardTypeBeingPlayed == "Airstrike" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true)) then
 			execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
-		elseif (strCardTypeBeingPlayed == "Card Piece" and Mod.Settings.ActiveModules.CardPieces == true) then
+		elseif (strCardTypeBeingPlayed == "Card Piece" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardPieces == true)) then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Forest Fire" and Mod.Settings.ActiveModules.ForestFire == true) then
+		elseif (strCardTypeBeingPlayed == "Forest Fire" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true)) then
 			--Forest Fire details go here
-		elseif (strCardTypeBeingPlayed == "Card Block" and Mod.Settings.ActiveModules.CardBlock == true) then
+		elseif (strCardTypeBeingPlayed == "Card Block" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardBlock == true)) then
 			execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Earthquake" and Mod.Settings.ActiveModules.Earthquake == true) then
+		elseif (strCardTypeBeingPlayed == "Earthquake" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Earthquake == true)) then
 			execute_Earthquake_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Tornado" and Mod.Settings.ActiveModules.Tornado == true) then
+		elseif (strCardTypeBeingPlayed == "Tornado" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Tornado == true)) then
 			execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Quicksand" and Mod.Settings.ActiveModules.Quicksand == true) then
+		elseif (strCardTypeBeingPlayed == "Quicksand" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Quicksand == true)) then
 			execute_Quicksand_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		else
 			--custom card play not handled by this mod; could be an error, or a card from another mod
@@ -1391,7 +1391,7 @@ function process_Isolation_expirations (game,addOrder)
 	local publicGameData = Mod.PublicGameData; 
 	local IsolationData = publicGameData.IsolationData;
 
-	if (Mod.Settings.ActiveModules.Isolation ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.IsolationEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	--case of Isolation Duration==-1 (permanent) is handled below, don't exit function here
 
@@ -1455,7 +1455,7 @@ function process_Neutralize_expirations (game,addOrder)
 	local neutralizeDataRecord = nil;
 	local numNeutralizeActionsPending = tablelength(privateGameData.NeutralizeData);
 
-	if (Mod.Settings.ActiveModules.Neutralize ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Neutralize ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.NeutralizeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	--neutralize duration -1 (permanent) case is handled below, don't exit function here
 
@@ -1715,7 +1715,7 @@ end
 function CardBlock_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if Pestilence module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.CardBlockEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.CardBlockDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
@@ -1746,7 +1746,7 @@ end
 function Tornado_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-	if (Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.TornadoEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.TornadoDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
@@ -1789,7 +1789,7 @@ end
 function Earthquake_processEndOfTurn(game, addOrder)
 	local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
-	if (Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.EarthquakeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.EarthquakeDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
@@ -1841,7 +1841,7 @@ function Quicksand_processEndOfTurn(game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 
-	if (Mod.Settings.ActiveModules.Quicksand ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.QuicksandEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.QuicksandDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
@@ -1911,7 +1911,7 @@ function Shield_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 
-	if (Mod.Settings.ActiveModules.Shield ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.ShieldEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.ShieldDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
@@ -1957,7 +1957,7 @@ function Monolith_processEndOfTurn (game, addOrder)
 	local privateGameData = Mod.PrivateGameData;
 	local turnNumber = tonumber (game.Game.TurnNumber);
 
-	if (Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.MonolithEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.MonolithDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 	
@@ -2024,7 +2024,7 @@ end
 function Pestilence_processEndOfTurn (game, addOrder)
 	local publicGameData = Mod.PublicGameData;
 
-	if (Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence module is not active, skip everything, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence module is not active, skip everything, just return
 	if (Mod.Settings.PestilenceEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.PestilenceDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 

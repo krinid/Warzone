@@ -67,7 +67,7 @@ end
 
 --check if player is playing a card and is impacted by CardBlock; skip the order if so
 function process_game_order_entry_CardBlock (game,gameOrder,skip)
-	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if module isn't active for this mod, do nothing, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if module isn't active for this mod, do nothing, just return
 
 	--check if order is a card play (could be regular or custom card)
     if startsWith (gameOrder.proxyType, 'GameOrderPlayCard') == true then
@@ -121,7 +121,7 @@ function process_game_order_entry_CustomCards (game,gameOrder,skip)
 			--Forest Fire details go here
 		elseif strCardTypeBeingPlayed == "Card Block" then
 			--execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif (strCardTypeBeingPlayed == "Earthquake" and Mod.Settings.ActiveModules.Earthquake == true) then
+		elseif (strCardTypeBeingPlayed == "Earthquake" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Earthquake == true)) then
 			--execute_Earthquake_order_input(game,gameOrder,skip, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Tornado" then
 			--execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
@@ -144,7 +144,7 @@ function process_game_order_entry_RegularCards (game,gameOrder,skip)
 		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
 		print ("[AIRLIFT PLAYED] FROM "..gameOrder.FromTerritoryID.."/"..getTerritoryName (gameOrder.FromTerritoryID, game)..", TO "..gameOrder.ToTerritoryID.."/"..getTerritoryName (gameOrder.ToTerritoryID, game)..", #armies=="..gameOrder.Armies.NumArmies.."::");
 
-        if (Mod.Settings.ActiveModules.Quicksand ~= true or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] == nil)) then
+        if ((Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand ~= true) or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] == nil)) then
             --do nothing, there are no Quicksand operations in place, permit these orders
             --weed out the cases above, then what's left are Airlifts to or from Isolated territories
         else
@@ -174,7 +174,7 @@ function process_game_order_entry_RegularCards (game,gameOrder,skip)
         end
 
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.Settings.ActiveModules.Isolation ~= true or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
+		if ((Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation ~= true) or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
 			--do nothing, there are no Isolation operations in place, permit these orders
 			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
 		else
@@ -203,7 +203,7 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,skip)
 
     --check for Attack/Transfers into/out of quicksand that violate the rules configured in Mod.Settings.QuicksandBlockEntryIntoTerritory & Mod.Settings.QuicksandBlockExitFromTerritory
     --if there's no QuicksandData, do nothing (b/c there's nothing to check)
-        if (Mod.Settings.ActiveModules.Quicksand ~= true or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
+        if ((Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand ~= true) or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
             --do nothing, permit these orders
             --weed out the cases above, then what's left are moves to or from Isolated territories
         else
@@ -235,7 +235,7 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,skip)
         end
 
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.Settings.ActiveModules.Isolation ~= true or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
+		if ((Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation ~= true) or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
 			--weed out the cases above, then what's left are moves to or from Isolated territories
 		else
@@ -263,7 +263,7 @@ function check_for_CardBlock ()
     local targetPlayerID = game.Us.ID;
 
     --if CardBlock isn't in use, just return false
-	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end
 	if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
     --if there is no CardBlock data, just return false

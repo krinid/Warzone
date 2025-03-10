@@ -1,17 +1,17 @@
 require("utilities");
 
 function Client_GameRefresh(clientGame)
-	--print ("[CLIENT] refresh START - - - - - - - - - - ");
+	print ("[CLIENT] refresh START - - - - - - - - - - ");
 	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiative this function
 	checkForPendingPestilence (clientGame, false); --false indicates to not forcibly show the popup warning; only do it if it's 1st turn this time or appropriate time has elapsed since last display
-	--print ("[CLIENT] refresh END - - - - - - - - - - ");
-	end
+	print ("[CLIENT] refresh END - - - - - - - - - - ");
+end
 
 function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 	--pestilence_lastPlayerWarning variable is used to track warning popups for the local client player, to avoid spamming warnings with every Refresh event
 	--^^don't define as local; leave it as global so the value persists for a given client session instead of resetting to nil each time the function executes
 
-	if (Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence isn't active for this mod, do nothing, just return
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence isn't active for this mod, do nothing, just return
 
 	local pestilence_WarningFrequency = 5; --measured in seconds; send a new warning at this frequency
 

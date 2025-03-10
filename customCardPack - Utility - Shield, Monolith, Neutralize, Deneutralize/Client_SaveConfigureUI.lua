@@ -35,6 +35,9 @@ function loadActiveModules_SaveConfigUI ()
 	if (activeModules["Airstrike"] == true) then Mod.Settings.ActiveModules.Airstrike = true; end
 	if (activeModules["Forest Fire"] == true) then Mod.Settings.ActiveModules.ForestFire = true; end
 	if (activeModules["Earthquake"] == true) then Mod.Settings.ActiveModules.Earthquake = true; end
+
+	--delme; only do this for testing with older pre-ActiveModules versions
+	--Mod.Settings.ActiveModules = nil;
 end
 
 function createCards_newCards(alert, addCard);
