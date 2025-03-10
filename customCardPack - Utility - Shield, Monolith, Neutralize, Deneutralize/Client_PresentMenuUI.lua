@@ -14,9 +14,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
     MenuWindow = rootParent;
-	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
+	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
-    TopLabel.SetText (TopLabel.GetText() .. ("\n\nActive Modules: "));
+    TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
     local moduleCount = 0;
     for k,v in pairs (Mod.Settings.ActiveModules) do
         moduleCount = moduleCount + 1;
@@ -24,7 +24,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         TopLabel.SetText (TopLabel.GetText() ..k);
     end
 
-    TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
+    TopLabel.SetText (TopLabel.GetText() .. ("\n\nServer time: "..game.Game.ServerTime));
 	if (game.Us~=nil) then --a player in the game
 		TopLabel.SetText (TopLabel.GetText() .. "\n\nClient player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(game.Us.ID == game.Settings.StartedBy));
 	else
