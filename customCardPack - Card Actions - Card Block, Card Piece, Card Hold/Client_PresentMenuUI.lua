@@ -15,6 +15,15 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
     MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Used for testing purposes only; this will be removed before releasing to public\n\n");
+
+    TopLabel.SetText (TopLabel.GetText() .. ("\n\nActive Modules: "));
+    local moduleCount = 0;
+    for k,v in pairs (Mod.Settings.ActiveModules) do
+        moduleCount = moduleCount + 1;
+        if (moduleCount > 1) then TopLabel.SetText (TopLabel.GetText() ..", "); end
+        TopLabel.SetText (TopLabel.GetText() ..k);
+    end
+
     TopLabel.SetText (TopLabel.GetText() .. ("Server time: "..game.Game.ServerTime));
 	if (game.Us~=nil) then --a player in the game
 		TopLabel.SetText (TopLabel.GetText() .. "\n\nClient player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(game.Us.ID == game.Settings.StartedBy));
@@ -32,7 +41,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		TopLabel.SetText (TopLabel.GetText() .. "\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
 	end
 
-	--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
+--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
 Mod security should be applied when working with this Hook
 Arguments:
@@ -47,11 +56,11 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 	end]]
 
     showDefinedCards (game);
-    showCardBlockData ();
-    showIsolationData ();
-    showQuicksandData ();
-    showEarthquakeData ();
-    showPestilenceData ();
+    if (Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
+    if (Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
+    if (Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
+    if (Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
+    if (Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 end
 
@@ -149,7 +158,8 @@ function showDefinedCards (game)
     for k,v in pairs (cards) do
         strText = strText .. "\n"..v.." / ["..k.."]";
     end
-    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText .. "\n\nCardPieceCardID=="..CardPiecesCardID;
+    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
+    if (Mod.Settings.ActiveModules.CardPieces == true) then strText = TopLabel.GetText() .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
     TopLabel.SetText (strText.."\n");
 end
 

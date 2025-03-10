@@ -76,7 +76,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 	local targetPlayerID = gameOrder.PlayerID;
 
 	--if CardBlock isn't in use, just return false
-	if (Mod.Settings.ActiveModules.Tornado ~= true) then return false; end --if module is not active, just return false
+	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end --if module is not active, just return false
 	if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
 	--if there is no CardBlock data, just return false

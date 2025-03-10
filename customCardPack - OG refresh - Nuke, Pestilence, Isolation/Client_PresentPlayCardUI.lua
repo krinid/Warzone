@@ -202,7 +202,7 @@ function PlayerButton(player)
 	local name = player.DisplayName(nil, false);
 	local ret = {};
 	ret["text"] = name;
-	ret["selected"] = function() 
+	ret["selected"] = function()
 		TargetPlayerBtn.SetText(name);
 		TargetPlayerID = player.ID;
 	end
@@ -227,9 +227,9 @@ function play_Earthquake_card(game, cardInstance, playCard)
                 return;
             end
 
-            print(strPlayerName_cardPlayer);
+            --[[print(strPlayerName_cardPlayer);
             print(Earthquake_SelectedBonus.ID);
-            print(Earthquake_SelectedBonus.Name);
+            print(Earthquake_SelectedBonus.Name);]]
 
             print("[EARTHQUAKE] order input: bonus=" .. Earthquake_SelectedBonus.ID .. "/".. Earthquake_SelectedBonus.Name .." :: Earthquake|" .. Earthquake_SelectedBonus.ID);
             playCard(strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);

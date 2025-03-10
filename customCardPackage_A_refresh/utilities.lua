@@ -527,8 +527,8 @@ function getXYcoordsForBonus (bonusID, game)
 	if (game==nil) then print ("@@game is nil"); end
 	if (game.Map==nil) then print ("@@game.Map is nil"); end
 	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
-	print ("@@bonusID==".. bonusID);
-	print ("@@bonusName==".. getBonusName (bonusID, game));
+	--print ("@@bonusID==".. bonusID);
+	--print ("@@bonusName==".. getBonusName (bonusID, game));
 
 	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
 		count = count + 1;

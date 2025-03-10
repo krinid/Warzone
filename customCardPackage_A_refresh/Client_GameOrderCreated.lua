@@ -58,8 +58,8 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				local orders = game.Orders;
                 table.insert(orders, replacementOrder);
 				game.Orders = orders;
-				skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
-				--skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
+				--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
+				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 			end
 		end
 	end
@@ -67,7 +67,9 @@ end
 
 --check if player is playing a card and is impacted by CardBlock; skip the order if so
 function process_game_order_entry_CardBlock (game,gameOrder,skip)
-    --check if order is a card play (could be regular or custom card)
+	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return; end --if module isn't active for this mod, do nothing, just return
+
+	--check if order is a card play (could be regular or custom card)
     if startsWith (gameOrder.proxyType, 'GameOrderPlayCard') == true then
         print ("[CARD PLAY]");
         --check for card plays by players impacted by CardBlock, and skip the order if so; include Reinforcements card in the block b/c this is client order entry time, so can stop it entirely
@@ -119,8 +121,8 @@ function process_game_order_entry_CustomCards (game,gameOrder,skip)
 			--Forest Fire details go here
 		elseif strCardTypeBeingPlayed == "Card Block" then
 			--execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
-		elseif strCardTypeBeingPlayed == "Earthquake" then
-			execute_Earthquake_operation(game,gameOrder,skip, tonumber(cardOrderContentDetails));
+		elseif (strCardTypeBeingPlayed == "Earthquake" and Mod.Settings.ActiveModules.Earthquake == true) then
+			--execute_Earthquake_order_input(game,gameOrder,skip, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Tornado" then
 			--execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Quicksand" then
@@ -130,7 +132,7 @@ function process_game_order_entry_CustomCards (game,gameOrder,skip)
 			--do nothing
 		end
 	end
-end 
+end
 
 function process_game_order_entry_RegularCards (game,gameOrder,skip)
     --if there's no QuicksandData, do nothing (b/c there's nothing to check)
@@ -142,7 +144,7 @@ function process_game_order_entry_RegularCards (game,gameOrder,skip)
 		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
 		print ("[AIRLIFT PLAYED] FROM "..gameOrder.FromTerritoryID.."/"..getTerritoryName (gameOrder.FromTerritoryID, game)..", TO "..gameOrder.ToTerritoryID.."/"..getTerritoryName (gameOrder.ToTerritoryID, game)..", #armies=="..gameOrder.Armies.NumArmies.."::");
 
-        if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] == nil)) then
+        if (Mod.Settings.ActiveModules.Quicksand ~= true or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] == nil)) then
             --do nothing, there are no Quicksand operations in place, permit these orders
             --weed out the cases above, then what's left are Airlifts to or from Isolated territories
         else
@@ -172,7 +174,7 @@ function process_game_order_entry_RegularCards (game,gameOrder,skip)
         end
 
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
+		if (Mod.Settings.ActiveModules.Isolation ~= true or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
 			--do nothing, there are no Isolation operations in place, permit these orders
 			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
 		else
@@ -201,7 +203,7 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,skip)
 
     --check for Attack/Transfers into/out of quicksand that violate the rules configured in Mod.Settings.QuicksandBlockEntryIntoTerritory & Mod.Settings.QuicksandBlockExitFromTerritory
     --if there's no QuicksandData, do nothing (b/c there's nothing to check)
-        if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
+        if (Mod.Settings.ActiveModules.Quicksand ~= true or Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
             --do nothing, permit these orders
             --weed out the cases above, then what's left are moves to or from Isolated territories
         else
@@ -233,7 +235,7 @@ function process_game_order_entry_AttackTransfers (game,gameOrder,skip)
         end
 
 		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
+		if (Mod.Settings.ActiveModules.Isolation ~= true or Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.To] == nil and Mod.PublicGameData.IsolationData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
 			--weed out the cases above, then what's left are moves to or from Isolated territories
 		else
@@ -260,9 +262,9 @@ function check_for_CardBlock ()
     local publicGameData = Mod.PublicGameData;
     local targetPlayerID = game.Us.ID;
 
-    CreateLabel (TopLabel).SetText (tostring ("Mod.Settings.CardBlockEnabled == false --> "..tostring(Mod.Settings.CardBlockEnabled == false)));
     --if CardBlock isn't in use, just return false
-    if (Mod.Settings.CardBlockEnabled == false) then return false; end
+	if (Mod.Settings.ActiveModules.CardBlock ~= true) then return false; end
+	if (Mod.Settings.CardBlockEnabled == false) then return false; end
 
     --if there is no CardBlock data, just return false
     local numCardBlockDataRecords = tablelength (publicGameData.CardBlockData);
@@ -286,9 +288,9 @@ function check_for_CardBlock ()
     end
 end
 
-function execute_Earthquake_operation(game, gameOrder, skip, bonusID)
-	print ("[EARTHQUAKE] target bonus=="..bonusID.. "::");--..getBonusName (tonumber(bonusID), game).."::");
-	print ("[EARTHQUAKE] target bonus=="..bonusID.. "/"..getBonusName (tonumber(bonusID), game).."::");
+function execute_Earthquake_order_input (game, gameOrder, skip, bonusID)
+	--print ("[EARTHQUAKE] target bonus=="..bonusID.. "::");--..getBonusName (tonumber(bonusID), game).."::");
+	--print ("[EARTHQUAKE] target bonus=="..bonusID.. "/"..getBonusName (tonumber(bonusID), game).."::");
 	print ("[EARTHQUAKE] target bonus=="..bonusID.. "/"..game.Map.Bonuses[bonusID].Name.."::");
 
 	if (game==nil) then print ("!!game is nil"); end
@@ -300,9 +302,8 @@ function execute_Earthquake_operation(game, gameOrder, skip, bonusID)
 
 	--local event = WL.GameOrderEvent.Create(game.Us.ID, "[EARTHQUAKE] target bonus=="..bonusID.. "/"..getBonusName (bonusID, game), {}, {});
 	local XYbonusCoords = getXYcoordsForBonus (tonumber(bonusID), game);
-	print ("ave X,Y=="..XYbonusCoords.average_X,XYbonusCoords.average_Y);
-	print ("min/max X/Y=="..XYbonusCoords.min_X,XYbonusCoords.max_X .."/"..XYbonusCoords.min_Y,XYbonusCoords.max_Y);
+	--print ("ave X,Y=="..XYbonusCoords.average_X..","..XYbonusCoords.average_Y);
+	--print ("min/max X/Y=="..XYbonusCoords.min_X..","..XYbonusCoords.max_X .."/"..XYbonusCoords.min_Y..","..XYbonusCoords.max_Y);
 
-	--XYbonusCoords = {X=1, Y=10};
 	--event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.X, XYbonusCoords.Y, XYbonusCoords.X, XYbonusCoords.Y);
 end

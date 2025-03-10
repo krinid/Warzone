@@ -1,10 +1,10 @@
 require("utilities");
 
 function Client_GameRefresh(clientGame)
-	print ("[CLIENT] refresh START - - - - - - - - - - ");
+	--print ("[CLIENT] refresh START - - - - - - - - - - ");
 	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiative this function
 	checkForPendingPestilence (clientGame, false); --false indicates to not forcibly show the popup warning; only do it if it's 1st turn this time or appropriate time has elapsed since last display
-	print ("[CLIENT] refresh END - - - - - - - - - - ");
+	--print ("[CLIENT] refresh END - - - - - - - - - - ");
 	end
 
 function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
