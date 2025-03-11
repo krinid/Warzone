@@ -28,6 +28,13 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
     end
 
+    for k,gameOrder in pairs (game.Orders) do
+        print (k..", "..gameOrder.proxyType);
+        if (gameOrder.proxyType == "GameOrderAttackTransfer") then
+            print ("player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
+        end
+    end
+
     --debugging test criteria; for games where Mod.Settings.ActiveModules is properly defined, this should print JUMBO, then PUCHI, then JUMBO, and none cause an error/halt execution
    	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
     if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
