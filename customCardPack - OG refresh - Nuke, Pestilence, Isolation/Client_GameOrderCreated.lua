@@ -61,20 +61,26 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 
 				print ("ORDERS:");
+				local boolSameOrderExistsAlready = false; --indicates whether an order for A->B already exists in the order list; if so, assume it's legit and skip this order
+				--need to do this b/c each of he 4 CardPack mods tries to process the original order and recreate it as an order with no Immovable Specials, generating an error due to inserting multiple A->B orders
 				for k,existingGameOrder in pairs (game.Orders) do
 					print (k..", "..existingGameOrder.proxyType);
 					if (existingGameOrder.proxyType == "GameOrderAttackTransfer") then
 						print ("player "..existingGameOrder.PlayerID..", FROM "..existingGameOrder.From..", TO "..existingGameOrder.To..", AttackTransfer "..tostring (existingGameOrder.AttackTransfer)..", ByPercent "..tostring(existingGameOrder.ByPercent).. ", #armies"..existingGameOrder.NumArmies.NumArmies..", #SUs "..#existingGameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (existingGameOrder.AttackTeammates));
-						if (gameOrder.From == existingGameOrder.From and gameOrder.To == existingGameOrder.To) then print ("**********MATCH**********"); end
+						if (gameOrder.From == existingGameOrder.From and gameOrder.To == existingGameOrder.To) then print ("**********ORDER EXISTS ALREADY, don't re-add**********"); boolSameOrderExistsAlready = true; end
 					end
 				end
 
-				--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
-				local orders = game.Orders;
-                table.insert(orders, replacementOrder);
-				game.Orders = orders;
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
-				--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
+				--only do this is an order for territory A->B doesn't exist yet; if it does, it'll throw an error on user client; each of the 4 Card Pack mods will try to recreate the order w/o Immovable Specials
+				--leverage 'boolSameOrderExistsAlready' to ensure that only the 1st mod actually inserts the corrected order 
+				if (boolSameOrderExistsAlready == false) then
+					--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
+					local orders = game.Orders;
+					table.insert(orders, replacementOrder);
+					game.Orders = orders;
+					skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
+					--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
+				end
 			end
 		end
 	end
