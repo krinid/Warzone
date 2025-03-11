@@ -28,6 +28,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
     end
 
+    print ("ORDERS:");
     for k,gameOrder in pairs (game.Orders) do
         print (k..", "..gameOrder.proxyType);
         if (gameOrder.proxyType == "GameOrderAttackTransfer") then
