@@ -14,7 +14,7 @@ STILL TO DO:
 
 function Server_AdvanceTurn_End(game, addNewOrder)
 	--uncomment the below line to forcibly halt execution for troubleshooting purposes
-	print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
+	--print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
 	print ("[GRACEFUL END OF TURN EXECUTION]");
 end
 

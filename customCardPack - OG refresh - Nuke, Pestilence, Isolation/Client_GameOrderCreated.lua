@@ -55,11 +55,11 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, numArmies); end
 
 				--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
+				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
+				--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
 				local orders = game.Orders;
                 table.insert(orders, replacementOrder);
 				game.Orders = orders;
-				--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 			end
 		end
 	end
