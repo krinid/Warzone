@@ -61,10 +61,11 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 
 				print ("ORDERS:");
-				for k,gameOrder in pairs (game.Orders) do
-					print (k..", "..gameOrder.proxyType);
-					if (gameOrder.proxyType == "GameOrderAttackTransfer") then
-						print ("player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
+				for k,existingGameOrder in pairs (game.Orders) do
+					print (k..", "..existingGameOrder.proxyType);
+					if (existingGameOrder.proxyType == "GameOrderAttackTransfer") then
+						print ("player "..existingGameOrder.PlayerID..", FROM "..existingGameOrder.From..", TO "..existingGameOrder.To..", AttackTransfer "..tostring (existingGameOrder.AttackTransfer)..", ByPercent "..tostring(existingGameOrder.ByPercent).. ", #armies"..existingGameOrder.NumArmies.NumArmies..", #SUs "..#existingGameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (existingGameOrder.AttackTeammates));
+						if (gameOrder.From == existingGameOrder.From and gameOrder.To == existingGameOrder.To) then print ("**********MATCH**********"); end
 					end
 				end
 
