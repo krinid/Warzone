@@ -54,6 +54,12 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, numArmies, gameOrder.AttackTeammates); end
 				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, numArmies); end
 
+				--can't figure out how to have this code in 4 mods all acting on the same order; they all receive and process the original order, then try to add the newly created order sans immovable SUs
+				--and the 2nd mod to try fails and throws an error
+				--until I can figure out & implement a fix for this, don't re-add the corrected order, just display an alert and let the user do it manually
+				UI.Alert ("Please unselect all immovable Special Units in your order (Monolith, ,Shield, Neutralize, Quicksand, Isolation)");
+				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
+
 				--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
 				--[[local orders = game.Orders;
                 table.insert(orders, replacementOrder);
