@@ -90,7 +90,7 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 					game.Orders = orders;
 					skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 					--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
-					if (boolImmovableAntiNag == false) then UI.Alert ("You have entered an order that moves an Immovable Special Unit (Monolith, Shield, Neutralize, Quicksand, Isolation). It has been automatically removed from your order."); boolImmovableAntiNag == true; end
+					if (boolImmovableAntiNag == false) then UI.Alert ("You have entered an order that moves an Immovable Special Unit (Monolith, Shield, Neutralize, Quicksand, Isolation). It has been automatically removed from your order."); boolImmovableAntiNag = true; end
 				end
 			end
 		end
