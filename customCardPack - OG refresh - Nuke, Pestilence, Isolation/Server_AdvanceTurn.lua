@@ -164,10 +164,10 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 
 				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, newNumArmies, gameOrder.AttackTeammates); end
 				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, newNumArmies); end
-				--addOrder (replacementOrder);
+				addOrder (replacementOrder);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 				print ("------------jinx---------------------------");
-				boolSkipOrder = false;
+				boolSkipOrder = true;
 				return false;
 			end
 		end
