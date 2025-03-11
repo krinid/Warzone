@@ -103,8 +103,6 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 				--don't block Reinfs b/c the armies are already deployed, so blocking the card just gives the card back and the armies stay deployed
 				--ie: do nothing, let it process normally
 					print ("[CARD] Reinf card play - don't block");
-					boolSkipOrder = true;
-					return false;
 			else
 				--skip order, as it is a card play (that isn't Reinf) by a player impacted by CardBlock
 				printObjectDetails (publicGameData.CardBlockData, "CardBlockData", "in skip routine");
@@ -169,7 +167,8 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 				addOrder (replacementOrder);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 				print ("------------jinx---------------------------");
-				return;
+				boolSkipOrder = false;
+				return false;
 			end
 		end
 	end
