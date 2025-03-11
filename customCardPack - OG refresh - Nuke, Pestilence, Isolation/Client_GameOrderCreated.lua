@@ -23,6 +23,16 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 end
 
 function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
+
+	--global (not local) variables to control the UI.Alert nagging between the 4 mods, nag only once per session for each Immovable Special type across all 4 mods
+	--default to false, set to true once a nag for that SU type has been done
+	if (boolImmovableAntiNag_Monolith == nil) then boolImmovableAntiNag_Monolith = false; end
+	if (boolImmovableAntiNag_Shield == nil) then boolImmovableAntiNag_Shield = false; end
+	if (boolImmovableAntiNag_Quicksand == nil) then boolImmovableAntiNag_Quicksand = false; end
+	if (boolImmovableAntiNag_Isolation == nil) then boolImmovableAntiNag_Isolation = false; end
+	if (boolImmovableAntiNag_Neutralize == nil) then boolImmovableAntiNag_Neutralize = false; end --actually it's not possible to move Neutralize, b/c it's on a Neutral territory
+	if (boolImmovableAntiNag == nil) then boolImmovableAntiNag = false; end --for now just use this one for all Immovable SUs; decide later if 1 per SU type is really required
+
 	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
 	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
 		--check any Special Units in the armies include in the AttackTransfer or Airlift operation
@@ -57,7 +67,7 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 				--can't figure out how to have this code in 4 mods all acting on the same order; they all receive and process the original order, then try to add the newly created order sans immovable SUs
 				--and the 2nd mod to try fails and throws an error
 				--until I can figure out & implement a fix for this, don't re-add the corrected order, just display an alert and let the user do it manually
-				--UI.Alert ("Please unselect all immovable Special Units in your order (Monolith, ,Shield, Neutralize, Quicksand, Isolation)");
+				--UI.Alert ("Please unselect all immovable Special Units in your order (Monolith, Shield, Neutralize, Quicksand, Isolation)");
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 
 				print ("ORDERS:");
@@ -80,6 +90,7 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 					game.Orders = orders;
 					skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 					--skip (WL.ModOrderControl.Skip, false); --skip the original order with an Immovable Special Unit
+					if (boolImmovableAntiNag == false) then UI.Alert ("You have entered an order that moves an Immovable Special Unit (Monolith, Shield, Neutralize, Quicksand, Isolation). It has been automatically removed from your order."); boolImmovableAntiNag == true; end
 				end
 			end
 		end
