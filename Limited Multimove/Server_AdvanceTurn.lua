@@ -98,7 +98,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	-- So far ... I can detect the case when the glitch will happen but can't fix it, even by recreating the order with the same # of armies & specials, even if forcing it to an Attack Only setting
+	-- Confirm: this isn't required anymore; Fizz updated WZ so this doesn't occur any longer; leave in anyway just in case? Or remove it?
 
 	--check for case of FROM=order player, TO=another player (not same team) but IsAttack=false; this causes either a WZ error (if TO territory is neutral) or a transfer to the enemy (if TO territory is owned by an enemy player)
 	if (result.IsAttack==false and FROMowner == order.PlayerID and TOowner ~= order.PlayerID) then
@@ -185,8 +185,8 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'used armies' to mods)
 			if (result.IsAttack==true) then
-				result.AttackingArmiesKilled = WL.Armies.Create (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate, {});
-				result.DefendingArmiesKilled = WL.Armies.Create (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate, {});
+				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), {});
+				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), {});
 			end
 
 			--COMMENT FOR BELOW: map3 isn't used at this point; perhaps it could be but I think the current state is likely the best while keeping it simple (ie: not tracking the # of moves for every separate group of units and then having the user indicate which groups are moving where)
