@@ -469,7 +469,7 @@ function play_Isolation_card(game, cardInstance, playCard)
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory you wish to isolate."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-    
+
         UI.CreateButton(vert).SetText("Play Card").SetOnClick(function() 
 
         --check for CANCELED request, ie: no territory selected

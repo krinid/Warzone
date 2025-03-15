@@ -40,8 +40,40 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 	print ("____________________Turn #"..game.ServerGame.Game.TurnNumber.."________ move limit "..Mod.Settings.MoveLimit);
 end
 
+function checkForForcedOrder (game, order, result, skip, addNewOrder)
+	local strArrayOrderData = split(order.Payload,'|');
+
+	--for reference:
+	--local strForcedOrder = "ForceOrder|AttackTransfer|"..targetPlayer.."|"..gameOrder.From.."|"..gameOrder.To.."|"..gameOrder.NumArmies.NumArmies;
+
+	if (strArrayOrderData[1] ~= "ForceOrder") then return; end
+
+	if (strArrayOrderData[2] == "AttackTransfer") then
+		print ("[FORCE ORDER] prep - "..order.Payload);
+		local numArmies = WL.Armies.Create(strArrayOrderData[8], {});
+		print ("[FORCE ORDER] start - "..order.Payload);
+		local forcedAttackTransfer = WL.GameOrderAttackTransfer.Create(strArrayOrderData[3], strArrayOrderData[4], strArrayOrderData[5], tonumber (strArrayOrderData[6]), toboolean (strArrayOrderData[7]), numArmies, toboolean (strArrayOrderData[9]));
+		--replacementOrder = WL.GameOrderAttackTransfer.Create(targetPlayer, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, gameOrder.NumArmies, gameOrder.AttackTeammates);
+		print ("[FORCE ORDER] pre - "..order.Payload);
+		--addNewOrder(WL.GameOrderEvent.Create(strArrayOrderData[3], order.Payload, {}, {},{}));
+		addNewOrder (forcedAttackTransfer);
+		print ("[FORCE ORDER] post - "..order.Payload);
+	end
+end
+
+function toboolean (value)
+    if value == nil or value == false or value == "false" then
+        return false
+    else
+        return true
+    end
+end
+
 function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
-	if order.proxyType ~= "GameOrderAttackTransfer" then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
+	--print ("PROXY "..order.proxyType);
+	--if (order.proxyType == "GameOrderCustom") then checkForForcedOrder (game, order, result, skip, addNewOrder); end
+	--    if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'BuyTank_')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
+	if (order.proxyType ~= "GameOrderAttackTransfer") then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
 
 	local map2message = "map2FROM Armies (nil)/SU# (nil)";
 
@@ -87,7 +119,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	end
 
 	print ("- - - - - - - - - - - - - - - - - - - - - PRE");
-	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer));
+	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
 	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("NumArmies "..order.NumArmies.NumArmies..", #specials "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
 	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
@@ -95,9 +127,9 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
 
-	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	-- START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	--[[ - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- Confirm: this isn't required anymore; Fizz updated WZ so this doesn't occur any longer; leave in anyway just in case? Or remove it?
 
 	--check for case of FROM=order player, TO=another player (not same team) but IsAttack=false; this causes either a WZ error (if TO territory is neutral) or a transfer to the enemy (if TO territory is owned by an enemy player)
@@ -113,7 +145,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		--try recreating the order from current state, see if it becomes a proper Attack
 		local newNumArmiesCountFG = order.NumArmies.NumArmies;
 		local newSpecialsFG = order.NumArmies.SpecialUnits;
-		local newArmiesStructureFG = WL.Armies.Create(newNumArmiesCountFG, newSpecialsFG);
+		local newArmiesStructureFG = WL.Armies.Create(newNumArmiesCountFG, newSpecialsFG);]]
 
 		--[[if (not order.ByPercent) then
 			--order is a straight fixed # of armies
@@ -123,13 +155,13 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			newNumArmiesCountFG = math.floor (game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies / 100 * order.NumArmies.NumArmies + 0.5); --round to nearest int
 		end]]
 
-		--don't do this for now -- it doesn't work, WZ overrides the attempt and just makes it a Transfer again regardless, so just SKIP all FizzGlitch orders for now
+		--[[ --don't do this for now -- it doesn't work, WZ overrides the attempt and just makes it a Transfer again regardless, so just SKIP all FizzGlitch orders for now
 		--recreate the order, forcingg it to be an Attack order (Attack Only, no transfer)
 		if (false) then --(problematicOrderCount==1) then
 		--if (problematicOrderCount==1) then
-				--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, order.NumArmies, order.AttackTeammates);
-			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, newArmiesStructureFG, order.AttackTeammates);
-			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, newArmiesStructureFG, false);
+			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack, order.ByPercent, order.NumArmies, order.AttackTeammates);
+			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack, order.ByPercent, newArmiesStructureFG, order.AttackTeammates);
+			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack, false, newArmiesStructureFG, false);
 			addNewOrder (replacementOrder);
 			print ("[RECREATE & SKIP ORDER]");
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
@@ -151,16 +183,16 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	end
 	-- END OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- END OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	-- END OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	-- END OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ]]
 
 	--only process the order if the FROM territory is owned by the order player
 	if (FROMowner == order.PlayerID and Mod.Settings.MoveLimit ~= 0 and boolUnitsPresentOnFROMterritory) then --if MoveLimit == 0, no moves are allowed, just skip the order
 		-- if order player owns FROM territory, there are units on the territory and MoveLimit isn't set to 0, inspect the order details to see if it can be processed
 
-		local boolMoveUnitsTransferredIn = false;
-		local boolMoveUnitsOnTerritoryAtStartOfTurn = false;
-		local boolProcessOrder = false;
-		local boolSkipOrder = false;
+		local boolMoveUnitsTransferredIn = false; --indicates whether the full army count available on FROM territory should be moved, including both units on the territory from start of turn & units that transferred onto the territory during the turn; if false, then don't move the transferred in units, but possibly move the units resident since start of turn (boolMoveUnitsOnTerritoryAtStartOfTurn decides whether they can move)
+		local boolMoveUnitsOnTerritoryAtStartOfTurn = false; --indicates whether the units that were on the territory at the beginning of the turn (ie: haven't moved yet, have move allocations left) should be moved independently from any units that transferred onto the territory this turn that have consumed their move allocations
+		local boolProcessOrder = false; --indicates whether the order should be processed (true) or skipped (false)
+		local boolSkipOrder = false; --indicates whether the order should be skipped (true) or not (false)
 		if (map1FROM > 0 or map1FROM <= -1) then boolMoveUnitsTransferredIn = true; end
 		if ((map2FROMarmies ~= nil and map2FROMarmies > 0) or (map2FROMspecials ~= nil and #map2FROMspecials > 0)) then boolMoveUnitsOnTerritoryAtStartOfTurn = true; end
 
@@ -169,6 +201,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			--if units have transferred into the FROM territory, then the map1 value for the FROM territory is irrelevant, it's only important when groups of armies mix that we use the lowest of the two map1 values
 			boolProcessOrder = true;
 			result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
+			print ("[ACTUAL ARMIES] result.ActualArmies "..result.ActualArmies.NumArmies..", numArmies "..numArmies..", #SUs "..#order.NumArmies.SpecialUnits..", APow "..result.ActualArmies.AttackPower);
 			--the result structure auto-updates to reflect proper AttackPower & DefensePower values, so use these below for attacks!
 
 			---if Transfer, use min Map1 value of FROM & TO territories, b/c order player owns To and it might already have less move allocations less than From-1
@@ -185,8 +218,10 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'used armies' to mods)
 			if (result.IsAttack==true) then
+				print ("[CUSTOM KILL COUNTS] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
 				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), {});
 				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), {});
+				print ("[CUSTOM KILL COUNTS] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies);
 			end
 
 			--COMMENT FOR BELOW: map3 isn't used at this point; perhaps it could be but I think the current state is likely the best while keeping it simple (ie: not tracking the # of moves for every separate group of units and then having the user indicate which groups are moving where)
@@ -312,7 +347,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	end
 
 	print ("- - - - - - - - - - - - - - - - - - - - - POST");
-	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer));
+	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
 	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("NumArmies "..order.NumArmies.NumArmies..", #specials "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
 	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
@@ -433,4 +468,16 @@ function resultantSetOfSpecials (origSpecials, currentOrderSpecials)
 		end
 	end
 	return resultantSpecials;
+end
+
+function split(inputstr, sep)
+	if sep == nil then
+			sep = "%s"
+	end
+	local t={} ; i=1
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			t[i] = str
+			i = i + 1
+	end
+	return t
 end
