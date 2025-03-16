@@ -982,7 +982,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.AttackPower = 0;
 		builder.AttackPowerPercentage = 0;
 		builder.DefensePower = 0;
-		builder.DefensePowerPercentage = 0;
+		--builder.DefensePowerPercentage = 0;
 		builder.DamageToKill = 9999999;
 		builder.DamageAbsorbedWhenAttacked = 9999999;
 		--builder.Health = 99999999999999;

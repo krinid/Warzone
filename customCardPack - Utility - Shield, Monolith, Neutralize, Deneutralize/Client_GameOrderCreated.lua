@@ -77,7 +77,7 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 					print (k..", "..existingGameOrder.proxyType);
 					if (existingGameOrder.proxyType == "GameOrderAttackTransfer") then
 						print ("player "..existingGameOrder.PlayerID..", FROM "..existingGameOrder.From..", TO "..existingGameOrder.To..", AttackTransfer "..tostring (existingGameOrder.AttackTransfer)..", ByPercent "..tostring(existingGameOrder.ByPercent).. ", #armies"..existingGameOrder.NumArmies.NumArmies..", #SUs "..#existingGameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (existingGameOrder.AttackTeammates));
-						if (gameOrder.From == existingGameOrder.From and gameOrder.To == existingGameOrder.To) then print ("**********ORDER EXISTS ALREADY, don't re-add**********"); boolSameOrderExistsAlready = true; end
+						if (gameOrder.From == existingGameOrder.From and gameOrder.To == existingGameOrder.To) then print ("***ORDER EXISTS ALREADY, don't re-add"); boolSameOrderExistsAlready = true; end
 					end
 				end
 

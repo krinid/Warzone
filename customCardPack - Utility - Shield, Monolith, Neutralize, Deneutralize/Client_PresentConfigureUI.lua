@@ -400,6 +400,7 @@ function earthquakeCheckboxClicked()
 		local horzEarthquakeStrength = CreateHorz(UIcontainer);
         CreateLabel(horzEarthquakeStrength).SetText("Strength: ");
         EarthquakeStrength = CreateNumberInputField(horzEarthquakeStrength).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.EarthquakeStrength).SetWholeNumbers(true).SetInteractable(true);
+        CreateLabel(UIcontainer).SetText("(how much damage the Earthquake will do to each territory in the bonus each turn)");
 
 		local horzEarthquakePiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzEarthquakePiecesNeeded).SetText("Number of pieces to divide the card into: ");
@@ -431,14 +432,15 @@ function tornadoCheckboxClicked()
     else
         vertTornadoSettingsDetails = CreateVert(vertTornadoSettingsHeading);
         local UIcontainer = vertTornadoSettingsDetails;
-        local horzTornadoDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzTornadoDuration).SetText("Duration: ");
-        TornadoDuration = CreateNumberInputField(horzTornadoDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.TornadoDuration).SetWholeNumbers(true).SetInteractable(true);
-        CreateLabel(horzTornadoDuration).SetText("(use -1 to make Tornados permanent)");
+        local horzTornadoDuration = CreateHorz(UIcontainer).SetFlexibleWidth (1.0);
+        CreateLabel(horzTornadoDuration).SetText("Duration: ").SetFlexibleWidth (0.5);
+        TornadoDuration = CreateNumberInputField(horzTornadoDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.TornadoDuration).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth (0.5);
+        CreateLabel(UIcontainer).SetText("(use -1 to make Tornados permanent)");
 
 		local horzTornadoStrength = CreateHorz(UIcontainer);
         CreateLabel(horzTornadoStrength).SetText("Strength: ");
         TornadoStrength = CreateNumberInputField(horzTornadoStrength).SetSliderMinValue(1).SetSliderMaxValue(25).SetValue(Mod.Settings.TornadoStrength).SetWholeNumbers(true).SetInteractable(true);
+        CreateLabel(UIcontainer).SetText("(how much damage the Tornado will do each turn; Tornado does double damage on the 1st turn)");
 
 		local horzTornadoPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzTornadoPiecesNeeded).SetText("Number of pieces to divide the card into: ");
