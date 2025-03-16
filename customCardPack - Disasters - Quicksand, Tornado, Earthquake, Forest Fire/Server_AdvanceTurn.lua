@@ -863,7 +863,7 @@ end
 --create a new special unit for Quicksand visiblity; used for both initial creation and for recreation if it gets killed by incoming attack
 function build_Quicksand_specialUnit (game, targetTerritoryID)
     local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
-    builder.Name = 'Quicksand';
+    builder.Name = 'Quicksand impacted territory';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
     builder.AttackPower = 0;
@@ -879,7 +879,7 @@ function build_Quicksand_specialUnit (game, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
-	builder.ModData = "CCPA|Immovable|Quicksand";
+	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local specialUnit_Quicksand = builder.Build();
 	return specialUnit_Quicksand;
 end
@@ -929,14 +929,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
-
-	--print ("Mod.Settings.ShieldDescription=="..tostring (Mod.Settings.ShieldDescription));
-	local strShieldDesc = tostring (Mod.Settings.ShieldDescription);
-	local recordUnitDesc = {UnitDescription = strShieldDesc};
-	local recordEssentials = {Essentials = recordUnitDesc};
-	--builder.ModData = strShieldDesc;
-	--builder.ModData = DataConverter.DataToString(recordEssentials); --use Dutch's library code to store unit description in a special "Essentials" table construct which is then stored in ModData
-	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = "The medic does not like standing on the front lines, but rather wants to stay back to heal up any wounded soldiers. Any time the player owning this unit loses armies on a territory connected to this medic, it will recover " .. Mod.Settings.Percentage .. "% of the armies lost\n\nThis unit can be bought for " .. Mod.Settings.Cost .. " gold in the purchase menu (same place where you buy cities)\n\nEach player can have up to " .. Mod.Settings.MaxUnits .. " Medic(s), so you can't have an army of Medics unfortunately"}});
+	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 
     local specialUnit_Shield = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Shield};
@@ -975,7 +968,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 	
 		-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
-		local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Neutralize action)
+		local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Monolith action)
 		builder.Name = 'Monolith';
 		builder.IncludeABeforeName = false;
 		builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels
@@ -994,7 +987,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.CanBeAirliftedToTeammate = false;
 		builder.IsVisibleToAllPlayers = false;
 		--builder.TextOverHeadOpt = "Monolith"; --don't need writing; the graphic is sufficient
-		--builder.ModDate - ""; store some info in here? Not sure it's wise; unit could be killed, etc -- best to just store it in a table in privategatedata
+		builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 		local specialUnit_Monolith = builder.Build(); --save this in a table somewhere to destroy later
 	
 		--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
@@ -1038,7 +1031,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 
 	-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
-	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Neutralize action)
+	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Isolation action)
 	builder.Name = 'Isolated territory';
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = 'isolatedTerritory.png'; --max size of 60x100 pixels
@@ -1054,15 +1047,15 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	builder.CanBeAirliftedToTeammate = false;
 	builder.IsVisibleToAllPlayers = false;
 	builder.TextOverHeadOpt = "Isolated";
-	--builder.ModDate - ""; store some info in here? Not sure it's wise; unit could be killed, etc -- best to just store it in a table in privategatedata
+	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
 
 	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
 	impactedTerritory.AddSpecialUnits = {specialUnit_Isolation}; --add special unit
 	--table.insert (modifiedTerritories, impactedTerritory);
-	printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit
-	
-	local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Neutralize action
+	--printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit
+
+	local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Isolation action
 	--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
 	--actually think we can get away with just Event
 	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
@@ -1073,12 +1066,12 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	local publicGameData = Mod.PublicGameData;
 	local turnNumber_IsolationExpires = -1;
 	--print ("PRE  Isolation#items="..tablelength(publicGameData.IsolationData));
-	printObjectDetails (publicGameData.IsolationData, "[PRE  Isolation data]", "Execute Isolation operation");
-	
+	--printObjectDetails (publicGameData.IsolationData, "[PRE  Isolation data]", "Execute Isolation operation");
+
 	if (Mod.Settings.IsolationDuration==0) then  --if Isolation duration is Permanent (don't auto-revert), set expiration turn to -1
 		turnNumber_IsolationExpires = -1; 
 	else --otherwise, set expire turn as current turn # + card Duration
-		turnNumber_IsolationExpires = game.Game.TurnNumber + Mod.Settings.IsolationDuration; 
+		turnNumber_IsolationExpires = game.Game.TurnNumber + Mod.Settings.IsolationDuration;
 	end
 	print ("expire turn#="..turnNumber_IsolationExpires.."::duration=="..Mod.Settings.IsolationDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."::");
 	--even if Isolation duration==0, still make a note of the details of the Isolation action - probably not required though
@@ -1191,7 +1184,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 				--for k,sp in pairs (currentTargetTerritory.NumAries.SpecialUnits) do
 				--	print ("[DENEUTRALIZE] "..k..", special Name: "..sp.Name..", proxyType "..sp.proxyType..", ID "..sp.ID.."::");
 				--end
-					
+
 				--resave privateGameData
 				privateGameData.NeutralizeData = neutralizeData;
 				Mod.PrivateGameData = privateGameData;
@@ -1328,7 +1321,7 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			builder.CanBeAirliftedToTeammate = false;
 			builder.IsVisibleToAllPlayers = false;
 			builder.TextOverHeadOpt = "Neutralized";
-			--builder.ModDate - ""; store some info in here? Not sure it's wise; unit could be killed, etc -- best to just store it in a table in privategatedata
+			builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 			local specialUnit_Neutralize = builder.Build(); --save this in a table somewhere to destroy later
 
 			--[[all SpecialUnit properties:

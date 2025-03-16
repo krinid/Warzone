@@ -62,7 +62,8 @@ local _EMPTY_TABLE_STRING = string.format("[%s#JAD]{}[%s#JAD]", _VERSION_DATA_CO
 ---Turns a table into a string
 ---@param t table? # The table that will be converted to a string
 ---@return FormattedString # The converted string
-function P.DataToString(t)
+function P.DataToString(t, m)
+    Mod = m or Mod;
     -- If t == nil then return smallest possible string
     if t == nil then
         print("[DataConverter]: Table input for `DataToString` was nil");
@@ -114,7 +115,8 @@ end
 ---Turns a string into a table. Always returns a table, even if the string is wrongly configured
 ---@param s FormattedString? # The string that has the convention
 ---@return table # The converted table
-function P.StringToData(s)
+function P.StringToData(s, m)
+    Mod = m or Mod;
     if s == nil then
         print("[DataConverter]: Input to `StringToData` was nil");
         return {};
@@ -424,9 +426,11 @@ function conversionFunction_SToT_V0(s)
 end
 
 ---Set up an injectable key. When set-up, this key allows you to write to your tables
-function P.SetKey()
+function P.SetKey(mod)
+    Mod = mod or Mod;
     if Mod == nil then
-        error("[DataConverter]: `Mod` is nil", 2);
+        print("[DataConverter]: `Mod` is nil", 2);
+        return nil;
     end
     if Mod.Settings == nil then
         error("[DataConverter]: `Mod.Settings` is nil", 2);
@@ -442,7 +446,8 @@ end
 ---@return string?
 function getKey()
     if Mod == nil then
-        error("[DataConverter]: `Mod` is nil", 2);
+        print("[DataConverter]: `Mod` is nil", 2);
+        return nil;
     end
     if Mod.Settings == nil then
         error("[DataConverter]: `Mod.Settings` is nil", 2);

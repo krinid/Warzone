@@ -193,8 +193,11 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		local boolMoveUnitsOnTerritoryAtStartOfTurn = false; --indicates whether the units that were on the territory at the beginning of the turn (ie: haven't moved yet, have move allocations left) should be moved independently from any units that transferred onto the territory this turn that have consumed their move allocations
 		local boolProcessOrder = false; --indicates whether the order should be processed (true) or skipped (false)
 		local boolSkipOrder = false; --indicates whether the order should be skipped (true) or not (false)
+		local boolactualIsSuccessful = false; --indicates the true success result of the order; this is important for Attacks, which may change from false to true after recalcing ActualArmies figures and thus determine whether the territory is captured or not and thus whether to update the map1 value or not
+
 		if (map1FROM > 0 or map1FROM <= -1) then boolMoveUnitsTransferredIn = true; end
 		if ((map2FROMarmies ~= nil and map2FROMarmies > 0) or (map2FROMspecials ~= nil and #map2FROMspecials > 0)) then boolMoveUnitsOnTerritoryAtStartOfTurn = true; end
+		print ("boolMoveUnitsTransferredIn "..tostring(boolMoveUnitsTransferredIn)..", boolMoveUnitsOnTerritoryAtStartOfTurn "..tostring (boolMoveUnitsOnTerritoryAtStartOfTurn));
 
 		--if units transferred into the FROM territory have move allocations left, move all units specified in numArmies
 		if boolMoveUnitsTransferredIn == true then
@@ -202,137 +205,111 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			boolProcessOrder = true;
 			result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
 			print ("[ACTUAL ARMIES] result.ActualArmies "..result.ActualArmies.NumArmies..", numArmies "..numArmies..", #SUs "..#order.NumArmies.SpecialUnits..", APow "..result.ActualArmies.AttackPower);
-			--the result structure auto-updates to reflect proper AttackPower & DefensePower values, so use these below for attacks!
+			--the 'result' structure auto-updates to reflect proper AttackPower & DefensePower values, so use these below for attacks!
+
+			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'Used Armies' counter structure to mods); internal WZ engine used marks moved armies as 'Used Armies' once they have transferred and prevents them from making further moves
+			--rather than relying on WZ to calculate the damage to defender & attacker based on Attack/Defense power of # of quantity of armies & specials that haven't been 'used', manually calc the damage and apply it to the .AttackingArmiesKilled & .DefendingArmiesKilled fields
+			if (result.IsAttack==true) then
+				print ("[ADJUSTED KILL COUNTS] [full] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
+				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
+				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
+				--&&& need to include the Special damage/killing algorithm here, for now just include whatever Specials were killed in the original result (which may be too low)
+
+				--if all defending armies & specials died, mark the attack as successful
+				if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				--if damage down >= DefensePower of TO territory, it will be captured; result.IsSuccessful may not accurate reflect this b/c the # of armies may have been too low b/c WZ removed "Used Armies"/specials from the Attack/DefensePower values; boolactualIsSuccessful is the
+				--true result, inclusive of the values of the post adjusted Off/Def kill counts
+				print ("[ADJUSTED KILL COUNTS] [full] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", IsSuccessful "..tostring (result.IsSuccessful)..", Actual IsSuccessful "..tostring (boolactualIsSuccessful));
+			end
 
 			---if Transfer, use min Map1 value of FROM & TO territories, b/c order player owns To and it might already have less move allocations less than From-1
 			---if Attack, ignore TO territory map value b/c that's the value for another player (or a neutral)
 			if (result.IsAttack==false and boolUnitsPresentOnTOterritory==true) then --order is a Transfer and there are units on the TO territory (so must use the min map1 value of the FROM and TO territories)
 				map1[order.To] = math.min(map1FROM - 1, map1TO); --subtract one from the map1 table, representing 1 less movement available for the units on this territory; if the TO map value is lower, use that instead
+				print ("[ORDER] process Transfer [full], TO has units already, reduce TO map1 [min calc] to "..map1[order.To]);
 			else --order is an Attack or a Transfer to a territory with 0 units (in which case the map1 value for those units is no longer relevant, it's only important when groups of armies mix that we use the lowest of the two map1 values)
-				map1[order.To] = map1FROM - 1; --subtract one from the map1 table, representing 1 less movement available for the units on this territory; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
+
+				if (boolactualIsSuccessful==true or result.IsAttack==false) then --only set map1 for TO territory iff order is a transfer or a successful attack; if an unsuccessful attack, leave TO map1 value as-is
+				--if (result.IsSuccessful==true or result.IsAttack==false) then --only set map1 for TO territory iff order is a transfer or a successful attack; if an unsuccessful attack, leave TO map1 value as-is
+					map1[order.To] = map1FROM - 1; --subtract one from the map1 table, representing 1 less movement available for the units on this territory; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
+					if (result.IsAttack==false) then print ("[ORDER] process Transfer, TO has 0 units, reduce TO map1 [straight] to "..map1[order.To]);
+					elseif (boolactualIsSuccessful==true) then print ("[ORDER] process successful Attack [full], reduce TO map1 [straight] to "..map1[order.To]);
+					end
+				else
+					if (result.IsAttack) then print ("[ORDER] process failed Attack [full], don't reduce TO map1, remains at "..map1[order.To]); end
+				end
 			end
 			map2[order.From] = nil; --indicate that the units on the FROM territory have been moved
 
 			--if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
-			if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
-
-			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'used armies' to mods)
-			if (result.IsAttack==true) then
-				print ("[CUSTOM KILL COUNTS] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
-				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), {});
-				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), {});
-				print ("[CUSTOM KILL COUNTS] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies);
-			end
+			if (result.IsAttack==true and boolactualIsSuccessful==true) then map2[order.To] = nil; end
+			--if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
 
 			--COMMENT FOR BELOW: map3 isn't used at this point; perhaps it could be but I think the current state is likely the best while keeping it simple (ie: not tracking the # of moves for every separate group of units and then having the user indicate which groups are moving where)
 			--if there are no movement allocations left on the TO territory, add them to map3 to indicate that they can't move anymore
 			if (map1TO == 0) then map3[order.To] = map3[order.To]-(numArmies-result.AttackingArmiesKilled.NumArmies); end --simplified for now, need to do for both armies & specials
 
 		--units transferred into FROM territory so far have no move allocations left, so check if units on the territory at start of turn have moved yet, if not, move them; if they have moved, skip the order
-		elseif boolMoveUnitsOnTerritoryAtStartOfTurn == true then
+		elseif boolMoveUnitsOnTerritoryAtStartOfTurn == true then --units that were present on the territory haven't moved yet, so don't stop them from moving during this order
 			boolProcessOrder = true;
 			local newNumArmies = math.min (numArmies, map2[order.From].NumArmies); --use the lesser of the # of armies the player entered or the quantity present at start of turn (b/c all other units have no movement allocations left)
 			local newSpecials = resultantSetOfSpecials (map2[order.From].SpecialUnits, order.NumArmies.SpecialUnits); --create new list of Specials that is the intersection of what's included in the list of Specials originally on the territory & what's included in the order (anything else was either killed or not included in the order)
 			result.ActualArmies = WL.Armies.Create(newNumArmies, newSpecials);
 
+			--similar to the same block for the case where TransferringUnits also participate in the Attack/Transfer, calc the true kill counts for Defend/Offense armies; technically don't need to do this, WZ will calc it correctly in this case, however in order to get the true 
+			--success/failure result of an Attack, need to calc the # of Attackers and Defenders that die & assign boolactualIsSuccessful to true when all defenders die (attacker captures territory) & update TO map1 values appropriately based on success of attack
+			--
+			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'Used Armies' counter structure to mods); internal WZ engine used marks moved armies as 'Used Armies' once they have transferred and prevents them from making further moves
+			--rather than relying on WZ to calculate the damage to defender & attacker based on Attack/Defense power of # of quantity of armies & specials that haven't been 'used', manually calc the damage and apply it to the .AttackingArmiesKilled & .DefendingArmiesKilled fields
+			if (result.IsAttack==true) then
+				print ("[ADJUSTED KILL COUNTS] [map2 only] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
+				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
+				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
+				--&&& need to include the Special damage/killing algorithm here, for now just include whatever Specials were killed in the original result (which may be too low)
+
+				--if all defending armies & specials died, mark the attack as successful
+				if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				--if damage down >= DefensePower of TO territory, it will be captured; result.IsSuccessful may not accurate reflect this b/c the # of armies may have been too low b/c WZ removed "Used Armies"/specials from the Attack/DefensePower values; boolactualIsSuccessful is the
+				--true result, inclusive of the values of the post adjusted Off/Def kill counts
+				print ("[ADJUSTED KILL COUNTS] [map2 only] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", IsSuccessful "..tostring (result.IsSuccessful)..", Actual IsSuccessful "..tostring (boolactualIsSuccessful));
+			end
+
 			--if map2 value==nil, the units on this territory have moved already, and the map1 calc already down above indicates that these units can't move any farther, so skip the order (go down to the ELSE clause)
 			--if map2 value==0 for both NumArmies & Specials then there are no units on the territory to be moved; in both cases, skip the order, there's nothing to do here (go down to the ELSE clause)
 
-			--adjust map1, map2 values
+			--adjust map1, map2 values; WZ processes the adjusted army counts correctly in this case so don't need to adjust army counts, special 
 			if (result.IsAttack==false and boolUnitsPresentOnTOterritory==true) then --order is a Transfer with units on the TO territory, so use min of Mod.Settings.MoveLimit (b/c these FROM units haven't moved yet this turn) & Map1 value of TO territory
 				map1[order.To] = math.min(Mod.Settings.MoveLimit - 1, map1TO); --subtract one from the map1 table, representing 1 less movement available for the units on this territory; if the TO map value is lower, use that instead
+				print ("[ORDER] process Transfer [map2 only], reduce TO map1 to "..map1[order.To]..", TO map2 no change, FROM map2 set to nil");
 			else --order is an Attack or a Transfer with no units on the TO territory, so just use Mod.Settings.MoveLimit - 1
-				map1[order.To] = Mod.Settings.MoveLimit - 1; --subtract one from Mod.Settings.MoveLimit b/c these units haven't moved yet; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
+				if (boolactualIsSuccessful==true or result.IsAttack==false) then --only set map1 for TO territory iff order is a transfer or a successful attack; if an unsuccessful attack, leave TO map1 value as-is
+				--if (result.IsSuccessful==true or result.IsAttack==false) then --only set map1 for TO territory iff order is a transfer or a successful attack; if an unsuccessful attack, leave TO map1 value as-is
+					map1[order.To] = Mod.Settings.MoveLimit - 1; --subtract one from Mod.Settings.MoveLimit b/c these units haven't moved yet; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
+					if (result.IsAttack==true) then
+						print ("[ORDER] process successful Attack [map2 only], reduce TO map1 to "..map1[order.To]..", TO map2 set to nil, FROM map2 set to nil"); end
+						map2[order.To] = nil; --if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
+					else
+						print ("[ORDER] process Transfer [map2 only], reduce TO map1 to "..map1[order.To]..", TO map2 no change, FROM map2 set to nil");
+					end
 			end
 
 			map2[order.From] = nil; --indicate that the units on the FROM territory have been moved and any units that arrive should be moved according to their regular movement allocation
 			map3[order.To] = map3[order.To]-newNumArmies; --simplified for now, need to do for both armies & specials
 
-			--if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
-			if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
-
 		else --skip the order
 			--no movement allocation remaining for the units on FROM territory, and the units that were on this territory have already moved or their quantity is 0, in any cases, no units can move, so skip the order
+			boolSkipOrder = true;
 			local strSkipOrderMessage = "Order skipped, units have no movement allocations remaining; Original order: " ..genereateSkipMessage (order, game);
 			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 		end
-
-	------------------------------------ end of new coding ------------------------------------
-	---------------------OLD CODE--------------------------
-
-
-	--only process the order if the FROM territory is owned by the order player
-	--[[if (game.ServerGame.LatestTurnStanding.Territories[order.From].OwnerPlayerID == order.PlayerID and Mod.Settings.MoveLimit ~= 0) then --if MoveLimit == 0, no moves are allowed, just skip the order
-		-- if FROM territory (?for this specific order player?) has transfers left, process the order
-		--FOR TROUBLESHOOTING ONLY!!! --> if (map1[order.From] >= 0 or map1[order.From] <= -1) then --if value is <=-1, this means unlimited so always permit; orig set to -1, and then -1 for each move done; could just keep it constant @ -1 but this might be useful some time later (not sure though)
-		if (map1[order.From] > 0 or map1[order.From] <= -1) then --if value is <=-1, this means unlimited so always permit; orig set to -1, and then -1 for each move done; could just keep it constant @ -1 but this might be useful some time later (not sure though)
-			--result.ActualArmies represents the # of armies & the specials that the WZ engine deems correct to move with this order; for attacks, they'll all continue attacking forever
-			--but for transfers, they'll stop after the first transfer; by overriding this and setting the #armies & the table of SpecialUnits moving within result.ActualArmies, we can
-			--force transfers to occur
-			result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
-			--result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
-
-			---if Transfer, use min Map1 value of FROM & TO territories, b/c order player owns To and it might already have less move allocations less than From-1
-			---if Attack, ignore TO territory map value b/c that's the value for another player (or a neutral)
-			if (result.IsAttack==false and boolUnitsPresentOnTOterritory==true) then --order is a Transfer and there are units on the TO territory (so must use the min map1 value of the FROM and TO territories)
-				map1[order.To] = math.min(map1[order.From] - 1, map1[order.To]); --subtract one from the map1 table, representing 1 less movement available for the units on this territory; if the TO map value is lower, use that instead
-			else --order is an Attack or a Transfer to a territory with 0 units (in which case the map1 value for those units is no longer relevant, it's only important when groups of armies mix that we use the lowest of the two map1 values)
-				map1[order.To] = map1[order.From] - 1; --subtract one from the map1 table, representing 1 less movement available for the units on this territory; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
-			end
-			map2[order.From] = nil; --indicate that the units on the FROM territory have been moved
-
-			--COMMENT FOR BELOW: map3 isn't used at this point; perhaps it could be but I think the current state is likely the best while keeping it simple (ie: not tracking the # of moves for every separate group of units and then having the user indicate which groups are moving where)
-			--if there are no movement allocations left on the TO territory, add them to map3 to indicate that they can't move anymore
-			if (map1[order.To] == 0) then map3[order.To] = map3[order.To]-(numArmies-result.AttackingArmiesKilled.NumArmies); end --simplified for now, need to do for both armies & specials
-
-			--if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
-			if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
-
-		else
-			--map1 value indicates that the FROM territory does not have any transfers left, so the units that transferred into the FROM territory cannot move anymore
-			--check map2 value, if nil it indicates that the units that were on the FROM territory at start of turn have moved already, so just use map1 to decide if movement is permitted or not
-			--if map2 value ~= nil then those armies & specials can move (but the order still may not include all the armies or specials)
-
-			--if order is a successful attack, then clear map2 for the TO territory b/c this count represents units belonging to another player or a neutral territory, so don't include them in any calculations
-			if (result.IsAttack==true and result.IsSuccessful==true) then map2[order.To] = nil; end
-
-			--local newNumArmies = math.max (0, math.min (numArmies, map2[order.From].NumArmies), numArmies + map3[order.From]); --map3 holds the negative #'s of armies that should not be moved, so add them to numArmies to get the real moving army count
-			local newNumArmies = math.min (numArmies, map2[order.From].NumArmies); --use the lesser of the # of armies the player entered or the quantity present at start of turn (b/c all other units have no movement allocations left)
-			local newSpecials = resultantSetOfSpecials (map2[order.From].SpecialUnits, order.NumArmies.SpecialUnits); --create new list of Specials that is the intersection of what's included in the list of Specials originally on the territory & what's included in the order (anything else was either killed or not included in the order)
-			if (map2[order.From]~=nil and boolUnitsPresentOnFROMterritory == true) then
-				--if map2 value==nil, the units on this territory have moved already, and the map1 calc already down above indicates that these units can't move any farther, so skip the order (go down to the ELSE clause)
-				--if map2 value==0 for both NumArmies & Specials then there are no units on the territory to be moved; in both cases, skip the order, there's nothing to do here (go down to the ELSE clause)
-				--for transfers, technically could do nothing (but we won't) and let the units go as-is, WZ native engine handles this as we need it here
-				--for attacks, need to adjust b/c WZ would let attacks continue indefinitely
-
-				result.ActualArmies = WL.Armies.Create(newNumArmies, newSpecials); --technically this sends all Special Units that were on the territory to begin with regardless of what the order was
-
-				-- the units moving have movement allocations == Mod.Settings.MoveLimit - 1 after this order is completed, b/c they haven't moved yet (they were on the territory from start of turn)
-				-- if Transfer, use min of Mod.Settings.MoveLimit & Map1 value of TO territory, b/c order player owns TO and it might already have less move allocations less than Mod.Settings.MoveLimit
-				-- if Attack, ignore TO territory map1 value b/c that's the value for another player (or a neutral) so just use Mod.Settings.MoveLimit - 1
-				if (result.IsAttack==false and boolUnitsPresentOnTOterritory==true) then --order is a Transfer with units on the TO territory, so use min of Mod.Settings.MoveLimit (b/c these FROM units haven't moved yet this turn) & Map1 value of TO territory
-					map1[order.To] = math.min(Mod.Settings.MoveLimit - 1, map1[order.To]); --subtract one from the map1 table, representing 1 less movement available for the units on this territory; if the TO map value is lower, use that instead
-				else --order is an Attack or a Transfer with no units on the TO territory, so just use Mod.Settings.MoveLimit - 1
-					map1[order.To] = Mod.Settings.MoveLimit - 1; --subtract one from Mod.Settings.MoveLimit b/c these units haven't moved yet; ignore TO territory map value b/c it relates to another player or a neutral territory or it's a Transfer and those units have already moved and thus their map1 value is irrelevant
-				end
-
-				map2[order.From] = nil; --indicate that the units on the FROM territory have been moved and any units that arrive should be moved according to their regular movement allocation
-				map3[order.To] = map3[order.To]-numArmies; --simplified for now, need to do for both armies & specials
-			else
-				--no movement allocation remaining for the units on FROM territory, and the units that were on this territory have already moved or their quantity is 0, in any cases, no units can move, so skip the order
-				--skip (WL.ModOrderControl.Skip); --skip this order
-				--message: skipped b/c you are out of allocations
-				local strSkipOrderMessage = "Order skipped, units have no movement allocations remaining; Original order: " ..genereateSkipMessage (order, game);
-				addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
-			end
-		end]]
 	else
 		--skip the order, order player does not own the FROM territory or Mod.Settings.MoveLimit == 0 which means no Attack/Transfer orders are possible (captures/etc must be done by other means, cards/mods/etc)
 		--skip (WL.ModOrderControl.Skip); --skip this order
 		--message:: skipped b/c you don't own the territory; is this required? at least indicate which move is being skipped
+		boolSkipOrder = true;
 		local strSkipOrderMessage = "Order skipped, you do not own source territory; Original order: ";
+		if (boolUnitsPresentOnFROMterritory == false) then strSkipOrderMessage = "Order skipped, no units present on territory; Original order: "; end
 		if (Mod.Settings.MoveLimit == 0) then strSkipOrderMessage = "Order skipped, Move Limit is set to 0, standard Attack/Transfers are disabled; Original order: "; end
 		strSkipOrderMessage = strSkipOrderMessage .. genereateSkipMessage (order, game);
 		addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));

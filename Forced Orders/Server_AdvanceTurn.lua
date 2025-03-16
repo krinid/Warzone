@@ -1,14 +1,16 @@
-function Server_AdvanceTurn_End(game, addNewOrder)
+function Server_AdvanceTurn_End_ignore(game, addNewOrder)
 	--uncomment the below line to forcibly halt execution for troubleshooting purposes
 	--print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
 	print ("[GRACEFUL END OF TURN EXECUTION]");
 end
 
 function Server_AdvanceTurn_Start (game,addNewOrder)
+	boolPermitNextAIorder=false; --default to false in case this persists from last turn
+
 	--delete all AI orders
-	for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
-		print (k, v.__proxyID, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
-		printObjectDetails (v);
+	--for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
+	--	print (k, v.__proxyID, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
+--		printObjectDetails (v);
 
 	--for _,playerID in pairs(game.ServerGame.Game.PlayingPlayers) do
       	--[[if (playerID.ID <= 50) then
@@ -25,7 +27,7 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 			end
 		end]]
 	--end
-	end
+--	end
 
 	-- game.ServerGame.ActiveTurnOrders[1] = {}; -- doesn't work
 	-- neither does this:
@@ -34,8 +36,34 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 	game.ServerGame.ActiveTurnOrders = newboy;]]
 end
 
+--Actually the error occurs even when I make orders myself and there are 2 other AIs whose orders haven't been canceled and it's a commerce game (ie: the error isn't related to the AI not allocating their income). If I cancel all orders for AI1, it causes this crash.
+
+function Server_AdvanceTurn_Order_SimpleCrashDemo(game, order, result, skip, addNewOrder)
+	if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); end --skip this order for AI1
+end
+
 function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
-	print ("proxyType "..order.proxyType, tostring (order), order.__proxyID);
+	--global/persistent variable 'boolPermitNextAIorder'
+	if (boolPermitNextAIorder==nil) then boolPermitNextAIorder=false; end
+	--this variable indicates whether to permit the next AI move or not; this is set to true after a ForcedOrder custom game order is played, then set back to false until the next one, then all AI moves are canceled
+	--if (order.PlayerID == 1) then print ("PROXY: "..order.proxyType); end;
+	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); return; end
+
+	if (order.proxyType == "GameOrderEvent") then print ("[GOE] ModID "..tostring(order.ModID)..", "..tostring(order.Message)); end
+
+	if ((order.proxyType == "GameOrderDeploy" or order.proxyType == "GameOrderAttackTransfer") and order.PlayerID==1) then
+	--if (order.proxyType == "GameOrderDeploy" and order.PlayerID==1) then
+	--if (order.proxyType == "GameOrderAttackTransfer" and order.PlayerID==1) then
+		if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.Skip); return; end
+		--if (true) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+		--if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end --if boolPermitNextAIorder isn't set to true, skip all orders from AI1
+		-- reaching this point means boolPermitNextAIorder==true, so don't skip the order, let it be processed normally by WZ, but there's nothing left to do here in this mod, so return and process the next order, and set boolPermitNextAIorder=false so all following AI1 orders
+		-- are skipped until another Forced Order custom game order is processed
+		boolPermitNextAIorder = false;
+		return;
+	end
+
+	print ("proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID);
 	if (order.proxyType ~= "GameOrderCustom") then return; end --only inspect custom game orders (proxy type GameOrderCustom)
 	local strArrayOrderData = split(order.Payload,'|');
 
@@ -53,6 +81,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		--reference: replacementOrder = WL.GameOrderAttackTransfer.Create(targetPlayer, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, gameOrder.NumArmies, gameOrder.AttackTeammates);
 		print ("[FORCE ORDER] pre - "..order.Payload);
 		addNewOrder (forcedAttackTransfer);
+		boolPermitNextAIorder = true; --permit the next AI order (b/c it is this order that was just saved), then resume skipping AI orders until the next Forced Order custom game order is encountered
 		print ("[FORCE ORDER] post - "..order.Payload);
 	end
 end
