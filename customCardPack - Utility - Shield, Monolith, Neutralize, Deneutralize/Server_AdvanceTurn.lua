@@ -879,7 +879,7 @@ function build_Quicksand_specialUnit (game, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
-	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local specialUnit_Quicksand = builder.Build();
 	return specialUnit_Quicksand;
 end
@@ -929,7 +929,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
-	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 
     local specialUnit_Shield = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Shield};
@@ -987,7 +987,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.CanBeAirliftedToTeammate = false;
 		builder.IsVisibleToAllPlayers = false;
 		--builder.TextOverHeadOpt = "Monolith"; --don't need writing; the graphic is sufficient
-		builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+		--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 		local specialUnit_Monolith = builder.Build(); --save this in a table somewhere to destroy later
 	
 		--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
@@ -1047,7 +1047,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	builder.CanBeAirliftedToTeammate = false;
 	builder.IsVisibleToAllPlayers = false;
 	builder.TextOverHeadOpt = "Isolated";
-	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
 
 	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
@@ -1321,7 +1321,7 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			builder.CanBeAirliftedToTeammate = false;
 			builder.IsVisibleToAllPlayers = false;
 			builder.TextOverHeadOpt = "Neutralized";
-			builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+			--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 			local specialUnit_Neutralize = builder.Build(); --save this in a table somewhere to destroy later
 
 			--[[all SpecialUnit properties:
