@@ -1871,12 +1871,12 @@ function Quicksand_processEndOfTurn(game, addOrder)
 			local boolQuicksandSpecialUnitFound = false;
 			if (#targetTerritory.NumArmies.SpecialUnits >= 1) then
 				for _,specialUnit in pairs (targetTerritory.NumArmies.SpecialUnits) do
-					boolQuicksandSpecialUnitFound = (specialUnit.ID==record.specialUnitID);
+					if (specialUnit.ID==record.specialUnitID) then boolQuicksandSpecialUnitFound = true; end
 					print ("----special on "..terrID.. "/"..	game.Map.Territories[terrID].Name..", matches seek item=="..tostring(specialUnit.ID==record.specialUnitID).."/"..tostring (boolQuicksandSpecialUnitFound)..", ID "..specialUnit.ID.."::"); --, ", isAttack=="..", isSuccessful=="..);
 					--printObjectDetails (specialUnit, "[QPEOT]", "specialUnit details");
 				end
 			end
-			
+
 			--if the Quicksand special unit wasn't found, recreate it
 			if (boolQuicksandSpecialUnitFound == false) then
 				print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
