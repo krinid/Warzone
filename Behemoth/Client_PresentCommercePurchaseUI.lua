@@ -1,7 +1,5 @@
 --require('Utilities')
 
-
-
 function getColourCode (itemName)
     if (itemName=="card play heading") then return "#0099FF"; --medium blue
     elseif (itemName=="error")  then return "#FF0000"; --red
@@ -15,14 +13,16 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	Close1 = close;
 	Game = game;
 
+	if (game.Us.ID == nil) then UI.Alert ("Only active players can buy Behemoths") return; end
+
 	local MainUI = UI.CreateVerticalLayoutGroup(rootParent);
-	CreateLabel(MainUI).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
+	UI.CreateLabel(MainUI).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
 	--CreateLabel(MainUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 
-	horz = UI.CreateHorizontalLayoutGroup(vert).SetFlexibleWidth(1);
+	horz = UI.CreateHorizontalLayoutGroup(MainUI).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("Gold amount: ");
-	BehemothCost_NumberInputField = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(10000).SetValue(100).SetPreferredWidth(100).SetOnChange(OnGoldAmountChanged);
-	UI.CreateButton(vert).SetText("Purchase a Behemoth").SetOnClick(PurchaseClicked);
+	BehemothCost_NumberInputField = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(game.LatestStanding.NumResources(game.Us.ID, WL.ResourceType.Gold)).SetValue(100).SetPreferredWidth(100);--.SetOnChange(OnGoldAmountChanged);
+	UI.CreateButton(MainUI).SetText("Purchase a Behemoth").SetOnClick(PurchaseClicked);
 end
 
 function OnGoldAmountChanged ()
@@ -63,6 +63,7 @@ function PurchaseClicked()
 		return;
 	end]]
 
+	BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
 	Game.CreateDialog (PresentBehemothDialog);
 	Close1();
 end
@@ -72,6 +73,7 @@ function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, clo
 	Close2 = close;
 
 	local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+	UI.CreateLabel(vert).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
 
 	SelectTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(SelectTerritoryClicked);
 	TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -83,11 +85,13 @@ end
 
 function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	TargetTerritoryInstructionLabel.SetText("Please click on the territory to spawn the Behemoth to");
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. getBehemothPower(BehemothGoldSpent));
 	SelectTerritoryBtn.SetInteractable(false);
 end
 
 function TerritoryClicked(terrDetails)
+	if (UI.IsDestroyed (SelectTerritoryBtn)) then return; end
+
 	SelectTerritoryBtn.SetInteractable(true);
 
 	if (terrDetails == nil) then
@@ -108,11 +112,34 @@ function TerritoryClicked(terrDetails)
 end
 
 function CompletePurchaseClicked()
-	local msg = 'Buy Behemoth, spawn to ' .. SelectedTerritory.Name;
-	local payload = 'Behemoth|Purchase|' .. SelectedTerritory.ID.."|"..BehemothCost_NumberInputField.GetValue();
+	local msg = 'Buy Behemoth for '..BehemothGoldSpent..' gold, spawn to ' .. SelectedTerritory.Name;
+	local payload = 'Behemoth|Purchase|' .. SelectedTerritory.ID.."|"..BehemothGoldSpent;
 	local orders = Game.Orders;
-	table.insert(orders, WL.GameOrderCustom.Create(Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = BehemothCost_NumberInputField.GetValue() } ));
+	table.insert(orders, WL.GameOrderCustom.Create(Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = BehemothGoldSpent } ));
 	Game.Orders = orders;
 
 	Close2();
+end
+
+function getBehemothPower (goldSpent)
+	local power = 0;
+	if (goldSpent <= 0) then return 0; end
+	--if (goldSpent >= 1 and goldSpent <=50) then return (goldSpent/50)*goldSpent;
+	power = power + math.min ((goldSpent/50)*goldSpent, 25);
+	if (goldSpent >=50) then power = power + math.min ((goldSpent/100)*goldSpent, 100); end
+	if (goldSpent >= 100) then power = power + math.min ((goldSpent/500)*goldSpent, 500); end
+	if (goldSpent >= 500) then power = power + math.min ((goldSpent/1000)*goldSpent, 1000); end
+	if (goldSpent >= 1000) then power = power + math.min ((goldSpent/5000)*goldSpent, 5000); end
+	if (goldSpent >=5000) then power = power + (goldSpent/10000)*goldSpent; end
+	power = math.floor (math.max (1, power)+0.5);
+
+	power = 0;
+	power = power + math.min ((goldSpent/75)*goldSpent, 50);
+	power = power + math.min ((goldSpent/150)*goldSpent, 100);
+	power = power + math.min ((goldSpent/600)*goldSpent, 500);
+	power = power + math.min ((goldSpent/1200)*goldSpent, 1000);
+	power = power + math.min ((goldSpent/6000)*goldSpent, 5000);
+	power = power + (goldSpent/10000)*goldSpent;
+	power = math.floor (math.max (1, power)+0.5);
+	return power;
 end
