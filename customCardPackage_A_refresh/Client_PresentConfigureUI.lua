@@ -192,7 +192,7 @@ end
 
 function loadActiveModules ()
 	require ("activeModules"); --load the code to identify which cards are active for this mod
-	if activeModules==nil then activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Isolation"]=true, ["Shield"]=true, ["Monolith"]=true}; end --if not specified from activeModules.lua, just default to a small subset of cards
+	if activeModules==nil then activeModules = {["Nuke"]=true, ["Pestilence"]=true, ["Shield"]=true, ["Monolith"]=true}; end --if not specified from activeModules.lua, just default to a small subset of cards
 end
 
 function create_card_checkbox_UI_controls (rootParent)
