@@ -162,7 +162,8 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				table.remove (ArmiesKilled_SpecialUnits, k); --remove the Commander from the list of specials being killed
 				local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
+				addOrder (event, true); --add order to remove the Commander from the TO territory & jump to location
+				-- ^^IMPORTANT to use 'true' for 2nd param, so that this order GETS SKIPPED if another mod skips the order (eg: if the TO territory with the would-be killing order can't move b/c in Quicksand, etc, and the order is skipped)
 				replacementOrderRequired = true; --rewrite the original order without the dying Commander in place @ end of function
 
 				--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board

@@ -38,7 +38,7 @@ end
 
 --Actually the error occurs even when I make orders myself and there are 2 other AIs whose orders haven't been canceled and it's a commerce game (ie: the error isn't related to the AI not allocating their income). If I cancel all orders for AI1, it causes this crash.
 
-function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
+function Server_AdvanceTurn_Order_nope (game, order, result, skip, addNewOrder)
 	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); end --skip this order for AI1
 	if (order.PlayerID == 1) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip this order for AI1
 end

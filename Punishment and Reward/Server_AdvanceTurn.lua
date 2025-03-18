@@ -1,6 +1,7 @@
 --[[
 TODO:
 - implement territory count punishment/rewards
+- punished 1PU for not attacking each enemy you border -- ensure to not punish for teammates (in case this is used in team games)
 - implement tracking territory count for X turns (default 10) apply rolling increasing pun/rew for increases/decreases in the past 10 turns; decrease = nerf, increase = buff, no change = small nerf
 - implement Sanction/Reverse Sanction casting limitations; on self YES/NO, on teammate YES/NO
 - anti-card farming --> if own territory @ start of turn, doesn't count as a cap; check if was that player's territory in any of the last 10 turns? maybe this is too punishing? and too compute intensive to check for all captures?
