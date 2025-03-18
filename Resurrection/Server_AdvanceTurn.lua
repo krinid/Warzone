@@ -71,7 +71,7 @@ function process_pending_Resurrections (game, addOrder)
 		end
 	end
 
-	--any still pending Resurrections indicate that the player didn't play a Resurrection card to generate the Resurrection order; maybe they just didn't play the card despite the warnings, maybe they booted, maybe it's an AI, etc
+	--any still pending Resurrections indicate that the player didn't playt the Resurrection card to generate the Resurrection order; maybe they just didn't play the card despite the warnings, maybe they booted, maybe it's an AI, etc
 	--so just pick a territory and place the Commander there
 	if (Mod.PublicGameData.ResurrectionData ~= nil) then
 		for playerID,v in pairs (Mod.PublicGameData.ResurrectionData) do
@@ -135,7 +135,7 @@ function replace_Commander_on_map (game, playerID, territoryID, addOrder, boolCo
 		print ("[RESURRECTION PLACE ON MAP] do not consume Resurrection wholecard b/c player played card themselves");
 	end
 
-	addOrder(event); --add the order containing the placement of the Commander on the map & if appropriate consumption of the Resurrection card (if player didn't play it himself and it is being played on their behalf automatically)
+	addOrder(event, false); --add the order containing the placement of the Commander on the map & if appropriate consumption of the Resurrection card (if player didn't play it himself and it is being played on their behalf automatically)
 
 	--update ResurrectionData
 	local publicGameData = Mod.PublicGameData;
@@ -162,9 +162,7 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				table.remove (ArmiesKilled_SpecialUnits, k); --remove the Commander from the list of specials being killed
 				local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-				addOrder (event); --add order to remove the Commander from the TO territory & jump to location
-				-- ^^IMPORTANT to use 'true' for 2nd param, so that this order GETS SKIPPED if another mod skips the order (eg: if the TO territory with the would-be killing order can't move b/c in Quicksand, etc, and the order is skipped)
-				-- ^^scratch that b/c we're skipping it ourselves, so this would never execute
+				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 				replacementOrderRequired = true; --rewrite the original order without the dying Commander in place @ end of function
 
 				--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
@@ -207,9 +205,7 @@ function check_for_Resurrection_conditions_and_execute_preparation (game,order,r
 		--if Resurrection applies, create replica of original order without the dying command involved; otherwise do nothing (which covers cases of no dying Commanders involved but also dying Commanders whose players didn't hold Resurrection cards)
 		if (replacementOrderRequired == true) then
 			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, order.NumArmies, order.AttackTeammates);
-			addOrder (event); --add order to remove the Commander from the TO territory & jump to location
-			-- ^^IMPORTANT to use 'true' for 2nd param, so that this order GETS SKIPPED if another mod skips the order (eg: if the TO territory with the would-be killing order can't move b/c in Quicksand, etc, and the order is skipped)
-			-- ^^scratch that b/c we're skipping it ourselves, so this would never execute
+			addOrder (replacementOrder);
 			--skip (WL.ModOrderControl.Skip);
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		end
