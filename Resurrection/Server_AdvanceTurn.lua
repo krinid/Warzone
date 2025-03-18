@@ -162,8 +162,9 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				table.remove (ArmiesKilled_SpecialUnits, k); --remove the Commander from the list of specials being killed
 				local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-				addOrder (event, true); --add order to remove the Commander from the TO territory & jump to location
+				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 				-- ^^IMPORTANT to use 'true' for 2nd param, so that this order GETS SKIPPED if another mod skips the order (eg: if the TO territory with the would-be killing order can't move b/c in Quicksand, etc, and the order is skipped)
+				-- ^^scratch that b/c we're skipping it ourselves, so this would never execute
 				replacementOrderRequired = true; --rewrite the original order without the dying Commander in place @ end of function
 
 				--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
@@ -206,7 +207,9 @@ function check_for_Resurrection_conditions_and_execute_preparation (game,order,r
 		--if Resurrection applies, create replica of original order without the dying command involved; otherwise do nothing (which covers cases of no dying Commanders involved but also dying Commanders whose players didn't hold Resurrection cards)
 		if (replacementOrderRequired == true) then
 			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, order.NumArmies, order.AttackTeammates);
-			addOrder (replacementOrder);
+			addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
+			-- ^^IMPORTANT to use 'true' for 2nd param, so that this order GETS SKIPPED if another mod skips the order (eg: if the TO territory with the would-be killing order can't move b/c in Quicksand, etc, and the order is skipped)
+			-- ^^scratch that b/c we're skipping it ourselves, so this would never execute
 			--skip (WL.ModOrderControl.Skip);
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		end
