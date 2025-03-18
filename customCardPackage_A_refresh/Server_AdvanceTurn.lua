@@ -19,7 +19,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
 	--local boolHaltCodeExecutionAtEndofTurn = true;
-	local intHaltOnTurnNumber = 2;
+	local intHaltOnTurnNumber = 1;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
@@ -679,7 +679,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				--order is not a quicksand violation; it may not have anything to do with quicksand; check if order is a legit attack on a quicksanded territory
 				--if legit attack into quicksand then apply damage factors to attacking & defending armies killed
 				if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
-					print ("[QUICKSAND] ATTACK INTO QUICKSAND _ _ _ _ _ _ _ _ _ _ _ _ ");
+					print ("[QUICKSAND] ATTACK/TRANSFER INTO QUICKSAND _ _ _ _ _ _ _ _ _ _ _ _ ");
 					print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
 					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackerDamageTakenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefenderDamageTakenModifier.."::");
 					print ("[QUICKSAND] AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");

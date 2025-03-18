@@ -50,40 +50,40 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 	--if (order.PlayerID == 1) then print ("PROXY: "..order.proxyType); end;
 	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); return; end
 
+	print ("[ORDER] proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID..", processNextOrder "..tostring (boolPermitNextAIorder));
+
 	if (order.proxyType == "GameOrderEvent") then print ("[GOE] ModID "..tostring(order.ModID)..", "..tostring(order.Message)); end
 
 	if ((order.proxyType == "GameOrderDeploy" or order.proxyType == "GameOrderAttackTransfer") and order.PlayerID==1) then
 	--if (order.proxyType == "GameOrderDeploy" and order.PlayerID==1) then
 	--if (order.proxyType == "GameOrderAttackTransfer" and order.PlayerID==1) then
-		if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.Skip); return; end
+		--if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.Skip); return; end
 		--if (true) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
-		--if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end --if boolPermitNextAIorder isn't set to true, skip all orders from AI1
+		if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end --if boolPermitNextAIorder isn't set to true, skip all orders from AI1
 		-- reaching this point means boolPermitNextAIorder==true, so don't skip the order, let it be processed normally by WZ, but there's nothing left to do here in this mod, so return and process the next order, and set boolPermitNextAIorder=false so all following AI1 orders
 		-- are skipped until another Forced Order custom game order is processed
 		boolPermitNextAIorder = false;
 		return;
 	end
 
-	print ("proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID);
 	if (order.proxyType ~= "GameOrderCustom") then return; end --only inspect custom game orders (proxy type GameOrderCustom)
 	local strArrayOrderData = split(order.Payload,'|');
-
-	--for reference:
-	--local strForcedOrder = "ForceOrder|AttackTransfer|"..targetPlayer.."|"..gameOrder.From.."|"..gameOrder.To.."|"..gameOrder.NumArmies.NumArmies;
+	--for reference: local strForcedOrder = "ForceOrder|AttackTransfer|"..targetPlayer.."|"..gameOrder.From.."|"..gameOrder.To.."|"..gameOrder.NumArmies.NumArmies;
 
 	if (strArrayOrderData[1] ~= "ForcedOrders") then return; end --if this isn't an order for ForcedOrders, don't process anything, just exit
 
 	--currently only process AttackTransfers; only handles raw armies, no Special Units, which will be removed from any orders
 	if (strArrayOrderData[2] == "AttackTransfer") then
-		print ("[FORCE ORDER] prep - "..order.Payload);
+		print ("[FORCE ORDER] "..order.Payload);
+		--print ("[FORCE ORDER] prep - "..order.Payload);
 		local numArmies = WL.Armies.Create(strArrayOrderData[8], {});
-		print ("[FORCE ORDER] start - "..order.Payload);
+		--print ("[FORCE ORDER] start - "..order.Payload);
 		local forcedAttackTransfer = WL.GameOrderAttackTransfer.Create(strArrayOrderData[3], strArrayOrderData[4], strArrayOrderData[5], tonumber (strArrayOrderData[6]), toboolean (strArrayOrderData[7]), numArmies, toboolean (strArrayOrderData[9]));
 		--reference: replacementOrder = WL.GameOrderAttackTransfer.Create(targetPlayer, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, gameOrder.NumArmies, gameOrder.AttackTeammates);
-		print ("[FORCE ORDER] pre - "..order.Payload);
+		--print ("[FORCE ORDER] pre - "..order.Payload);
 		addNewOrder (forcedAttackTransfer);
 		boolPermitNextAIorder = true; --permit the next AI order (b/c it is this order that was just saved), then resume skipping AI orders until the next Forced Order custom game order is encountered
-		print ("[FORCE ORDER] post - "..order.Payload);
+		--print ("[FORCE ORDER] post - "..order.Payload);
 	end
 end
 
