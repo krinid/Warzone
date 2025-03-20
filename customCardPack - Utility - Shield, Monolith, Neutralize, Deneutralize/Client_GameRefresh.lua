@@ -43,7 +43,7 @@ function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 			--for reference: PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
 			--krinid userID=1058239
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
-			
+
 			local castingPlayerID = pestilenceDataRecord.castingPlayer;
 			local castingPlayerName = toPlayerName (castingPlayerID, clientGame);
 			local PestilenceWarningTurn = pestilenceDataRecord.PestilenceWarningTurn; --for now, make PestilenceWarningTurn = current turn +1 turn from now (next turn)

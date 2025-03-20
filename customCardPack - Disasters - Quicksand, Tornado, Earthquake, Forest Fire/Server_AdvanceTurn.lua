@@ -1,5 +1,7 @@
 require("utilities");
 require("DataConverter");
+local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
+local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E]::func start");
@@ -19,7 +21,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
 	--local boolHaltCodeExecutionAtEndofTurn = true;
-	local intHaltOnTurnNumber = 2;
+	local intHaltOnTurnNumber = 1;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
@@ -679,7 +681,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				--order is not a quicksand violation; it may not have anything to do with quicksand; check if order is a legit attack on a quicksanded territory
 				--if legit attack into quicksand then apply damage factors to attacking & defending armies killed
 				if (Mod.PublicGameData.QuicksandData[gameOrder.To] ~= nil) then
-					print ("[QUICKSAND] ATTACK INTO QUICKSAND _ _ _ _ _ _ _ _ _ _ _ _ ");
+					print ("[QUICKSAND] ATTACK/TRANSFER INTO QUICKSAND _ _ _ _ _ _ _ _ _ _ _ _ ");
 					print ("[QUICKSAND] PRE  attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
 					print ("[QUICKSAND] AttackerDamageTakenModifier=="..Mod.Settings.QuicksandAttackerDamageTakenModifier..", AttackerDamageTakenModifier=="..Mod.Settings.QuicksandDefenderDamageTakenModifier.."::");
 					print ("[QUICKSAND] AttackingSpecialsKilled=="..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled=="..#result.DefendingArmiesKilled.SpecialUnits.."::");
@@ -930,7 +932,12 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-
+	local strUnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]";
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="garbage";};}[V1.1#JAD]';
+	--result of using DataConverter: [V1.1#JAD]{"Essentials"={"UnitDescription"="A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. Shields last 1 turn before expiring. [Created on turn 2, expires on turn 3]";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]
+	print ("[SHIELD] ModData=="..tostring (builder.ModData));
     local specialUnit_Shield = builder.Build();
     impactedTerritory.AddSpecialUnits = {specialUnit_Shield};
 
@@ -988,6 +995,10 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		builder.IsVisibleToAllPlayers = false;
 		--builder.TextOverHeadOpt = "Monolith"; --don't need writing; the graphic is sufficient
 		--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+		local strUnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]";
+		--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+		builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	
 		local specialUnit_Monolith = builder.Build(); --save this in a table somewhere to destroy later
 	
 		--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
@@ -1048,6 +1059,9 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	builder.IsVisibleToAllPlayers = false;
 	builder.TextOverHeadOpt = "Isolated";
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	local strUnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]";
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
 
 	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
@@ -1322,6 +1336,9 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			builder.IsVisibleToAllPlayers = false;
 			builder.TextOverHeadOpt = "Neutralized";
 			--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+			local strUnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]";
+			--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+			builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 			local specialUnit_Neutralize = builder.Build(); --save this in a table somewhere to destroy later
 
 			--[[all SpecialUnit properties:
@@ -1522,7 +1539,7 @@ function process_Neutralize_expirations (game,addOrder)
 				impactedTerritory.SetOwnerOpt=territoryOwnerID_former;
 				table.insert (modifiedTerritories, impactedTerritory);
 
-				local territoryOwnerName_former = toPlayerName (territoryOwnerID_current);
+				local territoryOwnerName_former = toPlayerName (territoryOwnerID_former);
 				local strRevertNeutralizeOrderMessage = targetTerritoryName ..' reverted from neutral to owned by ' .. territoryOwnerName_former;
 				local event = WL.GameOrderEvent.Create(territoryOwnerID_former, strRevertNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
