@@ -107,3 +107,7 @@ function split(inputstr, sep)
 	end
 	return t
 end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
+end
