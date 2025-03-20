@@ -882,6 +882,9 @@ function build_Quicksand_specialUnit (game, targetTerritoryID)
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	local strUnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]";
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	local specialUnit_Quicksand = builder.Build();
 	return specialUnit_Quicksand;
 end
