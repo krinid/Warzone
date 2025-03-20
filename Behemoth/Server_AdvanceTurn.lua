@@ -48,23 +48,24 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 		return; --this player already has the maximum number of tanks possible, so skip adding a new one.
 	end]]
 
-	local behemothPowerFactor = 0.01;
 	--local behemothPower = math.max (behemothPowerFactor * (goldSpent^3) + behemothPowerFactor * (goldSpent^2) + behemothPowerFactor * goldSpent, 0);
-	local behemothPower = math.max (behemothPowerFactor * (goldSpent^2), 1);
+	--local behemothPower = math.max (behemothPowerFactor * (goldSpent^2), 1);
+	local behemothPower = getBehemothPower(goldSpent);
+	local behemothPowerFactor = getBehemothPowerFactor(behemothPower); --math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1); --max factor of 0.3
 
 	local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
 	builder.Name = 'Behemoth (power '.. behemothPower ..')';
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = 'Behemoth_clearback.png'; --max size of 60x100 pixels
 	--builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels
-	builder.AttackPower = behemothPower;
-	builder.DefensePower = behemothPower*0.1;
-	builder.AttackPowerPercentage = 1.1;  --0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
-	builder.DefensePowerPercentage = 0.9; --0.0 means -100% defense damage (the damage this unit does when attacking); 1.0=regular defense damage; >1.0 means bonus defense damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+	builder.AttackPower = behemothPower * (1+behemothPowerFactor); --adds to attack power, never reduces
+	builder.DefensePower = behemothPower * behemothPowerFactor; --reduces defense power to the level of the behemothPowerFactor which ranges from 0 to 0.3; Behemoths are strong attackers, but weak defenders
+	builder.AttackPowerPercentage = 1+behemothPowerFactor;  --increase (never reduce) attack power of self + accompanying units by behemothPowerFactor; 0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+	builder.DefensePowerPercentage = 0.6+behemothPowerFactor; --weak attacker (starts @ 60% reduction of defense damage given) that scales to near normal (90%) as behemoth power increases --0.0 means -100% defense damage (the damage this unit does when attacking); 1.0=regular defense damage; >1.0 means bonus defense damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
 	builder.CombatOrder = -1; --fights before armies
 	--builder.DamageToKill = behemothPower;
 	builder.Health = behemothPower;
-	builder.DamageAbsorbedWhenAttacked = behemothPower*0.1;
+	builder.DamageAbsorbedWhenAttacked = behemothPower * behemothPowerFactor; --absorbs damage when attacked, scales with behemothPowerFactor which starts at 0 when behemothPower==0, scales to max of 0.3 for strong Behemoths
 	builder.CanBeGiftedWithGiftCard = true;
 	builder.CanBeTransferredToTeammate = true;
 	builder.CanBeAirliftedToSelf = true;
@@ -77,6 +78,10 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	terrMod.AddSpecialUnits = {builder.Build()};
 
 	addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod}));
+end
+
+function getBehemothPowerFactor (behemothPower)
+	return (math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1)); --max factor of 0.3
 end
 
 function getBehemothPower (goldSpent)

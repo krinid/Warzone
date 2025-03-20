@@ -85,7 +85,7 @@ end
 
 function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. getBehemothPower(BehemothGoldSpent));
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. getBehemothPower (BehemothGoldSpent).."\nScaling factor: " .. getBehemothPowerFactor (getBehemothPower(BehemothGoldSpent)));
 	SelectTerritoryBtn.SetInteractable(false);
 end
 
@@ -119,6 +119,10 @@ function CompletePurchaseClicked()
 	Game.Orders = orders;
 
 	Close2();
+end
+
+function getBehemothPowerFactor (behemothPower)
+	return (math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1)); --max factor of 0.3
 end
 
 function getBehemothPower (goldSpent)

@@ -1,6 +1,15 @@
-function Server_AdvanceTurn_End_ignore(game, addNewOrder)
+function Server_AdvanceTurn_End(game, addNewOrder)
 	--uncomment the below line to forcibly halt execution for troubleshooting purposes
 	--print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
+
+	--[[for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
+		print ("[_END] "..k, v.__proxyID, v.proxyType, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
+		--printObjectDetails (v);
+		for k2,v2 in pairs (v) do
+			print ("[_END] __"..k2, v2.__proxyID, v2.proxyType, v2);--.." "..v2.proxyType);--.. "player "..v2.PlayerID);
+			--printObjectDetails (v2);
+		end
+	end]]
 	print ("[GRACEFUL END OF TURN EXECUTION]");
 end
 
@@ -8,9 +17,13 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 	boolPermitNextAIorder=false; --default to false in case this persists from last turn
 
 	--delete all AI orders
-	--for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
-	--	print (k, v.__proxyID, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
---		printObjectDetails (v);
+	for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
+		print ("[_START] "..k, v.__proxyID, v.proxyType, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
+		--printObjectDetails (v);
+		for k2,v2 in pairs (v) do
+			print ("[_START] __"..k2, v2.__proxyID, v2.proxyType, v2);--.." "..v2.proxyType);--.. "player "..v2.PlayerID);
+			--printObjectDetails (v2);
+		end
 
 	--for _,playerID in pairs(game.ServerGame.Game.PlayingPlayers) do
       	--[[if (playerID.ID <= 50) then
@@ -27,7 +40,7 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 			end
 		end]]
 	--end
---	end
+	end
 
 	-- game.ServerGame.ActiveTurnOrders[1] = {}; -- doesn't work
 	-- neither does this:
@@ -50,7 +63,21 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 	--if (order.PlayerID == 1) then print ("PROXY: "..order.proxyType); end;
 	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); return; end
 
-	print ("[ORDER] proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID..", processNextOrder "..tostring (boolPermitNextAIorder));
+	print ("[_ORDER] proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID..", processNextOrder "..tostring (boolPermitNextAIorder));
+
+	--this is just a snapshot of the entered orders; has same content as Server_AdvanceTurn_Start; doesn't show added orders, does show skipped orders
+	--maybe confirm this -- you were actually only looking at the order quantity, not the order content
+	--[[print ("[_JORK ORDER]");
+	for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
+		print ("[_JORK ORDER] "..k, v.__proxyID, v.proxyType, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
+		--printObjectDetails (v);
+		if (k>50) then   --show only non-AI moves (krinid's moves)
+			for k2,v2 in pairs (v) do
+				print ("[_JORK ORDER] __"..k2, v2.__proxyID, v2.proxyType, v2);--.." "..v2.proxyType);--.. "player "..v2.PlayerID);
+				--printObjectDetails (v2);
+			end
+		end
+	end]]
 
 	if (order.proxyType == "GameOrderEvent") then print ("[GOE] ModID "..tostring(order.ModID)..", "..tostring(order.Message)); end
 
@@ -85,6 +112,7 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 		boolPermitNextAIorder = true; --permit the next AI order (b/c it is this order that was just saved), then resume skipping AI orders until the next Forced Order custom game order is encountered
 		--print ("[FORCE ORDER] post - "..order.Payload);
 	end
+
 end
 
 function toboolean (value)

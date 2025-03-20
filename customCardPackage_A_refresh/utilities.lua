@@ -161,7 +161,9 @@ end
 
 function toPlayerName(playerid, game)
 	if (playerid ~= nil) then
-		if (playerid<50) then
+		if (playerid==WL.PlayerID.Neutral) then
+			return ("Neutral");
+		elseif (playerid<50) then
 				return ("AI"..playerid);
 		else
 			for _,playerinfo in pairs(game.Game.Players) do

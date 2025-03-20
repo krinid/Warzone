@@ -4,69 +4,69 @@ function Client_PresentSettingsUI(rootParent)
 	if(Mod.Settings.ReinforcementCardCost ~=nil)then
 	if(Mod.Settings.ReinforcementCardCost ~= 0)then
 		CreateLine('Reinforcement Card Cost : ',Mod.Settings.ReinforcementCardCost,Mod.Settings.ReinforcementCardCost);
-	else
-		CreateTextLine('Reinforcement Cards can not be purchased');
+	--else
+	--	CreateTextLine('Reinforcement Cards cannot be purchased');
 	end
 		end
 	if(Mod.Settings.GiftCardCost ~= 0)then
 		CreateLine('Gift Card Cost : ',Mod.Settings.GiftCardCost,Mod.Settings.GiftCardCost);
-	else
-		CreateTextLine('Gift Cards can not be purchased');
+	--else
+	--	CreateTextLine('Gift Cards cannot be purchased');
 	end
 	if(Mod.Settings.SpyCardCost ~= 0)then
 		CreateLine('Spy Card Cost : ',Mod.Settings.SpyCardCost,Mod.Settings.SpyCardCost);
-	else
-		CreateTextLine('Spy Cards can not be purchased');
+	--else
+	--	CreateTextLine('Spy Cards cannot be purchased');
 	end
 	if(Mod.Settings.EmergencyBlockadeCardCost ~= 0)then
 		CreateLine('Emergency blockade Card Cost : ',Mod.Settings.EmergencyBlockadeCardCost,Mod.Settings.EmergencyBlockadeCardCost);
-	else
-		CreateTextLine('Emergency blockade Cards can not be purchased');
+	--else
+	--	CreateTextLine('Emergency blockade Cards cannot be purchased');
 	end
 	if(Mod.Settings.BlockadeCardCost ~= 0)then
 		CreateLine('Blockade Card Cost : ',Mod.Settings.BlockadeCardCost,Mod.Settings.BlockadeCardCost);
-	else
-		CreateTextLine('Blockade Cards can not be purchased');
+	--else
+	--	CreateTextLine('Blockade Cards cannot be purchased');
 	end
 	if(Mod.Settings.OrderPriorityCardCost ~= 0)then
 		CreateLine('Order priority Card Cost : ',Mod.Settings.OrderPriorityCardCost,Mod.Settings.OrderPriorityCardCost);
-	else
-		CreateTextLine('Order priority Cards can not be purchased');
+	--else
+	--	CreateTextLine('Order priority Cards cannot be purchased');
 	end
 	if(Mod.Settings.OrderDelayCardCost ~= 0)then
 		CreateLine('Order delay Card Cost : ',Mod.Settings.OrderDelayCardCost,Mod.Settings.OrderDelayCardCost);
-	else
-		CreateTextLine('Order delay Cards can not be purchased');
+	--else
+	--	CreateTextLine('Order delay Cards cannot be purchased');
 	end
 	if(Mod.Settings.AirliftCardCost ~= 0)then
 		CreateLine('Airlift Card Cost : ',Mod.Settings.AirliftCardCost,Mod.Settings.AirliftCardCost);
-	else
-		CreateTextLine('Airlift Cards can not be purchased');
+	--else
+	--	CreateTextLine('Airlift Cards cannot be purchased');
 	end
 	if(Mod.Settings.DiplomacyCardCost ~= 0)then
 		CreateLine('Diplomacy Card Cost : ',Mod.Settings.DiplomacyCardCost,Mod.Settings.DiplomacyCardCost);
-	else
-		CreateTextLine('Diplomacy Cards can not be purchased');
+	--else
+	--	CreateTextLine('Diplomacy Cards cannot be purchased');
 	end
 	if(Mod.Settings.SanctionsCardCost ~= 0)then
 		CreateLine('Sanctions Card Cost : ',Mod.Settings.SanctionsCardCost,Mod.Settings.SanctionsCardCost);
-	else
-		CreateTextLine('Sanctions Cards can not be purchased');
+	--else
+	--	CreateTextLine('Sanctions Cards cannot be purchased');
 	end
 	if(Mod.Settings.SurveillanceCardCost ~= 0)then
 		CreateLine('Surveillance Card Cost : ',Mod.Settings.SurveillanceCardCost,Mod.Settings.SurveillanceCardCost);
-	else
-		CreateTextLine('Surveillance Cards can not be purchased');
+	--else
+	--	CreateTextLine('Surveillance Cards cannot be purchased');
 	end
 	if(Mod.Settings.ReconnaissanceCardCost ~= 0)then
 		CreateLine('Reconnaissance Card Cost : ',Mod.Settings.ReconnaissanceCardCost,Mod.Settings.ReconnaissanceCardCost);
-	else
-		CreateTextLine('Reconnaissance Cards can not be purchased');
+	--else
+	--	CreateTextLine('Reconnaissance Cards cannot be purchased');
 	end
 	if(Mod.Settings.BombCardCost ~= 0)then
 		CreateLine('Bomb Card Cost : ',Mod.Settings.BombCardCost,Mod.Settings.BombCardCost);
-	else
-		CreateTextLine('Bomb Cards can not be purchased');
+	--else
+	--	CreateTextLine('Bomb Cards cannot be purchased');
 	end
 end
 function CreateTextLine(text)
