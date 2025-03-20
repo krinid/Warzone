@@ -1,4 +1,6 @@
 --require('Utilities');
+local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
+local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
     if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Behemoth|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
