@@ -895,8 +895,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
 	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
     local specialUnit_Quicksand = build_Quicksand_specialUnit (game, targetTerritoryID);
-	
-    impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
+
+	impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = WL.RectangleVM.Create(
          game.Map.Territories[targetTerritoryID].MiddlePointX,
