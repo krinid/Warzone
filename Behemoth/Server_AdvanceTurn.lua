@@ -75,7 +75,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	builder.IsVisibleToAllPlayers = false;
 	--builder.TextOverHeadOpt = "Behemoth (power "..behemothPower..")";
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = "This unit's power scales with the amount of resources uses to spawn it."}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-	local strUnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", cost "..goldSpent.." gold, power "..behemothPower..", scaling factor "..behemothPowerFactor.."]";
+	local strUnitDescription = "A unit that scales its power and other stats with the amount of gold used to create the unit. Low quantities of gold will result in Behemoths weaker than the # of armies you could get for the same gold. [Created on turn "..game.Game.TurnNumber..", cost "..goldSpent.." gold, power "..behemothPower..", scaling factor "..behemothPowerFactor.."]";
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
 	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 
