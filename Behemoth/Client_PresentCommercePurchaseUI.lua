@@ -17,6 +17,7 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 
 	local MainUI = UI.CreateVerticalLayoutGroup(rootParent);
 	UI.CreateLabel(MainUI).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
+	UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it. Using low quantities gold will result in a Behemoth weaker than the # of armies you would receive for the same gold.");
 	--CreateLabel(MainUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 
 	horz = UI.CreateHorizontalLayoutGroup(MainUI).SetFlexibleWidth(1);
