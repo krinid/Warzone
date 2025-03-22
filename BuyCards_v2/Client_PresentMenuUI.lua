@@ -42,6 +42,7 @@ function displayMenu (game, close)
 	--[[UI.CreateLabel (vertHeader).SetText ("Turn #"..game.Game.TurnNumber);
 	UI.CreateLabel (vertHeader).SetText ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	UI.CreateLabel (vertHeader).SetText ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));]]
+
 	print ("[BUY CARDS] Turn #"..game.Game.TurnNumber);
 	print ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	print ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));
@@ -83,6 +84,10 @@ function displayMenu (game, close)
 				local cardCount = 0;
 				for cardID, cardRecord in pairs (publicGameData.CardData.DefinedCards) do
 					cardCount = cardCount + 1;
+					print (cardCount);
+					print (#sliderCardPrices);
+					print (sliderCardPrices[1].GetValue ());
+					print (sliderCardPrices[2].GetValue ());
 					print (cardRecord.ID .."/" .. cardRecord.Name..", " ..cardRecord.Price.. "" ..", change to new price "..sliderCardPrices [cardCount].GetValue ());
 					--for reference: publicGameData.CardData.DefinedCards [cardRecord.ID] = {Name=cardRecord.Name, Price=sliderCardPrices [cardCount].GetValue (), ID=cardID};
 					newCards [cardRecord.ID] = {Name=cardRecord.Name, Price=sliderCardPrices [cardCount].GetValue (), ID=cardID};
@@ -131,25 +136,25 @@ function displayMenu (game, close)
 			cardCountRegular = cardCountRegular + 1;
 		end
 		local interactable = ((cardRecord.Price>=1) and (publicGameData.CardData.CardPricesFinalized==true)); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
-		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI); end
+		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI).SetFlexibleWidth(1); end
 
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
-			UI.CreateButton(targetUI).SetPreferredWidth(540).SetFlexibleWidth (1).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
+			UI.CreateButton(targetUI).SetFlexibleWidth (0.75).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
 		end
 
 		--if client player is the host & prices aren't finalized, show a slider to be able to set the card price
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then
-			sliderCardPrices [cardCount] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetPreferredWidth(25).SetFlexibleWidth (1).SetWholeNumbers(true);
+			sliderCardPrices [cardCountTotal] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetFlexibleWidth (0.25).SetWholeNumbers(true);
 		end
 	end
-	if (cardCountRegular==0) then UI.CreateLabel (vertRegularCards).SetText ("[None]"); else UI.CreateLabel (vertRegularCards).SetText ("["..cardCountRegular.." standard cards]"); end
-	if (cardCountCustom==0) then UI.CreateLabel (vertCustomCards).SetText ("[None]"); else UI.CreateLabel (vertCustomCards).SetText ("["..cardCountCustom.. " custom cards]"); end
-	UI.CreateLabel (vertRegularCards).SetText ("["..cardCountTotal..".. total cards]");
 
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
-	UI.CreateLabel (DebugWindow).SetText ("\n\n\n- - - - - [DEBUG DATA START] - - - - -");
+	UI.CreateLabel (DebugWindow).SetText ("\n\n- - - - - [DEBUG DATA START] - - - - -");
     UI.CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
+	if (cardCountRegular==0) then UI.CreateLabel (DebugWindow).SetText ("[None]"); else UI.CreateLabel (vertHeader).SetText ("["..cardCountRegular.." standard card(s)]"); end
+	if (cardCountCustom==0) then UI.CreateLabel (DebugWindow).SetText ("[None]"); else UI.CreateLabel (vertHeader).SetText ("["..cardCountCustom.. " custom card(s)]"); end
+	UI.CreateLabel (DebugWindow).SetText ("["..cardCountTotal.." total card(s)]");
 
 	if (game.Us~=nil) then --a player in the game
 		--UI.CreateLabel (DebugWindow).SetText ("text \n\nClient player");

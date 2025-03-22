@@ -32,7 +32,7 @@ function Server_AdvanceTurn_Start(game,addOrder)
 	--if card prices have been finalized, add an order indicating this
 	if (Mod.PublicGameData.CardData.CardPricesFinalized == true) then
 		--don't declare variable as local, leave it global so this message can be displayed only once
-		if (publicGameData.PricesFinalizedMessageAlreadyDisplayed == nil) then
+		if (Mod.PublicGameData.PricesFinalizedMessageAlreadyDisplayed == nil) then
 			addOrder(WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{}));
 			local publicGameData = Mod.PublicGameData;
 			publicGameData.PricesFinalizedMessageAlreadyDisplayed = true; --flag it so it doesn't redisplay each turn
