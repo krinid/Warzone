@@ -107,17 +107,17 @@ function displayMenu (game, close)
 		UI.CreateLabel (vertHeader).SetText (" "); --empty label for visual vertical spacing
 	end
 
-	UI.CreateLabel (vertHeader).SetText ("[enter 0 to make a card unpurchasable]\n");
+	UI.CreateLabel (vertHeader).SetText ("Enter 0 for price to make a card unpurchasable\n");
 	local vertRegularCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
-	UI.CreateLabel (vertRegularCards).SetText ("Regular cards:").SetColor (getColourCode("subheading"));
+	UI.CreateLabel (vertRegularCards).SetText ("\nStandard cards:").SetColor (getColourCode("subheading"));
 	local vertCustomCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
 	UI.CreateLabel (vertCustomCards).SetText ("\nCustom cards:").SetColor (getColourCode("subheading"));
 
-	local cardCount = 0;
+	local cardCountTotal = 0;
 	local cardCountRegular = 0;
 	local cardCountCustom = 0;
 	for cardID, cardRecord in pairs (publicGameData.CardData.DefinedCards) do
-		cardCount = cardCount + 1;
+		cardCountTotal = cardCountTotal + 1;
 		--regular cards go in the Vert area and are listed at the top
 		--custom cards go in the Vert area and are listed at the bottom
 		--if client player is host & cards aren't finalized, then add sliders and use a horizontal layout group to organize the labels & sliders -- but don't use hori groups for non-host players b/c it adds unnecessary vertical space and less buttons fit on a single viewing window
@@ -129,25 +129,26 @@ function displayMenu (game, close)
 			cardCountCustom = cardCountCustom + 1;
 		else --this is a regular card; regular cards are <1000000
 			cardCountRegular = cardCountRegular + 1;
-		end 
+		end
 		local interactable = ((cardRecord.Price>=1) and (publicGameData.CardData.CardPricesFinalized==true)); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI); end
 
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
 			UI.CreateButton(targetUI).SetPreferredWidth(540).SetFlexibleWidth (1).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (cardRecord); end);
-		end 
+		end
 
 		--if client player is the host & prices aren't finalized, show a slider to be able to set the card price
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then
 			sliderCardPrices [cardCount] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetPreferredWidth(25).SetFlexibleWidth (1).SetWholeNumbers(true);
 		end
 	end
-	if (cardCountCustom==0) then UI.CreateLabel (vertCustomCards).SetText ("[None]"); end
-	if (cardCountRegular==0) then UI.CreateLabel (vertRegularCards).SetText ("[None]"); end
+	if (cardCountCustom==0) then UI.CreateLabel (vertCustomCards).SetText ("[None]"); else UI.CreateLabel (vertCustomCards).SetText ("["..cardCountCustom".. custom cards]"); end
+	if (cardCountRegular==0) then UI.CreateLabel (vertRegularCards).SetText ("[None]"); else UI.CreateLabel (vertRegularCards).SetText ("["..cardCountRegular..".. custom cards]"); end
+	UI.CreateLabel (vertRegularCards).SetText ("["..cardCountTotal..".. total cards]");
 
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
-	UI.CreateLabel (DebugWindow).SetText ("- - - - - [DEBUG DATA START] - - - - -");
+	UI.CreateLabel (DebugWindow).SetText ("\n\n\n- - - - - [DEBUG DATA START] - - - - -");
     UI.CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
 
 	if (game.Us~=nil) then --a player in the game
