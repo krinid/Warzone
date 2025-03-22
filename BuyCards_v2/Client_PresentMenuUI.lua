@@ -161,9 +161,9 @@ function displayMenu (game, close)
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
 	UI.CreateLabel (DebugWindow).SetText ("\n\n- - - - - [DEBUG DATA START] - - - - -");
     UI.CreateLabel (DebugWindow).SetText ("Server time: "..game.Game.ServerTime);
-	UI.CreateLabel (vertHeader).SetText ("["..cardCountRegular.." standard card(s) in game, "..cardCountRegular_Buyable.." are buyable]");
-	UI.CreateLabel (vertHeader).SetText ("["..cardCountCustom.. " custom card(s)], "..cardCountCustom_Buyable.." are buyable]");
-	UI.CreateLabel (DebugWindow).SetText ("["..cardCountTotal.." total card(s)], "..cardCountTotal_Buyable.." are buyable]");
+	UI.CreateLabel (DebugWindow).SetText ("["..cardCountRegular.." standard card(s) in game, "..cardCountRegular_Buyable.." buyable]");
+	UI.CreateLabel (DebugWindow).SetText ("["..cardCountCustom.. " custom card(s)], "..cardCountCustom_Buyable.." buyable]");
+	UI.CreateLabel (DebugWindow).SetText ("["..cardCountTotal.." total card(s)], "..cardCountTotal_Buyable.." buyable]");
 	UI.CreateLabel (DebugWindow).SetText ("Prices finalized == "..tostring(publicGameData.CardData.CardPricesFinalized));
 
 	if (game.Us~=nil) then --a player in the game
