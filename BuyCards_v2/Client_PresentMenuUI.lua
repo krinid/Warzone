@@ -143,8 +143,8 @@ function displayMenu (game, close)
 			sliderCardPrices [cardCount] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetPreferredWidth(25).SetFlexibleWidth (1).SetWholeNumbers(true);
 		end
 	end
-	if (cardCountCustom==0) then UI.CreateLabel (vertCustomCards).SetText ("[None]"); else UI.CreateLabel (vertCustomCards).SetText ("["..cardCountCustom".. custom cards]"); end
-	if (cardCountRegular==0) then UI.CreateLabel (vertRegularCards).SetText ("[None]"); else UI.CreateLabel (vertRegularCards).SetText ("["..cardCountRegular..".. custom cards]"); end
+	if (cardCountRegular==0) then UI.CreateLabel (vertRegularCards).SetText ("[None]"); else UI.CreateLabel (vertRegularCards).SetText ("["..cardCountRegular.." standard cards]"); end
+	if (cardCountCustom==0) then UI.CreateLabel (vertCustomCards).SetText ("[None]"); else UI.CreateLabel (vertCustomCards).SetText ("["..cardCountCustom.. " custom cards]"); end
 	UI.CreateLabel (vertRegularCards).SetText ("["..cardCountTotal..".. total cards]");
 
 	DebugWindow = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
