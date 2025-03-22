@@ -34,7 +34,9 @@ function Server_AdvanceTurn_Start(game,addOrder)
 		--don't declare variable as local, leave it global so this message can be displayed only once
 		if (publicGameData.PricesFinalizedMessageAlreadyDisplayed == nil) then
 			addOrder(WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{}));
-			boolPricesFinalizedMessageAlreadyDisplayed = true; --flag it so it doesn't redisplay each turn
+			local publicGameData = Mod.PublicGameData;
+			publicGameData.PricesFinalizedMessageAlreadyDisplayed = true; --flag it so it doesn't redisplay each turn
+			Mod.PublicGameData = publicGameData; --save updated values
 		end
 	end
 end
