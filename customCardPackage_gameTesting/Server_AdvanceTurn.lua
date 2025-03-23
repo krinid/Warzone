@@ -284,7 +284,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif strCardTypeBeingPlayed == "Deneutralize" then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Airstrike" then
-			execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails);
+			--execute_Airstrike_operation (game, gameOrder, addOrder, cardOrderContentDetails);
 		elseif strCardTypeBeingPlayed == "Card Piece" then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif strCardTypeBeingPlayed == "Forest Fire" then
