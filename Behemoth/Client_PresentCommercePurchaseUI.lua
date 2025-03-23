@@ -83,7 +83,7 @@ function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, clo
 
 	local behemothPower = getBehemothPower(BehemothGoldSpent);
 	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	UI.CreateLabel(vert).SetText("\n\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
+	UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
 		"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 		"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
@@ -95,7 +95,7 @@ function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	local behemothPower = getBehemothPower(BehemothGoldSpent);
 	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to"); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
 	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
