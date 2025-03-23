@@ -1542,7 +1542,8 @@ function process_Neutralize_expirations (game,addOrder)
 				impactedTerritory.SetOwnerOpt=territoryOwnerID_former;
 				table.insert (modifiedTerritories, impactedTerritory);
 
-				local territoryOwnerName_former = toPlayerName (territoryOwnerID_former);
+				local territoryOwnerName_former = toPlayerName (territoryOwnerID_former, game);
+				--local territoryOwnerName_former = game.Game.Players[territoryOwnerID_former].DisplayName(nil, false);
 				local strRevertNeutralizeOrderMessage = targetTerritoryName ..' reverted from neutral to owned by ' .. territoryOwnerName_former;
 				local event = WL.GameOrderEvent.Create(territoryOwnerID_former, strRevertNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
