@@ -18,6 +18,8 @@ TODO:
 - city spread - if # of cities on territory == #cities/#terrs (within 10%?) - bonus; if >10% punish?
 - reduce (or eliminate) cities when captured?
 - allow cities to be sold?
+- allow cities to be moved?
+- give buff to city growth on territories where bordering territories have <= (not >) city quantity; specifically how? tbd
 ]]
 
 function Server_AdvanceTurn_End(game, addOrder)
