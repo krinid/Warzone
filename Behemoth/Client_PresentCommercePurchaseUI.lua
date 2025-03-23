@@ -86,9 +86,11 @@ end
 
 function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. getBehemothPower (BehemothGoldSpent).."\nScaling factor: " .. getBehemothPowerFactor (getBehemothPower(BehemothGoldSpent).."\n\n"..
+	local behemothPower = getBehemothPower(BehemothGoldSpent);
+	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
 		"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
-		"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor));
+		"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
 end
 
