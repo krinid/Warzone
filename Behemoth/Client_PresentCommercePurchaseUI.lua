@@ -146,5 +146,16 @@ function getBehemothPower (goldSpent)
 	power = power + math.min ((goldSpent/6000)*goldSpent, 5000);
 	power = power + (goldSpent/10000)*goldSpent;
 	power = math.floor (math.max (1, power)+0.5);
+
+	local a = 50;  --while goldSpent < a, power < goldSpent
+	local b = 100; --while a < goldSpent < b, power >= b and grows slowly/linearly
+	local c = 1000; --while b < goldSpent < c, power grows faster/quadratically
+	               --while c < goldSpent, power grows even faster/exponentially
+	power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) + math.max(0, math.exp(goldSpent - c) - (c - b)^2);
+	print  (goldSpent ..", "..math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) ..", ".. math.max(0, math.exp(goldSpent - c) - (c - b)^2));
+
+	power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, ((goldSpent - b)) * 1.0)^1 + math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5);
+	print  (goldSpent ..", ".. math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, ((goldSpent - b)) * 1.0)^1 ..", ".. math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5));
+
 	return power;
 end
