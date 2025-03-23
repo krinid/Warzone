@@ -202,7 +202,7 @@ function PlayerButton(player)
 	local name = player.DisplayName(nil, false);
 	local ret = {};
 	ret["text"] = name;
-	ret["selected"] = function() 
+	ret["selected"] = function()
 		TargetPlayerBtn.SetText(name);
 		TargetPlayerID = player.ID;
 	end
@@ -227,9 +227,9 @@ function play_Earthquake_card(game, cardInstance, playCard)
                 return;
             end
 
-            print(strPlayerName_cardPlayer);
+            --[[print(strPlayerName_cardPlayer);
             print(Earthquake_SelectedBonus.ID);
-            print(Earthquake_SelectedBonus.Name);
+            print(Earthquake_SelectedBonus.Name);]]
 
             print("[EARTHQUAKE] order input: bonus=" .. Earthquake_SelectedBonus.ID .. "/".. Earthquake_SelectedBonus.Name .." :: Earthquake|" .. Earthquake_SelectedBonus.ID);
             playCard(strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
@@ -469,7 +469,7 @@ function play_Isolation_card(game, cardInstance, playCard)
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory you wish to isolate."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-    
+
         UI.CreateButton(vert).SetText("Play Card").SetOnClick(function() 
 
         --check for CANCELED request, ie: no territory selected
@@ -606,7 +606,7 @@ function play_Nuke_card(game, cardInstance, playCard)
     end);
 end
 
-function play_Airstrike_card(game, cardInstance, playCard)
+function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
     TargetTerritoryID = nil;
     TargetTerritoryName = nil;
     SourceTerritoryID = nil;
@@ -663,6 +663,7 @@ function SourceTerritoryClicked(terrDetails)
 		SourceTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		SourceTerritoryID = terrDetails.ID;
         SourceTerritoryName = terrDetails.Name;
+        TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 	end
 end
 
