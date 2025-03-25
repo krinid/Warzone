@@ -26,12 +26,12 @@ function process_game_order_ImmovableSpecialUnits (game,gameOrder,skip);
 
 	--global (not local) variables to control the UI.Alert nagging between the 4 mods, nag only once per session for each Immovable Special type across all 4 mods
 	--default to false, set to true once a nag for that SU type has been done
-	if (boolImmovableAntiNag_Monolith == nil) then boolImmovableAntiNag_Monolith = false; end
+	--[[if (boolImmovableAntiNag_Monolith == nil) then boolImmovableAntiNag_Monolith = false; end
 	if (boolImmovableAntiNag_Shield == nil) then boolImmovableAntiNag_Shield = false; end
 	if (boolImmovableAntiNag_Quicksand == nil) then boolImmovableAntiNag_Quicksand = false; end
 	if (boolImmovableAntiNag_Isolation == nil) then boolImmovableAntiNag_Isolation = false; end
-	if (boolImmovableAntiNag_Neutralize == nil) then boolImmovableAntiNag_Neutralize = false; end --actually it's not possible to move Neutralize, b/c it's on a Neutral territory
-	if (boolImmovableAntiNag == nil) then boolImmovableAntiNag = false; end --for now just use this one for all Immovable SUs; decide later if 1 per SU type is really required
+	if (boolImmovableAntiNag_Neutralize == nil) then boolImmovableAntiNag_Neutralize = false; end]] --actually it's not possible to move Neutralize, b/c it's on a Neutral territory
+	if (boolImmovableAntiNag == nil) then boolImmovableAntiNag = false; end --for now just use this one for all Immovable SUs; decide later if 1 per SU type is really required (I don't think it is at this point)
 
 	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
 	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
