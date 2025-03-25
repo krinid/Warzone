@@ -1,4 +1,8 @@
 function Client_GameRefresh(clientGame)
+    if (clientGame == nil) then print ("[CLIENTGAME is nil]"); return; end
+    if (clientGame.Us == nil) then print ("[CLIENTGAME.Us is nil]"); return; end --player is probably a spectator, do nothing, just return
+
+    local localPlayerIsHost = clientGame.Us.ID == game.Settings.StartedBy;
     if (boolHostToSetPrices_AntiNag == nil) then boolHostToSetPrices_AntiNag = false; end --when set to true, host has already been nagged about setting prices this session, so don't nag again
 
     --if not Commerce game, do nothing; if not host, do nothing; if Commercer game & local player is host & prices have not been set, send alert to advise player to set card prices, but only if they haven't been nagged already
