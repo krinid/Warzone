@@ -268,7 +268,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif (strCardTypeBeingPlayed == "Deneutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Deneutralize == true)) then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Airstrike" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true)) then
-			--execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
+			execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
 		elseif (strCardTypeBeingPlayed == "Card Piece" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardPieces == true)) then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Forest Fire" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true)) then
@@ -312,26 +312,27 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 	end]]
 
 	--used for debugging/testing purposes
-	local strWhatToDo = "SU_prep";
-	--local strWhatToDo = "do_airstrike";
+	--local strWhatToDo = "SU_prep";
+	local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
 
 	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
 	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then
 		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
-		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 0, 10, 15000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 10, 0, 4000, true, true, true, true, true, nil);
+		--for reference: function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilename, AttackPower, DefensePower, AttackPowerPercentage, DefensePowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, Health, CombatOrder, CanBeGiftedWithGiftCard, CanBeTransferredToTeammate, CanBeAirliftedToSelf, CanBeAirliftedToTeammate, IsVisibleToAllPlayers, ModData)
+		build_specialUnit (game, addOrder, sourceTerritoryID, "1a pre 10 health", "shield_special unit_clearback.png",    10, 10, 1.0, 1.0, 0, 0, 100, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "2a pre 0h 10kill", "shield_special unit_clearback.png",    10, 10, nil, nil, 0, 10, 0, -5000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "3a with 0h 10kill", "quicksand_v3_specialunit.png",        10, 10, 1.0, 1.0, 0, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "4a with 10 health", "quicksand_v3_specialunit.png",        10, 10, nil, nil, 0, 0, 100, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "5a 10 health", "monolith special unit_clearback.png",      10, 10, nil, nil, 0, 0, 100, 15000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, sourceTerritoryID, "6a 0h 10kill", "monolith special unit_clearback.png",      10, 10, nil, nil, 0, 10, 0, 4000, true, true, true, true, true, nil);
 
 		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
-		build_specialUnit (game, addOrder, targetTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "1b pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "2b pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "3b with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "4b with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "5b post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
+		build_specialUnit (game, addOrder, targetTerritoryID, "6b post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
 	else
 		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
 		local airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
@@ -345,9 +346,9 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 			print ("[AIRSTRIKE] attacker wins, move into target territory and take ownership of it");
 			-- Move surviving attacking units to target territory and change ownership to attacker
 			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-			targetTerritory.SetOwnerOpt = gameOrder.PlayerID;
-			targetTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
-			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove Defender killed Specials from the source territory
+			targetTerritory.SetOwnerOpt = gameOrder.PlayerID; --territory ownership changes to attacker, b/c attack was successful
+			targetTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;          --all units should be removed from Target territory b/c attack was successful
+			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove Defender killed Specials from the target territory; all SUs should be removed from Target territory b/c attack was successful
 
 			--max 4 Specials at a time can be applied to a territory in 1 game order, so if >4, break it up into multiple orders
 			if (#airstrikeResult.AttackerResult.SurvivingSpecials <= 4) then
@@ -384,21 +385,22 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
 		else
 			--attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
+			--if an SU took damage but wasn't killed, it was cloned and the original SU needs to be removed from & the new cloned SU with reduced health needs to be added to Source territory; there can only ever be max 1 SU that receives damage from an airstrike
 			print ("[AIRSTRIKE] attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it");
 			-- Update source territory with remaining attacking units
 			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
 			--sourceTerritory.NumArmies = airstrikeResult.AttackerResult;  --   <--- this doesn't work, NumArmies not writable
-			sourceTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
-			sourceTerritory.RemoveSpecialUnitsOpt = airstrikeResult.AttackerResult.KilledSpecials;
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in source territory", {}, {sourceTerritory}));
+			sourceTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies; --set attacker remaining army count on source territory
+			sourceTerritory.RemoveSpecialUnitsOpt = airstrikeResult.AttackerResult.KilledSpecials; --remove killed Specials from the source territory
+			if (#airstrikeResult.AttackerResult.ClonedSpecials > 0) then sourceTerritory.AddSpecialUnits = airstrikeResult.AttackerResult.ClonedSpecials; end --this is a table of 1 SU, so it can be added directly using AddSpecialUnits method
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike unsuccessful, surviving attacking units remain on source territory", {}, {sourceTerritory}));
 
 			-- Update target territory with remaining defending units
 			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 			--targetTerritory.NumArmies = airstrikeResult.DefenderResult.RemainingArmies;
-			targetTerritory.SetArmiesTo = airstrikeResult.DefenderResult.RemainingArmies;
-			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials;
-
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in target territory", {}, {targetTerritory}));
+			targetTerritory.SetArmiesTo = airstrikeResult.DefenderResult.RemainingArmies; --set defender remaining army count on target territory
+			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove killed Specials from the target territory
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike unsuccessful, surviving defending units remain on target territory", {}, {targetTerritory}));
 		end
 	end
 end
@@ -443,8 +445,8 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	local sortedAttackerSpecialUnits = {};
 	local sortedDefenderSpecialUnits = {};
 	local totalAttackerAttackPowerPercentage = 1.0;
-	local totalAttackerDefensePowerPercentage = 1.0;
-	local totalDefenderAttackPowerPercentage = 1.0;
+	--local totalAttackerDefensePowerPercentage = 1.0;  --this is covered in defense power for an SU so don't need this
+	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't need this
 	local totalDefenderDefensePowerPercentage = 1.0;
 
 	print ("[MANUAL ATTACK!] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AAPower "..AttackingArmies.AttackPower..", DDPower "..DefendingTerritory.NumArmies.DefensePower);
@@ -515,12 +517,14 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	local remainingArmies = armyCount;
 	local survivingSpecials = {};
 	local killedSpecials = {};
+	local clonedSpecials = {};
 
 	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType="|dummyPlaceholder|applyDamageToArmies"}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
 	print ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
 	for k,v in ipairs (sortedSpecialUnits) do
+		local newSpecialUnit_clone = nil;
 		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
 		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
 		print ("[[[[SPECIAL]]]] "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder..", remaining damage "..remainingDamage);
@@ -543,13 +547,13 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			if (boolArmiesProcessed==true or v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
 				--apply damage to armies
 				if (remainingDamage >= remainingArmies) then
-					remainingDamage = remainingDamage - remainingArmies; 
+					remainingDamage = math.max (0, remainingDamage - remainingArmies);
 					remainingArmies = 0;
 					print ("[[[[ARMY DAMAGE]]]] all armies die, remaining damage "..remainingDamage);
 				else
 					--apply damage to armies of amount remainingDamage
 					print ("[[[[ARMY DAMAGE]]]] "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
-					remainingArmies = remainingArmies - remainingDamage;
+					remainingArmies = math.max (0, remainingArmies - remainingDamage);
 					remainingDamage = 0;
 				end
 				boolArmiesProcessed = true;
@@ -562,14 +566,14 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 				if (v.proxyType=="Commander") then
 					if (remainingDamage >=7) then
 						print ("COMMANDER dies");
-						remainingDamage = remainingDamage - 7;
+						remainingDamage = math.max (0, remainingDamage - 7);
 						boolCurrentSpecialSurvives = false; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
 					else
 						print ("COMMANDER survives, not enough damage done");
 						remainingDamage = 0; --commander survives, no more attacks to occur
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
-					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
 					if (v.Health ~= nil) then
 						if (v.Health == 0) then
 							print ("SPECIAL already dead w/0 health, kill it/remove it");
@@ -580,11 +584,17 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
 						else
 							--apply damage to special of amount remainingDamage
-							print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
+							print ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
+							--&&& recreate the special with new health level
+							local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
+							newSpecialUnitBuilder.Health = v.Health - remainingDamage;
+							newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name .."(C)";
+
+							newSpecialUnit_clone = newSpecialUnitBuilder.Build();
 							remainingDamage = 0;
 						end
 					else
-						if (remainingDamage > v.DamageToKill) then remainingDamage = remainingDamage - v.DamageToKill; print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+						if (remainingDamage > v.DamageToKill) then remainingDamage = math.max (0, remainingDamage - v.DamageToKill); print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
 						else
 							--apply damage to special of amount remainingDamage
 							print ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
@@ -597,7 +607,17 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		if (remainingDamage<=0) then print ("[damage remaining is "..remainingDamage.."]"); end
 
 		--the Special being analyzed this iteration through loop has already DIED or SURVIVED by this opint, add to survivingSpecials table if it survived
-		if (boolCurrentSpecialSurvives == true) then print ("SPECIAL survived"); table.insert (survivingSpecials, v); --only add the Special to the survivingSpecials table if it survives the attack
+		if (boolCurrentSpecialSurvives == true) then --the Special survived; but it may have (A) taken no damage, in which case just add it to the survivingSpecials table, or (B) taken damage (if so it has been cloned and need to replace it with the new cloned Special and add that to the table)
+			print ("SPECIAL survived");
+			if (newSpecialUnit_clone == nil) then --the Special Unit survived the didn't need to be cloned, just add the original to the survivingSpecials table
+				table.insert (survivingSpecials, v);
+			else   --the Special Unit survived but needed to be cloned, add the new cloned Special to the survivingSpecials table & add the original to the killedSpecials table (this isn't totally accurate since it wasn't killed per se, 
+			       --but this mechanism is used to remove it from the source territory & not add it to the target territory if the attack if successful)
+				table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
+				table.insert (killedSpecials, v.ID); --add the original Special to the killedSpecials table
+				table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; SUs in this table need to be added to the source territory if attack is unsuccessful
+				--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
+			end
 		else
 			print ("SPECIAL died");
 			if (v.proxyType ~= "|dummyPlaceholder|applyDamageToArmies") then table.insert (killedSpecials, v.ID); end --only add the Special to the killedSpecials table if it dies, ignore the dummy placeholder
@@ -605,7 +625,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	end
 
 	print ("[FINAL RESULT] remaining damage "..remainingDamage..", remaining armies "..remainingArmies.. ", #survivingSpecials "..#survivingSpecials);
-	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials};
+	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
 	return damageResult;
 
 	--reference

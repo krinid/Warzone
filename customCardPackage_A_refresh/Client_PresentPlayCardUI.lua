@@ -51,10 +51,6 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
     end
 end
 
-function play_Airstrike_card (game, cardInstance, playCard)
-    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
-end
-
 function play_ForestFire_card (game, cardInstance, playCard)
     UI.Alert ("Forest Fire card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine be able to start a fire so wild that it keeps spreading each turn, farther and farther - be careful you don't burn your own lands down!");
 end
@@ -606,7 +602,11 @@ function play_Nuke_card(game, cardInstance, playCard)
     end);
 end
 
-function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
+function play_Airstrike_card_NotYet (game, cardInstance, playCard)
+    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
+end
+
+function play_Airstrike_card (game, cardInstance, playCard)
     TargetTerritoryID = nil;
     TargetTerritoryName = nil;
     SourceTerritoryID = nil;
@@ -622,7 +622,7 @@ function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
         SourceTerritoryBtn = UI.CreateButton(vert).SetText("Select Source Territory").SetOnClick(SourceTerritoryClicked);
         SourceTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         SourceTerritorySelectButton_Clicked("Select the territory you wish to attack from"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-        
+
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         --TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
