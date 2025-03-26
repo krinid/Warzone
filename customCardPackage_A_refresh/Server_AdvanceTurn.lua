@@ -379,7 +379,10 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
 			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
 
-			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do print ("---"..k,v,v.ID); table.insert(specialsToRemove, v.ID); end
+			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do 
+				print ("---"..k,v,v.ID); 
+				table.insert(specialsToRemove, v.ID); 
+			end
 			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
 			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
