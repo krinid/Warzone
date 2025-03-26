@@ -312,8 +312,8 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 	end]]
 
 	--used for debugging/testing purposes
-	--local strWhatToDo = "SU_prep";
-	local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
+	local strWhatToDo = "SU_prep";
+	--local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
 
 	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
 	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then
@@ -379,9 +379,9 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
 			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
 
-			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do 
-				print ("---"..k,v,v.ID); 
-				table.insert(specialsToRemove, v.ID); 
+			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do
+				print ("---"..k,v,v.ID);
+				table.insert(specialsToRemove, v.ID);
 			end
 			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
 			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
