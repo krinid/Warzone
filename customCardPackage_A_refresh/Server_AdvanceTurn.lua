@@ -312,8 +312,8 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 	end]]
 
 	--used for debugging/testing purposes
-	local strWhatToDo = "SU_prep";
-	--local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
+	--local strWhatToDo = "SU_prep";
+	local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
 
 	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
 	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then --for testing purposes only
