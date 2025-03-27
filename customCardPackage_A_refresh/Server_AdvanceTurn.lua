@@ -288,6 +288,12 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 	end
 end
 
+--airstrike TODOs:
+--enforce FROM must be owned by order player
+--if TO is no longer an enemy, it becomes a transfer (regular airlift, just replace it with an airlift? w/o need a card)
+--if attack successful, elim all armies+units in FROM and then do airlift of surviving units to TO? that way we get the arrow animation
+--add options for ability to target Commander, Specials, fogged territories, neutrals
+--add effect for Deployment yield % -- enforced only when FROM is enemy; if FROM is neutral, then don't reduce units b/c there's no military enemy shooting back
 function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails)
 	--Airstrike details go here
 	local modDataContent = split(gameOrder.ModData, "|");
@@ -404,6 +410,7 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 			--targetTerritory.NumArmies = airstrikeResult.DefenderResult.RemainingArmies;
 			targetTerritory.SetArmiesTo = airstrikeResult.DefenderResult.RemainingArmies; --set defender remaining army count on target territory
 			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove killed Specials from the target territory
+			if (#airstrikeResult.DefenderResult.ClonedSpecials > 0) then targetTerritory.AddSpecialUnits = airstrikeResult.DefenderResult.ClonedSpecials; end --this is a table of 1 SU, so it can be added directly using AddSpecialUnits method
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike unsuccessful, surviving defending units remain on target territory", {}, {targetTerritory}));
 		end
 	end
@@ -548,9 +555,11 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		--first check if CombatOrder indicates that it's time to apply damage to armies, then apply damage to Specials thereafter if damage is remaining
 		--1 iteration through loop can apply damage to both armies and then 1 Special (the current Special being iterated on in the loop representing the current element of the table being looped through)
 		if (remainingDamage >0) then
-			if (boolArmiesProcessed==true or v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
+			if (boolArmiesProcessed==false and v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
 				--apply damage to armies
-				if (remainingDamage >= remainingArmies) then
+				if (remainingArmies == 0) then
+					print ("[[[[ARMY DAMAGE]]]] no remaining armies present, remaining damage "..remainingDamage);
+				elseif (remainingDamage >= remainingArmies) then
 					remainingDamage = math.max (0, remainingDamage - remainingArmies);
 					remainingArmies = 0;
 					print ("[[[[ARMY DAMAGE]]]] all armies die, remaining damage "..remainingDamage);
@@ -566,7 +575,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			--damage to armies may have occurred already depending on CombatOrder value of current special, and this may have depleted all remaining damage
 			--if there's still damage to apply, apply it to this Special
 			if (remainingDamage > 0) then
-				print ("damage applied to Special");
+				print ("apply damage to Special");
 				if (v.proxyType=="Commander") then
 					if (remainingDamage >=7) then
 						print ("COMMANDER dies");
@@ -575,6 +584,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 					else
 						print ("COMMANDER survives, not enough damage done");
 						remainingDamage = 0; --commander survives, no more attacks to occur
+						boolCurrentSpecialSurvives = true; --add commander to survivingSpecials table
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
 					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
@@ -589,19 +599,24 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						else
 							--apply damage to special of amount remainingDamage
 							print ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
-							--&&& recreate the special with new health level
+							--recreate the special with new health level
 							local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
 							newSpecialUnitBuilder.Health = v.Health - remainingDamage;
 							newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name .."(C)";
-
 							newSpecialUnit_clone = newSpecialUnitBuilder.Build();
+							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
 							remainingDamage = 0;
 						end
 					else
-						if (remainingDamage > v.DamageToKill) then remainingDamage = math.max (0, remainingDamage - v.DamageToKill); print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+						if (remainingDamage > v.DamageToKill) then
+							remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
+							print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
+							--print ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
 						else
 							--apply damage to special of amount remainingDamage
 							print ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
+							boolCurrentSpecialSurvives = true; --add special to survivingSpecials table
 							remainingDamage = 0;
 						end
 					end
@@ -611,6 +626,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		if (remainingDamage<=0) then print ("[damage remaining is "..remainingDamage.."]"); end
 
 		--the Special being analyzed this iteration through loop has already DIED or SURVIVED by this opint, add to survivingSpecials table if it survived
+		--print ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
 		if (boolCurrentSpecialSurvives == true) then --the Special survived; but it may have (A) taken no damage, in which case just add it to the survivingSpecials table, or (B) taken damage (if so it has been cloned and need to replace it with the new cloned Special and add that to the table)
 			print ("SPECIAL survived");
 			if (newSpecialUnit_clone == nil) then --the Special Unit survived the didn't need to be cloned, just add the original to the survivingSpecials table
@@ -619,7 +635,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			       --but this mechanism is used to remove it from the source territory & not add it to the target territory if the attack if successful)
 				table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
 				table.insert (killedSpecials, v.ID); --add the original Special to the killedSpecials table
-				table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; SUs in this table need to be added to the source territory if attack is unsuccessful
+				table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; if airstrike is unsuccessful, attacking SUs in this table need to be added to the source territory & defending SUs in this table need to be added to the target territory
 				--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
 			end
 		else
