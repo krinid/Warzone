@@ -208,7 +208,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
     setScrollable(true);
 
 	local UIdisplay = UI.CreateVerticalLayoutGroup (rootParent);
-	UI.CreateLabel(UIdisplay).SetText("[UNIT INSPECTOR]\n\n").SetColor(getColourCode("card play heading"));
+	UI.CreateLabel(UIdisplay).SetText("[UNIT INSPECTOR]\n\n").SetColor(getColourCode("main heading"));
 
 	for _,terr in pairs (game.LatestStanding.Territories) do
 		--print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
@@ -217,8 +217,8 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 		if (#terr.NumArmies.SpecialUnits >= 1) then
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
-				if (boolCurrentTerritoryHeaderDisplayed == false) then UI.CreateLabel (UIdisplay).SetText ("["..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name.."] APower "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", DPower "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower).SetColor(colors.TextColor); boolCurrentTerritoryHeaderDisplayed = true; end
-				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID..", ID="..specialUnit.ID);
+				if (boolCurrentTerritoryHeaderDisplayed == false) then UI.CreateLabel (UIdisplay).SetText ("["..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name.."] Attack Power "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", Defense ower "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower).SetColor(getColourCode("subheading")); boolCurrentTerritoryHeaderDisplayed = true; end
+				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
 
 				if (specialUnit.proxyType == "Commander") then
 					--reference: displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
@@ -236,7 +236,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 end
 
 function displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)
-	UI.CreateLabel (UIcontrol).SetText ("    Name: "..tostring(name));
+	UI.CreateLabel (UIcontrol).SetText ("    Name: "..tostring(name)).SetColor ("#FFFFFF");
 	UI.CreateLabel (UIcontrol).SetText ("    Attack -- Power: "..tostring(attackPower)..", modifier factor: "..tostring(attackPowerPercentage));
 	UI.CreateLabel (UIcontrol).SetText ("    Defense -- Power: "..tostring(defensePower)..", modifier factor: "..tostring(defensePowerPercentage));
 	UI.CreateLabel (UIcontrol).SetText ("    Damage to kill: "..tostring(damageToKill)..", Health: "..tostring(health));
