@@ -316,7 +316,7 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 	--local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
 
 	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
-	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then
+	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then --for testing purposes only
 		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
 		--for reference: function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilename, AttackPower, DefensePower, AttackPowerPercentage, DefensePowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, Health, CombatOrder, CanBeGiftedWithGiftCard, CanBeTransferredToTeammate, CanBeAirliftedToSelf, CanBeAirliftedToTeammate, IsVisibleToAllPlayers, ModData)
 		build_specialUnit (game, addOrder, sourceTerritoryID, "1a pre 10 health", "shield_special unit_clearback.png",    10, 10, 1.0, 1.0, 0, 0, 100, -4000, true, true, true, true, true, nil);
@@ -333,7 +333,7 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 		build_specialUnit (game, addOrder, targetTerritoryID, "4b with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, targetTerritoryID, "5b post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
 		build_specialUnit (game, addOrder, targetTerritoryID, "6b post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
-	else
+	else --process a real Airstrike, not a testing order (eg: SU_prep)
 		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
 		local airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
@@ -344,6 +344,18 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 		if (airstrikeResult.IsSuccessful == true) then
 			--attacker wins, move into target territory and take ownership of it
 			print ("[AIRSTRIKE] attacker wins, move into target territory and take ownership of it");
+			-- Remove attacking units from source territory
+			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
+			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
+
+			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do
+				print ("---"..k.."/ID="..v.ID);
+				table.insert(specialsToRemove, v.ID);
+			end
+			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
+			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
+
 			-- Move surviving attacking units to target territory and change ownership to attacker
 			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 			targetTerritory.SetOwnerOpt = gameOrder.PlayerID; --territory ownership changes to attacker, b/c attack was successful
@@ -375,17 +387,6 @@ function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrd
 				end
 			end
 
-			-- Remove attacking units from source territory
-			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
-			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
-
-			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do
-				print ("---"..k,v,v.ID);
-				table.insert(specialsToRemove, v.ID);
-			end
-			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
-			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
 		else
 			--attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
 			--if an SU took damage but wasn't killed, it was cloned and the original SU needs to be removed from & the new cloned SU with reduced health needs to be added to Source territory; there can only ever be max 1 SU that receives damage from an airstrike
