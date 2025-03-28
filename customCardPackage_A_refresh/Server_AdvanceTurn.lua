@@ -308,6 +308,7 @@ end
 --when doing transfers, currently it takes owner the territory & assigns to owner player -- should this permit? makes it distinctive from Airlift, hmmm
 --      problematic for Commanders ... but leave that to host/players to manage?
 --during transfer, ensure Immovable specials are not moved
+--during transfer, take care of ownership of SUs already on the target territory (else they become unmovable)
 --if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
 --auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
