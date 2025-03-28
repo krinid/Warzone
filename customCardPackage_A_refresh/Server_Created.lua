@@ -27,7 +27,7 @@ function Server_Created (game, settings)
     --enable Airlift if Airstrike module is enabled
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Airstrike == true) then
         --check if Airlift card is enabled
-        print (tostring (WL.CardID.Airlift), WD.CardID.Airlift.Tostring());
+        print (tostring (WL.CardID.Airlift), WL.CardID.Airlift.Tostring());
         print ("Airstrike module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
         if (settings.Cards[WL.CardID.Airlift]==nil) then
             print ("[ENABLE AIRLIFT]");
