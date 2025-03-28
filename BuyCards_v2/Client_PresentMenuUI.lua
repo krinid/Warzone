@@ -106,9 +106,9 @@ function displayMenu (game, close)
 			UI.CreateLabel (vertHeader).SetText ("\nDefault card prices are shown below. They may change next turn once the host finalizes the prices.");
 		end
 		UI.CreateLabel (vertHeader).SetText (" "); --empty label for visual vertical spacing
+		UI.CreateLabel (vertHeader).SetText ("Enter 0 for price to make a card unpurchasable\n");
 	end
 
-	UI.CreateLabel (vertHeader).SetText ("Enter 0 for price to make a card unpurchasable\n");
 	local vertRegularCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
 	UI.CreateLabel (vertRegularCards).SetText ("\nStandard cards:").SetColor (getColourCode("subheading"));
 	local vertCustomCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
