@@ -220,8 +220,8 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
 				if (boolCurrentTerritoryHeaderDisplayed == false) then
-					UI.CreateLabel (UIdisplay).SetText ("["..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name.."] Attack Power "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", Defense Power "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower).SetColor(getColourCode("subheading")..
-						", #Armies ".. game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies ..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits); 
+					UI.CreateLabel (UIdisplay).SetText ("["..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name.."] Attack Power "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", Defense Power "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower..
+						", #Armies ".. game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies ..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading")); 
 					boolCurrentTerritoryHeaderDisplayed = true;
 				end
 				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
