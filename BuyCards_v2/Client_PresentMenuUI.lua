@@ -38,7 +38,7 @@ function displayMenu (game, close)
 	--delme delme delme -- for testing purposes only
 
 	local vertHeader = UI.CreateVerticalLayoutGroup(root).SetFlexibleWidth (1);
-	UI.CreateLabel (vertHeader).SetText ("[BUY CARDS]\n\n").SetColor (getColourCode("card play heading"));
+	UI.CreateLabel (vertHeader).SetText ("[BUY CARDS]\n").SetColor (getColourCode("card play heading"));
 	--[[UI.CreateLabel (vertHeader).SetText ("Turn #"..game.Game.TurnNumber);
 	UI.CreateLabel (vertHeader).SetText ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	UI.CreateLabel (vertHeader).SetText ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));]]
