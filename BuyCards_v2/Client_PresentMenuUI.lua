@@ -105,8 +105,8 @@ function displayMenu (game, close)
 			UI.CreateLabel (vertHeader).SetText ("The game host (".. toPlayerName(game.Settings.StartedBy, game) ..") has not finalized card prices yet. If they are finalized by end of this turn, you can buy cards starting next turn.").SetColor ("#FF0000");
 			UI.CreateLabel (vertHeader).SetText ("\nDefault card prices are shown below. They may change next turn once the host finalizes the prices.");
 		end
-		UI.CreateLabel (vertHeader).SetText (" "); --empty label for visual vertical spacing
-		UI.CreateLabel (vertHeader).SetText ("Enter 0 for price to make a card unpurchasable\n");
+		UI.CreateLabel (vertHeader).SetText ("\nEnter 0 for price to make a card unpurchasable\n");
+		--UI.CreateLabel (vertHeader).SetText (" "); --empty label for visual vertical spacing
 	end
 
 	local vertRegularCards = UI.CreateVerticalLayoutGroup(vertHeader).SetFlexibleWidth (1);
