@@ -74,13 +74,15 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 		print(i, v);
 	end]]
 
-    showDefinedCards (game);
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
+
+	showDefinedCards (game);
+
 end
 
 --not actually used; but keep it around as an example of how to use/return data using clientGame.SendGameCustomMessage
@@ -179,7 +181,7 @@ function showDefinedCards (game)
     end
 
     strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = TopLabel.GetText() .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = strText .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
     TopLabel.SetText (strText.."\n");
 end
 

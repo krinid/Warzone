@@ -763,7 +763,7 @@ function airstrikeCheckboxClicked()
 		CreateLabel(horz).SetText("Deployment yield (%): ");
 		if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
 		AirstrikeDeploymentYield = CreateNumberInputField(horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("• % of units that survive deployment from the plane and parachuting to the territory; the rest are considered to be shot out of the air on the way down");
+		CreateLabel(UIcontainer).SetText("• % of units that survive deployment from the plane and parachuting to an enemy territory; the rest are considered to be shot out of the air on the way down");
 		CreateLabel(UIcontainer).SetText("• 100% means that all units sent partipate in the attack");
 		CreateLabel(UIcontainer).SetText("• 75% means that 75% of the units partipate in the attack, 25% die during deployment without contributing to the attack");
 		CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting; no Special Units die during deployment");

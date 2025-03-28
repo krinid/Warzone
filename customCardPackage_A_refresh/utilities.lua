@@ -447,7 +447,7 @@ function getDefinedCardList (game)
 		print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
 		print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
 		print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
-	
+
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
 			local strCardName = getCardName_fromObject(cardConfig);
 			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
@@ -460,7 +460,7 @@ function getDefinedCardList (game)
 	end
 end
 
---given a card name, return it's cardID
+--given a card name, return it's cardID (not card instance ID), ie: represents the card type, not the instance of the card
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
 	local cards={};
@@ -486,6 +486,27 @@ function getCardID (strCardNameToMatch, game)
 		end
 	end
 	return nil; --cardName not found
+end
+
+--return card instance for a given card type by name that belongs to a given player
+function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
+	local cardID = getCardID (strCardNameToMatch, game);
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..cardID);
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	return getCardInstanceID (playerID, cardID, game);
+end
+
+--return card instance if playerID possesses card of type cardID, otherwise return nil; note this is not the same as getCardID, which returns the cardID of the card type
+function getCardInstanceID (playerID, cardID, game)
+	print ("[GCII] player "..playerID..", cardID "..cardID);
+	if (playerID==0) then print ("playerID is neutral (has no cards)"); return nil; end
+
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
+		if (v.CardID == cardID) then return k; end
+	end
+	return nil;
 end
 
 function getCardName_fromID(cardID, game);
