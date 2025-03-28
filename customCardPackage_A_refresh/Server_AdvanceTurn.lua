@@ -309,6 +309,7 @@ end
 --      problematic for Commanders ... but leave that to host/players to manage?
 --during transfer, ensure Immovable specials are not moved
 --if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
+--auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
 	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");

@@ -492,7 +492,7 @@ end
 function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
 	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
 	local cardID = getCardID (strCardNameToMatch, game);
-	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..cardID);
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
 	if (cardID==nil) then print ("cardID is nil"); return nil; end
 	return getCardInstanceID (playerID, cardID, game);
 end

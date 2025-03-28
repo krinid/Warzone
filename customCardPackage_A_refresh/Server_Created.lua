@@ -20,6 +20,39 @@ function Server_Created (game, settings)
     Mod.PrivateGameData = privateGameData;
     Mod.PublicGameData = publicGameData;
 
+    for k,v in pairs (settings.Cards) do
+        print (k,v.CardID);
+    end
+
+    --enable Airlift if Airstrike module is enabled
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Airstrike == true) then
+        --check if Airlift card is enabled
+        print (tostring (WL.CardID.Airlift), WD.CardID.Airlift.Tostring());
+        print ("Airstrike module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
+        if (settings.Cards[WL.CardID.Airlift]==nil) then
+            print ("[ENABLE AIRLIFT]");
+            local cardGameAirlift = WL.CardGameAirlift.Create(999, 0, 0.0, 0); --numPieces, minPerTurn, weight, initialPieces
+            --reference: WL.CardGameAirlift.Create(numPieces integer, minPerTurn integer, weight number, initialPieces integer) (static) returns CardGameAirlift:
+            local newSettings = settings;
+            local newCards = settings.Cards;
+            newSettings.Cards[WL.CardID.Airlift] = cardGameAirlift;
+            newCards[WL.CardID.Airlift] = cardGameAirlift;
+
+            --not sure why but must re-assign all the existing cards again; probably something to do with how Lua handles non-contiguous element arrays
+            for k, v in pairs(game.Settings.Cards) do
+                newCards[k] = v;
+            end
+            settings.Cards = newCards;
+        end
+        print ("Airstrike module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
+    end
+    for k,v in pairs (settings.Cards) do
+        print (k,v.CardID);
+    end
+    local c = settings.Cards;
+
+
+
     initialize_CardData (game); --save defined card list into Mod.Settings.CardData
     --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
     --print ("game.Settings==nil --> "..tostring(game.Settings==nil));
