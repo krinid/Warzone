@@ -311,6 +311,8 @@ end
 --during transfer, take care of ownership of SUs already on the target territory (else they become unmovable)
 --if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
 --auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
+--make Airstrike obey Shield, Monolith, Quicksand, Isolation rules (any others?)
+--max # armies that can participate in the Airstrike doesn't include deployments b/c they're not in LatestStanding; but could load the orders so far, look @ deployments and use that figure -- but it's a bit of work, a bit of a pain
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
 	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
@@ -318,8 +320,10 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
 	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
 	local intNumArmiesSpecified = tonumber (modDataContent[4]); --4th component of ModData after "|" is the # of armies to include in the Airstrike
+	local strSelectedSUsGUIDs = modDataContent[5]; --5th component of ModData after "|" is the CSV GUIDs of all SUs selected to include in Airstrike (not necessarily all SUs on the territory)
 	local intActualArmies = math.min (intNumArmiesSpecified, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies); --actual #armies to include in Airstrike is lesser of specified units and currently present on the territory
 	local SpecialUnitsSpecified = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits; --make this user specifiable in future; for now use all SUs on FROM territory
+	local SpecialUnitsSpecified = generateSelectedSUtable (game, strSelectedSUsGUIDs, sourceTerritoryID);
 	local sourceOwner = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].OwnerPlayerID;
 	local targetOwner = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 	local sourceOwnerTeam = -1; --indicates no team alignment
@@ -502,6 +506,23 @@ function manual_move_units (addOrder, playerID, sourceTerritory, targetTerritory
 		targetTerritory.AddArmies = 0; --reset the armies to 0 after 1st iteration, so that the next order doesn't add more armies to the target territory
 		territoriesToModify = {targetTerritory}; --on 2nd and after iterations, just modify target territory with Special Units
 	end
+end
+
+--given a CSV list of SU GUIDs & a territory ID, return a table of the actual SU objects present on the territory that match the specified GUIDs
+function generateSelectedSUtable (game, strSelectedSUsGUIDs, territoryID)
+	local GUIDsContiguous = split (strSelectedSUsGUIDs, ","); --split CSV string containing SU GUIDs into different elements
+	local GUIDs = {};
+	--print ("######################");
+	for k,GUID in pairs (GUIDsContiguous) do
+		--print ("GUID "..GUID);
+		GUIDs[GUID]=true; end --create array where elements are the GUIDs themselves
+
+	local selectedSUs = {};
+	for k,SP in pairs (game.ServerGame.LatestTurnStanding.Territories[territoryID].NumArmies.SpecialUnits) do
+		if (GUIDs [SP.ID] ~= nil) then table.insert (selectedSUs, SP); end
+		--print ("SP.ID "..tostring (SP.ID)..", GUIDs [SP.ID] "..tostring (GUIDs [SP.ID])..", count "..#selectedSUs);
+	end
+	return (selectedSUs);
 end
 
 --given a table of SU objects, return a table containing their GUIDs
