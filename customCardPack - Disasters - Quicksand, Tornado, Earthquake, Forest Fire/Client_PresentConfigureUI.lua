@@ -276,7 +276,7 @@ function create_card_checkbox_UI_controls (rootParent)
 
 	if (activeModules["Airstrike"] == true) then
 		vertAirstrikeSettingsHeading = CreateVert(MainModUI);
-		CreateLabel(vertAirstrikeSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
+		--CreateLabel(vertAirstrikeSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
 		AirstrikeCardCheckbox = CreateCheckBox(vertAirstrikeSettingsHeading).SetText("Airstrike").SetIsChecked(Mod.Settings.AirstrikeEnabled).SetOnValueChanged(function() airstrikeCheckboxClicked() end).SetInteractable(true);
 	end
 
@@ -751,13 +751,16 @@ function airstrikeCheckboxClicked()
 		local UIcontainer = vertAirstrikeSettingsDetails;
 
 		local horz = CreateHorz(UIcontainer);
-		AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(true).SetText("Can target neutrals");
+		--AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(true).SetText("Can target neutrals");
+		AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(false).SetText("Can target neutrals");
 
 		horz = CreateHorz(UIcontainer);
-		AirstrikeCanTargetPlayers = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(true).SetText("Can target players");
+		--AirstrikeCanTargetPlayers = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(true).SetText("Can target players");
+		AirstrikeCanTargetPlayers = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(false).SetText("Can target players");
 
 		horz = CreateHorz(UIcontainer);
-		AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(true).SetText("Can target fogged territories");
+		--AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(true).SetText("Can target fogged territories");
+		AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(false).SetText("Can target fogged territories");
 
 		horz = CreateHorz(UIcontainer);
 		CreateLabel(horz).SetText("Deployment yield (%): ");
