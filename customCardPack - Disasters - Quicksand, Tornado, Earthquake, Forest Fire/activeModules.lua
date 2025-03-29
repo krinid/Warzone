@@ -8,6 +8,6 @@ activeModules = {["Quicksand"]=true, ["Tornado"]=true, ["Earthquake"]=true, ["Fo
 
 --Rough mod plan:
 -- mod 1: Nuke, Pestilence, Isolation, Airstrike
--- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Portal
+-- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Phantom
 -- mod 3: Card Block, Card Piece, Card Hold (future)
--- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, ?
+-- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, Airstrike

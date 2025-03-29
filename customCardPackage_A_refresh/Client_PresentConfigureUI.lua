@@ -84,10 +84,10 @@ TODOs:
 	- @ end of turn, check if the territories for Isolation/Quicksand are missing special unit visual aids and if so, recreate them
 	- ask Fizz to allow negative #'s for specials' power?
 	- separate cards into a few different mods; already have the max 5 special unit images per mod for Isolation, Neutralize, Shield, Monolith, Quicksand, so no room to make special unit images for Tornado, Earthquake, Forest Fire
-		- mod 1: Nuke, Pestilence, Isolation, Airstrike
+		- mod 1: Nuke, Pestilence, Isolation
 		- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Phantom
 		- mod 3: Card Block, Card Piece, Card Hold (future)
-		- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, ?
+		- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, Airstrike
 		- mod 5: Resurrection
 		- mod 6: Portal - enable options to play it as a card and also as a purchase
 		- mod 7: Fortune & Favour

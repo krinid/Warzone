@@ -268,7 +268,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif (strCardTypeBeingPlayed == "Deneutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Deneutralize == true)) then
 			execute_Deneutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Airstrike" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true)) then
-			execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails);
+			execute_Airstrike_operation (game, gameOrder, result, skip, addOrder, cardOrderContentDetails);
 		elseif (strCardTypeBeingPlayed == "Card Piece" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardPieces == true)) then
 			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Forest Fire" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true)) then
@@ -288,124 +288,320 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 	end
 end
 
-function execute_Airstrike_operation (game, gameOrder, result, addOrder, cardOrderContentDetails)
-	--Airstrike details go here
+--airstrike TODOs:
+--enforce FROM must be owned by order player
+--if TO is no longer an enemy, it becomes a transfer (regular airlift, just replace it with an airlift? w/o need a card)
+--if attack successful, elim all armies+units in FROM and then do airlift of surviving units to TO? that way we get the arrow animation
+--add options for ability to target Commander, Specials, fogged territories, neutrals
+--add effect for Deployment yield % -- enforced only when FROM is enemy; if FROM is neutral, then don't reduce units b/c there's no military enemy shooting back; or maybe just let it apply to neutrals too? To avoid just targeting bordering neutrals and attacking normally to avoid penalty?
+--add option to enable ability to send Commander/Specials or exclude them (similar ability to target them) -- and structures? option to enable/disable targeting territories with them? like Forts ... it gets tricky (impossible) to accurately handle them
+--add UI option to select which units to send to TO territory for both #armies & Specials
+--handle case when a Commander is killed! how to handle? can't just elim player b/c Resurrection could be in play; maybe just remove the Commander from the game for now? enter custom order to flag Resurrection that Commander died? need to check for card?
+--      or just flag airstrike as not being compatible with Commanders?
+--      or just make Commander invulnerable to Airstrike? kill everything else regardless of combat order but never the Commander?
+--check for Immovables inside AIRSTRIKE maneuvers! don't like Airstrike override Immovables; can this be done easily with existing code? No ... b/c it's not a normal order
+--      but probably can be done reasonably easily still
+--on successful attack, ensure that only the remainder of the attacking army is ever sent to TO territory
+--      eg: so if 500 armies+3 specials are present and airstrike of 400 armies+2 specials is sent and 350 armies+1 special is killed, then only 50+1 special is sent to TO territory, not the entie remaining 150 armies+2 specials
+--for transfers (to self or teammate), just do a normal airlift (or manual move) of the units from FROM to TO territory
+--make Airstrike compatible with Quicksand/Isolation (any others?)
+--when doing transfers, currently it takes owner the territory & assigns to owner player -- should this permit? makes it distinctive from Airlift, hmmm
+--      problematic for Commanders ... but leave that to host/players to manage?
+--during transfer, ensure Immovable specials are not moved
+--during transfer, take care of ownership of SUs already on the target territory (else they become unmovable)
+--if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
+--auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
+--make Airstrike obey Shield, Monolith, Quicksand, Isolation rules (any others?)
+--max # armies that can participate in the Airstrike doesn't include deployments b/c they're not in LatestStanding; but could load the orders so far, look @ deployments and use that figure -- but it's a bit of work, a bit of a pain
+function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
-	--printObjectDetails (gameOrder, "gameOrder", "[TurnAdvance_Order]");
 	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
 	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
 	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
 	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
+	local intNumArmiesSpecified = tonumber (modDataContent[4]); --4th component of ModData after "|" is the # of armies to include in the Airstrike
+	local strSelectedSUsGUIDs = modDataContent[5]; --5th component of ModData after "|" is the CSV GUIDs of all SUs selected to include in Airstrike (not necessarily all SUs on the territory)
+	local intActualArmies = math.min (intNumArmiesSpecified, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies); --actual #armies to include in Airstrike is lesser of specified units and currently present on the territory
+	local SpecialUnitsSpecified = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits; --make this user specifiable in future; for now use all SUs on FROM territory
+	local SpecialUnitsSpecified = generateSelectedSUtable (game, strSelectedSUsGUIDs, sourceTerritoryID);
+	local sourceOwner = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].OwnerPlayerID;
+	local targetOwner = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
+	local sourceOwnerTeam = -1; --indicates no team alignment
+	local targetOwnerTeam = -1; --indicates no team alignment
+	local orderPlayerTeam = game.ServerGame.Game.Players[gameOrder.PlayerID].Team;
+	local boolIsAttack = true; --default to attack; if TO is owned by order player or member of same team, then it's a transfer
+	local intDeploymentYield = 0.75; --default to 75% yield, overwrite with mod setting if specified; this is % units that attack the TO territory; the remainder are lost in the attack
 
-	--these don't exist on Territories object, only as part of (I think) order.AttackPower & result.ActualArmies.AttackPower -- something like that
-	local sourceAttackPower = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower;
-	local targetDefensePower = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower;
-	print ("FROM attackPower=="..sourceAttackPower..", TO defensePower=="..targetDefensePower.."::");
-	--attempt to create Attack order on non-bordering FROM/TO -- it fails, so commented out:
-	--reference: WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], order.ByPercent, NumArmies table, order.AttackTeammates);
-	--local NumArmies = WL.Armies.Create(1000, {});
-	--local airstrikeOrder = WL.GameOrderAttackTransfer.Create (gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, WL.AttackTransferEnum.Attack --[[order.AttackTransfer]], false, NumArmies, false);
-	--addOrder (airstrikeOrder);
+	--global variable; used to not gift 2x Airlift cards while not unnecessarily increasing # of orders; only gift card initially if player doesn't have one in hand
+	--if player has one, use it, and replenish it as part of the territory adjustment; if not, assign it as a separate order, resubmit/skip Airstrike, then don't gift one during territory adjustment
+	if (boolAirliftCardGiftedAlready == nil) then boolAirliftCardGiftedAlready = false; end
 
-	--[[for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
-		print ("@@@ "..terr.ID.."/"..game.Map.Territories [terr.ID].Name,terr.NumArmies.AttackPower);
-	end]]
+	if (Mod.Settings.AirstrikeDeploymentYield ~= nil) then intDeploymentYield = Mod.Settings.AirstrikeDeploymentYield/100; end --if mod setting is set, use that value instead of the default
+
+	if (sourceOwner ~= WL.PlayerID.Neutral) then sourceOwnerTeam = game.ServerGame.Game.Players[sourceOwner].Team; end
+	if (targetOwner ~= WL.PlayerID.Neutral) then targetOwnerTeam = game.ServerGame.Game.Players[targetOwner].Team; end
+
+	if (sourceOwner ~= gameOrder.PlayerID) then
+		print ("[AIRSTRIKE] sourceOwner ~= orderPlayer, cancel Airstrike");
+		addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike from "..getTerritoryName(sourceTerritoryID, game) .." to ".. getTerritoryName(targetTerritoryID, game) .." skipped; player does not own source territory", {}, {}, {}), false);
+		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+		return; --don't process anything more; the order is invalid, skip it entirely
+	end
+
+		--check if the order player is attacking an enemy territory; if not, then it's a transfer
+	if ((targetOwner == gameOrder.PlayerID) or (targetOwnerTeam >= 0 and targetOwnerTeam == orderPlayerTeam)) then
+		boolIsAttack = false; --if TO is owned by order player or member of same team, then it's a transfer
+		intDeploymentYield = 1.0; --if it's a transfer, then the yield is 100% (ie: all units are sent to TO territory)
+		print ("[AIRSTRIKE] treat as transfer to self or teammate; teamID=="..targetOwnerTeam);
+	end
+
+	--&&& assign these to a user-specified subselection of units on TO territory; for now just send everything present
+	--local attackingArmies = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies;
+	local attackingArmies = WL.Armies.Create (intActualArmies, SpecialUnitsSpecified); --create attacking armies structure comprised of actual # of armies being sent & actual table of Specials included
+	local defendingArmies = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies; --defending armies are straight-up what's present on TO territory
+	local sourceAttackPower = attackingArmies.AttackPower;
+	local targetDefensePower = defendingArmies.DefensePower;
+	local intArmiesToSend = math.floor (attackingArmies.NumArmies * intDeploymentYield + 0.5); --this is the number of armies that will be sent to the target territory
+	if (boolIsAttack == false) then intArmiesToSend = attackingArmies.NumArmies; end --if it's a transfer, then all armies are sent to the target territory
+	local intArmiesDieDuringAttack = attackingArmies.NumArmies - intArmiesToSend; --units that die during the Airstrike (not as part of the attack)
+	--actually I'm TBD whether intArmiesToSend dictates the damage done by the Airstrike, ie: only 75% (default) do damage or not
+	--for now, I'm going to set it so that 100% of units do damage, but killed armies = regular counts from the attack + intArmiesDieDuringAttack
+	--     ie: Airstrike does regular damage, but takes heavier casualties than a regular attack would
+
+	print ("[AIRSTRIKE]   -=-=-=-=-=-=-=-=-=-=-=-=-"..
+		"\nFROM "..sourceTerritoryID.."/"..getTerritoryName (sourceTerritoryID, game)..", attackPower "..sourceAttackPower..", #armies ".. attackingArmies.NumArmies.. ", #specials "..#attackingArmies.SpecialUnits..
+		"\nTO "..targetTerritoryID.."/"..getTerritoryName (targetTerritoryID, game)..", defensePower "..targetDefensePower..", #armies ".. defendingArmies.NumArmies..", #specials "..#defendingArmies.SpecialUnits..
+		"\norderPlayer "..gameOrder.PlayerID.." [team "..orderPlayerTeam.."], sourceOwner "..sourceOwner.." [team "..sourceOwnerTeam.."], targetOwner "..targetOwner.." [team "..targetOwnerTeam.."]"..
+		"\nisAttack "..tostring (boolIsAttack)..", deployment yield "..intDeploymentYield..", #armies to attack "..intArmiesToSend ..", #armies die before attack ".. intArmiesDieDuringAttack);
 
 	--used for debugging/testing purposes
-	local strWhatToDo = "SU_prep";
-	--local strWhatToDo = "do_airstrike";
+	--local strWhatToDo = "SU_prep";
+	local strWhatToDo = "do_airstrike"; --not an actual action, it's just simply different from "SU_prep"
+	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then createSpecialUnitsForTesting (game, addOrder, sourceTerritoryID, targetTerritoryID); end --for testing purposes only
 
-	--APower% & DPower% works like: 0.00-1.00 --> -100% to 0%; 1.00-2.00 --> 0% to 100%; 2.00-3.00 --> 100% to 200% etc
-	if (strWhatToDo == "SU_prep" and game.Game.TurnNumber==1) then
-		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
-		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 0, 10, 15000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, sourceTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, nil, nil, 5, 10, 0, 4000, true, true, true, true, true, nil);
+	--if set to true, use the manual move method to do the Airlift, even if Airlift card is available; this may be advisable when using Late Airlifts or Transport Only Airlift mods
+	--import the value from a Mod setting, set by host in PresentConfigUI
+	local boolUseManualMoveMode = false;
+	--local boolUseManualMoveMode = true;
 
-		--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
-		build_specialUnit (game, addOrder, targetTerritoryID, "pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
-		build_specialUnit (game, addOrder, targetTerritoryID, "post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
-	else
-		print ("-=-=-=-=-=-=-=-=-=-=-=-=- "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.AttackPower..", "..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.DefensePower);
-		local airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+	local airliftCardID = getCardID ("Airlift", game); --get ID for card type 'Airlift'
+	local airliftCardInstanceID = getCardInstanceID_fromName (gameOrder.PlayerID, "Airlift", game); --get specific card instance ID from specific player for card of type 'Airlift'
+	if (boolUseManualMoveMode == true) then airliftCardID = nil; airliftCardInstanceID = nil; end --if using manual move mode, set airliftCardID & airliftCardInstanceID to nil so it doesn't try to use the Airlift card
+	--if airliftCardID == nil, then Airlift Card is not enabled, so can't draw the airlift line, so must do the moves manually (original method)
+	--if airliftCardID ~= nil then let Airlift do the move for successful attacks & draw a "0 unit airlift" arrow for unsuccessful attacks
+	print ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
+
+	--if Airlift card is in play but player has no whole Airlift cards, then add a whole Airlift card to the player + add the order, skip this Airstrike order & resubmit it to be able to use the Airlift card
+	if (airliftCardID ~= nil and airliftCardInstanceID == nil) then
+		local addAirLiftCardEvent = WL.GameOrderEvent.Create(gameOrder.PlayerID, "[grant Airlift card to use for Airstrike]", {}, {}, {}); --create a new event to add the Airlift card to the player
+		print ("[AIRLIFT CARD MISSING] add order to grant Airlift card, resubmit Airstrike order, skip current order");
+		addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+		addOrder (addAirLiftCardEvent, false); --add the event to the game order list, ensure 'false' so this order isn't skipped when we skip the Airstrike order
+		addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
+		--skipOrder (WL.ModOrderControl.Skip); --switch to Suppress after testing
+		boolAirliftCardGiftedAlready = true;
+		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+		return;
+	end
+
+	local airstrikeResult = nil;
+	if (boolIsAttack == true) then --Airstrike order is an attack
+		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
 		--airstrikeResult.DefenderResult is armies object for defender
 		--airstrikeResult.IsSuccessful is boolean indicating if the attack was successful, and thus whether:
 			--(A) attacker wins, defender units are wiped out, the attacker should move into the target territory and take ownership of it
 			--(B) attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
-		if (airstrikeResult.IsSuccessful == true) then
-			--attacker wins, move into target territory and take ownership of it
-			print ("[AIRSTRIKE] attacker wins, move into target territory and take ownership of it");
-			-- Move surviving attacking units to target territory and change ownership to attacker
-			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-			targetTerritory.SetOwnerOpt = gameOrder.PlayerID;
-			targetTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
-			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove Defender killed Specials from the source territory
 
-			--max 4 Specials at a time can be applied to a territory in 1 game order, so if >4, break it up into multiple orders
-			if (#airstrikeResult.AttackerResult.SurvivingSpecials <= 4) then
-				targetTerritory.AddSpecialUnits = airstrikeResult.AttackerResult.SurvivingSpecials;
-				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, territory captured", {}, {targetTerritory}));
-			else
-				local intCountSpecials = 0;
-				local next4Specials = {};
-				for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do
-					intCountSpecials = intCountSpecials + 1;
-					print (k,v.proxyType);
-					table.insert(next4Specials, v);
-					if (intCountSpecials % 4 == 0 or intCountSpecials == #airstrikeResult.AttackerResult.SurvivingSpecials) then --if divisible by 4 or this is the last element, add the next 4/all remaining specials to the territory
-						targetTerritory.AddSpecialUnits = next4Specials;
-						if (intCountSpecials == 4) then
-							addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, territory captured", {}, {targetTerritory}));
-							next4Specials = {};
-						else
-							addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful - adding Special Units", {}, {targetTerritory}));
-							next4Specials = {};
-							targetTerritory = WL.TerritoryModification.Create(targetTerritoryID); --recreate the territory to add up to 4 more specials to it
-						end
-					end
-				end
-			end
-
-			-- Remove attacking units from source territory
-			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID)
-			local specialsToRemove = airstrikeResult.AttackerResult.KilledSpecials; --this contains GUIDs of killed Specials which need to be removed; add GUIDs of Surviving specials to this list to remove all specials from source territory (b/c they are being moved to Target territory)
-
-			for k,v in pairs (airstrikeResult.AttackerResult.SurvivingSpecials) do print ("---"..k,v,v.ID); table.insert(specialsToRemove, v.ID); end
-			sourceTerritory.SetArmiesTo = 0; -- Set to 0 as all units moved to target territory
-			sourceTerritory.RemoveSpecialUnitsOpt = specialsToRemove;
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike successful, units moved from source territory", {}, {sourceTerritory}));
-		else
-			--attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
-			print ("[AIRSTRIKE] attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it");
-			-- Update source territory with remaining attacking units
-			local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
-			--sourceTerritory.NumArmies = airstrikeResult.AttackerResult;  --   <--- this doesn't work, NumArmies not writable
-			sourceTerritory.SetArmiesTo = airstrikeResult.AttackerResult.RemainingArmies;
-			sourceTerritory.RemoveSpecialUnitsOpt = airstrikeResult.AttackerResult.KilledSpecials;
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in source territory", {}, {sourceTerritory}));
-
-			-- Update target territory with remaining defending units
-			local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-			--targetTerritory.NumArmies = airstrikeResult.DefenderResult.RemainingArmies;
-			targetTerritory.SetArmiesTo = airstrikeResult.DefenderResult.RemainingArmies;
-			targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials;
-
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike failed, units remain in target territory", {}, {targetTerritory}));
-		end
+		--adjust attacker results, so # of killed armies is increased by quantity of intArmiesDieDuringAttack
+		airstrikeResult.AttackerResult.KilledArmies = math.min (airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack, intActualArmies); --#armies killed are those from regular battle damage + loss due to Deployment Yield but not to exceed the actual # included in the Airstrike operation (if exceeds this amount, it would subtract units from the FROM territory even if they didn't participate in the Airstrike -- don't do that)
+		airstrikeResult.AttackerResult.RemainingArmies = math.max (0, attackingArmies.NumArmies - airstrikeResult.AttackerResult.KilledArmies);
+	else
+		--if not an attack, then it's a transfer; so just do a normal airlift of the units from the source territory to the target territory
+		local AttackerResult = {RemainingArmies=intArmiesToSend, KilledArmies=0, SurvivingSpecials=attackingArmies.SpecialUnits, KilledSpecials={}, ClonedSpecials={}}; --all units survive, nothing dies, nothing clones b/c this is a transfer
+		local DefenderResult = {RemainingArmies=defendingArmies.NumArmies, KilledArmies=0, SurvivingSpecials=defendingArmies.SpecialUnits, KilledSpecials={}, ClonedSpecials={}}; --all units survive, nothing dies, nothing clones b/c this is a transfer
+		airstrikeResult = {AttackerResult=AttackerResult, DefenderResult=DefenderResult, IsSuccessful=true}; --transfer is always successful
+		-- reference: APPLY DAMAGE  -- local damageResult = {RemainingArmies=remainingArmies, KilledArmies=math.max (0, armyCount-remainingArmies), SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
+		-- reference: MANUAL ATTACK -- return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful});
 	end
+
+	local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
+	local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+	local strAirStrikeResultText = "";
+	local attackingArmiesToAirlift = nil; --if attack in unsuccessful, leave as nil, this indicates to send 0 armies and no specials, just draw the "0" airlift line
+
+	if (airstrikeResult.IsSuccessful == true) then
+		targetTerritory.SetOwnerOpt = gameOrder.PlayerID; --territory ownership changes to attacker, b/c attack was successful
+		strAirStrikeResultText = "Airstrike successful";
+		attackingArmiesToAirlift = WL.Armies.Create (airstrikeResult.AttackerResult.RemainingArmies, airstrikeResult.AttackerResult.SurvivingSpecials);
+	else
+		strAirStrikeResultText = "Airstrike unsuccessful";
+		--leave target territory owned by defender, leave airlift army structure as nil to just draw an empty "0" airlift line
+	end
+	print ("[AIRSTRIKE RESULT] "..strAirStrikeResultText);
+	--reference: 	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
+	print ("ATTACKER #armies "..airstrikeResult.AttackerResult.RemainingArmies .." ("..airstrikeResult.AttackerResult.KilledArmies.." died), "..
+		"#specials "..#airstrikeResult.AttackerResult.SurvivingSpecials.." ("..#airstrikeResult.AttackerResult.KilledSpecials.." died, #clonedSUs "..#airstrikeResult.AttackerResult.ClonedSpecials..")");
+	print ("DEFENDER #armies "..airstrikeResult.DefenderResult.RemainingArmies .." ("..airstrikeResult.DefenderResult.KilledArmies.." died), "..
+		"#specials "..#airstrikeResult.DefenderResult.SurvivingSpecials.." ("..#airstrikeResult.DefenderResult.KilledSpecials.." died, #clonedSUs "..#airstrikeResult.DefenderResult.ClonedSpecials..")");
+
+	--adjust armies & SUs on TO territory, including cloned SUs which took damage
+	sourceTerritory.AddArmies = -1 * airstrikeResult.AttackerResult.KilledArmies; -- reduce source territory armies by the number of killed armies
+	sourceTerritory.RemoveSpecialUnitsOpt = airstrikeResult.AttackerResult.KilledSpecials; --remove killed Specials from source territory
+	if (#airstrikeResult.AttackerResult.ClonedSpecials > 0) then sourceTerritory.AddSpecialUnits = airstrikeResult.AttackerResult.ClonedSpecials; end --add surviving cloned Specials to source territory; this is at max 1 SU, so no need to break it up into multiple orders
+
+	--adjust armies & SUs on TO territory, including cloned SUs which took damage
+	targetTerritory.AddArmies = -1 * airstrikeResult.DefenderResult.KilledArmies; -- reduce target territory armies by the number of killed armies; for successful attacks, this should be all armies present
+	targetTerritory.RemoveSpecialUnitsOpt = airstrikeResult.DefenderResult.KilledSpecials; --remove Defender killed Specials from the target territory; for successful attacks, this should be all SUs present
+	if (#airstrikeResult.DefenderResult.ClonedSpecials > 0) then targetTerritory.AddSpecialUnits = airstrikeResult.DefenderResult.ClonedSpecials; end --add surviving cloned Specials to target territory; this is at max 1 SU, so no need to break it up into multiple orders
+
+	--prep the event; if Airlift card will be used to transfer units for successful attack, add the Airlift card pieces as part of this order
+	local airstrikeEvent = WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirStrikeResultText, {}, {sourceTerritory, targetTerritory});
+
+	--if Airlift is in game, add granting of airlift whole card here; how to handle Late Airlifts & Transport Only Airlifts? or Card Block? <-- actually this would have stopped the Airstrike itself so not a concern
+	--add Airlift card to player hand if it is in the game; this is done here so that the player can use it to move armies from the source territory to the target territory
+	if (airliftCardID ~= nil and boolAirliftCardGiftedAlready == false) then airstrikeEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; end --add enough pieces to equal 1 whole card
+
+	airstrikeEvent.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+	addOrder (airstrikeEvent, true);
+	--this order needs to happen before the Airlift (if it is to occur) to the Airlift whole card can be guaranteed to be avaiable for game order player
+
+	--FOR SUCCESS ATTACKS, need to move surviving units among those included in the Airstrike to target territory:
+	--     if Airlift is in play, submit Airlift order, let the Airlift arrow/transfer occur normally
+	--     if Airlift is NOT in play, move them manually, no Airlift line appears
+	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
+	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
+
+	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line)
+	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil) then
+		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
+	--if Airlift is not in play, must do the move of surviving units manually
+	elseif (airstrikeResult.IsSuccessful == true) then
+		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, targetTerritory, attackingArmiesToAirlift);
+	end
+	boolAirliftCardGiftedAlready = false; --reset value to false for next iteration
+end
+
+--manually move units from one territory to another
+function manual_move_units (addOrder, playerID, sourceTerritory, targetTerritory, units)
+	--adjust armies & SUs on FROM territory
+	sourceTerritory.AddArmies = -1 * units.NumArmies; --reduce source territory armies by the number of armies moving to target territory
+	sourceTerritory.RemoveSpecialUnitsOpt = convert_SUobjects_to_SUguids (units.SpecialUnits); --remove Specials from source territory that are moving to target territory
+	--need to convert the table to get the SU GUIDs (needed to remove from Source territory) b/c it is stored as a table of SU objects (used to add to Target territory)
+
+	--adjust armies on TO territory
+	targetTerritory.AddArmies = units.NumArmies; --increase target territory armies by the number of armies moving from source territory
+	targetTerritory.RemoveSpecialUnitsOpt = {}; --reset the Specials to an empty table, so it's not constantly sending a list of SUs to remove that have already been removed
+
+	--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
+	local specialsToAdd = split_table_into_blocks (units.SpecialUnits, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
+	local territoriesToModify = {sourceTerritory, targetTerritory}; --on 1st iteration, modify source & territory, on 2nd and after just do target territory with Special Units
+	if (#specialsToAdd == 0) then addOrder (WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify), true); end --if there are no Specials to add, do the order once for both territories
+
+	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
+	for _,v in pairs (specialsToAdd) do
+		targetTerritory.AddSpecialUnits = v; --add Specials to target territory that are moving from source territory
+		addOrder (WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify), true);
+		targetTerritory.AddArmies = 0; --reset the armies to 0 after 1st iteration, so that the next order doesn't add more armies to the target territory
+		territoriesToModify = {targetTerritory}; --on 2nd and after iterations, just modify target territory with Special Units
+	end
+end
+
+--given a CSV list of SU GUIDs & a territory ID, return a table of the actual SU objects present on the territory that match the specified GUIDs
+function generateSelectedSUtable (game, strSelectedSUsGUIDs, territoryID)
+	local GUIDsContiguous = split (strSelectedSUsGUIDs, ","); --split CSV string containing SU GUIDs into different elements
+	local GUIDs = {};
+	--print ("######################");
+	for k,GUID in pairs (GUIDsContiguous) do
+		--print ("GUID "..GUID);
+		GUIDs[GUID]=true; end --create array where elements are the GUIDs themselves
+
+	local selectedSUs = {};
+	for k,SP in pairs (game.ServerGame.LatestTurnStanding.Territories[territoryID].NumArmies.SpecialUnits) do
+		if (GUIDs [SP.ID] ~= nil) then table.insert (selectedSUs, SP); end
+		--print ("SP.ID "..tostring (SP.ID)..", GUIDs [SP.ID] "..tostring (GUIDs [SP.ID])..", count "..#selectedSUs);
+	end
+	return (selectedSUs);
+end
+
+--given a table of SU objects, return a table containing their GUIDs
+--this is used to remove Specials from the source territory (which is done by SU GUIDs) and add them to the target territory (which is done using SU objects)
+function convert_SUobjects_to_SUguids (SUobjects)
+	local SUguids = {};
+	for _,v in pairs (SUobjects) do table.insert (SUguids, v.ID); end
+	return (SUguids);
+end
+
+function split_table_into_blocks (data, blockSize)
+	local blocks = {};
+	for i = 1, #data, blockSize do
+		local block = {};
+		for j = i, math.min(i + blockSize - 1, #data) do
+			table.insert(block, data[j]);
+		end
+		table.insert(blocks, block);
+	end
+	return blocks;
+end
+
+--create special units for testing purposes
+--NOTE: this is a test function, not used in the mod for normal games; it was/is used to test the special unit creation and combat order processing
+function createSpecialUnitsForTesting (game, addOrder, sourceTerritoryID, targetTerritoryID)
+	--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
+	--for reference: function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilename, AttackPower, DefensePower, AttackPowerPercentage, DefensePowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, Health, CombatOrder, CanBeGiftedWithGiftCard, CanBeTransferredToTeammate, CanBeAirliftedToSelf, CanBeAirliftedToTeammate, IsVisibleToAllPlayers, ModData)
+	build_specialUnit (game, addOrder, sourceTerritoryID, "1a pre 10 health", "shield_special unit_clearback.png",    10, 10, 1.0, 1.0, 0, 0, 100, -4000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, sourceTerritoryID, "2a pre 0h 10kill", "shield_special unit_clearback.png",    10, 10, nil, nil, 0, 10, 0, -5000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, sourceTerritoryID, "3a with 0h 10kill", "quicksand_v3_specialunit.png",        10, 10, 1.0, 1.0, 0, 10, 0, 0000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, sourceTerritoryID, "4a with 10 health", "quicksand_v3_specialunit.png",        10, 10, nil, nil, 0, 0, 100, 0000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, sourceTerritoryID, "5a 10 health", "monolith special unit_clearback.png",      10, 10, nil, nil, 0, 0, 100, 15000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, sourceTerritoryID, "6a 0h 10kill", "monolith special unit_clearback.png",      10, 10, nil, nil, 0, 10, 0, 4000, true, true, true, true, true, nil);
+
+	--filenames: monolith special unit_clearback.png, quicksand_v3_specialunit.png, shield_special unit_clearback.png, neutralizedTerritory.png, isolatedTerritory.png
+	build_specialUnit (game, addOrder, targetTerritoryID, "1b pre 0h 10kill", "shield_special unit_clearback.png",    0, 0, nil, nil, 5, 10, 0, -5000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, targetTerritoryID, "2b pre 10 health", "shield_special unit_clearback.png",    0, 0, 1.0, 1.0, 5, 0, 10, -4000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, targetTerritoryID, "3b with 0h 10kill", "quicksand_v3_specialunit.png",        0, 0, 1.0, 1.0, 5, 10, 0, 0000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, targetTerritoryID, "4b with 10 health", "quicksand_v3_specialunit.png",        0, 0, nil, nil, 5, 0, 10, 0000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, targetTerritoryID, "5b post 0h 10kill", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 10, 0, 4000, true, true, true, true, true, nil);
+	build_specialUnit (game, addOrder, targetTerritoryID, "6b post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
+end
+
+--add Airlift whole card to a player, to be consumed to make the airlift operation to show the airlift arrow
+function airstrike_doAirliftOperation_EDIT_JUST_TO_ADD_THE_WHOLE_CARD (game, order, PlayerID)
+	--add Airlift 1 whole card to the player, to be consumed to make the airlift operation to show the airlift arrow
+	local airliftCardID = getCardID ("Airlift", game); --get ID for card type 'Airlift'
+	local targetCardConfigNumPieces = game.Settings.Cards[airliftCardID].NumPieces; --add enough pieces to equal 1 whole card
+	local event = WL.GameOrderEvent.Create (PlayerID, "airlift arrow +piece +use it", {});
+	local actualNumArmies = WL.Armies.Create (0, {}); --create empty armies object
+	if (numArmies ~= nil) then actualNumArmies = numArmies; end --use parameter if it was specified
+	event.AddCardPiecesOpt = {[PlayerID] = {[airliftCardID] = targetCardConfigNumPieces}};
+	addOrder(event, true); --add the card pieces to the player; need to save this to update that player's card counts so can be sure there is an Airlift card available to use
+
+	--consume 1 whole card Airlift card; we know this player has at least 1 Airlift card b/c we just added it above
+	local airliftCardInstanceID = getCardInstanceID_fromName (PlayerID, "Airlift", game); --get specific card instance ID from specific player for card of type 'Airlift'
+	print ("[AIRLIFT] airliftCardInstance="..tostring(airliftCardInstanceID));
+	addOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualNumArmies), true); --draw arrow from source to target territory
+end
+
+--draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
+function airstrike_doAirliftOperation (game, addOrder, PlayerID, sourceTerritoryID, targetTerritoryID, numArmies, airliftCardInstanceID)
+	--[[--add Airlift 1 whole card to the player, to be consumed to make the airlift operation to show the airlift arrow
+	local airliftCardID = getCardID ("Airlift", game); --get ID for card type 'Airlift'
+	local targetCardConfigNumPieces = game.Settings.Cards[airliftCardID].NumPieces; --add enough pieces to equal 1 whole card
+	local event = WL.GameOrderEvent.Create (PlayerID, "airlift arrow +piece +use it", {});
+	event.AddCardPiecesOpt = {[PlayerID] = {[airliftCardID] = targetCardConfigNumPieces}};
+	addOrder(event, true);]] --add the card pieces to the player; need to save this to update that player's card counts so can be sure there is an Airlift card available to use
+
+	--consume 1 whole card Airlift card; we know this player has at least 1 Airlift card b/c we just added it above
+	print ("[AIRLIFT] airliftCardInstance="..tostring(airliftCardInstanceID));
+	local actualNumArmies = WL.Armies.Create (0, {}); --create empty armies object
+	if (numArmies ~= nil) then actualNumArmies = numArmies; end --use parameter if it was specified
+	addOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualNumArmies), true); --draw arrow from source to target territory
 end
 
 --create a new special unit
 function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilename, AttackPower, DefensePower, AttackPowerPercentage, DefensePowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, Health, CombatOrder, CanBeGiftedWithGiftCard, CanBeTransferredToTeammate, CanBeAirliftedToSelf, CanBeAirliftedToTeammate, IsVisibleToAllPlayers, ModData)
-    local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
+    local builder = WL.CustomSpecialUnitBuilder.Create (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
 	builder.Name = Name;
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = ImageFilename;
@@ -427,7 +623,7 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	local specialUnit = builder.Build();
 	local terrMod = WL.TerritoryModification.Create(targetTerritoryID)
 	terrMod.AddSpecialUnits = {specialUnit}
-	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}))
+	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
 	return specialUnit;
 end
 
@@ -442,10 +638,10 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 
 	local sortedAttackerSpecialUnits = {};
 	local sortedDefenderSpecialUnits = {};
-	local totalAttackerAttackPowerPercentage = 1.0;
-	local totalAttackerDefensePowerPercentage = 1.0;
-	local totalDefenderAttackPowerPercentage = 1.0;
-	local totalDefenderDefensePowerPercentage = 1.0;
+	local totalDefenderDefensePowerPercentage = 1.0;    --this is covered in defense power for an SU so don't actually need this
+	--local totalAttackerDefensePowerPercentage = 1.0;  --this is covered in defense power for an SU so don't need this
+	local totalAttackerAttackPowerPercentage = 1.0;     --this is covered in defense power for an SU so don't actually need this
+	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't actually need this
 
 	print ("[MANUAL ATTACK!] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AAPower "..AttackingArmies.AttackPower..", DDPower "..DefendingTerritory.NumArmies.DefensePower);
 
@@ -492,8 +688,8 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
 	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage);
 	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
-	print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies ..", #specials "..#defenderResult.SurvivingSpecials..", #killedSpecials "..#defenderResult.KilledSpecials);
-	print ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies ..", #specials "..#attackerResult.SurvivingSpecials..", #killedSpecials "..#attackerResult.KilledSpecials);
+	print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
+	print ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned]");
 	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0) then
 		--defender is eliminated, attacker wins
 		boolAttackSuccessful = true;
@@ -515,12 +711,14 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	local remainingArmies = armyCount;
 	local survivingSpecials = {};
 	local killedSpecials = {};
+	local clonedSpecials = {};
 
 	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType="|dummyPlaceholder|applyDamageToArmies"}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
 	print ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
 	for k,v in ipairs (sortedSpecialUnits) do
+		local newSpecialUnit_clone = nil;
 		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
 		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
 		print ("[[[[SPECIAL]]]] "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder..", remaining damage "..remainingDamage);
@@ -540,16 +738,18 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		--first check if CombatOrder indicates that it's time to apply damage to armies, then apply damage to Specials thereafter if damage is remaining
 		--1 iteration through loop can apply damage to both armies and then 1 Special (the current Special being iterated on in the loop representing the current element of the table being looped through)
 		if (remainingDamage >0) then
-			if (boolArmiesProcessed==true or v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
+			if (boolArmiesProcessed==false and v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
 				--apply damage to armies
-				if (remainingDamage >= remainingArmies) then
-					remainingDamage = remainingDamage - remainingArmies; 
+				if (remainingArmies == 0) then
+					print ("[[[[ARMY DAMAGE]]]] no remaining armies present, remaining damage "..remainingDamage);
+				elseif (remainingDamage >= remainingArmies) then
+					remainingDamage = math.max (0, remainingDamage - remainingArmies);
 					remainingArmies = 0;
 					print ("[[[[ARMY DAMAGE]]]] all armies die, remaining damage "..remainingDamage);
 				else
 					--apply damage to armies of amount remainingDamage
 					print ("[[[[ARMY DAMAGE]]]] "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
-					remainingArmies = remainingArmies - remainingDamage;
+					remainingArmies = math.max (0, remainingArmies - remainingDamage);
 					remainingDamage = 0;
 				end
 				boolArmiesProcessed = true;
@@ -558,18 +758,19 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 			--damage to armies may have occurred already depending on CombatOrder value of current special, and this may have depleted all remaining damage
 			--if there's still damage to apply, apply it to this Special
 			if (remainingDamage > 0) then
-				print ("damage applied to Special");
+				print ("apply damage to Special");
 				if (v.proxyType=="Commander") then
 					if (remainingDamage >=7) then
 						print ("COMMANDER dies");
-						remainingDamage = remainingDamage - 7;
+						remainingDamage = math.max (0, remainingDamage - 7);
 						boolCurrentSpecialSurvives = false; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
 					else
 						print ("COMMANDER survives, not enough damage done");
 						remainingDamage = 0; --commander survives, no more attacks to occur
+						boolCurrentSpecialSurvives = true; --add commander to survivingSpecials table
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
-					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = remainingDamage - v.DamageAbsorbedWhenAttacked; print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
 					if (v.Health ~= nil) then
 						if (v.Health == 0) then
 							print ("SPECIAL already dead w/0 health, kill it/remove it");
@@ -580,14 +781,25 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
 						else
 							--apply damage to special of amount remainingDamage
-							print ("SPECIAL survives but health by "..remainingDamage.." to "..v.Health-remainingDamage);
+							print ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
+							--recreate the special with new health level
+							local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
+							newSpecialUnitBuilder.Health = v.Health - remainingDamage;
+							newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name .."(C)";
+							newSpecialUnit_clone = newSpecialUnitBuilder.Build();
+							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
 							remainingDamage = 0;
 						end
 					else
-						if (remainingDamage > v.DamageToKill) then remainingDamage = remainingDamage - v.DamageToKill; print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+						if (remainingDamage > v.DamageToKill) then
+							remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
+							print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
+							--print ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
 						else
 							--apply damage to special of amount remainingDamage
 							print ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
+							boolCurrentSpecialSurvives = true; --add special to survivingSpecials table
 							remainingDamage = 0;
 						end
 					end
@@ -597,15 +809,26 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		if (remainingDamage<=0) then print ("[damage remaining is "..remainingDamage.."]"); end
 
 		--the Special being analyzed this iteration through loop has already DIED or SURVIVED by this opint, add to survivingSpecials table if it survived
-		if (boolCurrentSpecialSurvives == true) then print ("SPECIAL survived"); table.insert (survivingSpecials, v); --only add the Special to the survivingSpecials table if it survives the attack
+		--print ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
+		if (boolCurrentSpecialSurvives == true) then --the Special survived; but it may have (A) taken no damage, in which case just add it to the survivingSpecials table, or (B) taken damage (if so it has been cloned and need to replace it with the new cloned Special and add that to the table)
+			print ("SPECIAL survived");
+			if (newSpecialUnit_clone == nil) then --the Special Unit survived the didn't need to be cloned, just add the original to the survivingSpecials table
+				table.insert (survivingSpecials, v);
+			else   --the Special Unit survived but needed to be cloned, add the new cloned Special to the survivingSpecials table & add the original to the killedSpecials table (this isn't totally accurate since it wasn't killed per se, 
+			       --but this mechanism is used to remove it from the source territory & not add it to the target territory if the attack if successful)
+				table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
+				table.insert (killedSpecials, v.ID); --add the original Special to the killedSpecials table
+				table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; if airstrike is unsuccessful, attacking SUs in this table need to be added to the source territory & defending SUs in this table need to be added to the target territory
+				--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
+			end
 		else
 			print ("SPECIAL died");
 			if (v.proxyType ~= "|dummyPlaceholder|applyDamageToArmies") then table.insert (killedSpecials, v.ID); end --only add the Special to the killedSpecials table if it dies, ignore the dummy placeholder
 		end
 	end
 
-	print ("[FINAL RESULT] remaining damage "..remainingDamage..", remaining armies "..remainingArmies.. ", #survivingSpecials "..#survivingSpecials);
-	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials};
+	print ("[FINAL RESULT] remaining damage "..remainingDamage..", killed armies " .. math.max (0, armyCount-remainingArmies) ..", remaining armies "..remainingArmies.. ", #killedSpecials ".. #killedSpecials ..", #survivingSpecials "..#survivingSpecials);
+	local damageResult = {RemainingArmies=remainingArmies, KilledArmies=math.max (0, armyCount-remainingArmies), SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
 	return damageResult;
 
 	--reference

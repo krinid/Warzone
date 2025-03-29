@@ -8,6 +8,8 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
 
 	if (game.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires playing a Card, which they can't do b/c they're not in the game)
 
+    WZcolours = getColours (); --set global variable for WZ usable colours for buttons
+
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
     PrintProxyInfo (cardInstance);
@@ -49,10 +51,6 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
     else
         print ("A custom card that the Custom Card Pack A does not handle has been played. card played="..strCardBeingPlayed.."::");
     end
-end
-
-function play_Airstrike_card (game, cardInstance, playCard)
-    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
 end
 
 function play_ForestFire_card (game, cardInstance, playCard)
@@ -606,7 +604,11 @@ function play_Nuke_card(game, cardInstance, playCard)
     end);
 end
 
-function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
+function play_Airstrike_card_NotYet (game, cardInstance, playCard)
+    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
+end
+
+function play_Airstrike_card (game, cardInstance, playCard)
     TargetTerritoryID = nil;
     TargetTerritoryName = nil;
     SourceTerritoryID = nil;
@@ -615,32 +617,117 @@ function play_Airstrike_card_COMINGSOON(game, cardInstance, playCard)
 
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400, 300);
-        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (vert).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
+        setMaxSize(600, 600);
+        airstrikeObject = {}; --global variable
+        airstrikeObject.vertTop = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        CreateLabel (airstrikeObject.vertTop).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
+        local vertTop = airstrikeObject.vertTop;
 
-        SourceTerritoryBtn = UI.CreateButton(vert).SetText("Select Source Territory").SetOnClick(SourceTerritoryClicked);
-        SourceTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        SourceTerritoryBtn = UI.CreateButton(vertTop).SetText("Select Source Territory").SetOnClick(SourceTerritorySelectButton_Clicked);
+        SourceTerritoryInstructionLabel = UI.CreateLabel(vertTop).SetText("");
         SourceTerritorySelectButton_Clicked("Select the territory you wish to attack from"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-        
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+
+        TargetTerritoryBtn = UI.CreateButton(vertTop).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vertTop).SetText("");
         --TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(
-        function() 
+        CreateLabel (vertTop).SetText (" "); --spacer
+
+        local line = CreateHorz (vertTop);
+        CreateLabel (line).SetText ("Number of armies to send  ");
+        airstrikeObject.NIFarmies = CreateNumberInputField (line).SetValue(100).SetSliderMinValue(0).SetSliderMaxValue(1000);
+        --CreateLabel (vertTop).SetText ("[all Special Units will be sent; unit selector coming soon]").SetColor (getColourCode ("subheading"));
+        airstrikeObject.SUpanelVert = UI.CreateVerticalLayoutGroup (vertTop).SetFlexibleWidth(1);
+        CreateLabel (vertTop).SetText (" "); --spacer
+
+        UI.CreateButton(vertTop).SetText("Play Card").SetOnClick(
+        function()
             --check for CANCELED request, ie: no territory selected
-            if (TargetTerritoryID == nil) then
-                UI.Alert("No territory selected. Please select a territory");
+            if (SourceTerritoryID == nil or TargetTerritoryID == nil or SourceTerritoryID == TargetTerritoryID) then
+                UI.Alert("You must make unique selections for both FROM and TO territories");
                 return;
             end
-            intArmiesToSend = 1000; --hardcoded for now, but should be a user input field in the future
-            print ("[AIRSTRIKE] ".. strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."::");
-            if (playCard(strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend --[[, intImplementationPhase]])) then
+
+			generateStringOfSelectedSUs (); --generate the order text using friendly names of SUs & text for the order specifying GUIDs of SUs
+				local intArmiesToSend = airstrikeObject.NIFarmies.GetValue ();
+			local strAirstrikeMsg = strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName ..", sending ".. tostring(intArmiesToSend).. " armies and "..airstrikeObject.strSelectedSUs_Names;
+            print ("[AIRSTRIKE] ".. strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids));
+            if (playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids) --[[, intImplementationPhase]])) then
                 close();
             end
         end);
     end);
+end
+
+function updateAirstrikePanelDetails ()
+    --if (UI.IsDestroyed (airstrikeObject.airstrikeSUvert) ~= nil) then UI.Destroy (airstrikeObject.airstrikeSUvert); end
+    if (not UI.IsDestroyed (airstrikeObject.airstrikeSUvert)) then UI.Destroy (airstrikeObject.airstrikeSUvert); end
+    airstrikeObject.airstrikeSUvert = CreateVerticalLayoutGroup (airstrikeObject.vertTop);
+
+	--set input field for max & current value to the # of armies on the select FROM territory for ease of use
+    --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
+    --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); airstrikeObject.NIFarmies.SetValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
+
+    airstrikeObject.OrderPlayerID = Game.Us.ID;
+    airstrikeObject.FROMplayerID = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].OwnerPlayerID or nil;
+    airstrikeObject.TOplayerID = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID or nil;
+    airstrikeObject.OrderPlayerTeam = -1 or airstrikeObject.OrderPlayerID ~= nil and airstrikeObject.OrderPlayerID>0 and Game.Game.Players[airstrikeObject.OrderPlayerID].Team;
+    airstrikeObject.FROMplayerTeam = -1 or airstrikeObject.FROMplayerID~=nil and airstrikeObject.FROMplayerID>0 and Game.Game.Players[airstrikeObject.FROMplayerID].Team;
+    airstrikeObject.TOplayerTeam = -1 or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team;
+    --airstrikeObject.FROMplayerTeam = (nil or airstrikeObject.FROMplayerID~=nil and airstrikeObject.FROMplayerID>0 and Game.Game.Players[airstrikeObject.FROMplayerID].Team);
+    --airstrikeObject.TOplayerTeam = (nil or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team);
+    airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower or nil;
+    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower or nil;
+    airstrikeObject.FROMarmies = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0;
+	airstrikeObject.FROMselectedArmies = airstrikeObject.NIFarmies.GetValue (); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
+    airstrikeObject.TOarmies = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies or 0;
+    airstrikeObject.FROMnumSpecials = SourceTerritoryID ~= nil and #Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits or 0;
+    airstrikeObject.TOnumSpecials = TargetTerritoryID ~= nil and #Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0;
+    airstrikeObject.DeploymentYield = 0.75; --default to 75%
+    if (Mod.Settings.AirstrikeDeploymentYield ~= nil) then airstrikeObject.DeploymentYield = Mod.Settings.AirstrikeDeploymentYield/100; end --if mod setting is set, use that value instead of the default
+    airstrikeObject.DeploymentYieldLoss = math.floor ((1-airstrikeObject.DeploymentYield) * airstrikeObject.FROMarmies + 0.5);
+    airstrikeObject.AttackTransfer = "tbd";
+	if (airstrikeObject.FROMplayerID == nil or airstrikeObject.TOplayerID == nil) then airstrikeObject.AttackTransfer = "tbd";
+	elseif (airstrikeObject.FROMplayerID ~= airstrikeObject.TOplayerID and (airstrikeObject.FROMplayerTeam==-1 or airstrikeObject.FROMplayerTeam>0 and airstrikeObject.FROMplayerTeam ~= airstrikeObject.TOplayerTeam)) then airstrikeObject.AttackTransfer = "Attack";
+	elseif (airstrikeObject.FROMplayerID == airstrikeObject.TOplayerID or (airstrikeObject.FROMplayerTeam>0 or airstrikeObject.FROMplayerTeam == airstrikeObject.TOplayerTeam)) then airstrikeObject.AttackTransfer = "Transfer";
+	end
+
+	airstrikeObject.attackingArmies = nil;
+	airstrikeObject.defendingArmies = nil;
+	airstrikeObject.FROMactualAttackPower = 0;
+	if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
+	if (TargetTerritoryID~=nil) then airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits); end
+
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories become regular airlifts with no Yield Deployment loss");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+
+    airstrikeObject.FROMTOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
+    airstrikeObject.FROMvert = CreateVert (airstrikeObject.FROMTOhorz);
+    airstrikeObject.TOvert = CreateVert (airstrikeObject.FROMTOhorz);
+
+    CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(airstrikeObject.FROMplayerID).."/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower).. " ["..tostring (airstrikeObject.FROMactualAttackPower).."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (airstrikeObject.FROMnumSpecials) .."]");
+    airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
+    CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor("#FF3333");
+    CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(airstrikeObject.TOplayerID).."/[team ".. tostring(airstrikeObject.TOplayerTeam).."]");
+    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower));
+    CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
+    CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
+    --CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Attack/Transfer: ".. airstrikeObject.AttackTransfer .. " (at current time)");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target fog: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target neutrals: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target enemies: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Special Units: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Commanders: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Special Units: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Commanders: tbd");
 end
 
 function SourceTerritorySelectButton_Clicked(strLabelText) --SourceTerritoryInstructionLabel, SourceTerritoryBtn)
@@ -660,11 +747,83 @@ function SourceTerritoryClicked(terrDetails)
         SourceTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
+		airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies);  --set max slider value for input field to # of armies on territory for ease of use
+		if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
+
 		SourceTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		SourceTerritoryID = terrDetails.ID;
         SourceTerritoryName = terrDetails.Name;
-        TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+
+        populateSUpanel (); --populate the SP panel vert object with the SU's on the Source territory
+
+		--activate the Target territory selector if it hasn't been populated already; if it's populated already, don't activate, b/c this is the player altering the Source territory, and we shouldn't force them to update the Target territory as well, which may be accurate already
+		if (TargetTerritoryID == nil) then TargetTerritoryClicked ("Select the territory you wish to attack"); end -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+
+        updateAirstrikePanelDetails ();
 	end
+end
+
+function populateSUpanel ()
+    if (not UI.IsDestroyed (airstrikeObject.SUitemsVert)) then UI.Destroy (airstrikeObject.SUitemsVert); end
+    airstrikeObject.SUitemsVert = UI.CreateVerticalLayoutGroup (airstrikeObject.SUpanelVert).SetFlexibleWidth(1);
+    airstrikeObject.SUcheckboxes = {}; --array to store checkboxes for each SU on Source territory
+
+	local buttonLine = UI.CreateHorizontalLayoutGroup (airstrikeObject.SUitemsVert).SetFlexibleWidth (1);
+	UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green);
+	UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red);
+	UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow);
+
+	for k, SU in pairs (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits) do
+        --print (k, SU.ID);
+        local strSUname = SU.proxyType; --this is accurate for Commander & Bosses
+        if (SU.proxyType == "CustomSpecialUnit") then
+            strSUname = SU.Name;
+            if (SU.Health ~= nil) then strSUname = strSUname .. " [health "..tostring(SU.Health).."]"; end
+        end
+        airstrikeObject.SUcheckboxes[k] = UI.CreateCheckBox (airstrikeObject.SUitemsVert).SetText (strSUname).SetIsChecked (true);
+    end
+end
+
+function generateTableOfSelectedSUs ()
+	if (#airstrikeObject.SUcheckboxes==0) then return {}; end --return empty set if there are no checkboxes (no SUs)
+	local selectedSUs = {};
+	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do
+		if (cbox.GetIsChecked()) then table.insert (selectedSUs, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k]); end
+	end
+	return selectedSUs;
+end
+
+function generateStringOfSelectedSUs ()
+	airstrikeObject.strSelectedSUguids = "";
+	airstrikeObject.strSelectedSUs_Names = "";
+	if (#airstrikeObject.SUcheckboxes==0) then return; end --set empty strings if there are no checkboxes (no SUs)
+
+	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do
+		if (cbox.GetIsChecked()) then
+			if (airstrikeObject.strSelectedSUs_Names ~= "") then airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. ", "; airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. ","; end
+			airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k].ID;
+			airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. cbox.GetText ();
+		end
+	end
+	print (airstrikeObject.strSelectedSUguids);
+	print (airstrikeObject.strSelectedSUs_Names);
+end
+
+function SUpanel_toggleAll ()
+	if (#airstrikeObject.SUcheckboxes==0) then return; end --do nothing if there are no checkboxes (no SUs)
+	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do
+		if (cbox.GetIsChecked()) then cbox.SetIsChecked(false); else cbox.SetIsChecked(true); end
+	end
+end
+
+function SUpanel_deselectAll ()
+	if (#airstrikeObject.SUcheckboxes==0) then return; end --do nothing if there are no checkboxes (no SUs)
+	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do cbox.SetIsChecked(false); end
+end
+
+function SUpanel_selectAll ()
+	if (#airstrikeObject.SUcheckboxes==0) then return; end --do nothing if there are no checkboxes (no SUs)
+	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do cbox.SetIsChecked(true); end
 end
 
 function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
@@ -688,6 +847,7 @@ function TerritoryClicked(terrDetails)
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
 	end
+    updateAirstrikePanelDetails ();
 end
 
 function TargetPlayerClicked(strTextLabel)
