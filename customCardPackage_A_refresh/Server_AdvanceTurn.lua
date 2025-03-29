@@ -294,7 +294,7 @@ end
 --if attack successful, elim all armies+units in FROM and then do airlift of surviving units to TO? that way we get the arrow animation
 --add options for ability to target Commander, Specials, fogged territories, neutrals
 --add effect for Deployment yield % -- enforced only when FROM is enemy; if FROM is neutral, then don't reduce units b/c there's no military enemy shooting back; or maybe just let it apply to neutrals too? To avoid just targeting bordering neutrals and attacking normally to avoid penalty?
---add option to enable ability to send Commander/Specials or exclude them (similar ability to target them)
+--add option to enable ability to send Commander/Specials or exclude them (similar ability to target them) -- and structures? option to enable/disable targeting territories with them? like Forts ... it gets tricky (impossible) to accurately handle them
 --add UI option to select which units to send to TO territory for both #armies & Specials
 --handle case when a Commander is killed! how to handle? can't just elim player b/c Resurrection could be in play; maybe just remove the Commander from the game for now? enter custom order to flag Resurrection that Commander died? need to check for card?
 --      or just flag airstrike as not being compatible with Commanders?
@@ -317,6 +317,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
 	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
 	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
+	local intNumArmiesSpecified = tonumber (modDataContent[4]); --4th component of ModData after "|" is the # of armies to include in the Airstrike
+	local intActualArmies = math.min (intNumArmiesSpecified, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies); --actual #armies to include in Airstrike is lesser of specified units and currently present on the territory
+	local SpecialUnitsSpecified = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits; --make this user specifiable in future; for now use all SUs on FROM territory
 	local sourceOwner = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].OwnerPlayerID;
 	local targetOwner = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 	local sourceOwnerTeam = -1; --indicates no team alignment
@@ -349,8 +352,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	end
 
 	--&&& assign these to a user-specified subselection of units on TO territory; for now just send everything present
-	local attackingArmies = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies;
-	local defendingArmies = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies;
+	--local attackingArmies = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies;
+	local attackingArmies = WL.Armies.Create (intActualArmies, SpecialUnitsSpecified); --create attacking armies structure comprised of actual # of armies being sent & actual table of Specials included
+	local defendingArmies = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies; --defending armies are straight-up what's present on TO territory
 	local sourceAttackPower = attackingArmies.AttackPower;
 	local targetDefensePower = defendingArmies.DefensePower;
 	local intArmiesToSend = math.floor (attackingArmies.NumArmies * intDeploymentYield + 0.5); --this is the number of armies that will be sent to the target territory
@@ -398,7 +402,8 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	local airstrikeResult = nil;
 	if (boolIsAttack == true) then --Airstrike order is an attack
-		airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
 		--airstrikeResult.DefenderResult is armies object for defender
 		--airstrikeResult.IsSuccessful is boolean indicating if the attack was successful, and thus whether:
@@ -406,7 +411,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 			--(B) attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
 
 		--adjust attacker results, so # of killed armies is increased by quantity of intArmiesDieDuringAttack
-		airstrikeResult.AttackerResult.KilledArmies = airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack;
+		airstrikeResult.AttackerResult.KilledArmies = math.min (airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack, intActualArmies); --#armies killed are those from regular battle damage + loss due to Deployment Yield but not to exceed the actual # included in the Airstrike operation (if exceeds this amount, it would subtract units from the FROM territory even if they didn't participate in the Airstrike -- don't do that)
 		airstrikeResult.AttackerResult.RemainingArmies = math.max (0, attackingArmies.NumArmies - airstrikeResult.AttackerResult.KilledArmies);
 	else
 		--if not an attack, then it's a transfer; so just do a normal airlift of the units from the source territory to the target territory
@@ -612,10 +617,10 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 
 	local sortedAttackerSpecialUnits = {};
 	local sortedDefenderSpecialUnits = {};
-	local totalAttackerAttackPowerPercentage = 1.0;
+	local totalDefenderDefensePowerPercentage = 1.0;    --this is covered in defense power for an SU so don't actually need this
 	--local totalAttackerDefensePowerPercentage = 1.0;  --this is covered in defense power for an SU so don't need this
-	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't need this
-	local totalDefenderDefensePowerPercentage = 1.0;
+	local totalAttackerAttackPowerPercentage = 1.0;     --this is covered in defense power for an SU so don't actually need this
+	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't actually need this
 
 	print ("[MANUAL ATTACK!] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AAPower "..AttackingArmies.AttackPower..", DDPower "..DefendingTerritory.NumArmies.DefensePower);
 

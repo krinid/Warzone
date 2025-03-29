@@ -27,9 +27,11 @@ function Server_Created (game, settings)
     --enable Airlift if Airstrike module is enabled
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Airstrike == true) then
         --check if Airlift card is enabled
-        --print (WL.TurnPhase.ToString());
-        --print (tostring (WL.CardID.Airlift), WL.CardID.Airlift.ToString ());
-        --print ("Airstrike module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
+        --print (WL.TurnPhase.ToString(WL.TurnPhase.SanctionCards));   --  <--- this works, it displays "SanctionCards"
+        --print (WL.CardID.ToString(WL.CardID.Airlift)); -- <--- doesn't work b/c this isn't an Enum, it's just a constant
+
+        print ("Airstrike enabled==true; module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
+        WL.TurnPhase.ToString(WL.TurnPhase.SanctionCards)
         --WL.TurnPhase.ToString(...)
         if (settings.Cards[WL.CardID.Airlift]==nil) then
             print ("[ENABLE AIRLIFT]");
@@ -46,14 +48,11 @@ function Server_Created (game, settings)
             end
             settings.Cards = newCards;
         end
-        print ("Airstrike module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
+        print ("Airstrike enabled==true; module present; Airlift enabled=="..tostring (settings.Cards[WL.CardID.Airlift]~=nil)..", Airlift CardID=="..WL.CardID.Airlift);
     end
-    for k,v in pairs (settings.Cards) do
-        print (k,v.CardID);
-    end
-    local c = settings.Cards;
-
-
+    --for k,v in pairs (settings.Cards) do
+    --  print (k,v.CardID);
+    --end
 
     initialize_CardData (game); --save defined card list into Mod.Settings.CardData
     --print ("game.Settings.Cards==nil --> "..tostring(game.Settings.Cards==nil));
