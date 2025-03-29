@@ -313,6 +313,8 @@ end
 --auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
 --make Airstrike obey Shield, Monolith, Quicksand, Isolation rules (any others?)
 --max # armies that can participate in the Airstrike doesn't include deployments b/c they're not in LatestStanding; but could load the orders so far, look @ deployments and use that figure -- but it's a bit of work, a bit of a pain
+--for use with Quicksand/Isolation -- they should be aborted depending on the card settings for each but even if permitted, the Airlift maneuver will get canceled (but the attack damage still happens to each territory)
+--SUs should abide by "canAirlift" properties of the SU; minimally they'll get rejected during actualy Airlift operation if the properties are set to False even if they participate in the attack
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
 	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
@@ -770,7 +772,8 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						boolCurrentSpecialSurvives = true; --add commander to survivingSpecials table
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
-					if (v.DamageAbsorbedWhenAttacked ~= nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+					--absorb damage only applies to SUs that don't use Health; if they use Health, DamageAbsorbedWhenAttacked is ignored during regular WZ attacks; mimic that functionality here (even if both DamageAbsorbedWhenAttacked & Health are specified on an SU)
+					if (v.DamageAbsorbedWhenAttacked ~= nil and v.Health == nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
 					if (v.Health ~= nil) then
 						if (v.Health == 0) then
 							print ("SPECIAL already dead w/0 health, kill it/remove it");

@@ -714,7 +714,7 @@ function updateAirstrikePanelDetails ()
     CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
     CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (airstrikeObject.FROMnumSpecials) .."]");
     airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
-    CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor("#FF3333");
+    CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(airstrikeObject.TOplayerID).."/[team ".. tostring(airstrikeObject.TOplayerTeam).."]");
     CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower));
     CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
@@ -747,8 +747,10 @@ function SourceTerritoryClicked(terrDetails)
         SourceTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
-		airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies);  --set max slider value for input field to # of armies on territory for ease of use
-		if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
+		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
+		airstrikeObject.NIFarmies.SetSliderMaxValue (intNumArmiesPresent);  --set max slider value for input field to # of armies on territory for ease of use (sum of current state + current deployments to source territory)
+		--if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
+		airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
 
 		SourceTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		SourceTerritoryID = terrDetails.ID;
@@ -763,15 +765,31 @@ function SourceTerritoryClicked(terrDetails)
 	end
 end
 
+--return the # of armies deployed to territory terrID so far this turn
+function getArmiesDeployedThisTurnSoFar (terrID)
+	for k,existingGameOrder in pairs (Game.Orders) do
+		--print (k,existingGameOrder.proxyType);
+		if (existingGameOrder.proxyType == "GameOrderDeploy") then
+			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
+			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
+		end
+	end
+	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
+end
+
 function populateSUpanel ()
     if (not UI.IsDestroyed (airstrikeObject.SUitemsVert)) then UI.Destroy (airstrikeObject.SUitemsVert); end
     airstrikeObject.SUitemsVert = UI.CreateVerticalLayoutGroup (airstrikeObject.SUpanelVert).SetFlexibleWidth(1);
     airstrikeObject.SUcheckboxes = {}; --array to store checkboxes for each SU on Source territory
 
+	--if there are SUs on the source territory, display the Select/Deselect/Toggle buttons
 	local buttonLine = UI.CreateHorizontalLayoutGroup (airstrikeObject.SUitemsVert).SetFlexibleWidth (1);
-	UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green);
-	UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red);
-	UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow);
+	if (#Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits >0) then
+		UI.CreateLabel (buttonLine).SetText ("Special Units:").SetFlexibleWidth(0.25);
+		UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green).SetFlexibleWidth(0.25);
+		UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red).SetFlexibleWidth(0.25);
+		UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow).SetFlexibleWidth(0.25);
+	end
 
 	for k, SU in pairs (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits) do
         --print (k, SU.ID);
