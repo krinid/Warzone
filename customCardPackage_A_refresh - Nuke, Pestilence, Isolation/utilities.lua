@@ -148,20 +148,23 @@ function tablelength(T)
 end
 
 function split(inputstr, sep)
-		  if sep == nil then
-				  sep = "%s"
-		  end
-		  local t={} ; i=1
-		  for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-				  t[i] = str
-				  i = i + 1
-		  end
-		  return t
+	if inputstr == nil then return {}; end
+	if sep == nil then
+			sep = "%s"
+	end
+	local t={} ; i=1
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			t[i] = str
+			i = i + 1
+	end
+	return t
 end
 
 function toPlayerName(playerid, game)
 	if (playerid ~= nil) then
-		if (playerid<50) then
+		if (playerid==WL.PlayerID.Neutral) then
+			return ("Neutral");
+		elseif (playerid<50) then
 				return ("AI"..playerid);
 		else
 			for _,playerinfo in pairs(game.Game.Players) do
@@ -400,10 +403,17 @@ function isPlayerActive (playerID, game)
 	end
 end
 
+function getColours()
+    local colors = {};					-- Stores all the built-in colors (player colors only)
+    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+    return colors;
+end
+
 function getColourCode (itemName)
-    if (itemName=="card play heading") then return "#0099FF"; --medium blue
+    if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
     elseif (itemName=="error")  then return "#FF0000"; --red
 	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
+	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
     else return "#AAAAAA"; --return light grey for everything else
     end
 end
@@ -444,7 +454,7 @@ function getDefinedCardList (game)
 		print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
 		print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
 		print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
-	
+
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
 			local strCardName = getCardName_fromObject(cardConfig);
 			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
@@ -457,7 +467,7 @@ function getDefinedCardList (game)
 	end
 end
 
---given a card name, return it's cardID
+--given a card name, return it's cardID (not card instance ID), ie: represents the card type, not the instance of the card
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
 	local cards={};
@@ -483,6 +493,27 @@ function getCardID (strCardNameToMatch, game)
 		end
 	end
 	return nil; --cardName not found
+end
+
+--return card instance for a given card type by name that belongs to a given player
+function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
+	local cardID = getCardID (strCardNameToMatch, game);
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	return getCardInstanceID (playerID, cardID, game);
+end
+
+--return card instance if playerID possesses card of type cardID, otherwise return nil; note this is not the same as getCardID, which returns the cardID of the card type
+function getCardInstanceID (playerID, cardID, game)
+	print ("[GCII] player "..playerID..", cardID "..cardID);
+	if (playerID==0) then print ("playerID is neutral (has no cards)"); return nil; end
+
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
+		if (v.CardID == cardID) then return k; end
+	end
+	return nil;
 end
 
 function getCardName_fromID(cardID, game);
@@ -527,8 +558,8 @@ function getXYcoordsForBonus (bonusID, game)
 	if (game==nil) then print ("@@game is nil"); end
 	if (game.Map==nil) then print ("@@game.Map is nil"); end
 	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
-	print ("@@bonusID==".. bonusID);
-	print ("@@bonusName==".. getBonusName (bonusID, game));
+	--print ("@@bonusID==".. bonusID);
+	--print ("@@bonusName==".. getBonusName (bonusID, game));
 
 	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
 		count = count + 1;
