@@ -334,7 +334,7 @@ function inspectUnit(sp, callback)
 	CreateEmpty(line).SetFlexibleWidth(0.33);
 	--CreateButton(line).SetText("Return").SetColor(colors.Orange).SetOnClick(callback);
 	CreateEmpty(line).SetFlexibleWidth(0.33);
-	CreateButton(line).SetText("Combat Order").SetColor(colors.Orange).SetOnClick(function() showCombatOrder(function() inspectUnit(sp, callback, UnitInspectorRoot); end, sp); end);
+	CreateButton(line).SetText("Combat Order").SetColor(colors.Orange).SetOnClick(function() showCombatOrder(function() inspectUnit(sp, callback--[[, UnitInspectorRoot]]); end, sp); end);
 	CreateEmpty(line).SetFlexibleWidth(0.33);
 	CreateEmpty(CurrentDisplayRoot).SetPreferredHeight(5);
 
@@ -611,7 +611,7 @@ function getUnitName(sp)
 	if type(sp) == type("") then return sp; end
 	if sp.proxyType == "CustomSpecialUnit" then
 		if (sp.Health==nil) then return sp.Name or "[No name]";
-		else return sp.Name .. " [health "..sp.Health.."]" or "[No name]"; end
+		else return (sp.Name .. " [health "..sp.Health.."]" or "[No name]"); end
 	else
 		return getReadableString(sp.proxyType);
 	end
