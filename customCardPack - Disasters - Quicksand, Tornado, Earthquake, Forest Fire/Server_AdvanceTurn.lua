@@ -1073,13 +1073,14 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	impactedTerritory.SetStructuresOpt = structures;
     impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
-    event.JumpToActionSpotOpt = WL.RectangleVM.Create(
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	--[[WL.RectangleVM.Create(
          game.Map.Territories[targetTerritoryID].MiddlePointX,
          game.Map.Territories[targetTerritoryID].MiddlePointY,
          game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY);
-	--addOrder(event, true);
-	--event.TerritoryAnnotationsOpt = {targetTerritoryID, WL.TerritoryAnnotation.Create ("Tornado", 10, 0)};
+         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
+	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, 0)};
+	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
     addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end
@@ -1126,12 +1127,14 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
 
 	impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
-    event.JumpToActionSpotOpt = WL.RectangleVM.Create(
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	--[[WL.RectangleVM.Create(
          game.Map.Territories[targetTerritoryID].MiddlePointX,
          game.Map.Territories[targetTerritoryID].MiddlePointY,
          game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY);
-    addOrder(event, true);
+         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
+	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, 10)};
+	addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.QuicksandData == nil) then publicGameData.QuicksandData = {}; end
     local turnNumber_QuicksandExpires = (Mod.Settings.QuicksandDuration > 0) and (game.Game.TurnNumber + Mod.Settings.QuicksandDuration) or -1;
@@ -2012,7 +2015,7 @@ function Tornado_processEndOfTurn(game, addOrder)
          if (record.turnNumberTornadoEnds > 0 and turnNumber >= record.turnNumberTornadoEnds) then
             local impactedTerritory = WL.TerritoryModification.Create(terrID);
             print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
-			
+
 			--remove an Idle "power" structure from the territory
 			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory

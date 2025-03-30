@@ -8,7 +8,7 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
 
 	if (game.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires playing a Card, which they can't do b/c they're not in the game)
 
-    WZcolours = getColours (); --set global variable for WZ usable colours for buttons
+    WZcolours = getColours (); --set global variable for WZ usable colours for buttons;
 
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
@@ -94,17 +94,17 @@ end
 
 function play_Shield_card(game, cardInstance, playCard)
     print("[SHIELD] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
-    
+
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
         local vert = CreateVert(rootParent).SetFlexibleWidth(1);
         CreateLabel(vert).SetText("[SHIELD]\n\n").SetColor(getColourCode("card play heading"));
-        
+
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to create a Shield on.");
-        
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function() 
+
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
@@ -114,12 +114,36 @@ function play_Shield_card(game, cardInstance, playCard)
                 return;
             end
             print("[SHIELD] order input::terr=" .. TargetTerritoryName .. "::Shield|" .. TargetTerritoryID .. "::");
-            
-            if (playCard(strPlayerName_cardPlayer .. " creates a Shield on " .. TargetTerritoryName, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift)) then
-                local orders = game.Orders;
-                table.insert(orders, WL.GameOrderCustom.Create(game.Us.ID, "Creates a Shield on " .. TargetTerritoryName, 'Shield|'..TargetTerritoryID));
-                close();
+
+            local strShieldMessage = strPlayerName_cardPlayer .. " creates a Shield on " .. TargetTerritoryName;
+            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger(0,0,255))}; --blue annotation background for Shield
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+
+            --for k,v in pairs (game.Orders) do print (k,v.proxyType); end
+
+            --newOrder = game.Orders[1];
+            --print (newOrder.proxyType);
+            --newOrder.TerritoryAnnotationsOpt = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, 100)};
+            --table.insert(orders, newOrder);
+            --order.TerritoryAnnotationsOpt = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, 100)};
+            --table.insert(orders, order);
+
+            --for testing territory annotations with colour settings:
+            --[[local orders = game.Orders;
+            for terrID,v in pairs (game.LatestStanding.Territories) do
+                colourNum = (terrID-1) * 9300;
+                colourNum = getColourInteger (terrID%3==0 and 255 or 0, terrID%3==1 and 255 or 0, terrID%3==2 and 255 or 0); --set annotation background to pure R,G or B based on the mod 3 value
+                local order = WL.GameOrderCustom.Create(game.Us.ID, colourNum.."/"..terrID, 'colour check|'..terrID);
+                --order.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create (colourNum.."/"..terrID, 10, colourNum)};
+                order.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create (terrID, 10, colourNum)};
+                table.insert(orders, order);
             end
+            newGame = game;
+            newGame.Orders = orders;
+            game = newGame;]]
+
+            close();
         end);
     end);
 end
@@ -230,7 +254,25 @@ function play_Earthquake_card(game, cardInstance, playCard)
             print(Earthquake_SelectedBonus.Name);]]
 
             print("[EARTHQUAKE] order input: bonus=" .. Earthquake_SelectedBonus.ID .. "/".. Earthquake_SelectedBonus.Name .." :: Earthquake|" .. Earthquake_SelectedBonus.ID);
-            playCard(strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
+            local strEarthquakeMessage = strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name;
+            local territoryAnnotation = {}; --{[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}; --red annotation background for Earthquake
+            --table of (array/table of territoryIDs + territory annotation) doesn't work, gives error that it found dictionary, was expecting integer (b/c it's an array of integers)
+            --neither does table of 1 element for (each territory + territory annotation) work, gives error that the record has no proxy ID (b/c it's not a single record which has the TerritoryAnnotation proxy type but instead an array, each element of which has a territory annotation proxy type)
+            --so just pick 1 territory in the bonus to show the Earthquake
+            local EQterritories = {};
+            for _, terrID in pairs(game.Map.Bonuses[Earthquake_SelectedBonus.ID].Territories) do
+                --table.insert (territoryAnnotation, {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}); --red annotation background for Earthquake
+                --table.insert (EQterritories, terrID);--] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}); --red annotation background for Earthquake
+                territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}; --red annotation background for Earthquake
+            end
+            --territoryAnnotation = {[EQterritories] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}; --red annotation background for Earthquake
+            --print ("elements "..#territoryAnnotation);
+            local jumpToActionSpotOpt = createJumpToLocationObject_Bonus (game, Earthquake_SelectedBonus.ID);
+            playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation, jumpToActionSpotOpt);
+            --playCard(strEarthquakeMessage.."1", 'Earthquake1|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);--, territoryAnnotation, jumpToActionSpotOpt);
+            --playCard(strEarthquakeMessage.."2", 'Earthquake2|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation);--, jumpToActionSpotOpt);
+            --playCard(strEarthquakeMessage.."2.5", 'Earthquake2|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, tAnn, jumpToActionSpotOpt);
+            --playCard(strEarthquakeMessage.."3", 'Earthquake3|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, nil, jumpToActionSpotOpt);
             close();
         end);
         labelEarthquake_BonusTerrList = CreateLabel (EarthquakeUI);
@@ -258,6 +300,7 @@ function EarthquakeTargetSelected(bonusDetails)
         --CreateLabel(EarthquakeUI).SetText (terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name);
         --createButton(vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
     end
+    Game.HighlightTerritories(Game.Map.Bonuses[bonusDetails.ID].Territories);
     Earthquake_PlayCardButton.SetInteractable(true);
     buttonEarthquakeSelectBonus.SetInteractable(true);
     labelEarthquake_BonusTerrList.SetText (strLabelText);
@@ -279,7 +322,10 @@ function play_Tornado_card(game, cardInstance, playCard)
                 return;
             end
             print("[TORNADO] order input: territory=" .. TargetTerritoryName .. " :: Tornado|" .. TargetTerritoryID);
-            playCard(strPlayerName_cardPlayer .. " invokes a Tornado on " .. TargetTerritoryName, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            local strTornadoMessage = strPlayerName_cardPlayer .. " invokes a Tornado on " .. TargetTerritoryName;
+            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger(255,0,0))}; --red annotation background for Tornado
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
             close();
         end);
     end);
@@ -300,7 +346,10 @@ function play_Quicksand_card(game, cardInstance, playCard)
                 return;
             end
             print("[QUICKSAND] order input: territory=" .. TargetTerritoryName .. " :: Quicksand|" .. TargetTerritoryID);
-            playCard(strPlayerName_cardPlayer .. " transforms " .. TargetTerritoryName .. " into quicksand", 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            local strQuicksandMessage = strPlayerName_cardPlayer .. " transforms " .. TargetTerritoryName .. " into quicksand";
+            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, getColourInteger(255,0,0))}; --red annotation background for Quicksand
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
             close();
         end);
     end);
