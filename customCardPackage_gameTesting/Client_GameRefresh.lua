@@ -1,23 +1,21 @@
 require("utilities");
 
 function Client_GameRefresh(clientGame)
+	print ("[CLIENT] refresh START - - - - - - - - - - ");
 	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiative this function
 	checkForPendingPestilence (clientGame, false); --false indicates to not forcibly show the popup warning; only do it if it's 1st turn this time or appropriate time has elapsed since last display
-end
-
-function popupPestilenceWarning (clientGame)
-	--tbd ... considering breaking up the check and the display so can call the display on Game Commit regardless of whether it's time to do it or not
-	--but is this required? tbd
+	print ("[CLIENT] refresh END - - - - - - - - - - ");
 end
 
 function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 	--pestilence_lastPlayerWarning variable is used to track warning popups for the local client player, to avoid spamming warnings with every Refresh event
 	--^^don't define as local; leave it as global so the value persists for a given client session instead of resetting to nil each time the function executes
 
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence ~= true) then return; end --if Pestilence isn't active for this mod, do nothing, just return
+
 	local pestilence_WarningFrequency = 5; --measured in seconds; send a new warning at this frequency
 
 	--check if the current client user has any pending Pestilences
-	print ("[CLIENT] refresh started - - - - - - - - - - ");
 	--PrintProxyInfo (Mod.PublicGameData.PestilenceData, "a", "b");
 	if (clientGame.Us ~= nil) then --can't check if client doesn't have an associated playerID (ie: isn't an active player, could be a spectator)
 		local targetPlayerID = clientGame.Us.ID; --target player is the current player using the client
@@ -45,7 +43,7 @@ function checkForPendingPestilence (clientGame, boolForceWarningDisplay)
 			--for reference: PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
 			--krinid userID=1058239
 			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
-			
+
 			local castingPlayerID = pestilenceDataRecord.castingPlayer;
 			local castingPlayerName = toPlayerName (castingPlayerID, clientGame);
 			local PestilenceWarningTurn = pestilenceDataRecord.PestilenceWarningTurn; --for now, make PestilenceWarningTurn = current turn +1 turn from now (next turn)

@@ -403,6 +403,59 @@ function isPlayerActive (playerID, game)
 	end
 end
 
+function createJumpToLocationObject (game, targetTerritoryID)
+	return (WL.RectangleVM.Create(
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY,
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY));
+end
+
+function createJumpToLocationObject_Bonus (game, bonusID)
+	--get XY coordinates of the bonus; note this is estimated since it's based on the midpoints of the territories in the bonus (that's all WZ provides)
+	local XYbonusCoords = getXYcoordsForBonus (bonusID, game);
+	--# of map units to add as buffer to min/max X values to zoom/pan on the bonus; do this to increase chance of territories being on screen, since the X/Y calcs WZ provides are midpoints of the territories (and thus the bonuses), not the actual left/right/top/bottom coordiantes
+	local X_buffer = 25;
+	local Y_buffer = 25;
+
+	--add/subtract buffer (25) on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
+	return (WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer));
+end
+
+--return table with keys X=xvalue, Y=yvalue for a bonus which is the average of its territories' X,Y coords as a best estimate for where the bonus resides on the map
+function getXYcoordsForBonus (bonusID, game)
+	local average_X = 0;
+	local average_Y = 0;
+	local min_X = 0;
+	local max_X = 0;
+	local min_Y = 0;
+	local max_Y = 0;
+	local sum_X = 0;
+	local sum_Y = 0;
+	local count = 0;
+
+	if (game==nil) then print ("@@game is nil"); end
+	if (game.Map==nil) then print ("@@game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
+	--print ("@@bonusID==".. bonusID);
+	--print ("@@bonusName==".. getBonusName (bonusID, game));
+
+	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
+		count = count + 1;
+		sum_X = sum_X + game.Map.Territories[terrID].MiddlePointX;
+		sum_Y = sum_Y + game.Map.Territories[terrID].MiddlePointY;
+		if (game.Map.Territories[terrID].MiddlePointX < min_X) then min_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointX > max_X) then max_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointY < min_Y) then min_Y = game.Map.Territories[terrID].MiddlePointY; end
+		if (game.Map.Territories[terrID].MiddlePointY > max_Y) then max_Y = game.Map.Territories[terrID].MiddlePointY; end
+	end
+	--take average of all the X/Y coords
+	average_X = sum_X / count;
+	average_Y = sum_Y / count;
+
+	return ({average_X=average_X, average_Y=average_Y, min_X=min_X, max_X=max_X, min_Y=min_Y, max_Y=max_Y});
+end
+
 function getColours()
     local colors = {};					-- Stores all the built-in colors (player colors only)
     colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
@@ -418,13 +471,16 @@ function getColourCode (itemName)
     end
 end
 
+--given 0-255 RGB integers, return a single 24-bit integer
+function getColourInteger (red, green, blue)
+	return red*256^2 + green*256 + blue;
+end
+
 --adds an "s" for plural items
 --if parameter is 1, return "s", else return ""; eg: in order correctly write: 1 turn, 5 turns
 function plural (intInputNumber)
 	if (intInputNumber==nil or intInputNumber == 1) then return "";
-	else
-			return "s";
-	end
+	else return "s"; end
 end
 
 --return list of all cards defined in this game; includes custom cards
@@ -541,45 +597,25 @@ function getBonusName (intBonusID, game)
 	if (game.Map==nil) then print ("##game.Map is nil"); end
 	if (game.Map.Bonuses==nil) then print ("##game.Map.Bonuses is nil"); end
 	return (game.Map.Bonuses[intBonusID].Name);
-end 
-
---return table with keys X=xvalue, Y=yvalue for a bonus which is the average of its territories' X,Y coords as a best estimate for where the bonus resides on the map
-function getXYcoordsForBonus (bonusID, game)
-	local average_X = 0;
-	local average_Y = 0;
-	local min_X = 0;
-	local max_X = 0;
-	local min_Y = 0;
-	local max_Y = 0;
-	local sum_X = 0;
-	local sum_Y = 0;
-	local count = 0;
-
-	if (game==nil) then print ("@@game is nil"); end
-	if (game.Map==nil) then print ("@@game.Map is nil"); end
-	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
-	--print ("@@bonusID==".. bonusID);
-	--print ("@@bonusName==".. getBonusName (bonusID, game));
-
-	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
-		count = count + 1;
-		sum_X = sum_X + game.Map.Territories[terrID].MiddlePointX;
-		sum_Y = sum_Y + game.Map.Territories[terrID].MiddlePointY;
-		if (game.Map.Territories[terrID].MiddlePointX < min_X) then min_X = game.Map.Territories[terrID].MiddlePointX; end
-		if (game.Map.Territories[terrID].MiddlePointX > max_X) then max_X = game.Map.Territories[terrID].MiddlePointX; end
-		if (game.Map.Territories[terrID].MiddlePointY < min_Y) then min_Y = game.Map.Territories[terrID].MiddlePointY; end
-		if (game.Map.Territories[terrID].MiddlePointY > max_Y) then max_Y = game.Map.Territories[terrID].MiddlePointY; end
-	end
-	--take average of all the X/Y coords
-	average_X = sum_X / count;
-	average_Y = sum_Y / count;
-
-	return ({average_X=average_X, average_Y=average_Y, min_X=min_X, max_X=max_X, min_Y=min_Y, max_Y=max_Y});
 end
 
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
 	return (game.Map.Territories[intTerrID].Name);
+end
+
+function getPlayerName(game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (playerid==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (playerid<50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs(game.Game.Players) do
+			if(playerid == playerinfo.ID)then
+				return (playerinfo.DisplayName(nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end
 
 function initialize_CardData (game)
