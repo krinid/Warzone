@@ -1078,6 +1078,8 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
          game.Map.Territories[targetTerritoryID].MiddlePointY,
          game.Map.Territories[targetTerritoryID].MiddlePointX,
          game.Map.Territories[targetTerritoryID].MiddlePointY);
+	--addOrder(event, true);
+	--event.TerritoryAnnotationsOpt = {targetTerritoryID, WL.TerritoryAnnotation.Create ("Tornado", 10, 0)};
     addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end

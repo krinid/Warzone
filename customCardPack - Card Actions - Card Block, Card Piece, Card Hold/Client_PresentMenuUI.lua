@@ -301,7 +301,7 @@ function UnitInspector_clickedTerr(terrDetails)
 		--SetWindow("NoUnitFound");
 
 		--CreateButton(UnitInspectorRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(function() inspectToolInUse = false; showMainMenu(); end);
-		CreateLabel(UnitInspectorRoot).SetText("\nIn order to use the special unit inspector, you must select a territory with at least 1 visible special unit").SetColor(colors.TextColor);
+		CreateLabel(UnitInspectorRoot).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
 	end
 end
 

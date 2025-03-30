@@ -627,9 +627,8 @@ function play_Airstrike_card (game, cardInstance, playCard)
         SourceTerritoryInstructionLabel = UI.CreateLabel(vertTop).SetText("");
         SourceTerritorySelectButton_Clicked("Select the territory you wish to attack from"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
-        TargetTerritoryBtn = UI.CreateButton(vertTop).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryBtn = UI.CreateButton(vertTop).SetText("Select Target Territory").SetOnClick(TargetTerritoryClicked_Airstrike);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vertTop).SetText("");
-        --TargetTerritoryClicked("Select the territory you wish to attack"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
         CreateLabel (vertTop).SetText (" "); --spacer
 
@@ -759,7 +758,7 @@ function SourceTerritoryClicked(terrDetails)
         populateSUpanel (); --populate the SP panel vert object with the SU's on the Source territory
 
 		--activate the Target territory selector if it hasn't been populated already; if it's populated already, don't activate, b/c this is the player altering the Source territory, and we shouldn't force them to update the Target territory as well, which may be accurate already
-		if (TargetTerritoryID == nil) then TargetTerritoryClicked ("Select the territory you wish to attack"); end -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+		if (TargetTerritoryID == nil) then TargetTerritoryClicked_Airstrike ("Select the territory you wish to attack"); end -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
         updateAirstrikePanelDetails ();
 	end
@@ -844,6 +843,30 @@ function SUpanel_selectAll ()
 	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do cbox.SetIsChecked(true); end
 end
 
+function TargetTerritoryClicked_Airstrike(strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
+	UI.InterceptNextTerritoryClick(TerritoryClicked);
+	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
+	TargetTerritoryBtn.SetInteractable(false);
+end
+
+function TerritoryClicked_Airstrike(terrDetails)
+	if (UI.IsDestroyed (TargetTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable
+    TargetTerritoryBtn.SetInteractable(true);
+
+	if (terrDetails == nil) then
+		--The click request was cancelled.   Return to our default state.
+		TargetTerritoryInstructionLabel.SetText("");
+		TargetTerritoryID = nil;
+        TargetTerritoryName = nil;
+	else
+		--Territory was clicked, remember its ID
+		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
+		TargetTerritoryID = terrDetails.ID;
+        TargetTerritoryName = terrDetails.Name;
+	end
+    updateAirstrikePanelDetails ();
+end
+
 function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
@@ -865,7 +888,6 @@ function TerritoryClicked(terrDetails)
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
 	end
-    updateAirstrikePanelDetails ();
 end
 
 function TargetPlayerClicked(strTextLabel)
