@@ -9,6 +9,7 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
 	if (game.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires playing a Card, which they can't do b/c they're not in the game)
 
     --WZcolours = getColours (); --set global variable for WZ usable colours for buttons;
+    --^^ can't explain why but this works in SP but not in MP
 
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
