@@ -1,5 +1,6 @@
 require("UI_Events");
 require("utilities");
+require("DataConverter");
 
 --used only for testing purposes, this menu has no in-game functional purpose at this point in time
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
@@ -233,7 +234,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 				elseif (specialUnit.proxyType == "Boss3") then
 					displaySpecialUnitProperties (UIdisplay, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, specialUnit.ModData);
+					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit.ModData));
 				else
 					CreateLabel(UIdisplay).SetText("unknown unit type").SetColor(colors["Orange Red"]);
 				end
@@ -662,16 +663,16 @@ end
 function getUnitDescription(sp)
 	if sp.ModData ~= nil then
 		print("Has mod data");
-		return sp.ModData;
-		--[[local data = DataConverter.StringToData(sp.ModData);
+		local data = DataConverter.StringToData(sp.ModData);
 		if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
 			return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
 		elseif data.UnitDescription ~= nil then		-- Old version (V0)
 			return subtitudeData(sp, data, tostring(data.UnitDescription));
 		else
-			return "This unit does not have a unit description.";
+			return sp.ModData;
+			--return "This unit does not have a unit description.";
 		end
-		print("Has no unit description");]]
+		print("Has no unit description");
 	end
 	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
 end
