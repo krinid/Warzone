@@ -480,9 +480,7 @@ end
 --if parameter is 1, return "s", else return ""; eg: in order correctly write: 1 turn, 5 turns
 function plural (intInputNumber)
 	if (intInputNumber==nil or intInputNumber == 1) then return "";
-	else
-			return "s";
-	end
+	else return "s"; end
 end
 
 --return list of all cards defined in this game; includes custom cards
@@ -604,6 +602,20 @@ end
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
 	return (game.Map.Territories[intTerrID].Name);
+end
+
+function getPlayerName(game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (playerid==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (playerid<50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs(game.Game.Players) do
+			if(playerid == playerinfo.ID)then
+				return (playerinfo.DisplayName(nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end
 
 function initialize_CardData (game)

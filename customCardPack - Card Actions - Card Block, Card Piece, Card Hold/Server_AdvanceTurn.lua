@@ -1110,10 +1110,10 @@ function build_Quicksand_specialUnit (game, targetTerritoryID)
     builder.CanBeAirliftedToSelf = false;
     builder.CanBeAirliftedToTeammate = false;
     builder.IsVisibleToAllPlayers = false;
-	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local strUnitDescription = tostring (Mod.Settings.QuicksandDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.QuicksandDuration.."]";
+	builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = strUnitDescription}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	local specialUnit_Quicksand = builder.Build();
 	return specialUnit_Quicksand;
 end
@@ -1142,6 +1142,10 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     Mod.PublicGameData = publicGameData;
 end
 
+function createUnitDescriptionCode (strDescription)
+	return (DataConverter.DataToString({Essentials = {UnitDescription = strDescription}}, Mod)); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+end
+
 function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	print("[PROCESS SHIELD START] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::description="..gameOrder.Description.."::");
 
@@ -1168,7 +1172,9 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local strUnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]";
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="garbage";};}[V1.1#JAD]';
 	--result of using DataConverter: [V1.1#JAD]{"Essentials"={"UnitDescription"="A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. Shields last 1 turn before expiring. [Created on turn 2, expires on turn 3]";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]
 	print ("[SHIELD] ModData=="..tostring (builder.ModData));
