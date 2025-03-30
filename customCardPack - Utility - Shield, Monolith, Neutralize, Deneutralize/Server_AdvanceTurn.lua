@@ -306,10 +306,13 @@ end
 --for transfers (to self or teammate), just do a normal airlift (or manual move) of the units from FROM to TO territory
 --make Airstrike compatible with Quicksand/Isolation (any others?)
 --when doing transfers, currently it takes owner the territory & assigns to owner player -- should this permit? makes it distinctive from Airlift, hmmm
---      problematic for Commanders ... but leave that to host/players to manage?
+--      problematic for Commanders ... but leave that to host/players to manage?\
+--      make sender take it over unless there's an allied Commander there, in which case leave it as orig owner? or just let them settle it themselves? esp case of sending a C to territory where allied C exists already - 2 C's of diff players on same territory, lol
+--      can fix by sending own C somewhere and gifting back to orig player; OR just don't send own C in this case? but then it might die b/c everything else goes and leaves the C vulnerable, hmmm
 --during transfer, ensure Immovable specials are not moved
 --during transfer, take care of ownership of SUs already on the target territory (else they become unmovable)
 --if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
+--      solution: check if Resurrection card is in play! if card exists & onwer of C has a card, then send customorder to treat as a killed Commander; else (Resurrection not used or player has no card) eliminate the player
 --auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
 --make Airstrike obey Shield, Monolith, Quicksand, Isolation rules (any others?)
 --max # armies that can participate in the Airstrike doesn't include deployments b/c they're not in LatestStanding; but could load the orders so far, look @ deployments and use that figure -- but it's a bit of work, a bit of a pain

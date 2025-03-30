@@ -226,7 +226,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 					boolCurrentTerritoryHeaderDisplayed = true;
 				end
 				if (numSpecialsOnTerritory>1) then UI.CreateLabel (UIdisplay).SetText (" "); end --spacer between SUs, but don't leave space between territory heading and 1st SU
-				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
+				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID.."/"..getPlayerName (game, specialUnit.OwnerID)..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
 
 				if (specialUnit.proxyType == "Commander") then
 					--reference: displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
@@ -344,7 +344,7 @@ function inspectUnit(sp, callback)
 	CreateLabel(line).SetText(getReadableString(sp.proxyType)).SetColor(colors.Tan);
 	line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Owner: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(getPlayerName(sp.OwnerID)).SetColor(colors.Tan);
+	CreateLabel(line).SetText(getPlayerName(Game, sp.OwnerID)).SetColor(colors.Tan);
 	if sp.proxyType == "CustomSpecialUnit" then
 		inspectCustomUnit(sp, CurrentDisplayRoot);
 	else
@@ -484,7 +484,7 @@ function inspectNormalUnit(sp, UnitInspectorRoot)
 		
 		line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 		CreateLabel(line).SetText("Special features: ").SetColor(colors.TextColor);
-		CreateLabel(UnitInspectorRoot).SetText("When this unit dies, " .. getPlayerName(sp.OwnerID) .. " is eliminated immediately").SetColor(colors.Tan);
+		CreateLabel(UnitInspectorRoot).SetText("When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately").SetColor(colors.Tan);
 	
 	elseif sp.proxyType == "Boss3" then
 		
@@ -652,7 +652,7 @@ function GetColors()
     return colors;
 end
 
-function getPlayerName(playerID)
+function getPlayerName_Dutch_useUtilitiesVersionInstead(playerID)
 	if playerID ~= WL.PlayerID.Neutral then
 		return Game.Game.Players[playerID].DisplayName(nil, true);
 	else

@@ -605,12 +605,13 @@ function getTerritoryName (intTerrID, game)
 end
 
 function getPlayerName(game, playerid)
+print (tostring (playerid));
 	if (playerid == nil) then return "Player DNE (nil)";
-	elseif (playerid==WL.PlayerID.Neutral) then return ("Neutral");
-	elseif (playerid<50) then return ("AI "..playerid);
+	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
 	else
 		for _,playerinfo in pairs(game.Game.Players) do
-			if(playerid == playerinfo.ID)then
+			if(tonumber(playerid) == tonumber(playerinfo.ID))then
 				return (playerinfo.DisplayName(nil, false));
 			end
 		end

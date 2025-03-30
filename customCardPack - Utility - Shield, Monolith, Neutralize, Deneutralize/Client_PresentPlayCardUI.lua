@@ -699,10 +699,20 @@ function play_Airstrike_card (game, cardInstance, playCard)
         UI.CreateButton(playCardButtonhorz).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetFlexibleWidth(0.5).SetOnClick(
         function()
             --check for CANCELED request, ie: no territory selected
-            if (SourceTerritoryID == nil or TargetTerritoryID == nil or SourceTerritoryID == TargetTerritoryID) then
-                UI.Alert("You must make unique selections for both FROM and TO territories");
-                return;
+            if (SourceTerritoryID == nil and TargetTerritoryID == nil) then
+                UI.Alert("Select SOURCE and TARGET territories to send units TO and FROM"); return;
+            elseif (SourceTerritoryID == nil) then
+                UI.Alert("Select a SOURCE territory to send units FROM"); return;
+            elseif (TargetTerritoryID == nil) then
+                UI.Alert("Select a TARGET territory to send units TO"); return;
+            elseif (SourceTerritoryID == TargetTerritoryID) then
+                UI.Alert("Select unique SOURCE and TARGET territories to send units TO and FROM"); return;
+            elseif (airstrikeObject.FROMplayerID ~= airstrikeObject.OrderPlayerID) then
+                UI.Alert("Select a SOURCE territory you own to send units FROM"); return;
             end
+            --&&& check and warn if sending own C as a transfer to ally -- C will get left behind in Airlift (but not manual -- but make it so!)
+            --&&& check and warn if sending units to ally who already has a C there -- usual function is take over the territory; if allied C is there, then can't take it over -- own C gets left behind, target territory remains owned by ally (still to be done)
+            --^^ don't cancel moves, treat like attacking a Diplo ... can let it get decided during _Order; if ownership issues persist, above results result, but if resolved, then proceed normally
 
 			generateStringOfSelectedSUs (); --generate the order text using friendly names of SUs & text for the order specifying GUIDs of SUs
 			local intArmiesToSend = airstrikeObject.NIFarmies.GetValue ();
