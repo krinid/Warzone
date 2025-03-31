@@ -17,7 +17,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 	--game.CreateDialog (populateUnitInspectorMenu);
-	create_UnitInspectUnitMenu ();
+	create_UnitInspectorMenu ();
 
     TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
     local moduleCount = 0;
@@ -186,7 +186,7 @@ function showDefinedCards (game)
     TopLabel.SetText (strText.."\n");
 end
 
-function create_UnitInspectUnitMenu ()
+function create_UnitInspectorMenu ()
 	Game.CreateDialog (populateUnitInspectorMenu);
 	Game.CreateDialog (unitInspectorMenu);
 end
@@ -234,7 +234,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 				elseif (specialUnit.proxyType == "Boss3") then
 					displaySpecialUnitProperties (UIdisplay, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit.ModData));
+					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
 				else
 					CreateLabel(UIdisplay).SetText("unknown unit type").SetColor(colors["Orange Red"]);
 				end

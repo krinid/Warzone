@@ -845,28 +845,28 @@ function nukeCheckboxClicked ()
 
 		CreateLabel (UIcontainer).SetText ("Launch a nuke at any territory on the map. Requires neither proximity nor visibility to the territory. Configure damage for the epicenter and the blast range to extend outward from the epicenter.")
 		--horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		horzNukeCardMainTerritoryDamage = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth(1);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.5);
-		vertA = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.25);
-		CreateLabel(vertA).SetText("Damage (%): *");
-		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-		vertB = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.25);
-		CreateLabel(vertB).SetText("Fixed damage: ");
-		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
+		horzNukeCardMainTerritoryDamage = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth(1.0);
+		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.34);
+		vertA = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
+		CreateLabel(vertA).SetText("Damage (%):").SetFlexibleWidth(0.25);
+		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		vertB = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
+		CreateLabel(vertB).SetText("Fixed damage:").SetFlexibleWidth(0.25);
+		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
 
 		--horzNukeCardMainTerritoryFixedDamage = CreateHorz(UIcontainer);
 		--horzNukeCardConnectedTerritoryFixedDamage = CreateHorz(UIcontainer);
 
-		horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("[Bordering\nterritories]");
-		vertC = CreateVert (horzNukeCardConnectedTerritoryDamage);
-		CreateLabel(vertC).SetText("Damage (%): ");
-		NukeCardConnectedTerritoryDamage = CreateNumberInputField(vertC).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-		vertD = CreateVert (horzNukeCardConnectedTerritoryDamage);
-		CreateLabel(vertD).SetText("Fixed damage: ");
-		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(vertD).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
+		horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer).SetFlexibleWidth(1.0);
+		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("[Bordering\nterritories]").SetFlexibleWidth(0.34);
+		vertC = CreateVert (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
+		CreateLabel(vertC).SetText("Damage (%): ").SetFlexibleWidth(0.33);
+		NukeCardConnectedTerritoryDamage = CreateNumberInputField(vertC).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		vertD = CreateVert (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
+		CreateLabel(vertD).SetText("Fixed damage: ").SetFlexibleWidth(0.25);
+		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(vertD).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
 
-		CreateLabel(UIcontainer).SetText("Specify the % damage each of the epicenter and bordering territories will sustain. Fixed damage can also be specified either in place or in addition to % damage. If both are specified, fixed damage will apply after % damage has been applied.");
+		CreateLabel(UIcontainer).SetText("Specify the % damage & fixed damage each of the epicenter and bordering territories will sustain. If both are specified, fixed damage will apply after % damage has been applied.");
 
 
 --[[		horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
