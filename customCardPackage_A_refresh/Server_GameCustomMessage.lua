@@ -6,6 +6,11 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			--table.insert (debugOutputData, payload.output);
 		elseif (payload.action == "trimdebugdata") then
 			trimDebug (payload.lastReadKey);
+		elseif (payload.action == "debugmodetoggle") then
+			local publicGameData = Mod.PublicGameData;
+			publicGameData.Debug.DebugMode = not publicGameData.Debug.DebugMode;
+			Mod.PublicGameData = publicGameData;
+			setReturn ({publicGameData.Debug.DebugMode});
 		end
 	end
 

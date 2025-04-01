@@ -17,8 +17,15 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
 
 	MenuWindow = rootParent;
+	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
-	--game.CreateDialog (populateUnitInspectorMenu);
+
+	--debug info for debug authorized user only
+	if (game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
+		--put debug panel here
+		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
+	end
+
 	create_UnitInspectorMenu ();
 
     TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
@@ -42,9 +49,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     end
 
     --debugging test criteria; for games where Mod.Settings.ActiveModules is properly defined, this should print JUMBO, then PUCHI, then JUMBO, and none cause an error/halt execution
-   	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
-    if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
-    if (Mod.Settings.ERROROUT == nil or Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+   	-- if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+    -- if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+    -- if (Mod.Settings.ERROROUT == nil or Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
 
     TopLabel.SetText (TopLabel.GetText() .. ("\n\nServer time: "..game.Game.ServerTime));
 	if (game.Us~=nil) then --a player in the game
@@ -76,7 +83,17 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 
 	showDefinedCards (game);
+end
 
+--send message to Server hook to toggle debug mode and save result in Mod.PublicGameData
+function debugModeButtonClick ()
+	Game.SendGameCustomMessage ("[toggling debug mode]", {action="debugmodetoggle"}, debugModeButtonClick_callback); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data
+end
+
+--return value is a 1 element table of value true/false indicating whether debugMode is active
+function debugModeButtonClick_callback (tableData)
+	debugButton.SetText ("Debug mode active: "..tostring (tableData[1]));
+	-- debugButton.SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode));
 end
 
 --not actually used; but keep it around as an example of how to use/return data using clientGame.SendGameCustomMessage
