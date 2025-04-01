@@ -525,14 +525,16 @@ function generateSelectedSUtable (game, strSelectedSUsGUIDs, territoryID)
 
 	--print ("######################");
 	for k,GUID in pairs (GUIDsContiguous) do
-		printDebug ("GUID "..GUID);
-		GUIDs[GUID]=true;
+		local GUID_upperCaseNoDashes = string.upper(GUID):gsub("-", "")
+		printDebug ("GUID orig "..GUID..", uppercase+nodashes: ".. GUID_upperCaseNoDashes);
+		GUIDs[GUID_upperCaseNoDashes]=true;
 	end --create array where elements are the GUIDs themselves
 	printDebug (tablelength (GUIDs) .." GUIDs specified");
 
 	for k,SP in pairs (game.ServerGame.LatestTurnStanding.Territories[territoryID].NumArmies.SpecialUnits) do
-		if (GUIDs [SP.ID] ~= nil) then table.insert (selectedSUs, SP); end
-		printDebug ("SP.ID "..tostring (SP.ID)..", GUIDs [SP.ID] "..tostring (GUIDs [SP.ID])..", count "..#selectedSUs);
+		local GUID_upperCaseNoDashes = string.upper(SP.ID):gsub("-", "")
+		if (GUIDs [GUID_upperCaseNoDashes] ~= nil) then table.insert (selectedSUs, SP); end
+		printDebug ("SP.ID orig "..tostring (SP.ID)..", SP.ID "..GUID_upperCaseNoDashes..", GUIDs [SP.ID] "..tostring (GUID_upperCaseNoDashes)..", count "..#selectedSUs);
 	end
 	printDebug (#selectedSUs .." SUs matched");
 	return (selectedSUs);
