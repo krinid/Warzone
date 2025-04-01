@@ -379,7 +379,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	printDebug ("[AIRSTRIKE]   -=-=-=-=-=-=-=-=-=-=-=-=-"..
 		"\nFROM "..sourceTerritoryID.."/"..getTerritoryName (sourceTerritoryID, game)..", [ATTACKING ARMIES ACTUAL] attackPower "..sourceAttackPower..", #armies ".. attackingArmies.NumArmies.. ", #specials "..#attackingArmies.SpecialUnits..
 		"\nTO "..targetTerritoryID.."/"..getTerritoryName (targetTerritoryID, game)..", defensePower "..targetDefensePower..", #armies ".. defendingArmies.NumArmies..", #specials "..#defendingArmies.SpecialUnits..
-		"\nFROM SPECIFIED: #armies "..intNumArmiesSpecified.. ", #SUs "..tostring (#SpecialUnitsSpecified) .. "// FROM TERRITORY ITSELF: #armies "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies ..", #SUs "..#game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits..
+		"\nFROM SPECIFIED: #armies "..intNumArmiesSpecified.. ", #SUs "..tostring (#SpecialUnitsSpecified) .. " // FROM TERRITORY ITSELF: #armies "..game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies ..", #SUs "..#game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits..
 		"\norderPlayer "..gameOrder.PlayerID.." [team "..orderPlayerTeam.."], sourceOwner "..sourceOwner.." [team "..sourceOwnerTeam.."], targetOwner "..targetOwner.." [team "..targetOwnerTeam.."]"..
 		"\nisAttack "..tostring (boolIsAttack)..", deployment yield "..intDeploymentYield..", #armies to attack "..intArmiesToSend ..", #armies die before attack ".. intArmiesDieDuringAttack);
 
@@ -525,14 +525,16 @@ function generateSelectedSUtable (game, strSelectedSUsGUIDs, territoryID)
 
 	--print ("######################");
 	for k,GUID in pairs (GUIDsContiguous) do
-		--print ("GUID "..GUID);
+		printDebug ("GUID "..GUID);
 		GUIDs[GUID]=true;
 	end --create array where elements are the GUIDs themselves
+	printDebug (tablelength (GUIDs) .." GUIDs specified");
 
 	for k,SP in pairs (game.ServerGame.LatestTurnStanding.Territories[territoryID].NumArmies.SpecialUnits) do
 		if (GUIDs [SP.ID] ~= nil) then table.insert (selectedSUs, SP); end
 		printDebug ("SP.ID "..tostring (SP.ID)..", GUIDs [SP.ID] "..tostring (GUIDs [SP.ID])..", count "..#selectedSUs);
 	end
+	printDebug (#selectedSUs .." SUs matched");
 	return (selectedSUs);
 end
 
