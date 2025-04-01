@@ -433,7 +433,7 @@ function play_Deneutralize_card (game, cardInstance, playCard)
                     --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 10, getColourInteger(0,0,255))}; --blue annotation background for Shield
                     local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
                     --playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-                    playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, WL.TurnPhase.Gift);
+                    playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift);
                     --official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
                     close(); --close the popup dialog
                 end

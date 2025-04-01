@@ -611,7 +611,6 @@ function getTerritoryName (intTerrID, game)
 end
 
 function getPlayerName(game, playerid)
-print (tostring (playerid));
 	if (playerid == nil) then return "Player DNE (nil)";
 	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
 	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
@@ -678,11 +677,55 @@ function initialize_CardData (game)
         publicGameData.CardData.CardPiecesCardID = Mod.Settings.CardPiecesCardID;
         print ("11----------------------");
     end]]
-    
-    --[[print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
+
+	--[[print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
     print ("[CardPiece CardID] Mod.PublicGameData.CardData.CardPiecesCardID=="..tostring (Mod.PublicGameData.CardData.CardPiecesCardID));
     print ("12----------------------");]]
 
     --Mod.PublicGameData = publicGameData;
 end
+
+--call from server hooks to write data to be retrieved by client hooks later
+function printDebug (strOutputText)
+	print (strOutputText); --in addition to storing for retrieval from client hook (see below), also output to Mod Log window (this will display normally when playing SP on standalone client)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; end
+	if (publicGameData.debugOutputDataCounter == nil) then publicGameData.debugOutputDataCounter = 0; end
+	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
+	publicGameData.debugOutputDataCounter = publicGameData.debugOutputDataCounter + 1;
+	publicGameData.debugOutputData[publicGameData.debugOutputDataCounter] = "[S]"..strOutputText;
+	--table.insert (publicGameData.debugOutputData, {key=publicGameData.debugOutputDataCounter+1, data="[S_T"..game.Game.TurnNumber.."]"..strOutputText});
+	Mod.PublicGameData = publicGameData;
+end
+
+--called from Server_GameCustomMessage which is in turn called by client hooks, in order to clear data elements retrieved by the client hook (so they aren't continually redisplayed on client side)
+function trimDebug (intLastReadKey)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; return; end --debug data is empty, nothing to trim
+	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
+	if (intLastReadKey <= publicGameData.debugOutputDataLastRead) then return; end --new intLastReadKey is lower than the already stored previous debugOutputDataLastRead, which makes no sense, so just do nothing
+
+	for k=publicGameData.debugOutputDataLastRead+1, intLastReadKey do
+		publicGameData.debugOutputData[k] = nil;
+	end
+	publicGameData.debugOutputDataLastRead = intLastReadKey;
+	Mod.PublicGameData = publicGameData;
+end
+
+--called from client hooks to display data stored by server hooks
+function displayDebugInfoFromServer (game)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; end
+	if (publicGameData.debugOutputDataCounter == nil) then publicGameData.debugOutputDataCounter = 0; end
+	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
+
+	if (publicGameData.debugOutputDataLastRead == publicGameData.debugOutputDataCounter) then print ("[No new server debug output]"); end
+	for k=publicGameData.debugOutputDataLastRead+1, publicGameData.debugOutputDataCounter do
+		print (publicGameData.debugOutputData[k]); --output stored debug statement
+	end
+	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
+	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.debugOutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data
+	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
+end
+-- end
 --- END of krinid's functions
