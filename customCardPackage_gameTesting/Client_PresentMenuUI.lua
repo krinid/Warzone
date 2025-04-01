@@ -14,10 +14,12 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if game.Settings == nil then 		print('ClientGame.Settings is nil'); 	end
 	if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
-    MenuWindow = rootParent;
+	displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
+
+	MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 	--game.CreateDialog (populateUnitInspectorMenu);
-	create_UnitInspectUnitMenu ();
+	create_UnitInspectorMenu ();
 
     TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
     local moduleCount = 0;
@@ -31,7 +33,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
     end
 
-    print ("ORDERS:");
+    print ("LOCAL CLIENT ORDERS SO FAR:");
     for k,gameOrder in pairs (game.Orders) do
         print (k..", "..gameOrder.proxyType);
         if (gameOrder.proxyType == "GameOrderAttackTransfer") then
@@ -60,15 +62,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		if (k == game.Settings.StartedBy) then strPlayerIsHost = " [HOST]"; end
 		TopLabel.SetText (TopLabel.GetText() .. "\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
 	end
-
---[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
-Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
-Mod security should be applied when working with this Hook
-Arguments:
-Game: Provides read-only information about the game.
-PlayerID: The ID of the player who invoked this call.
-payload: The data passed as the payload parameter to SendGameCustomMessage. Must be a lua table.
-setReturn: Optionally, a function that sets what data will be returned back to the client. If you wish to return data, pass a table as the sole argument to this function. Not calling this function will result in an empty table being returned.]]
 
 	--this shows all Global Functions! wow
 	--[[for i, v in pairs(_G) do
@@ -186,9 +179,9 @@ function showDefinedCards (game)
     TopLabel.SetText (strText.."\n");
 end
 
-function create_UnitInspectUnitMenu ()
-	Game.CreateDialog (populateUnitInspectorMenu);
-	Game.CreateDialog (unitInspectorMenu);
+function create_UnitInspectorMenu ()
+	Game.CreateDialog (populateUnitInspectorMenu); --user friendly Unit Inspector
+	Game.CreateDialog (unitInspectorMenu);         --comprehensive Unit Inspector
 end
 
 function createDialogWindow ()
@@ -226,7 +219,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 					boolCurrentTerritoryHeaderDisplayed = true;
 				end
 				if (numSpecialsOnTerritory>1) then UI.CreateLabel (UIdisplay).SetText (" "); end --spacer between SUs, but don't leave space between territory heading and 1st SU
-				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
+				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID.."/"..getPlayerName (game, specialUnit.OwnerID)..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
 
 				if (specialUnit.proxyType == "Commander") then
 					--reference: displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
@@ -234,7 +227,7 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 				elseif (specialUnit.proxyType == "Boss3") then
 					displaySpecialUnitProperties (UIdisplay, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit.ModData));
+					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
 				else
 					CreateLabel(UIdisplay).SetText("unknown unit type").SetColor(colors["Orange Red"]);
 				end
@@ -344,7 +337,7 @@ function inspectUnit(sp, callback)
 	CreateLabel(line).SetText(getReadableString(sp.proxyType)).SetColor(colors.Tan);
 	line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Owner: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(getPlayerName(sp.OwnerID)).SetColor(colors.Tan);
+	CreateLabel(line).SetText(getPlayerName(Game, sp.OwnerID)).SetColor(colors.Tan);
 	if sp.proxyType == "CustomSpecialUnit" then
 		inspectCustomUnit(sp, CurrentDisplayRoot);
 	else
@@ -387,19 +380,19 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Attack Power: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(sp.AttackPower).SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (sp.AttackPower, 2)).SetColor(colors.Cyan);
 
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   Defense Power: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(sp.DefensePower).SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (sp.DefensePower, 2)).SetColor(colors.Cyan);
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Attack power modifier: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(math.floor((sp.AttackPowerPercentage * 10000) + 0.5) / 100 - 100 .. "%").SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (math.floor((sp.AttackPowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
 
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   Defense power modifier: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(math.floor((sp.DefensePowerPercentage * 10000) + 0.5) / 100 - 100 .. "%").SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (math.floor((sp.DefensePowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
 	CreateLabel(UnitInspectorRoot).SetText("(modifies the kill ratios used for battles this Special Unit participates in)");
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
@@ -412,6 +405,7 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Can be airlifted -- to self: ").SetColor(colors.TextColor);
+	-- createLabel_TrueFalse_YesNo_GreenRed (line, sp.CanBeAirliftedToSelf);
 	if sp.CanBeAirliftedToSelf then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -420,6 +414,7 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   -- to teammates: ").SetColor(colors.TextColor);
+	createLabel_TrueFalse_YesNo_GreenRed (line, sp.CanBeAirliftedToTeammate);
 	if sp.CanBeAirliftedToTeammate then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -427,15 +422,15 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	end
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Can be gifted with a gift card: ").SetColor(colors.TextColor);
+	CreateLabel(line).SetText("Giftable using gift card: ").SetColor(colors.TextColor);
 	if sp.CanBeGiftedWithGiftCard then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
 		CreateLabel(line).SetText("No").SetColor(colors.Red);
 	end
 	
-	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Can be transferred to teammates: ").SetColor(colors.TextColor);
+	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
+	CreateLabel(line).SetText("    Transferrable to teammates: ").SetColor(colors.TextColor);
 	if sp.CanBeTransferredToTeammate then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -446,6 +441,12 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	CreateLabel(line).SetText("Description: ").SetColor(colors.TextColor);
 	CreateLabel(UnitInspectorRoot).SetText(getUnitDescription(sp)).SetColor(colors.Tan);
 
+end
+
+--given 'result' (true/false) create label on container 'line' with text Yes in green or No in red respectively
+function createLabel_TrueFalse_YesNo_GreenRed (line, result)
+	if (result) then CreateLabel(line).SetText("Yes").SetColor(colors.Green);
+	else CreateLabel(line).SetText("No").SetColor(colors.Red); end
 end
 
 function inspectNormalUnit(sp, UnitInspectorRoot)
@@ -484,7 +485,7 @@ function inspectNormalUnit(sp, UnitInspectorRoot)
 		
 		line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 		CreateLabel(line).SetText("Special features: ").SetColor(colors.TextColor);
-		CreateLabel(UnitInspectorRoot).SetText("When this unit dies, " .. getPlayerName(sp.OwnerID) .. " is eliminated immediately").SetColor(colors.Tan);
+		CreateLabel(UnitInspectorRoot).SetText("When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately").SetColor(colors.Tan);
 	
 	elseif sp.proxyType == "Boss3" then
 		
@@ -652,7 +653,7 @@ function GetColors()
     return colors;
 end
 
-function getPlayerName(playerID)
+function getPlayerName_Dutch_useUtilitiesVersionInstead(playerID)
 	if playerID ~= WL.PlayerID.Neutral then
 		return Game.Game.Players[playerID].DisplayName(nil, true);
 	else
@@ -660,19 +661,37 @@ function getPlayerName(playerID)
 	end
 end
 
-function getUnitDescription(sp)
+function getUnitDescription_causesCrashWithDragons (sp) --(why? happens even with native Essentials mod itself)
 	if sp.ModData ~= nil then
-		print("Has mod data");
+		-- print("Has mod data");
+		-- print (sp.ModData);
 		local data = DataConverter.StringToData(sp.ModData);
 		if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
 			return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
 		elseif data.UnitDescription ~= nil then		-- Old version (V0)
 			return subtitudeData(sp, data, tostring(data.UnitDescription));
 		else
-			return sp.ModData;
-			--return "This unit does not have a unit description.";
+			return "This unit does not have a unit description.";
 		end
 		print("Has no unit description");
+	end
+	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+end
+
+function getUnitDescription(sp)
+	if sp.ModData ~= nil then
+		--print("Has mod data");
+		-- local data = DataConverter.StringToData(sp.ModData);
+		-- if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
+		-- 	return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
+		-- elseif data.UnitDescription ~= nil then		-- Old version (V0)
+		-- 	return subtitudeData(sp, data, tostring(data.UnitDescription));
+		-- else
+		-- 	return sp.ModData;
+		-- 	--return "This unit does not have a unit description.";
+		-- end
+		-- print("Has no unit description");
+		return sp.ModData;
 	end
 	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
 end
