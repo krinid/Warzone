@@ -2,8 +2,8 @@ require("utilities");
 
 function Server_GameCustomMessage(game,playerID,payload,setReturn)
 	if (payload.action ~= nil) then
-		if (payload.action == "printdebug") then
-			--table.insert (debugOutputData, payload.output);
+		if (payload.action == "unused") then
+
 		elseif (payload.action == "trimdebugdata") then
 			trimDebug (payload.lastReadKey);
 		elseif (payload.action == "debugmodetoggle") then
@@ -13,6 +13,8 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			setReturn ({publicGameData.Debug.DebugMode});
 		end
 	end
+
+    if (Mod.PublicGameData.Debug == nil) then initialize_debug_data (); --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
 
 	--initialize_CardData (game); --no longer required here, it's done before the game starts (in Server_Created)
 end
