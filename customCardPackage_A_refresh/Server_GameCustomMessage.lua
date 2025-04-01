@@ -11,10 +11,11 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			publicGameData.Debug.DebugMode = not publicGameData.Debug.DebugMode;
 			Mod.PublicGameData = publicGameData;
 			setReturn ({publicGameData.Debug.DebugMode});
+		elseif (payload.action == "initializedebug") then
+			if (Mod.PublicGameData.Debug == nil) then initialize_debug_data (); end --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
 		end
 	end
 
-    if (Mod.PublicGameData.Debug == nil) then initialize_debug_data (); end --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
 
 	--initialize_CardData (game); --no longer required here, it's done before the game starts (in Server_Created)
 end
