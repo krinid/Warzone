@@ -323,7 +323,7 @@ end
 --SUs should abide by "canAirlift" properties of the SU; minimally they'll get rejected during actualy Airlift operation if the properties are set to False even if they participate in the attack
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
-	print ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
+	printDebug ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
 	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
 	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
 	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
@@ -350,7 +350,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	if (targetOwner ~= WL.PlayerID.Neutral) then targetOwnerTeam = game.ServerGame.Game.Players[targetOwner].Team; end
 
 	if (sourceOwner ~= gameOrder.PlayerID) then
-		print ("[AIRSTRIKE] sourceOwner ~= orderPlayer, cancel Airstrike");
+		printDebug ("[AIRSTRIKE] sourceOwner ~= orderPlayer, cancel Airstrike");
 		addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike from "..getTerritoryName(sourceTerritoryID, game) .." to ".. getTerritoryName(targetTerritoryID, game) .." skipped; player does not own source territory", {}, {}, {}), false);
 		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		return; --don't process anything more; the order is invalid, skip it entirely
@@ -360,7 +360,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	if ((targetOwner == gameOrder.PlayerID) or (targetOwnerTeam >= 0 and targetOwnerTeam == orderPlayerTeam)) then
 		boolIsAttack = false; --if TO is owned by order player or member of same team, then it's a transfer
 		intDeploymentYield = 1.0; --if it's a transfer, then the yield is 100% (ie: all units are sent to TO territory)
-		print ("[AIRSTRIKE] treat as transfer to self or teammate; teamID=="..targetOwnerTeam);
+		printDebug ("[AIRSTRIKE] treat as transfer to self or teammate; teamID=="..targetOwnerTeam);
 	end
 
 	--&&& assign these to a user-specified subselection of units on TO territory; for now just send everything present
@@ -376,7 +376,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--for now, I'm going to set it so that 100% of units do damage, but killed armies = regular counts from the attack + intArmiesDieDuringAttack
 	--     ie: Airstrike does regular damage, but takes heavier casualties than a regular attack would
 
-	print ("[AIRSTRIKE]   -=-=-=-=-=-=-=-=-=-=-=-=-"..
+	printDebug ("[AIRSTRIKE]   -=-=-=-=-=-=-=-=-=-=-=-=-"..
 		"\nFROM "..sourceTerritoryID.."/"..getTerritoryName (sourceTerritoryID, game)..", attackPower "..sourceAttackPower..", #armies ".. attackingArmies.NumArmies.. ", #specials "..#attackingArmies.SpecialUnits..
 		"\nTO "..targetTerritoryID.."/"..getTerritoryName (targetTerritoryID, game)..", defensePower "..targetDefensePower..", #armies ".. defendingArmies.NumArmies..", #specials "..#defendingArmies.SpecialUnits..
 		"\norderPlayer "..gameOrder.PlayerID.." [team "..orderPlayerTeam.."], sourceOwner "..sourceOwner.." [team "..sourceOwnerTeam.."], targetOwner "..targetOwner.." [team "..targetOwnerTeam.."]"..
@@ -397,12 +397,12 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	if (boolUseManualMoveMode == true) then airliftCardID = nil; airliftCardInstanceID = nil; end --if using manual move mode, set airliftCardID & airliftCardInstanceID to nil so it doesn't try to use the Airlift card
 	--if airliftCardID == nil, then Airlift Card is not enabled, so can't draw the airlift line, so must do the moves manually (original method)
 	--if airliftCardID ~= nil then let Airlift do the move for successful attacks & draw a "0 unit airlift" arrow for unsuccessful attacks
-	print ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
+	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
 
 	--if Airlift card is in play but player has no whole Airlift cards, then add a whole Airlift card to the player + add the order, skip this Airstrike order & resubmit it to be able to use the Airlift card
 	if (airliftCardID ~= nil and airliftCardInstanceID == nil) then
 		local addAirLiftCardEvent = WL.GameOrderEvent.Create(gameOrder.PlayerID, "[grant Airlift card to use for Airstrike]", {}, {}, {}); --create a new event to add the Airlift card to the player
-		print ("[AIRLIFT CARD MISSING] add order to grant Airlift card, resubmit Airstrike order, skip current order");
+		printDebug ("[AIRLIFT CARD MISSING] add order to grant Airlift card, resubmit Airstrike order, skip current order");
 		addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
 		addOrder (addAirLiftCardEvent, false); --add the event to the game order list, ensure 'false' so this order isn't skipped when we skip the Airstrike order
 		addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
@@ -447,11 +447,11 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		strAirStrikeResultText = "Airstrike unsuccessful";
 		--leave target territory owned by defender, leave airlift army structure as nil to just draw an empty "0" airlift line
 	end
-	print ("[AIRSTRIKE RESULT] "..strAirStrikeResultText);
+	printDebug ("[AIRSTRIKE RESULT] "..strAirStrikeResultText);
 	--reference: 	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
-	print ("ATTACKER #armies "..airstrikeResult.AttackerResult.RemainingArmies .." ("..airstrikeResult.AttackerResult.KilledArmies.." died), "..
+	printDebug ("ATTACKER #armies "..airstrikeResult.AttackerResult.RemainingArmies .." ("..airstrikeResult.AttackerResult.KilledArmies.." died), "..
 		"#specials "..#airstrikeResult.AttackerResult.SurvivingSpecials.." ("..#airstrikeResult.AttackerResult.KilledSpecials.." died, #clonedSUs "..#airstrikeResult.AttackerResult.ClonedSpecials..")");
-	print ("DEFENDER #armies "..airstrikeResult.DefenderResult.RemainingArmies .." ("..airstrikeResult.DefenderResult.KilledArmies.." died), "..
+	printDebug ("DEFENDER #armies "..airstrikeResult.DefenderResult.RemainingArmies .." ("..airstrikeResult.DefenderResult.KilledArmies.." died), "..
 		"#specials "..#airstrikeResult.DefenderResult.SurvivingSpecials.." ("..#airstrikeResult.DefenderResult.KilledSpecials.." died, #clonedSUs "..#airstrikeResult.DefenderResult.ClonedSpecials..")");
 
 	--adjust armies & SUs on TO territory, including cloned SUs which took damage
@@ -651,7 +651,8 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	local totalAttackerAttackPowerPercentage = 1.0;     --this is covered in defense power for an SU so don't actually need this
 	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't actually need this
 
-	printDebug ("[MANUAL ATTACK!] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AAPower "..AttackingArmies.AttackPower..", DDPower "..DefendingTerritory.NumArmies.DefensePower);
+	printDebug ("[MANUAL ATTACK!] ATTACKER: #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AttackingArmiesPower "..AttackingArmies.AttackPower..
+		"\nDEFENDER: #armies "..DefendingTerritory.NumArmies.NumArmies..", #SUs "..#DefendingTerritory.NumArmies.SpecialUnits..", DefendingTerritoryPower "..DefendingTerritory.NumArmies.DefensePower);
 
 	--this doesn't work; the AttackingArmies.SpecialUnits table is likely not totally compliant; it needs to be a sequential array table, not a key-value table
 	--table.sort(sortedAttackingArmies.SpecialUnits, function(a, b) printDebug ("COMPARE "..a.CombatOrder..", ".. b.CombatOrder..", "..tostring(a.CombatOrder < b.CombatOrder)); return (a.CombatOrder < b.CombatOrder); end);

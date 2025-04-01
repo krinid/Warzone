@@ -663,8 +663,8 @@ end
 
 function getUnitDescription_causesCrashWithDragons (sp) --(why? happens even with native Essentials mod itself)
 	if sp.ModData ~= nil then
-		print("Has mod data");
-		print (sp.ModData);
+		-- print("Has mod data");
+		-- print (sp.ModData);
 		local data = DataConverter.StringToData(sp.ModData);
 		if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
 			return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
@@ -680,7 +680,7 @@ end
 
 function getUnitDescription(sp)
 	if sp.ModData ~= nil then
-		print("Has mod data");
+		--print("Has mod data");
 		-- local data = DataConverter.StringToData(sp.ModData);
 		-- if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
 		-- 	return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
