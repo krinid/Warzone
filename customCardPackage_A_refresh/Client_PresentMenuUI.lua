@@ -180,8 +180,8 @@ function showDefinedCards (game)
 end
 
 function create_UnitInspectorMenu ()
-	Game.CreateDialog (populateUnitInspectorMenu);
-	Game.CreateDialog (unitInspectorMenu);
+	Game.CreateDialog (populateUnitInspectorMenu); --user friendly Unit Inspector
+	Game.CreateDialog (unitInspectorMenu);         --comprehensive Unit Inspector
 end
 
 function createDialogWindow ()

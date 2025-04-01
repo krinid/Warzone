@@ -611,7 +611,6 @@ function getTerritoryName (intTerrID, game)
 end
 
 function getPlayerName(game, playerid)
-print (tostring (playerid));
 	if (playerid == nil) then return "Player DNE (nil)";
 	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
 	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
@@ -722,12 +721,11 @@ function displayDebugInfoFromServer (game)
 
 	if (publicGameData.debugOutputDataLastRead == publicGameData.debugOutputDataCounter) then print ("[No new server debug output]"); end
 	for k=publicGameData.debugOutputDataLastRead+1, publicGameData.debugOutputDataCounter do
-		print (publicGameData.debugOutputData[k]);
+		print (publicGameData.debugOutputData[k]); --output stored debug statement
 	end
+	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
 	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.debugOutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data
+	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
 end
-
--- 	function Server_GameCustomMessage(game,playerID,payload,setReturn)
-
 -- end
 --- END of krinid's functions
