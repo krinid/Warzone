@@ -14,7 +14,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if game.Settings == nil then 		print('ClientGame.Settings is nil'); 	end
 	if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
-    MenuWindow = rootParent;
+	displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
+
+	MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 	--game.CreateDialog (populateUnitInspectorMenu);
 	create_UnitInspectorMenu ();
@@ -31,7 +33,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
     end
 
-    print ("ORDERS:");
+    print ("LOCAL CLIENT ORDERS SO FAR:");
     for k,gameOrder in pairs (game.Orders) do
         print (k..", "..gameOrder.proxyType);
         if (gameOrder.proxyType == "GameOrderAttackTransfer") then
@@ -60,15 +62,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		if (k == game.Settings.StartedBy) then strPlayerIsHost = " [HOST]"; end
 		TopLabel.SetText (TopLabel.GetText() .. "\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing) .. strPlayerIsHost);
 	end
-
---[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
-Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
-Mod security should be applied when working with this Hook
-Arguments:
-Game: Provides read-only information about the game.
-PlayerID: The ID of the player who invoked this call.
-payload: The data passed as the payload parameter to SendGameCustomMessage. Must be a lua table.
-setReturn: Optionally, a function that sets what data will be returned back to the client. If you wish to return data, pass a table as the sole argument to this function. Not calling this function will result in an empty table being returned.]]
 
 	--this shows all Global Functions! wow
 	--[[for i, v in pairs(_G) do
