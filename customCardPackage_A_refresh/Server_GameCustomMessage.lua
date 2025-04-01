@@ -15,7 +15,7 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			if (Mod.PublicGameData.Debug == nil) then initialize_debug_data (); end --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
 		end
 	end
-	initialize_debug_data ();
+	--initialize_debug_data ();
 
 	--initialize_CardData (game); --no longer required here, it's done before the game starts (in Server_Created)
 end
