@@ -2,6 +2,7 @@ require("utilities");
 
 function Server_Created (game, settings)
     print ("[SERVER CREATED] START");
+    initialize_debug_data (); --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
 
     local privateGameData = Mod.PrivateGameData;
     local publicGameData = Mod.PublicGameData;

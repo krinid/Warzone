@@ -685,47 +685,71 @@ function initialize_CardData (game)
     --Mod.PublicGameData = publicGameData;
 end
 
+--initialize the Mod.PublicGameData.Debug structure and all member properties
+function initialize_debug_data ()
+	local publicGameData = Mod.PublicGameData;
+	publicGameData.Debug = {};
+	publicGameData.Debug.DebugMode = false;
+	publicGameData.Debug.DebugUser = 1058239; --only output data for this user, to prevent other users from displaying & erasing the data so it's not available for me & disable abuse of this coding/debugging feature
+	publicGameData.Debug.TrimData = true; --indicates whether to trim data (erase) it after viewing it or leave it in PublicGameData.Debug.OutputData for future perusal
+    publicGameData.Debug.OutputData = {};
+    publicGameData.Debug.OutputDataCounter = 0;  --the highest key# created so far
+    publicGameData.Debug.OutputDataLastRead = 0; --the highest key# retrieved by client side
+    Mod.PublicGameData = publicGameData;
+end
+
 --call from server hooks to write data to be retrieved by client hooks later
 function printDebug (strOutputText)
 	print (strOutputText); --in addition to storing for retrieval from client hook (see below), also output to Mod Log window (this will display normally when playing SP on standalone client)
+
 	local publicGameData = Mod.PublicGameData;
-	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; end
-	if (publicGameData.debugOutputDataCounter == nil) then publicGameData.debugOutputDataCounter = 0; end
-	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
-	publicGameData.debugOutputDataCounter = publicGameData.debugOutputDataCounter + 1;
-	publicGameData.debugOutputData[publicGameData.debugOutputDataCounter] = "[S]"..strOutputText;
-	--table.insert (publicGameData.debugOutputData, {key=publicGameData.debugOutputDataCounter+1, data="[S_T"..game.Game.TurnNumber.."]"..strOutputText});
-	Mod.PublicGameData = publicGameData;
+	if (publicGameData.Debug == nil) then publicGameData.Debug = {}; end
+	if (publicGameData.Debug.DebugMode == nil) then publicGameData.Debug.DebugMode = false; end
+	if (publicGameData.Debug.TrimData == nil) then publicGameData.Debug.TrimData = true; end --if not configured, default to trim data (so it doesn't get unnecessarily/unknowingly huge)
+
+	-- local debugMode = true;
+	if (publicGameData.Debug.DebugMode == true) then
+		if (publicGameData.Debug.OutputData == nil) then publicGameData.Debug.OutputData = {}; end
+		if (publicGameData.Debug.OutputDataCounter == nil) then publicGameData.Debug.OutputDataCounter = 0; end
+		if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+		publicGameData.Debug.OutputDataCounter = publicGameData.Debug.OutputDataCounter + 1;
+		publicGameData.Debug.OutputData [publicGameData.Debug.OutputDataCounter] = "[S]"..strOutputText;
+		Mod.PublicGameData = publicGameData;
+	end
 end
 
 --called from Server_GameCustomMessage which is in turn called by client hooks, in order to clear data elements retrieved by the client hook (so they aren't continually redisplayed on client side)
 function trimDebug (intLastReadKey)
 	local publicGameData = Mod.PublicGameData;
-	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; return; end --debug data is empty, nothing to trim
-	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
-	if (intLastReadKey <= publicGameData.debugOutputDataLastRead) then return; end --new intLastReadKey is lower than the already stored previous debugOutputDataLastRead, which makes no sense, so just do nothing
+	if (publicGameData.Debug == nil) then return; end --debug data is empty, nothing to trim
+	if (publicGameData.Debug.OutputData == nil) then return; end --debug data is empty, nothing to trim
 
-	for k=publicGameData.debugOutputDataLastRead+1, intLastReadKey do
-		publicGameData.debugOutputData[k] = nil;
+	if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+	if (intLastReadKey <= publicGameData.Debug.OutputDataLastRead) then return; end --new intLastReadKey is lower than the already stored previous debugOutputDataLastRead, which makes no sense, so just do nothing
+
+	for k=publicGameData.Debug.OutputDataLastRead+1, intLastReadKey do
+		publicGameData.Debug.OutputData [k] = nil;
 	end
-	publicGameData.debugOutputDataLastRead = intLastReadKey;
+	publicGameData.Debug.OutputDataLastRead = intLastReadKey;
 	Mod.PublicGameData = publicGameData;
 end
 
 --called from client hooks to display data stored by server hooks
 function displayDebugInfoFromServer (game)
 	local publicGameData = Mod.PublicGameData;
-	if (publicGameData.debugOutputData == nil) then publicGameData.debugOutputData = {}; end
-	if (publicGameData.debugOutputDataCounter == nil) then publicGameData.debugOutputDataCounter = 0; end
-	if (publicGameData.debugOutputDataLastRead == nil) then publicGameData.debugOutputDataLastRead = 0; end
+	if (publicGameData.Debug == nil) then return; end --debug data is empty, nothing to display
+	if (publicGameData.Debug.OutputData == nil) then return; end --debug data is empty, nothing to display
 
-	if (publicGameData.debugOutputDataLastRead == publicGameData.debugOutputDataCounter) then print ("[No new server debug output]"); end
-	for k=publicGameData.debugOutputDataLastRead+1, publicGameData.debugOutputDataCounter do
-		print (publicGameData.debugOutputData[k]); --output stored debug statement
+	if (publicGameData.Debug.OutputDataCounter == nil) then publicGameData.Debug.OutputDataCounter = 0; end
+	if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+
+	--check if there are any undisplayed debug messages; if LastRead > Counter then there is an error, that should never happen; when LastRead == Counter, all messages have been displayed already
+	if (publicGameData.Debug.OutputDataLastRead >= publicGameData.Debug.OutputDataCounter) then print ("[No new server debug output]"); end
+	for k=publicGameData.Debug.OutputDataLastRead+1, publicGameData.Debug.OutputDataCounter do
+		print (publicGameData.Debug.OutputData [k]); --output stored debug statement to local client Mod Log console
 	end
 	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
-	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.debugOutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data
+	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
 end
--- end
 --- END of krinid's functions
