@@ -24,8 +24,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
 	--debug info for debug authorized user only
-	if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
-		--put debug panel here
+	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
+	if (game.Us.ID == 1058239) then
+			--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
 	end
 
