@@ -656,24 +656,24 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--instead, rebuild AttackingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
 	for _, unit in pairs(AttackingArmies.SpecialUnits) do
 		table.insert(sortedAttackerSpecialUnits, unit);
-		if (unit.proxyType == "CustomSpecialUnit") then
+		-- if (unit.proxyType == "CustomSpecialUnit") then
 			--if (unit.AttackPowerPercentage ~= nil) then totalAttackerAttackPowerPercentage = totalAttackerAttackPowerPercentage * unit.AttackPowerPercentage; end
 			--if (unit.DefensePowerPercentage ~= nil) then totalAttackerDefensePowerPercentage = totalAttackerDefensePowerPercentage * unit.DefensePowerPercentage; end
 			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
 				--print ("SPECIAL ATTACKER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
-		end
+		-- end
 	end
 	table.sort(sortedAttackerSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
 
 	--instead, rebuild DefendingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
 	for _, unit in pairs(DefendingArmies.SpecialUnits) do
 		table.insert(sortedDefenderSpecialUnits, unit);
-		if (unit.proxyType == "CustomSpecialUnit") then
+		-- if (unit.proxyType == "CustomSpecialUnit") then
 			--if (unit.AttackPowerPercentage ~= nil) then print ("APP "..unit.Name,totalDefenderAttackPowerPercentage,unit.AttackPowerPercentage); totalDefenderAttackPowerPercentage = totalDefenderAttackPowerPercentage * unit.AttackPowerPercentage; end
 			--if (unit.DefensePowerPercentage ~= nil) then print ("DPP "..unit.Name,totalDefenderDefensePowerPercentage,unit.DefensePowerPercentage); totalDefenderDefensePowerPercentage = totalDefenderDefensePowerPercentage * unit.DefensePowerPercentage; end
 			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
 			--print ("SPECIAL DEFENDER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
-		end
+		-- end
 	end
 	table.sort(sortedDefenderSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
 
@@ -776,8 +776,9 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
 					--absorb damage only applies to SUs that don't use Health; if they use Health, DamageAbsorbedWhenAttacked is ignored during regular WZ attacks; mimic that functionality here (even if both DamageAbsorbedWhenAttacked & Health are specified on an SU)
+					--SUs use either (A) Health or (B) DamageToKill + DamageAbsorbedWhenAttacked; if Health is specified, the other 2 properties are ignored
 					if (v.DamageAbsorbedWhenAttacked ~= nil and v.Health == nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); print ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
-					if (v.Health ~= nil) then
+					if (v.Health ~= nil) then --SU uses Health (not DamageToKill + DamageAbsorbedWhenAttacked)
 						if (v.Health == 0) then
 							print ("SPECIAL already dead w/0 health, kill it/remove it");
 							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
@@ -796,7 +797,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
 							remainingDamage = 0;
 						end
-					else
+					else   --SU uses DamageToKill + DamageAbsorbedWhenAttacked (not Health)
 						if (remainingDamage > v.DamageToKill) then
 							remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
 							print ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);

@@ -387,19 +387,19 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Attack Power: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(sp.AttackPower).SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (sp.AttackPower, 2)).SetColor(colors.Cyan);
 
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   Defense Power: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(sp.DefensePower).SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (sp.DefensePower, 2)).SetColor(colors.Cyan);
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Attack power modifier: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(math.floor((sp.AttackPowerPercentage * 10000) + 0.5) / 100 - 100 .. "%").SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (math.floor((sp.AttackPowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
 
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   Defense power modifier: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(math.floor((sp.DefensePowerPercentage * 10000) + 0.5) / 100 - 100 .. "%").SetColor(colors.Cyan);
+	CreateLabel(line).SetText(truncateDecimals (math.floor((sp.DefensePowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
 	CreateLabel(UnitInspectorRoot).SetText("(modifies the kill ratios used for battles this Special Unit participates in)");
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
@@ -412,6 +412,7 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Can be airlifted -- to self: ").SetColor(colors.TextColor);
+	-- createLabel_TrueFalse_YesNo_GreenRed (line, sp.CanBeAirliftedToSelf);
 	if sp.CanBeAirliftedToSelf then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -420,6 +421,7 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	
 	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("   -- to teammates: ").SetColor(colors.TextColor);
+	createLabel_TrueFalse_YesNo_GreenRed (line, sp.CanBeAirliftedToTeammate);
 	if sp.CanBeAirliftedToTeammate then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -427,15 +429,15 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	end
 	
 	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Can be gifted with a gift card: ").SetColor(colors.TextColor);
+	CreateLabel(line).SetText("Giftable using gift card: ").SetColor(colors.TextColor);
 	if sp.CanBeGiftedWithGiftCard then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
 		CreateLabel(line).SetText("No").SetColor(colors.Red);
 	end
 	
-	line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Can be transferred to teammates: ").SetColor(colors.TextColor);
+	--line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
+	CreateLabel(line).SetText("    Transferrable to teammates: ").SetColor(colors.TextColor);
 	if sp.CanBeTransferredToTeammate then
 		CreateLabel(line).SetText("Yes").SetColor(colors.Green);
 	else
@@ -446,6 +448,12 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	CreateLabel(line).SetText("Description: ").SetColor(colors.TextColor);
 	CreateLabel(UnitInspectorRoot).SetText(getUnitDescription(sp)).SetColor(colors.Tan);
 
+end
+
+--given 'result' (true/false) create label on container 'line' with text Yes in green or No in red respectively
+function createLabel_TrueFalse_YesNo_GreenRed (line, result)
+	if (result) then CreateLabel(line).SetText("Yes").SetColor(colors.Green);
+	else CreateLabel(line).SetText("No").SetColor(colors.Red); end
 end
 
 function inspectNormalUnit(sp, UnitInspectorRoot)
@@ -660,19 +668,37 @@ function getPlayerName_Dutch_useUtilitiesVersionInstead(playerID)
 	end
 end
 
-function getUnitDescription(sp)
+function getUnitDescription_causesCrashWithDragons (sp) --(why? happens even with native Essentials mod itself)
 	if sp.ModData ~= nil then
 		print("Has mod data");
+		print (sp.ModData);
 		local data = DataConverter.StringToData(sp.ModData);
 		if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
 			return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
 		elseif data.UnitDescription ~= nil then		-- Old version (V0)
 			return subtitudeData(sp, data, tostring(data.UnitDescription));
 		else
-			return sp.ModData;
-			--return "This unit does not have a unit description.";
+			return "This unit does not have a unit description.";
 		end
 		print("Has no unit description");
+	end
+	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+end
+
+function getUnitDescription(sp)
+	if sp.ModData ~= nil then
+		print("Has mod data");
+		-- local data = DataConverter.StringToData(sp.ModData);
+		-- if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
+		-- 	return subtitudeData(sp, data, tostring(data.Essentials.UnitDescription));
+		-- elseif data.UnitDescription ~= nil then		-- Old version (V0)
+		-- 	return subtitudeData(sp, data, tostring(data.UnitDescription));
+		-- else
+		-- 	return sp.ModData;
+		-- 	--return "This unit does not have a unit description.";
+		-- end
+		-- print("Has no unit description");
+		return sp.ModData;
 	end
 	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
 end

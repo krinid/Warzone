@@ -483,6 +483,12 @@ function plural (intInputNumber)
 	else return "s"; end
 end
 
+--keep numDecimalsToKeep quantity of decimal points for 'number', truncate the remainder
+function truncateDecimals (number, numDecimalsToKeep)
+    local multiplier = 10 ^ numDecimalsToKeep;
+    return (math.floor (number * multiplier) / multiplier);
+end
+
 --return list of all cards defined in this game; includes custom cards
 --generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
 function getDefinedCardList (game)
