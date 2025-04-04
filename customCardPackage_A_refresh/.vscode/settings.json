@@ -8,5 +8,8 @@
         "lowercase-global",
         "undefined-global",
         "undefined-field"
+    ],
+    "Lua.workspace.library": [
+	"..\\Annotations.lua"
     ]
 }

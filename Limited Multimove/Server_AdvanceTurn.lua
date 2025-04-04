@@ -1,24 +1,23 @@
+require("Manual_Attack");
+
 --[[
 STILL TO DO:
-- odd behaviour when:
-	- a Transfer is done to territory with 0 units, then an Attack; if on Neutral then WZ error occurs; if on enemy then a TRANSFER (not attack!) occurs
-	- a Transfer is done to territory with 1+ units, then an Attack; the resultant attack damage was only for the units that were on the territory at the start of the turn, not the units that transferred in --- but if the order is mixed up, then
-	  sometimes it works; haven't been able to figure out the criteria for success vs failure, hmmm!
-- test with various specials, notably along the path, not included from beginning of a movement changing
-- test with fixed # inputs
-- test with %'s other than 100%
 - currently adding # of units moving into a territory to map3, and this is fine for transfers, but for attacks it will be too many units as some will die in the attack so need to subtract the # of attacks killed
 	^^ maybe skip the order & create new order with appropriate #'s in place instead of doing funky math, b/c "result.armies killed" will be wrong in many cases b/c we're changing the ActualArmies involved thus # attackers killed will change too
 	^^ if did this, would it put the order in the right spot? or would it append it to end of order list? for multimove orders to work, the order of the orders is key
+- check the ResultantSetOfSpecials, to ensure that order entry time SUs and Server_TurnAdvance_Order time SUs don't mismatch due to GUID mismatches (uppercase/dashes) - do GUIDs come into play here?
 ]]
 
 function Server_AdvanceTurn_End(game, addNewOrder)
 	--uncomment the below line to forcibly halt execution for troubleshooting purposes
-	--print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
+--	print ("[FORCIBLY HALTED EXEUCTION @ END OF TURN]"); toriaezu_stop_execution();
 	print ("[GRACEFUL END OF TURN EXECUTION]");
 end
 
-function Server_AdvanceTurn_Start (game,addNewOrder)
+--set the map1, map2, map3 values to prepare for the current turn
+--this must occur not during Server_AdvanceTurn_Start but during Server_TurnAdvance_Order after all deployments have finished, b/c the true map2 values need to be inclusive of any deployments made; the deployments should be permitted to move forward off a territory even 
+--if units transferred in have expended their move allocations; use boolAttackTransfersHaveBegun == false;
+function initialize_map_counters (game)
 	map1 = {}; --tracks the # of movement allocations units that moved onto a territory have left
 	map2 = {}; --tracks the # of armies & specials were on a territory at the beginning of the turn (track separately from units that transfer into the territory)
 	map3 = {}; --tracks the # of armies that transferred onto a territory that have run out of allocations and can't move anymore (so always subtract these from any moves going forward in this turn)
@@ -35,12 +34,37 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 		--set to the NumArmies table resident on each territory before any moves have been processed; set to nil once the units have been moved
 		--ie: thus if map1 indicates that no moves are left but map2 indicates that the units haven't been moved, block the move for the entire amount currently on the territory, but allow
 		--a move up to the quantities that were on the territory to begin with
+		--NOTE: this actually must occur after all deployments have finished, b/c the true map2 values need to be inclusive of any deployments made; the deployments should be permitted to move forward off a territory even if units transferred in have expended their move allocations
 		map3[i] = 0;
 	end
-	print ("____________________Turn #"..game.ServerGame.Game.TurnNumber.."________ move limit "..Mod.Settings.MoveLimit);
 end
 
-function checkForForcedOrder (game, order, result, skip, addNewOrder)
+function Server_AdvanceTurn_Start (game,addNewOrder)
+	--[[ map1 = {}; --tracks the # of movement allocations units that moved onto a territory have left
+	map2 = {}; --tracks the # of armies & specials were on a territory at the beginning of the turn (track separately from units that transfer into the territory)
+	map3 = {}; --tracks the # of armies that transferred onto a territory that have run out of allocations and can't move anymore (so always subtract these from any moves going forward in this turn)
+
+	-- potential future use:  (for now just implement MultiMove)
+	-- Mod.Settings.UseMultimove == true --> indicates to use Multimove, not individual limits for MA & MT
+	-- Mod.Settings.MoveLimit --> indicates no limit on the number of moves, -1 is unlimited, 0 is no moves allowed, 1 is standard Warzone behaviour
+	-- Mod.Settings.AttackLimit --> indicates no limit on the number of attacks, -1 is unlimited, 0 is no attacks allowed, 1 is standard Warzone behaviour
+	-- Mod.Settings.TransferLimit --> indicates no limit on the number of transfers, -1 is unlimited, 0 is no transfers allowed, 1 is standard Warzone behaviour
+
+	for i, _ in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+		map1[i] = Mod.Settings.MoveLimit;
+		map2[i] = game.ServerGame.LatestTurnStanding.Territories[i].NumArmies;
+		--set to the NumArmies table resident on each territory before any moves have been processed; set to nil once the units have been moved
+		--ie: thus if map1 indicates that no moves are left but map2 indicates that the units haven't been moved, block the move for the entire amount currently on the territory, but allow
+		--a move up to the quantities that were on the territory to begin with
+		--NOTE: this actually must occur after all deployments have finished, b/c the true map2 values need to be inclusive of any deployments made; the deployments should be permitted to move forward off a territory even if units transferred in have expended their move allocations
+		map3[i] = 0;
+	end ]]
+	print ("____________________Turn #"..game.ServerGame.Game.TurnNumber.."________ move limit "..Mod.Settings.MoveLimit);
+	boolAttackTransfersHaveBegun = false; --global variable; signals the completion of Deployments and the start of the Attack/Transfer phase; this is used to save the true map2 values for the territories inclusive of any deployments made (which are permitted to move even if units transferred in have expended their move allocations)
+	boolMapValuesInitialized = false; --indicates whether the map values (map1, map2, map3) have been initialized; this happens are all deployments are complete (when the first attack/transfer is made)
+end
+
+--[[ function checkForForcedOrder (game, order, result, skip, addNewOrder)
 	local strArrayOrderData = split(order.Payload,'|');
 
 	--for reference:
@@ -59,7 +83,7 @@ function checkForForcedOrder (game, order, result, skip, addNewOrder)
 		addNewOrder (forcedAttackTransfer);
 		print ("[FORCE ORDER] post - "..order.Payload);
 	end
-end
+end ]]
 
 function toboolean (value)
     if value == nil or value == false or value == "false" then
@@ -73,9 +97,69 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	--print ("PROXY "..order.proxyType);
 	--if (order.proxyType == "GameOrderCustom") then checkForForcedOrder (game, order, result, skip, addNewOrder); end
 	--    if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'BuyTank_')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
+
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	if (order.PlayerID == 1) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+
+
+	--game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID
+-- 	if (order.proxyType ~= "GameOrderAttackTransfer") then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
+-- 	dtsu = {};
+-- 	dtsu [game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID] = 5;
+-- 	result.DamageToSpecialUnits = dtsu;
+-- 	--result.DamageToSpecialUnits = {game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID, 5};
+-- 	return;
+-- end
+
+-- function temp ()
+
+
+
+
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+
 	if (order.proxyType ~= "GameOrderAttackTransfer") then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
+	--order is an AttackTransfer
+
+	--as the order is an Attack/Transfer, if the map values haven't been initialized yet, do that now before processing any Attack/Transfer orders
+	--doing this here ensures that the map2 values are inclusive of any deployments made, thus permitting them to move off a territory where all the units transferred in have expended their move allocations
+	if (boolMapValuesInitialized == false) then
+		print ("[INITIALIZE MAP VALUES] deployments finished, first attack/transfer order in processing, initializing map values");
+		initialize_map_counters (game);
+		boolMapValuesInitialized = true; --don't reinitialize map values again
+	end
 
 	local map2message = "map2FROM Armies (nil)/SU# (nil)";
+
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	--[[ if (order.To == 24 and boolThisTestingFunctionActive == nil) then
+		--do something
+			-- 846: <1> CustomSpecialUnit, owner 1058239/krinid, ID=7b190e13-048d-4e7d-ae78-9e0674536853 --NS Behemoth
+			-- 846: <1> CustomSpecialUnit, owner 1058239/krinid, ID=2f4d5ff8-75a5-4473-9046-58ce51ce41a9 --Rocky reddy
+			-- 846: <1> CustomSpecialUnit, owner 1058239/krinid, ID=68d4ee40-a404-4b92-ba10-4309bbf50f2d --Florida bluey
+			-- 846: <1> CustomSpecialUnit, owner 1/AI 1, ID=33620572-24fe-427f-a2b0-a9d60071ef34         --Azores recruiter
+			-- 846: <1> Commander, owner 1058239/krinid, ID=e043282f-737d-48fb-b444-fa45fbd98c24
+			-- 846: <2> CustomSpecialUnit, owner 1058239/krinid, ID=0ebe0225-595f-41bd-b8b8-2c75c3f8e21a
+			-- 846: <1> Commander, owner 1/AI 1, ID=020092b9-b01d-4dd5-bd58-bf4f54913e81
+			-- 846: <1> CustomSpecialUnit, owner 1058239/krinid, ID=92234e16-6176-4bed-bbe0-daa13cc9773c		
+		local damageToSpecialUnits = {};
+		damageToSpecialUnits["7b190e13-048d-4e7d-ae78-9e0674536853"] = 1;
+		result.DamageToSpecialUnits = damageToSpecialUnits; return;
+	elseif (boolThisTestingFunctionActive == nil) then
+		addNewOrder (WL.GameOrderAttackTransfer.Create (1, 65, 24, 3, false, WL.Armies.Create (1, {}), true));
+		boolThisTestingFunctionActive = false;
+	end ]]
+	--ref: local forcedAttackTransfer = WL.GameOrderAttackTransfer.Create(strArrayOrderData[3], strArrayOrderData[4], strArrayOrderData[5], tonumber (strArrayOrderData[6]), toboolean (strArrayOrderData[7]), numArmies, toboolean (strArrayOrderData[9]));
+	--ref: ---@field Create fun(playerID: PlayerID, from: TerritoryID, to: TerritoryID, attackOrTransfer: EnumAttackTransfer, byPercent: boolean, numArmies: Armies, attackTeammates: boolean): GameOrderAttackTransfer # Creates a GameOrderAttackTransfer object
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 
 	local map1FROM = map1[order.From];
 	local map1TO = map1[order.To];
@@ -109,23 +193,30 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	if (game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies > 0 or #game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits > 0) then boolUnitsPresentOnFROMterritory = true; end
 
 	--get real # of armies to move; if % then need to calc it from the actual # of armies on the territory; ideally this matches result.ActualArmies.NumArmies but WZ might reduce the 'actual' count if it deems they aren't eligible to continue attacking/transferring, and we need to override this
-	local numArmies;
+	local numArmies = 0;
+	local intNumArmies_specifiedInOrder = order.NumArmies.NumArmies; --this is the # of the player actually entered into the order (regardless as to whether it was a %, a fixed amount, and whether that # of armies is actually available on the territory or not)
+	local intNumArmies_actualOriginal = 0;   --this is the initial actual # of armies on the territory at time or order; it could be lower than intNumArmies_specifiedInOrder in some armies died, moved off, etc; this value is actually present on the territory (but may not be able to move if they've exceeded their move allocations)
+	local intNumSUs_specifiedInOrder = #order.NumArmies.SpecialUnits; --this is the # of specials the player actually entered into the order (regardless as to whether it was a %, a fixed amount, and whether that # of specials is actually available on the territory or not)
+
 	if (not order.ByPercent) then
 		--order is a straight fixed # of armies
-		numArmies = order.NumArmies.NumArmies;
+		numArmies = math.min (order.NumArmies.NumArmies, game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies); --take minimum of what was specified or what's currently on the territory; if specified>present then use present; if specified<present then use specified
 	else
 		--order is a %, need to calculate the true # of armies this % represents
-		numArmies = math.floor (game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies / 100 * order.NumArmies.NumArmies + 0.5); --round to nearest int
+		numArmies = math.min (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies / 100 * order.NumArmies.NumArmies + 0.5), game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies); --round to nearest int, then take the
+		--minimum of this amount and what's actually present on the territory
 	end
+	intNumArmies_actualOriginal = numArmies;
 
 	print ("- - - - - - - - - - - - - - - - - - - - - PRE");
 	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
 	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
-	print ("NumArmies "..order.NumArmies.NumArmies..", #specials "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
-	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
+	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
+	", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
+	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
 
 	--[[ - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -172,7 +263,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		if (true) then
 		--if (problematicOrderCount==2) then
 			--toriaezu_stop_execution();  --forcibly halt execution for troubleshooting purposes
-			local strSkipOrderMessage = "[FizzGlitch condition] Order skipped to avoid WZ error or transfer to enemy [requires WZ bug fix]; Original order: " ..genereateSkipMessage (order, game);
+			local strSkipOrderMessage = "[FizzGlitch condition] Order skipped to avoid WZ error or transfer to enemy [requires WZ bug fix]; Original order: " ..generateSkipMessage (order, game);
 			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
 			process_manual_attack (game, newArmiesStructureFG, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
 			--skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
@@ -204,19 +295,56 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			--if units have transferred into the FROM territory, then the map1 value for the FROM territory is irrelevant, it's only important when groups of armies mix that we use the lowest of the two map1 values
 			boolProcessOrder = true;
 			result.ActualArmies = WL.Armies.Create(numArmies, order.NumArmies.SpecialUnits);
+			print ("[ATTACK/TRANSFER TYPE 1 -- boolMoveUnitsTransferredIn == true]");
 			print ("[ACTUAL ARMIES] result.ActualArmies "..result.ActualArmies.NumArmies..", numArmies "..numArmies..", #SUs "..#order.NumArmies.SpecialUnits..", APow "..result.ActualArmies.AttackPower);
 			--the 'result' structure auto-updates to reflect proper AttackPower & DefensePower values, so use these below for attacks!
 
 			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'Used Armies' counter structure to mods); internal WZ engine used marks moved armies as 'Used Armies' once they have transferred and prevents them from making further moves
 			--rather than relying on WZ to calculate the damage to defender & attacker based on Attack/Defense power of # of quantity of armies & specials that haven't been 'used', manually calc the damage and apply it to the .AttackingArmiesKilled & .DefendingArmiesKilled fields
 			if (result.IsAttack==true) then
-				print ("[ADJUSTED KILL COUNTS] [full] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
-				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
-				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
+				print ("[ATTACK TYPE 1 -- boolMoveUnitsTransferredIn == true]");
+				print ("[ADJUSTED KILL COUNTS] [full] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", ORDER ACTUAL #armies "..result.ActualArmies.NumArmies..", #SUs "..#result.ActualArmies.SpecialUnits ..", APow "..result.ActualArmies.AttackPower..", kill rates "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
+				--orig (current public mod published code):
+				-- result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
+				-- result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
 				--&&& need to include the Special damage/killing algorithm here, for now just include whatever Specials were killed in the original result (which may be too low)
+				--new code utilizing Manual Attack routine:
+
+				print ("======================================Manual Attack; boolMoveUnitsTransferredIn == true [use full armies on territory]");
+				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
+				print ("MAR.DR.KA type/# ".. type(manualAttackResult.DefenderResult.KilledArmies).."/"..tostring (manualAttackResult.DefenderResult.KilledArmies)..", MAR.DR.KS type/# "..type (manualAttackResult.DefenderResult.KilledSpecials).."/".. tablelength (manualAttackResult.DefenderResult.KilledSpecialsObjects)..", #MAR.DR.DTSU "..tablelength (manualAttackResult.DefenderResult.DamageToSpecialUnits));
+				print ("MAR.AR.KA type/# ".. type(manualAttackResult.AttackerResult.KilledArmies).."/"..tostring (manualAttackResult.AttackerResult.KilledArmies)..", MAR.AR.KS type/# "..type (manualAttackResult.AttackerResult.KilledSpecials).."/".. tablelength (manualAttackResult.AttackerResult.KilledSpecialsObjects)..", #MAR.AR.DTSU "..tablelength (manualAttackResult.AttackerResult.DamageToSpecialUnits));
+				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecials) do print ("AR.KS "..k,v); end
+				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecialsObjects) do print ("AR.KSO.ID "..k,v.ID); end
+				for k,v in pairs (manualAttackResult.AttackerResult.DamageToSpecialUnits) do print ("AR.DSU "..k,v); end
+				for k,v in pairs (manualAttackResult.DefenderResult.KilledSpecials) do print ("DR.KS "..k,v); end
+				for k,v in pairs (manualAttackResult.DefenderResult.KilledSpecialsObjects) do print ("DR.KSO.ID "..k,v.ID); end
+				for k,v in pairs (manualAttackResult.DefenderResult.DamageToSpecialUnits) do print ("DR.DSU "..k,v); end
+				-- result.AttackingArmiesKilled = WL.Armies.Create (manualAttackResult.AttackerResult.KilledArmies, manualAttackResult.AttackerResult.KilledSpecialsObjects); --%^&* --&&&
+				-- result.DefendingArmiesKilled = WL.Armies.Create (manualAttackResult.DefenderResult.KilledArmies, manualAttackResult.DefenderResult.KilledSpecialsObjects);
+				-- result.AttackingArmiesKilled = WL.Armies.Create (manualAttackResult.AttackerResult.KilledArmies, manualAttackResult.AttackerResult.KilledSpecialsObjects); --%^&* --&&&
+				-- result.DefendingArmiesKilled = WL.Armies.Create (manualAttackResult.DefenderResult.KilledArmies, manualAttackResult.DefenderResult.KilledSpecialsObjects);
+				result.AttackingArmiesKilled = manualAttackResult.AttackingArmiesKilled;
+				result.DefendingArmiesKilled = manualAttackResult.DefendingArmiesKilled;
+				result.DamageToSpecialUnits = manualAttackResult.DamageToSpecialUnits; --assign array of tables {GUIDs & damage integers} to apply damge to the SUs as part of the WZ attack order
+				-- result = manualAttackResult.Result;
+
+				--result.DamageToSpecialUnits = 
+				--reference: 	local damageResult = {RemainingArmies=remainingArmies, KilledArmies=math.max (0, armyCount-remainingArmies), SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials, DamageToSpecialUnits=damageToSpecialUnits};
+				--reference: GameOrderResult
+					--[[ ---@field ActualArmies Armies # The actual armies that participated in the attack / transfer
+					---@field AttackingArmiesKilled Armies # The armies that are killed on the attacking side
+					---@field DamageToSpecialUnits table<GUID, integer> # The damage done to special units, only when they are not killed
+					---@field DefendingArmieskilled Armies # The armies that are killed on the defending side
+					---@field DefenseLuck number | nil # The luck attribute for the defending player
+					---@field IsAttack boolean # True if the attack / transfer was an attack
+					---@field IsNullified boolean # True if the attack is nullified, essentially skipping the order
+					---@field IsSuccessful boolean # True if the attack / transfer was able to reach the other territory, if IsAttack is also true the order successfully took the defending territory
+					---@field OffenseLuck number | nil # The luck attribute for the attacking player]]
 
 				--if all defending armies & specials died, mark the attack as successful
-				if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				--if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				if (manualAttackResult.IsSuccessful == true) then boolactualIsSuccessful = true; end
 				--if damage down >= DefensePower of TO territory, it will be captured; result.IsSuccessful may not accurate reflect this b/c the # of armies may have been too low b/c WZ removed "Used Armies"/specials from the Attack/DefensePower values; boolactualIsSuccessful is the
 				--true result, inclusive of the values of the post adjusted Off/Def kill counts
 				print ("[ADJUSTED KILL COUNTS] [full] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", IsSuccessful "..tostring (result.IsSuccessful)..", Actual IsSuccessful "..tostring (boolactualIsSuccessful));
@@ -251,10 +379,19 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 		--units transferred into FROM territory so far have no move allocations left, so check if units on the territory at start of turn have moved yet, if not, move them; if they have moved, skip the order
 		elseif boolMoveUnitsOnTerritoryAtStartOfTurn == true then --units that were present on the territory haven't moved yet, so don't stop them from moving during this order
+			print ("[ATTACK/TRANSFER TYPE 2 -- boolMoveUnitsTransferredIn == false, use map2 values]");
 			boolProcessOrder = true;
 			local newNumArmies = math.min (numArmies, map2[order.From].NumArmies); --use the lesser of the # of armies the player entered or the quantity present at start of turn (b/c all other units have no movement allocations left)
 			local newSpecials = resultantSetOfSpecials (map2[order.From].SpecialUnits, order.NumArmies.SpecialUnits); --create new list of Specials that is the intersection of what's included in the list of Specials originally on the territory & what's included in the order (anything else was either killed or not included in the order)
 			result.ActualArmies = WL.Armies.Create(newNumArmies, newSpecials);
+
+			--add an order indicating that the #armies/SUs participating has decreased due to exceeding move allocations, but the order is still valid, some units will still be able to move
+			local strReduceArmiesMessage = "[units that transferred in have exceeded their move allocations and were excluded from the order; only units present on the territory at start of turn or via deployments could execute the order] (specified: #armies "
+				..intNumArmies_specifiedInOrder.. (order.ByPercent and "%" or "") .. ", #specials "..#order.NumArmies.SpecialUnits.."; actually present: #armies "..numArmies..", #specials ".. intNumSUs_specifiedInOrder.."; able to move: #armies "..newNumArmies..", #specials "..#newSpecials..")";
+			local numArmies = 0;
+			local intNumArmies_specifiedInOrder = order.NumArmies.NumArmies; --this is the # of the player actually entered into the order (regardless as to whether it was a %, a fixed amount, and whether that # of armies is actually available on the territory or not)
+			local intNumArmies_actualOriginal = 0;   --this is the initial actual # of armies on the territory at time or order; it could be lower than intNumArmies_specifiedInOrder in some armies died, moved off, etc; this value is actually present on the territory (but may not be able to move if they've exceeded their move allocations)
+			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strReduceArmiesMessage, {}, {},{}));
 
 			--similar to the same block for the case where TransferringUnits also participate in the Attack/Transfer, calc the true kill counts for Defend/Offense armies; technically don't need to do this, WZ will calc it correctly in this case, however in order to get the true 
 			--success/failure result of an Attack, need to calc the # of Attackers and Defenders that die & assign boolactualIsSuccessful to true when all defenders die (attacker captures territory) & update TO map1 values appropriately based on success of attack
@@ -262,13 +399,36 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'Used Armies' counter structure to mods); internal WZ engine used marks moved armies as 'Used Armies' once they have transferred and prevents them from making further moves
 			--rather than relying on WZ to calculate the damage to defender & attacker based on Attack/Defense power of # of quantity of armies & specials that haven't been 'used', manually calc the damage and apply it to the .AttackingArmiesKilled & .DefendingArmiesKilled fields
 			if (result.IsAttack==true) then
-				print ("[ADJUSTED KILL COUNTS] [map2 only] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
-				result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
-				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
+				print ("[ATTACK TYPE 2 -- boolMoveUnitsTransferredIn == false, use map2 values]");
+				print ("[ADJUSTED KILL COUNTS] [map2 only] TO #armies "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.NumArmies..", TO DPow "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower..", Order #actual armies "..result.ActualArmies.NumArmies..", Order #SUs "..#result.ActualArmies.SpecialUnits ..", Order APow "..result.ActualArmies.AttackPower..", att "..game.Settings.OffenseKillRate.."/"..game.Settings.DefenseKillRate);
+
+				--orig (current public mod published code):
+				-- result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), result.AttackingArmiesKilled.SpecialUnits);
+				-- result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), result.DefendingArmiesKilled.SpecialUnits);
 				--&&& need to include the Special damage/killing algorithm here, for now just include whatever Specials were killed in the original result (which may be too low)
 
+				--new code utilizing Manual Attack routine:
+				print ("======================================Manual Attack; boolMoveUnitsTransferredIn == false [utilize map2 values]");
+				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
+				print ("MAR.DR.KA type/# ".. type(manualAttackResult.DefenderResult.KilledArmies).."/"..tostring (manualAttackResult.DefenderResult.KilledArmies)..", MAR.DR.KS type/# "..type (manualAttackResult.DefenderResult.KilledSpecials).."/".. tablelength (manualAttackResult.DefenderResult.KilledSpecialsObjects)..", #MAR.DR.DTSU "..tablelength (manualAttackResult.DefenderResult.DamageToSpecialUnits));
+				print ("MAR.AR.KA type/# ".. type(manualAttackResult.AttackerResult.KilledArmies).."/"..tostring (manualAttackResult.AttackerResult.KilledArmies)..", MAR.AR.KS type/# "..type (manualAttackResult.AttackerResult.KilledSpecials).."/".. tablelength (manualAttackResult.AttackerResult.KilledSpecialsObjects)..", #MAR.AR.DTSU "..tablelength (manualAttackResult.AttackerResult.DamageToSpecialUnits));
+				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecials) do print ("AR.KS "..k,v); end
+				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecialsObjects) do print ("AR.KSO.ID "..k,v.ID); end
+				for k,v in pairs (manualAttackResult.AttackerResult.DamageToSpecialUnits) do print ("AR.DSU "..k,v); end
+				for k,v in pairs (manualAttackResult.DefenderResult.KilledSpecials) do print ("DR.KS "..k,v); end
+				for k,v in pairs (manualAttackResult.DefenderResult.KilledSpecialsObjects) do print ("DR.KSO.ID "..k,v.ID); end
+				for k,v in pairs (manualAttackResult.DefenderResult.DamageToSpecialUnits) do print ("DR.DSU "..k,v); end
+				-- result.AttackingArmiesKilled = WL.Armies.Create (manualAttackResult.AttackerResult.KilledArmies, manualAttackResult.AttackerResult.KilledSpecialsObjects); --%^&* --&&&
+				-- result.DefendingArmiesKilled = WL.Armies.Create (manualAttackResult.DefenderResult.KilledArmies, manualAttackResult.DefenderResult.KilledSpecialsObjects);
+				-- result.DamageToSpecialUnits = manualAttackResult.DamageToSpecialUnits; --assign array of tables {GUIDs & damage integers} to apply damge to the SUs as part of the WZ attack order
+				-- result = manualAttackResult.Result;
+				result.AttackingArmiesKilled = manualAttackResult.AttackingArmiesKilled;
+				result.DefendingArmiesKilled = manualAttackResult.DefendingArmiesKilled;
+				result.DamageToSpecialUnits = manualAttackResult.DamageToSpecialUnits; --assign array of tables {GUIDs & damage integers} to apply damge to the SUs as part of the WZ attack order
+
 				--if all defending armies & specials died, mark the attack as successful
-				if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				-- if (result.DefendingArmiesKilled.NumArmies >= game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower and #result.DefendingArmiesKilled.SpecialUnits >= #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits) then boolactualIsSuccessful = true; end
+				if (manualAttackResult.IsSuccessful == true) then boolactualIsSuccessful = true; end
 				--if damage down >= DefensePower of TO territory, it will be captured; result.IsSuccessful may not accurate reflect this b/c the # of armies may have been too low b/c WZ removed "Used Armies"/specials from the Attack/DefensePower values; boolactualIsSuccessful is the
 				--true result, inclusive of the values of the post adjusted Off/Def kill counts
 				print ("[ADJUSTED KILL COUNTS] [map2 only] result.AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", result.DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", IsSuccessful "..tostring (result.IsSuccessful)..", Actual IsSuccessful "..tostring (boolactualIsSuccessful));
@@ -299,7 +459,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		else --skip the order
 			--no movement allocation remaining for the units on FROM territory, and the units that were on this territory have already moved or their quantity is 0, in any cases, no units can move, so skip the order
 			boolSkipOrder = true;
-			local strSkipOrderMessage = "Order skipped, units have no movement allocations remaining; Original order: " ..genereateSkipMessage (order, game);
+			local strSkipOrderMessage = "Order skipped, units have no movement allocations remaining; Original order: " ..generateSkipMessage (order, game);
 			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 		end
@@ -311,7 +471,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		local strSkipOrderMessage = "Order skipped, you do not own source territory; Original order: ";
 		if (boolUnitsPresentOnFROMterritory == false) then strSkipOrderMessage = "Order skipped, no units present on territory; Original order: "; end
 		if (Mod.Settings.MoveLimit == 0) then strSkipOrderMessage = "Order skipped, Move Limit is set to 0, standard Attack/Transfers are disabled; Original order: "; end
-		strSkipOrderMessage = strSkipOrderMessage .. genereateSkipMessage (order, game);
+		strSkipOrderMessage = strSkipOrderMessage .. generateSkipMessage (order, game);
 		addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 	end
@@ -326,11 +486,26 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	print ("- - - - - - - - - - - - - - - - - - - - - POST");
 	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
 	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
-	print ("NumArmies "..order.NumArmies.NumArmies..", #specials "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
-	", ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
+	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
+	", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower);
+	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
+end
+
+function process_entire_manual_attack (game, AttackingArmies, DefendingTerritory, result)
+	local manualAttackResult = process_manual_attack (game, AttackingArmies, DefendingTerritory, result);
+--&&&
+	--manualAttackResult.AttackerResult is armies object for attacker
+	--manualAttackResult.DefenderResult is armies object for defender
+	--manualAttackResult.IsSuccessful is boolean indicating if the attack was successful, and thus whether:
+		--(A) attacker wins, defender units are wiped out, the attacker should move into the target territory and take ownership of it
+		--(B) attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
+
+	--adjust attacker results, so # of killed armies is increased by quantity of intArmiesDieDuringAttack
+	airstrikeResult.AttackerResult.KilledArmies = math.min (airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack, intActualArmies); --#armies killed are those from regular battle damage + loss due to Deployment Yield but not to exceed the actual # included in the Airstrike operation (if exceeds this amount, it would subtract units from the FROM territory even if they didn't participate in the Airstrike -- don't do that)
+	airstrikeResult.AttackerResult.RemainingArmies = math.max (0, attackingArmies.NumArmies - airstrikeResult.AttackerResult.KilledArmies);
 end
 
 --process a manual attack sequence from AttackOrder [type NumArmies] on DefendingTerritory [type Territory] with respect to Specials & armies
@@ -338,7 +513,7 @@ end
 --also treat Specials properly with respect to their specs, notably damage required to kill, health, attack/damage properties, etc
 --return value is the result with updated AttackingArmiesKilled & DefendingArmiesKilled values
 --also need some way of indicating overall success separately b/c can't change some properties of the result object directly
-function process_manual_attack (game, AttackingArmies, DefendingTerritory, result)
+function process_manual_attack_NOPE_seeUpdatedRoutine_canProbablyDeleteThisNow (game, AttackingArmies, DefendingTerritory, result)
 	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
 	local newResult = result;
 	local AttackPower = AttackingArmies.AttackPower;
@@ -419,19 +594,19 @@ function applyDamageToSpecials (intDamage, Specials, result)
 
 end
 
-function genereateSkipMessage (order, game)
+function generateSkipMessage (order, game)
 	local strPercentInPlay = "% of";
 	if (not order.ByPercent) then strPercentInPlay = ""; end
-	local genereateSkipMessage = "Original order: "..order.NumArmies.NumArmies.. strPercentInPlay .." armies";
+	local generateSkipMessage = "Original order: "..order.NumArmies.NumArmies.. strPercentInPlay .." armies";
 	for _,v in pairs(order.NumArmies.SpecialUnits) do
 		if (v.proxyType == "Commander") then
-			genereateSkipMessage = genereateSkipMessage..", ".. v.proxyType;
+			generateSkipMessage = generateSkipMessage..", ".. v.proxyType;
 		elseif (v.proxyType == "CustomSpecialUnit") then
-			genereateSkipMessage = genereateSkipMessage..", ".. v.Name;
+			generateSkipMessage = generateSkipMessage..", ".. v.Name;
 		end
 	end
-	genereateSkipMessage = genereateSkipMessage..", FROM ".. game.Map.Territories[order.From].Name..", TO "..game.Map.Territories[order.To].Name;
-	return genereateSkipMessage;
+	generateSkipMessage = generateSkipMessage..", FROM ".. game.Map.Territories[order.From].Name..", TO "..game.Map.Territories[order.To].Name;
+	return generateSkipMessage;
 end
 
 function resultantSetOfSpecials (origSpecials, currentOrderSpecials)
@@ -457,4 +632,16 @@ function split(inputstr, sep)
 			i = i + 1
 	end
 	return t
+end
+
+function printDebug (strText)
+	print (strText);
+end
+
+function tablelength(T)
+	local count = 0;
+	if (T==nil) then return 0; end
+	if (type(T) ~= "table") then return 0; end
+	for _ in pairs(T) do count = count + 1 end
+	return count
 end

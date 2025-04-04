@@ -1,6 +1,4 @@
 --require('Utilities');
-local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
-local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
     if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Behemoth|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
@@ -56,7 +54,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	local behemothPowerFactor = getBehemothPowerFactor(behemothPower); --math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1); --max factor of 0.3
 
 	local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
-	builder.Name = 'Behemoth (power '.. behemothPower ..')';
+	builder.Name = 'Behemoth (power '.. tostring (math.floor (behemothPower*10)/10) ..')';
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = 'Behemoth_clearback.png'; --max size of 60x100 pixels
 	--builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels
@@ -75,9 +73,6 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	builder.IsVisibleToAllPlayers = false;
 	--builder.TextOverHeadOpt = "Behemoth (power "..behemothPower..")";
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = "This unit's power scales with the amount of resources uses to spawn it."}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-	local strUnitDescription = "A unit that scales its power and other stats with the amount of gold used to create the unit. Low quantities of gold will result in Behemoths weaker than the # of armies you could get for the same gold. [Created on turn "..game.Game.TurnNumber..", cost "..goldSpent.." gold, power "..behemothPower..", scaling factor "..behemothPowerFactor.."]";
-	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 
 	local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
 	terrMod.AddSpecialUnits = {builder.Build()};

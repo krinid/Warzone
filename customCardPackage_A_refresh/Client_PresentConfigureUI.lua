@@ -730,7 +730,7 @@ function cardPiecesCheckboxClicked()
 
 		local horzCardPiecesCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzCardPiecesCardWeight).SetText("Card weight: ");
-		CardPiecesCardWeight = CreateNumberInputField(horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		CardPiecesCardWeight = CreateNumberInputField(horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -750,6 +750,15 @@ function airstrikeCheckboxClicked()
 		vertAirstrikeSettingsDetails = CreateVert(vertAirstrikeSettingsHeading);
 		local UIcontainer = vertAirstrikeSettingsDetails;
 
+		--set default values if not configured already (could be for games that were added to templates before some of these settings were added)
+		if (Mod.Settings.AirstrikeCanTargetNeutrals == nil) then Mod.Settings.AirstrikeCanTargetNeutrals = true; end
+		if (Mod.Settings.AirstrikeCanTargetPlayers == nil) then Mod.Settings.AirstrikeCanTargetPlayers = true; end
+		if (Mod.Settings.AirstrikeCanTargetFoggedTerritories == nil) then Mod.Settings.AirstrikeCanTargetFoggedTerritories = true; end
+		if (Mod.Settings.AirstrikeCanTargetCommanders == nil) then Mod.Settings.AirstrikeCanTargetCommanders = true; end
+		if (Mod.Settings.AirstrikeCanTargetSpecialUnits == nil) then Mod.Settings.AirstrikeCanTargetSpecialUnits = true; end
+		if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = true; end
+		if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = true; end
+
 		local horz = CreateHorz(UIcontainer);
 		--AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(true).SetText("Can target neutrals");
 		AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(false).SetText("Can target neutrals");
@@ -761,6 +770,21 @@ function airstrikeCheckboxClicked()
 		horz = CreateHorz(UIcontainer);
 		--AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(true).SetText("Can target fogged territories");
 		AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(false).SetText("Can target fogged territories");
+
+		-- AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
+		-- AirstrikeCanTargetCommanders = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
+		-- AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
+		-- AirstrikeCanTargetStructures = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
+
+		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
+		AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
+		AirstrikeCanTargetCommanders = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
+		AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
+		AirstrikeCanTargetStructures = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
+		UI.CreateLabel (UIcontainer).SetText("(caution recommended; Structures would be ignored by Airstrike b/c different mods have no way to interact with one another)");
+		AirstrikeMoveUnitsWithAirliftCard = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Move units with airlift cards");
+		UI.CreateLabel (UIcontainer).SetText("    - true - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with mods Late Airlifts or Tranport Only Airlifts");
+		UI.CreateLabel (UIcontainer).SetText("    - false - moves units using mod code; does not create airlift travel arrows -- works with mods Late Airlifts or Tranport Only Airlifts");
 
 		horz = CreateHorz(UIcontainer);
 		CreateLabel(horz).SetText("Deployment yield (%): ");

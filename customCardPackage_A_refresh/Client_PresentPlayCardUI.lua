@@ -673,6 +673,7 @@ function play_Airstrike_card (game, cardInstance, playCard)
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(600, 600);
         airstrikeObject = {}; --global variable
+		airstrikeObject.FROMselectedSUs = {}; --to store actual SU objects in order to create WL.Armies object to get its Attack Power
         airstrikeObject.vertTop = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
         CreateLabel (airstrikeObject.vertTop).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
         local vertTop = airstrikeObject.vertTop;
@@ -715,7 +716,7 @@ function play_Airstrike_card (game, cardInstance, playCard)
             --^^ don't cancel moves, treat like attacking a Diplo ... can let it get decided during _Order; if ownership issues persist, above results result, but if resolved, then proceed normally
 
 			generateStringOfSelectedSUs (); --generate the order text using friendly names of SUs & text for the order specifying GUIDs of SUs
-			local intArmiesToSend = airstrikeObject.NIFarmies.GetValue ();
+			local intArmiesToSend = math.max (0, airstrikeObject.NIFarmies.GetValue ());
 			local strAirstrikeMsg = strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName ..", sending ".. tostring(intArmiesToSend).. " armies and "..airstrikeObject.strSelectedSUs_Names;
             print ("[AIRSTRIKE] ".. strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids));
             --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger(255,0,0))}; --red annotation background for Nuke
@@ -745,10 +746,13 @@ function updateAirstrikePanelDetails ()
     airstrikeObject.TOplayerTeam = -1 or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team;
     --airstrikeObject.FROMplayerTeam = (nil or airstrikeObject.FROMplayerID~=nil and airstrikeObject.FROMplayerID>0 and Game.Game.Players[airstrikeObject.FROMplayerID].Team);
     --airstrikeObject.TOplayerTeam = (nil or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team);
+	generateStringOfSelectedSUs (); --generate table of selected SUs from the checkbox panel & store result in airstrikeObject.FROMselectedSUs
+	print ("#selected SUs "..#airstrikeObject.FROMselectedSUs);
     airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower or nil;
     airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower or nil;
     airstrikeObject.FROMarmies = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0;
-	airstrikeObject.FROMselectedArmies = airstrikeObject.NIFarmies.GetValue (); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
+	airstrikeObject.FROMselectedArmies = math.max (0, airstrikeObject.NIFarmies.GetValue ()); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
+
     airstrikeObject.TOarmies = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies or 0;
     airstrikeObject.FROMnumSpecials = SourceTerritoryID ~= nil and #Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.TOnumSpecials = TargetTerritoryID ~= nil and #Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0;
@@ -764,26 +768,25 @@ function updateAirstrikePanelDetails ()
 	airstrikeObject.attackingArmies = nil;
 	airstrikeObject.defendingArmies = nil;
 	airstrikeObject.FROMactualAttackPower = 0;
-	if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
+	-- if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
+	if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, airstrikeObject.FROMselectedSUs); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
 	if (TargetTerritoryID~=nil) then airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits); end
-
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories become regular airlifts with no Yield Deployment loss");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+    airstrikeObject.FROMattackPower_SelectedUnits = SourceTerritoryID ~= nil and airstrikeObject.attackingArmies.AttackPower or nil;
 
     airstrikeObject.FROMTOhorz = CreateHorz (airstrikeObject.airstrikeSUvert).SetFlexibleWidth(1.0);
     airstrikeObject.FROMvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
     airstrikeObject.TOvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
 
-    local strFROMteamText = ""; if (airstrikeObject.FROMplayerTeam) >=0 then airstrikeObject.FROMplayerTeam = "/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]"; end
-    local strTOteamText = ""; if (airstrikeObject.TOplayerTeam) >=0 then airstrikeObject.TOplayerTeam = "/[team ".. tostring(airstrikeObject.TOplayerTeam).."]"; end
+    local strFROMteamText = ""; if (airstrikeObject.FROMplayerTeam >=0) then airstrikeObject.FROMplayerTeam = "/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]"; end
+    local strTOteamText = ""; if (airstrikeObject.TOplayerTeam >=0) then airstrikeObject.TOplayerTeam = "/[team ".. tostring(airstrikeObject.TOplayerTeam).."]"; end
     CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
     CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(getPlayerName(Game, airstrikeObject.FROMplayerID))..strFROMteamText);
-    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower).. strTOteamText);
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (airstrikeObject.FROMnumSpecials) .."]");
+    --CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower) .." [".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits));
+    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring (airstrikeObject.FROMselectedArmies));
+    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (#airstrikeObject.FROMselectedSUs) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring (#airstrikeObject.FROMselectedSUs));
     airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
     CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(getPlayerName (Game, airstrikeObject.TOplayerID))..strTOteamText);
@@ -791,7 +794,14 @@ function updateAirstrikePanelDetails ()
     CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
     CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
     --CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
-    local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
+
+	CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+
+	local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
     CreateLabel (AttackTransferHorz).SetText ("Attack/Transfer: ");
     CreateLabel (AttackTransferHorz).SetText (airstrikeObject.AttackTransfer).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (AttackTransferHorz).SetText (" (at current time)");
@@ -882,23 +892,38 @@ function populateSUpanel ()
 
 	--if there are SUs on the source territory, display the Select/Deselect/Toggle buttons
 	local buttonLine = UI.CreateHorizontalLayoutGroup (airstrikeObject.SUitemsVert).SetFlexibleWidth (1);
-	if (#Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits >0) then
-		UI.CreateLabel (buttonLine).SetText ("Special Units:").SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green).SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red).SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow).SetFlexibleWidth(0.25);
-	end
 
+    local boolNumSUsIncluded = 0
 	for k, SU in pairs (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits) do
         --print (k, SU.ID);
-        local strSUname = SU.proxyType; --this is accurate for Commander & Bosses
+        local strSUname = SU.proxyType; --this is accurate for Commander & Bosses (it makes the SU name 'Commander' or 'Boss 1/2/3/4')
+        local boolIncludeSU = true;
         if (SU.proxyType == "CustomSpecialUnit") then
             strSUname = SU.Name;
             if (SU.Health ~= nil) then strSUname = strSUname .. " [health "..tostring(SU.Health).."]"; end
+            if (isSpecialUnitAnImmovableUnit (SU) == true) then boolIncludeSU = false; end
         end
-        airstrikeObject.SUcheckboxes[k] = UI.CreateCheckBox (airstrikeObject.SUitemsVert).SetText (strSUname).SetIsChecked (true);
+        if (boolIncludeSU == true) then airstrikeObject.SUcheckboxes[k] = UI.CreateCheckBox (airstrikeObject.SUitemsVert).SetText (strSUname).SetIsChecked (true).SetOnValueChanged (updateAirstrikePanelDetails); boolNumSUsIncluded = boolNumSUsIncluded + 1; end
     end
+    if (boolNumSUsIncluded > 0) then
+        if (#Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits >0) then
+            UI.CreateLabel (buttonLine).SetText ("Special Units:").SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green).SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red).SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow).SetFlexibleWidth(0.25);
+        end
+    end
+	updateAirstrikePanelDetails ();
 end
+
+-- if (Mod.Settings.AirstrikeCanTargetNeutrals == nil) then Mod.Settings.AirstrikeCanTargetNeutrals = true; end
+-- if (Mod.Settings.AirstrikeCanTargetPlayers == nil) then Mod.Settings.AirstrikeCanTargetPlayers = true; end
+-- if (Mod.Settings.AirstrikeCanTargetFoggedTerritories == nil) then Mod.Settings.AirstrikeCanTargetFoggedTerritories = false; end
+-- if (Mod.Settings.AirstrikeCanTargetCommanders == nil) then Mod.Settings.AirstrikeCanTargetCommanders = false; end
+-- if (Mod.Settings.AirstrikeCanTargetSpecialUnits == nil) then Mod.Settings.AirstrikeCanTargetSpecialUnits = false; end
+-- if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = false; end
+-- if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = false; end
+
 
 function generateTableOfSelectedSUs ()
 	if (#airstrikeObject.SUcheckboxes==0) then return {}; end --return empty set if there are no checkboxes (no SUs)
@@ -912,6 +937,7 @@ end
 function generateStringOfSelectedSUs ()
 	airstrikeObject.strSelectedSUguids = "";
 	airstrikeObject.strSelectedSUs_Names = "";
+    airstrikeObject.FROMselectedSUs = {}; --to store the actual SU objects in order make a WL.Armies object and get its Attack Power
 	if (#airstrikeObject.SUcheckboxes==0) then return; end --set empty strings if there are no checkboxes (no SUs)
 
 	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do
@@ -919,10 +945,11 @@ function generateStringOfSelectedSUs ()
 			if (airstrikeObject.strSelectedSUs_Names ~= "") then airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. ", "; airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. ","; end
 			airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k].ID;
 			airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. cbox.GetText ();
+            table.insert (airstrikeObject.FROMselectedSUs, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k]); --add the SU to a table
 		end
 	end
-	print (airstrikeObject.strSelectedSUguids);
-	print (airstrikeObject.strSelectedSUs_Names);
+	print ("Selected SU GUID string: "..airstrikeObject.strSelectedSUguids);
+	print ("Selected SU name string: "..airstrikeObject.strSelectedSUs_Names);
 end
 
 function SUpanel_toggleAll ()

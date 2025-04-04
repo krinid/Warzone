@@ -1,5 +1,9 @@
 ---@meta _
 
+-------------------------------
+--- Warzone Version: 5.34.1 ---
+-------------------------------
+
 ---@class ProxyObject # Proxy object class
 ---@field proxyType string # The proxy type
 ---@field readonly true # Set to true if the object is readonly
@@ -122,7 +126,7 @@
 ---@field Cards table<PlayerID, PlayerCards> # Table containing all the cards of each player
 ---@field Territories table<TerritoryID, TerritoryStanding> # Table containing all the TerritoryStandings, identified by the TerritoryID
 ---@field Resources table<PlayerID, table<EnumResourceType, integer>> # Table containing the resources of each player
----@field IncomeMods IncomeMod[] # Array containing all the income modifications made last turn
+---@field IncomeMods IncomeMod[] # Array containing all the income modifications made last turn. Writable in the Server_StartGame hook
 ---@field NumResources fun(playerID: PlayerID, type: EnumResourceType): integer # Returns the amount of this resource type a player has
 
 ---@class TerritoryStanding: ProxyObject # Territory standing
@@ -251,6 +255,14 @@
 ---@class GameOrderPlayCardBomb: GameOrderPlayCard # Game order for playing a bomb card
 ---@field TargetTerritoryID TerritoryID # The ID of the territory that will be bombed
 
+---@class GameOrderPlayCardCustom: GameOrderPlayCard # Game order for playing a custom card
+---@field CustomCardID integer # The CardID of the custom card
+---@field Description string # The description of the custom card
+---@field ModData string # Field used to pass any data along to the server for processing
+---@field Phase EnumTurnPhase | nil # Optional phase parameter of the card. Determines when the card is played during a turn
+---@field JumpToActionSpotOpt RectangleVM # Makes the client view jump to the given RectangleVM
+---@field TerritoryAnnotationsOpt table<TerritoryID, TerritoryAnnotation> # When the order is selected in the orders list by the player, these messages will be presented on top of the territories specified
+
 ---@class GameOrderAttackTransfer: GameOrder # Game order for attacking and / or transfering
 ---@field AttackTeammates boolean # Set to true if the order will attack teammates
 ---@field AttackTransfer EnumAttackTransfer # The type of the order
@@ -298,13 +310,18 @@
 ---@field AddCardPiecesOpt table<PlayerID, table<CardID, integer>> # The amount of card pieces that are added of each card for each player
 ---@field RemoveWholeCardsOpt table<PlayerID, CardInstanceID> # Removes whole cards from a player
 ---@field JumpToActionSpotOpt RectangleVM | nil # Makes the client view jump to the given RectangleVM
+---@field FogModsOpt FogMod[] # Adds [FogMods](lua://FogMod) for modifying fog
+---@field RemoveFogModsOpt GUID[] # Removes [FogMods](lua://FogMod) that were previously added
 ---@field ModID ModID | nil # The ID of the mod who created this order
+---@field TerritoryAnnotationsOpt table<TerritoryID, TerritoryAnnotation> # When the order is selected in the orders list by the player, these messages will be presented on top of the territories specified
 
 ---@class GameOrderCustom: GameOrder # Custom game order, mostly used for creating custom client orders that are processed into GameOrderEvents on the server side
 ---@field Message string # The message that appear in the order list
 ---@field Payload string # Data send with the order in a string
 ---@field CostOpt table<EnumResourceType, integer> # The cost of the order
 ---@field OccursInPhase EnumTurnPhase | integer | nil # The phase in which this order will be processed. Note that when you create a GameOrderCustom and set this field, you must add the order in the order list in the right place
+---@field JumpToActionSpotOpt RectangleVM # Makes the client view jump to the given RectangleVM
+---@field TerritoryAnnotationsOpt table<TerritoryID, TerritoryAnnotation> # When the order is selected in the orders list by the player, these messages will be presented on top of the territories specified
 
 ---@class GameOrderPurchase: GameOrder # Game order for purchasing
 ---@field BuildCities table<TerritoryID, integer> # Table containing each territory ID where a city will be built and the amount of cities for that territory
@@ -394,6 +411,11 @@
 ---@field Left number # The coordinate of the left side
 ---@field Right number # The coordinate of the right side
 ---@field Top number # The coordinate of the top side
+
+---@class TerritoryAnnotation # A small text box that appears over a territory
+---@field Message string # The text that will be shown
+---@field FontSize number # How large the font is. Default is 10
+---@field FillColor number # The color of the background of the box, default is 0. values up to 24 bits are allowed, so you can use the full RGB spectrum
 
 ---@class ActiveCard: ProxyObject # Active card
 ---@field Card GameOrderPlayCard # The order that made the card active
@@ -618,6 +640,12 @@
 ---@class CardGameSurveillance: CardGame # Surveillance card
 ---@field Duration integer # The duration of the surveillance card
 
+---@class CardGameCustom: CardGame # Custom card
+---@field CustomCardDescription string # The description of the custom card
+---@field ImageFilename string # The filename of the image of the card
+---@field ModID ModID # The ModID of the mod that added the card to the game
+---@field Name string # The name of the custom card
+
 ---@class CustomScenario # Custom scenario
 ---@field SlotsAvailable Slot[] # The slots that are available
 ---@field Territories table<TerritoryID, CustomScenarioTerritory> # Table containing all the custom scenario territory data, indexed by TerritoryID
@@ -638,6 +666,14 @@
 ---@field ClanID ClanID # The ID that identifies this clan
 ---@field IconIncre integer # Not documented
 ---@field Name string # The name of the clan
+
+---@class FogMod # FogMod object
+---@field ID GUID # The unique identifier for the FogMod object
+---@field Message string # A message explaining why the fog is applied on the territory. This is currently not displayed anywhere, but this might happen in a future update
+---@field FogLevel EnumStandingFogLevel # A [fog level enum](lua://EnumStandingFogLevel) value
+---@field Priority integer # Affects how this fog modification interacts with other fog modifications. The priority also determines what happens: <br> Priority is >= 9000: The FogMod will always change the territory visibility <br> Priority is 6000 - 8999: The FogMod will not affect the player's own territories or the player's teammates territories (your own territories and teammates territories are always visible, like normal) <br> Priority is 3000 - 5999: The FogMod will also not affect a territory that's being made visible by a special unit <br> Priority is < 3000: The FogMod will also not affect any territory that's being made visible by a spy, recon, or surveillance cards
+---@field Territories HashSet<TerritoryID> # A list of the territory IDs to which this fog modification will be applied
+---@field PlayersAffectedOpt HashSet<PlayerID> | nil # A list of all players that will be affected by the fog modification. When this field is nil, it will be applied to all players
 
 
 ---@alias TerritoryID integer # The identifier used to uniquely identify territories
@@ -728,11 +764,15 @@
 ---@field TerritoryModification TerritoryModificationWL # Allows for creating TerritoryModification objects
 ---@field TickCount fun(): integer # The amount of time in miliseconds have passed, useful for profiling code
 ---@field ModOrderControl EnumModOrderControl # Available ModOrderControl enums
+---@field FogMod FogModWL # Allows for creating FogMod objects
+---@field TextAlignmentOptions TextAlignmentEnum # Enum for alignment of text in labels 
+---@field TerritoryAnnotation TerritoryAnnotationWL # Allow for creating TerritoryAnnotations
 
 ---@class EnumPlayerID #
 ---| 'Neutral' # The PlayerID representing a neutral territory
 ---| 'Fog' # The PlayerID representing a fogged territory
 ---| 'AvailableForDistribution' # The PlayerID representing a territory that can be picked; Only used in the distribution turn
+---| 'ToString' # Function
 
 ---@class EnumTerritoryConnectionWrap #
 ---| 'Normal' # A normal connection
@@ -813,7 +853,7 @@
 ---| 'ProgressiveByNumberOfTerritories' # Progressive by the number of territories the player owns
 ---| 'ProgressiveByTurnNumber' # Progressive by the amount of turns that have passed
 
----@class EnumTurnPhase # Turn phase enums -- alphebetical order
+---@class EnumTurnPhase # Turn phase enums
 ---| 'Airlift' # Airlift turn phase
 ---| 'Attacks' # Attack / transfer turn phase
 ---| 'BlockadeCards' # Blockade card turn phase
@@ -830,25 +870,6 @@
 ---| 'ReinforcementCards' # Reinforcement card turn phase
 ---| 'SanctionCards' # Sanction card turn phase
 ---| 'SpyingCards' # Spy card turn phase
-
----@class EnumTurnPhase # Turn phase enums -- actual in-game sequence order as per https://www.warzone.com/wiki/Turn_phases; reference in code via WL.TurnPhase. prefix, eg: WL.TurnPhase.BombCards, etc
----| 'CardsWearOff' # Cards wearing off turn phase  <--- is this true? seems to happen late in turn, between receiving card pieces & receiving gold (tested for Sanctions wearing off)
----| 'Purchase' # Purchase turn phase
----| 'Discards' # Discard cards turn phase
----| 'OrderPriorityCards' # Priority card turn phase
----| 'SpyingCards' # Spy card turn phase
----| 'ReinforcementCards' # Reinforcement card turn phase
----| 'Deploys' # Deploy turn phase
----| 'BombCards' # Bomb card turn phase
----| 'EmergencyBlockadeCards' # Emergency blockade card turn phase
----| 'Airlift' # Airlift turn phase
----| 'Gift' # Gift card turn phase
----| 'Attacks' # Attack / transfer turn phase
----| 'BlockadeCards' # Blockade card turn phase
----| 'DiplomacyCards' # Diplomacy card turn phase  <--- identified myself (krinid) via experimentation; not documented on https://www.warzone.com/wiki/Turn_phases
----| 'SanctionCards' # Sanction card turn phase
----| 'ReceiveCards' # Receive cards turn phase
----| 'ReceiveGold' # Receive gold turn phase <--- not sure if this is an official phase, but in Commerce games, it occurs after receiving card pieces; not documented on https://www.warzone.com/wiki/Turn_phases
 
 ---@class EnumAttackTransfer # Attack / transfer enums
 ---| 'Attack' # Attack only
@@ -934,7 +955,7 @@
 ---@field Create fun(playerID: PlayerID, from: TerritoryID, to: TerritoryID, attackOrTransfer: EnumAttackTransfer, byPercent: boolean, numArmies: Armies, attackTeammates: boolean): GameOrderAttackTransfer # Creates a GameOrderAttackTransfer object
 
 ---@class GameOrderCustomWL # WL GameOrderCustom
----@field Create fun(playerID: PlayerID, message: string, payload: string, costOpt: table<EnumResourceType, integer>, phase: EnumTurnPhase | integer | nil): GameOrderCustom # Creates a GameOrderCustom object
+---@field Create fun(playerID: PlayerID, message: string, payload: string, costOpt: table<EnumResourceType, integer> | nil, phase: EnumTurnPhase | integer | nil): GameOrderCustom # Creates a GameOrderCustom object
 
 ---@class GameOrderDeployWL # WL GameOrderDeploy
 ---@field Create fun(playerID: PlayerID, numArmies: integer, deployOn: TerritoryID, free: boolean): GameOrderDeploy # Creates a GameOrderDeploy object
@@ -1001,16 +1022,33 @@
 ---| 'Skip' # Skip the order and add an order that tells the player it got skipped
 ---| 'SkipAndSupressSkippedMessage' # Skip the order but not add an order that tells the player it got skipped
 
+---@class FogModWL # WL FogMod
+---@field Create fun(message: string, fogLevel: EnumStandingFogLevel, priority: integer, territories: HashSet<TerritoryID>, playersAffectedOpt: HashSet<PlayerID> | nil): FogMod # Creates a [FogMod](lua://FogMod) object
 
+---@class TextAlignmentEnum # Enum values for text alignments for labels
+---| 'TopLeft' # Align the text top left corner
+---| 'Top' # Align the text in the top and center
+---| 'TopRight' # Align the text in the top right corner
+---| 'Left' # Align the text center and left
+---| 'Center' # Align the text in the center
+---| 'Right' # Align the text center and right
+---| 'BottomLeft' # Align the text bottom left corner
+---| 'Bottom' # Align the text in the bottom
+---| 'BottomRight' # Align the text in the bottom right corner
+
+---@class TerritoryAnnotationWL # WL TerritoryAnnotation
+---@field Create fun(message: string, fontSize: integer, fillColor: integer): TerritoryAnnotation # Creates a TerritoryAnnotation object
 
 
 ---@class UI # Root component containing all UI related objects
----@field CreateEmpty fun(parent: UIObject): EmptyUIObject # Creates a container that displays nothing. Used to create a better layout
+---@field CreateEmpty fun(parent: UIObject): Empty # Creates a container that displays nothing. Used to create a better layout
 ---@field CreateVerticalLayoutGroup fun(parent: UIObject): VerticalLayoutGroup # Creates a VerticalLayoutGroup that will display all it's children vertically
 ---@field CreateHorizontalLayoutGroup fun(parent: UIObject): HorizontalLayoutGroup # Create a HorizontalLayoutGroup that will display all it's children horizontally
 ---@field CreateLabel fun(parent: UIObject): Label # An UI object for displaying text
 ---@field CreateButton fun(parent: UIObject): Button # A button that the client can interact with
----@field CreateCheckBox fun(parent: UIObject): CheckBox # A UI object for inputting boolean values
+---@field CreateCheckBox fun(parent: UIObject): CheckBox # An UI object for inputting boolean values
+---@field CreateRadioButtonGroup fun(parent: UIObject): RadioButtonGroup # An UI object for grouping individual radio buttons together
+---@field CreateRadioButton fun(parent: UIObject): RadioButton
 ---@field CreateTextInputField fun(parent: UIObject): TextInputField # A UI object for inputting text values
 ---@field CreateNumberInputField fun(parent: UIObject): NumberInputField # A UI object for inputting number values
 ---@field Destroy fun(object: UIObject) # Destroys and removes the passed UI object, note that all children are also destroyed
@@ -1024,56 +1062,140 @@
 ---@field text string # The text displayed on the option
 ---@field selected fun() # Zero argument function that will be invoked if this option is picked
 
----@class UIObject # An UI object
----@field SetPreferredWidth fun(width: number): UIObject # Set the preferred width of the UIObject. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
----@field GetPreferredWidth fun(): number # Returns the preferred width set for this UIObject
----@field SetPreferredHeight fun(height: number): UIObject # Set the preferred height of the UIObject. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
----@field GetPreferredHeight fun(): number # Returns the preferred height set for this UIObject
----@field SetFlexibleWidth fun(width: number): UIObject # Set the flexible width of the UIObject. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
----@field GetFlexibleWidth fun(): number # returns the flexible width set for this UIObject
----@field SetFlexibleHeight fun(height: number): UIObject # Set the flexible height of the UIObject. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
----@field GetFlexibleHeight fun(): number # Returns the flexible height set for this UIObject
----@field id string # A unique UUID of this UIObject
+---@class UIObject  # An UI object
+---@field GetFlexibleHeight fun(): number # Returns the flexible height set for this object
+---@field GetFlexibleWidth fun(): number # returns the flexible width set for this object
+---@field GetPreferredHeight fun(): number # Returns the preferred height set for this object
+---@field GetPreferredWidth fun(): number # Returns the preferred width set for this object
+---@field GetMinWidth fun(): number # Returns the minimum width of the object
+---@field GetMinHeight fun(): number # Returns the minimum height of the object
+---@field id string # A unique UUID of this object
 
----@class TextUIObject # An UI object that can display text
----@field SetText fun(text: string): TextUIObject # Set the text of the UI object
----@field GetText fun(): string # Get the text of the UI object
+---@class Empty: UIObject # A container that displays nothing. Used to create a better layout
+---@field SetPreferredWidth fun(width: number): Empty # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): Empty # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): Empty # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): Empty # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetMinWidth fun(minWidth: number): Empty # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): Empty # Set the minimum height of the object
 
----@class ColorUIObject # An UI object that can have a color
----@field SetColor fun(color: string): ColorUIObject # Sets the colof of the UI object. Only accepts strings of the format `#XXXXXX` where an X is a hexadecimal character
----@field GetColor fun(): string # Get the color of the UI object
-
----@class InteractableUIObject # An UI object that is interactable
----@field SetInteractable fun(bool: boolean): InteractableUIObject # Set the UI object interactable or not interactable
----@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
-
----@class EmptyUIObject: UIObject # A container that displays nothing. Used to create a better layout
 
 ---@class VerticalLayoutGroup: UIObject # A container that stacks all its children vertically
+---@field SetPreferredWidth fun(width: number): VerticalLayoutGroup # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): VerticalLayoutGroup # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): VerticalLayoutGroup # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): VerticalLayoutGroup # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetCenter fun(bool: boolean): VerticalLayoutGroup # When passed true, make all elements in this group align in the center. Otherwise they will all align to the left
+---@field GetCenter fun(): boolean # Returns true if all elements are aligned in the center, returns false if all elements are aligned left
+---@field SetMinWidth fun(minWidth: number): VerticalLayoutGroup # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): VerticalLayoutGroup # Set the minimum height of the object
 
 ---@class HorizontalLayoutGroup: UIObject # A container that stacks all its children horizontally
+---@field SetPreferredWidth fun(width: number): HorizontalLayoutGroup # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): HorizontalLayoutGroup # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): HorizontalLayoutGroup # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): HorizontalLayoutGroup # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetCenter fun(bool: boolean): HorizontalLayoutGroup # When passed true, make all elements in this group align in the center. Otherwise they will all align to the left
+---@field GetCenter fun(): boolean # Returns true if all elements are aligned in the center, returns false if all elements are aligned left
+---@field SetMinWidth fun(minWidth: number): HorizontalLayoutGroup # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): HorizontalLayoutGroup # Set the minimum height of the object
 
----@class Label: UIObject, TextUIObject, ColorUIObject # A UI object for displaying text
+---@class Label: UIObject # A UI object for displaying text
+---@field SetPreferredWidth fun(width: number): Label # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): Label # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): Label # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): Label # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetText fun(text: string | number): Label # Set the text of the UI object
+---@field GetText fun(): string # Get the text of the UI object
+---@field SetColor fun(color: string): Label # Sets the colof of the UI object. Only accepts strings of the format `#XXXXXX` where an X is a hexadecimal character
+---@field GetColor fun(): string # Get the color of the UI object
+---@field SetMinWidth fun(minWidth: number): Label # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): Label # Set the minimum height of the object
+---@field SetAlignment fun(alignment: TextAlignmentEnum): Label # Set the alignment of the text of the label
+---@field GetAlignment fun(): TextAlignmentEnum # Get the alignment of the text of the label
 
----@class Button: UIObject, TextUIObject, ColorUIObject, InteractableUIObject # A container that can be clicked
+---@class Button: UIObject # A container that can be clicked
+---@field SetPreferredWidth fun(width: number): Button # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): Button # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): Button # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): Button # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
 ---@field SetTextColor fun(color: string): Button # Set the color of the text. Must be of the format `#XXXXXX` with every X being a hexidecimal character
 ---@field GetTextColor fun(): string # Get the color of the text
 ---@field SetOnClick fun(onClick: fun()): Button # Set the function that will be invoked when the client clicks on the button
 ---@field GetOnClick fun(): fun() # Get the function that will be invoked when the client clicks the button
+---@field SetText fun(text: string): Button # Set the text of the UI object
+---@field GetText fun(): string # Get the text of the UI object
+---@field SetColor fun(color: string): Button # Sets the colof of the UI object. Only accepts strings of the format `#XXXXXX` where an X is a hexadecimal character
+---@field GetColor fun(): string # Get the color of the UI object
+---@field SetInteractable fun(bool: boolean): Button # Set the UI object interactable or not interactable
+---@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
+---@field SetMinWidth fun(minWidth: number): Button # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): Button # Set the minimum height of the object
 
----@class CheckBox: UIObject, TextUIObject, InteractableUIObject # A container used for getting boolean inputs from a client
+---@class CheckBox: UIObject # A container used for getting boolean inputs from a client. If you want a user to select only 1 option from a list, see [RadioButton](lua://RadioButton)
+---@field SetPreferredWidth fun(width: number): CheckBox # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): CheckBox # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): CheckBox # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): CheckBox # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
 ---@field SetIsChecked fun(isChecked: boolean): CheckBox # Set whether the checkbox is checked or not
 ---@field GetIsChecked fun(): boolean # Get whether the checkbox is checked, used to retrieve boolean inputs from a player
 ---@field SetOnValueChanged fun(onValueChanged: fun()): CheckBox # Set the function that will be invoked when the client or mod changes the state of the checkbox
 ---@field GetOnValueChanged fun(): fun() # Get the function that will be invoked when the client or mod changes the state of the checkbox
+---@field SetText fun(text: string): CheckBox # Set the text of the UI object
+---@field GetText fun(): string # Get the text of the UI object
+---@field SetInteractable fun(bool: boolean): CheckBox # Set the UI object interactable or not interactable
+---@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
+---@field SetMinWidth fun(minWidth: number): CheckBox # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): CheckBox # Set the minimum height of the object
 
----@class TextInputField: UIObject, TextUIObject, InteractableUIObject # A container used for getting string inputs
+---@class RadioButtonGroup: UIObject
+---@field SetPreferredWidth fun(width: number): RadioButtonGroup # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): RadioButtonGroup # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): RadioButtonGroup # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): RadioButtonGroup # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetCenter fun(bool: boolean): RadioButtonGroup # When passed true, make all elements in this group align in the center. Otherwise they will all align to the left
+---@field GetCenter fun(): boolean # Returns true if all elements are aligned in the center, returns false if all elements are aligned left
+---@field SetMinWidth fun(minWidth: number): RadioButtonGroup # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): RadioButtonGroup # Set the minimum height of the object
+
+---@class RadioButton: UIObject # A container used for getting boolean inputs from a client. Useful if you want the user to select only 1 option, to allow more options, see [CheckBox](lua://CheckBox)
+---@field SetPreferredWidth fun(width: number): RadioButton # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): RadioButton # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): RadioButton # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): RadioButton # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetIsChecked fun(isChecked: boolean): RadioButton # Set whether the radio button is checked or not
+---@field GetIsChecked fun(): boolean # Get whether the radio button is checked or not
+---@field SetOnvalueChanged fun(onValueChanged: fun()): RadioButton # Set the function that will be invoked when the radio button gets checked or unchecked by the mod or player
+---@field GetOnValueChanged fun(): fun() # Get the funcion that will be invoked when the radio button is checked or unchecked by the mod or player
+---@field SetGroup fun(group: RadioButtonGroup): RadioButton # Adds this radio button to a [radio button group](lua://RadioButtonGroup). A radio button can only be in 1 group at the time
+---@field SetText fun(text: string): RadioButton # Set the text of the UI object
+---@field GetText fun(): string # Get the text of the UI object
+---@field SetInteractable fun(bool: boolean): RadioButton # Set the UI object interactable or not interactable
+---@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
+---@field SetMinWidth fun(minWidth: number): RadioButton # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): RadioButton # Set the minimum height of the object
+
+---@class TextInputField: UIObject # A container used for getting string inputs
+---@field SetPreferredWidth fun(width: number): TextInputField # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): TextInputField # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): TextInputField # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): TextInputField # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
 ---@field SetPlaceholderText fun(text: string): TextInputField # Set the text that will be displayed when the text field is empty
 ---@field GetPlaceholderText fun(): string # Get the text that will be displayed when the text field is empty
 ---@field SetCharacterLimit fun(limit: integer): TextInputField # Set the limit of characters the client can input
 ---@field GetCharacterLimit fun(): integer # Get the character limit that the client can input
+---@field SetText fun(text: string): TextInputField # Set the text of the UI object
+---@field GetText fun(): string # Get the text of the UI object
+---@field SetInteractable fun(bool: boolean): TextInputField # Set the UI object interactable or not interactable
+---@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
+---@field SetMinWidth fun(minWidth: number): TextInputField # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): TextInputField # Set the minimum height of the object
 
----@class NumberInputField: UIObject, InteractableUIObject # A container used for getting number inputs
+---@class NumberInputField: UIObject # A container used for getting number inputs
+---@field SetPreferredWidth fun(width: number): NumberInputField # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): NumberInputField # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): NumberInputField # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): NumberInputField # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
 ---@field SetValue fun(value: number): NumberInputField # Set the value of the number input field
 ---@field GetValue fun(): number # Get the value of the number input field, used to retrieve the input of the client
 ---@field SetWholeNumbers fun(wholeNumbers: boolean): NumberInputField # Set whether this number input field accepts only integers or also decimal numbers
@@ -1086,8 +1208,18 @@
 ---@field GetBoxPreferredWidth fun(): number # Get the preferred width of just the input box
 ---@field SetSliderPreferredWidth fun(width: number): NumberInputField # Set the preferred width of just the slider
 ---@field GetSliderPreferredWidth fun(): number # Get the preferred width of just the slider
+---@field SetInteractable fun(bool: boolean): NumberInputField # Set the UI object interactable or not interactable
+---@field GetInteractable fun(): boolean # Returns true if the client can interact with the UI object
+---@field SetMinWidth fun(minWidth: number): NumberInputField # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): NumberInputField # Set the minimum height of the object
 
----@class RootParent : UIObject # The root parent of the any dialog
+---@class RootParent: UIObject # The root parent of any dialog. Note that this parent should only have 1 child
+---@field SetPreferredWidth fun(width: number): RootParent # Set the preferred width of the object. It may not be this wide if there is not enough space, and it may be wider if FlexibleWidth is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetPreferredHeight fun(height: number): RootParent # Set the preferred height of the object. It may not be this tall if there is not enough space, and it may be taller if FlexibleHeight is greater than 0. Defaults to -1, which is a special value meaning the object will meansure its own size based on its contents. Returns itself
+---@field SetFlexibleWidth fun(width: number): RootParent # Set the flexible width of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no wider than PreferredWidth. Set it to 1 to indicate the object should grow to encompass all remaining horizontal space it can.
+---@field SetFlexibleHeight fun(height: number): RootParent # Set the flexible height of the object. A number from 0 to 1 indicating how much of the remaining space this element wishes to take up. Defaults to 0, which means the element will be no taller than PreferredHeight. Set it to 1 to indicate the object should grow to encompass all remaining vertical space it can
+---@field SetMinWidth fun(minWidth: number): RootParent # Set the minimum width of the object. Be careful with this property, since devices differ in size a lot. A maximum value of 60 should be used for this property
+---@field SetMinHeight fun(minHeight: number): RootParent # Set the minimum height of the object
 
 
 
