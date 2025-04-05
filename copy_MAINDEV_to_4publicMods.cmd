@@ -22,7 +22,7 @@ set sources[0]=customCardPackage_A_refresh\Client*.lua
 set sources[1]=customCardPackage_A_refresh\Server*.lua
 set sources[2]=customCardPackage_A_refresh\utilities.lua
 set sources[3]=customCardPackage_A_refresh\DataConverter.lua
-set sources[4]=Manual_Attack.lua
+set sources[4]=customCardPackage_A_refresh\Manual_Attack.lua
 
 :: Define destinations (must be existing folders)
 set destinations[0]=customCardPack - Card Actions - Card Block, Card Piece, Card Hold
