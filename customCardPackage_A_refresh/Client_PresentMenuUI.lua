@@ -25,10 +25,20 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	--debug info for debug authorized user only
 	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
-	if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == publicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
+
+	if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
 		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
 	end
+
+	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
+	local incompatibleMods_gameIDmap = {};
+	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
+	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
+	--UI.CreateLabel (MenuWindow).SetText ("GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode));
+	--UI.CreateLabel (MenuWindow).SetText ("GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode));
+	TopLabel.SetText(TopLabel.GetText().."GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode).."\n\n");
+	--return;
 
 	create_UnitInspectorMenu ();
 

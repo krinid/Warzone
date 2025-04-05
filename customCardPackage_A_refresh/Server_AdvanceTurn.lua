@@ -553,11 +553,16 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--     if Airlift is NOT in play, move them manually, no Airlift line appears
 	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
 	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
+	--ALSO, keep a list of game IDs to enforce manual move mode on; these are known games that use Late Airlifts or Transport Only Airlifts mods, which must use Manual Move mode and not Airlift move mode
+	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
+	local incompatibleMods_gameIDmap = {};
+	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
+	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
 
-	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line)
-	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil) then
+	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
+	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolForceManualMoveMode == false) then
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
-	--if Airlift is not in play, must do the move of surviving units manually
+	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
 		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, targetTerritory, attackingArmiesToAirlift);
 	end
