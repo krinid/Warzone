@@ -36,8 +36,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
         end
 
         for playerID,v in pairs (Mod.PublicGameData.ResurrectionData) do
-            print ("[GAME REFRESH] Resurrecton pending;  player "..playerID.."/"..tostring (v));
-            UI.CreateLabel (UIcontainer).SetText ("Resurrecton pending for "..playerID.."/"..tostring (v));
+            print ("[GAME REFRESH] Resurrecton pending;  player "..tostring (playerID).."/"..tostring (v));
+            UI.CreateLabel (UIcontainer).SetText ("Resurrecton pending for "..tostring (playerID).."/"..tostring (v));
         end
     else
         UI.CreateLabel (UIcontainer).SetText ("No resurrections pending");
