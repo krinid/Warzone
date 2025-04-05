@@ -22,6 +22,7 @@ set sources[0]=customCardPackage_A_refresh\Client*.lua
 set sources[1]=customCardPackage_A_refresh\Server*.lua
 set sources[2]=customCardPackage_A_refresh\utilities.lua
 set sources[3]=customCardPackage_A_refresh\DataConverter.lua
+set sources[4]=Manual_Attack.lua
 
 :: Define destinations (must be existing folders)
 set destinations[0]=customCardPack - Card Actions - Card Block, Card Piece, Card Hold
@@ -30,7 +31,7 @@ set destinations[2]=customCardPack - OG refresh - Nuke, Pestilence, Isolation
 set destinations[3]=customCardPack - Utility - Shield, Monolith, Neutralize, Deneutralize
 
 :: Get source and destination counts
-set sourceCount=3
+set sourceCount=4
 set destinationCount=3
 
 :: Loop through each destination
