@@ -146,11 +146,18 @@ function Client_PresentSettingsUI(rootParent)
     if (Mod.Settings.AirstrikeEnabled == true) then
         CreateLabel(UImain).SetText("\n[AIRSTRIKE]").SetColor(getColourCode("card play heading"));
         CreateLabel(UImain).SetText("Conduct an aerial assault on any territory, bypassing normal borders.");
+		CreateLabel(UImain).SetText("\nDeployment yield (%): "..Mod.Settings.AirstrikeDeploymentYield);
+		CreateLabel(UImain).SetText("• % of units that are killed during Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
+		CreateLabel(UImain).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
+		CreateLabel(UImain).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
+		CreateLabel(UImain).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
+
         CreateLabel(UImain).SetText("\nCan target neutrals: " .. tostring(Mod.Settings.AirstrikeCanTargetNeutrals));
         CreateLabel(UImain).SetText("Can target players: " .. tostring(Mod.Settings.AirstrikeCanTargetPlayers));
         CreateLabel(UImain).SetText("Can target fogged territories: " .. tostring(Mod.Settings.AirstrikeCanTargetFoggedTerritories));
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.AirstrikePiecesNeeded);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.AirstrikeStartPieces);
+        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: 1"); -- .. Mod.Settings.AirstrikePiecesPerTurn); <-- this property doesn't exist yet, forgot to implement it
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.AirstrikeCardWeight);
     end
 

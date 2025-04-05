@@ -203,6 +203,56 @@ end
 --- END of Fizzer's functions
 
 --- START of DanWL's functions
+function eliminatePlayer (playerIds, territories, removeSpecialUnits, isSinglePlayer)
+	-- https://www.warzone.com/wiki/Mod_API_Reference:TerritoryModification RemoveSpecialUnitsOpt 5.22
+	-- there are times when special units are not on the same territory as who owns the territory
+	-- eliminating a player should always remove all their special units, regardless of which territory they are on
+	-- if special units can be removed
+
+	local mods = {};
+	local canRemoveSpecialUnits = removeSpecialUnits and ((not isSinglePlayer) or (isSinglePlayer and WL and WL.IsVersionOrHigher and WL.IsVersionOrHigher('5.22')));
+
+	for tId, territory in pairs(territories) do
+		local mod = nil;
+		local specialUnitsToRemove = {};
+
+		for _, playerId in ipairs(playerIds) do
+			if territory.OwnerPlayerID == playerId then
+				if not mod then
+					mod = WL.TerritoryModification.Create(territory.ID);
+				end
+
+				mod.SetOwnerOpt = WL.PlayerID.Neutral;
+
+				if not canRemoveSpecialUnits then
+					break;
+				end
+			end
+
+			if canRemoveSpecialUnits then
+				for _, su in pairs(territory.NumArmies.SpecialUnits) do
+					if su.OwnerID == playerId then
+						if not mod then
+							mod = WL.TerritoryModification.Create(territory.ID);
+						end
+
+						table.insert(specialUnitsToRemove, su.ID);
+					end
+				end
+			end
+		end
+
+		if mod then
+			if #specialUnitsToRemove > 0 then
+				mod.RemoveSpecialUnitsOpt = specialUnitsToRemove;
+			end
+
+			table.insert(mods, mod);
+		end
+	end
+
+	return mods;
+end
 --- END of DanWL's functions
 
 --- START of Derfellios's functions
@@ -718,6 +768,16 @@ function printDebug (strOutputText)
 	end
 end
 
+--given an SU 'unit', return true/false indicating whether it is an Immovable Special Unit (ie: should be excluded from any Attack/Transfer/Airlift operations)
+function isSpecialUnitAnImmovableUnit (unit)
+	if (unit.proxyType ~= "CustomSpecialUnit") then return false; end --non-custom special units (Commanders & Bosses) are not Immovables
+
+	--identify all of the following SU types as Immovables; some of these like Nuke, Pestilence
+	if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralized territory") or (unit.Name == "Quicksand impacted territory") or (unit.Name == "Isolated territory") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
+		return true;
+	end
+end
+
 --called from Server_GameCustomMessage which is in turn called by client hooks, in order to clear data elements retrieved by the client hook (so they aren't continually redisplayed on client side)
 function trimDebug (intLastReadKey)
 	local publicGameData = Mod.PublicGameData;
@@ -751,5 +811,14 @@ function displayDebugInfoFromServer (game)
 	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
 	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
+end
+
+--concatenate elements of 2 arrays, return resulting array; elements do not need to be consecutive or numeric; if both arrays use the same keys, array2 will overwrite the values of array1 where the keys overlap
+function concatenateArrays (array1, array2)
+	local result = array1; --start with the first array, then add the elements of the 2nd array to it
+	for k,v in pairs (array2) do
+		result[k] = array2[i];
+	end
+	return result
 end
 --- END of krinid's functions

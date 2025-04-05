@@ -1,5 +1,7 @@
 require("utilities");
 require("DataConverter");
+require("Manual_Attack");
+
 local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
 local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
@@ -25,11 +27,17 @@ function Server_AdvanceTurn_End(game, addOrder)
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
 
-function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
-	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..gameOrder.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
-	--skip order if this order is a card play by a player impacted by Card Block
+--Server_AdvanceTurn_Order
+---@param game GameServerHook
+---@param order GameOrder
+---@param orderResult GameOrderResult
+---@param skipThisOrder fun(modOrderControl: EnumModOrderControl) # Allows you to skip the current order
+---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
+function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
+	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
-	if (execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, skip, addOrder) == true) then
+	--skip order if this order is a card play by a player impacted by Card Block
+	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
 		--skip order is actually done within the function above; the true/false return value is just a signal as to whether to proceed further execution in this function (if false) or not (if true)
 		return; --don't process the rest of the function, else it will still process card plays
@@ -37,14 +45,17 @@ function Server_AdvanceTurn_Order(game,gameOrder,result,skip,addOrder)
 
 	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
 	boolSkipOrder = false;
-	process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
+	process_game_orders_ImmovableSpecialUnits (game, order, orderResult, skipThisOrder, addNewOrder);
 	if (boolSkipOrder == true) then return; end
-	process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder);
-	process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder);
+	process_game_orders_RegularCards (game, order, orderResult, skipThisOrder, addNewOrder);
+	process_game_orders_CustomCards (game, order, orderResult, skipThisOrder, addNewOrder);
+	process_game_orders_AttackTransfers (game, order, orderResult, skipThisOrder, addNewOrder);
 end
 
-function Server_AdvanceTurn_Start(game,addOrder)
+---Server_AdvanceTurn_Start hook
+---@param game GameServerHook
+---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
+function Server_AdvanceTurn_Start (game, addNewOrder)
 	strArrayModData = {};
 	local strCardTypeBeingPlayed = "";
 	local publicGameData = Mod.PublicGameData;
@@ -148,13 +159,12 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 		if (#orderArmies.SpecialUnits >= 1) then --if there are no specials, take no further action, let the order proceed; if there are specials, check if they are one of the immovable types
 			local specialUnitsToRemoveFromOrder = {};
 			for _, unit in pairs(orderArmies.SpecialUnits) do
-				if (unit.proxyType == "CustomSpecialUnit") then --ignore non-custom special units (which I think is just Commanders? Actually maybe the Boss units are non-custom specials too)
+				if (unit.proxyType == "CustomSpecialUnit") then --ignore non-custom special units (which I think is just Commanders & Bosses)
 					local strModData = tostring(unit.ModData);
-					print ("[___________special] ModData=="..strModData..", Name=="..unit.Name..", numArmies=="..orderArmies.NumArmies.."::");
-					--print ("ModData contains 'CCPA|Immovable'=="..tostring (startsWith (strModData, "CCPA|Immovable")));
-					if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralize") or (unit.Name == "Quicksand") or (unit.Name == "Isolation") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
+					--print ("[___________special] ModData=="..strModData..", Name=="..unit.Name..", numArmies=="..orderArmies.NumArmies.."::");
+					if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralized territory") or (unit.Name == "Quicksand impacted territory") or (unit.Name == "Isolated territory") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
 						--some of these cards don't currently have special units, but including them here so if they do, this code is already in place
-						print ("Immovable Special==true --> block movement of this unit! (but let everything else go forward)");
+						--print ("Immovable Special==true --> block movement of this unit! (but let everything else go forward)");
 						table.insert(specialUnitsToRemoveFromOrder, unit);
 					end
 				end
@@ -166,13 +176,12 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 				--then assign it to numArmies, then make a new order using newArmies and keep all other aspects of the order the same; handle cases for both Attack/Transfer & Airlift; then skip the original order; result is same order minus the Immovable Specials
 				local newNumArmies = orderArmies.Subtract(WL.Armies.Create(0, specialUnitsToRemoveFromOrder));
 				local newNumArmies = WL.Armies.Create(gameOrder.NumArmies.NumArmies, {});
-				print ("Immovable Specials present==true --> numArmies=="..newNumArmies.NumArmies);
+				--print ("Immovable Specials present==true --> numArmies=="..newNumArmies.NumArmies);
 
 				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, newNumArmies, gameOrder.AttackTeammates); end
 				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, newNumArmies); end
 				addOrder (replacementOrder);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
-				print ("------------jinx---------------------------");
 				boolSkipOrder = true;
 				return false;
 			end
@@ -180,7 +189,7 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 	end
 end
 
-function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
+function process_game_orders_RegularCards_ORIG_preAirstrike (game,gameOrder,result,skip,addOrder)
 	--check for regular card plays
 	if (gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
 		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
@@ -208,7 +217,7 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
 				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
 			end
-			
+
 			--skip the order if a violation was flagged in the IF structure above
 			if (boolQuicksandAirliftViolation==true) then
 				strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an Airlift from "..getTerritoryName (gameOrder.FromTerritoryID, game).." to "..getTerritoryName(gameOrder.ToTerritoryID, game);
@@ -238,6 +247,85 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 			print ("[AIRLIFT/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.FromTerritoryID .."/"..getTerritoryName (gameOrder.FromTerritoryID, game).."::, to="..gameOrder.ToTerritoryID .."/"..getTerritoryName(gameOrder.ToTerritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+		end
+	end
+end
+
+function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
+	local FROMterritoryID, TOterritoryID, intNumArmies, intNumSUs, playerID, strCardType;
+
+	--check for regular card plays or Airstrike (since it's essentially the same as Airlift)
+	if ((gameOrder.proxyType == 'GameOrderPlayCardAirlift') or (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|"))) then
+		if ((gameOrder.proxyType == 'GameOrderPlayCardAirlift')) then
+			FROMterritoryID = gameOrder.FromTerritoryID;
+			TOterritoryID = gameOrder.ToTerritoryID;
+			strCardType = "Airlift";
+		elseif (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|")) then
+			local modDataContent = split(gameOrder.ModData, "|");
+			print ("[AIRSTRIKE - GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
+			strCardType = modDataContent[1]; --this will equal "Airstrike"
+			FROMterritoryID = tonumber (modDataContent[2]);
+			TOterritoryID = tonumber (modDataContent[3]);
+			--reference: playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids)); --, nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+			strCardType = "Airstrike";
+		end
+
+		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
+		print ("["..strCardType.." PLAYED] FROM "..FROMterritoryID.."/"..getTerritoryName (FROMterritoryID, game)..", TO "..TOterritoryID.."/"..getTerritoryName (TOterritoryID, game).."::"); --, #armies=="..gameOrder.Armies.NumArmies.."::");
+
+		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
+		local boolQuicksandAirliftViolation = false;
+		local strAirliftSkipOrder_Message="";
+		print ("[QUICKSAND DATA] TO territory "..tostring (Mod.PublicGameData.QuicksandData[TOterritoryID]) ..", FROM territory ".. tostring (Mod.PublicGameData.QuicksandData[FROMterritoryID]));
+
+		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[TOterritoryID] == nil and Mod.PublicGameData.QuicksandData[FROMterritoryID] == nil)) then
+			--do nothing, there are no Quicksand operations in place, permit these orders
+			--weed out the cases above, then what's left are Airlifts/Airstrikes to or from Quicksanded territories
+		else
+			--block airlifts IN/OUT of the quicksand as per the mod settings
+			if (Mod.Settings.QuicksandBlockAirliftsIntoTerritory==true and Mod.PublicGameData.QuicksandData[TOterritoryID] ~= nil and Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[FROMterritoryID] ~= nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since source and target territories have quicksand, and quicksand is configured so you can neither ".. strCardType .." in or out of quicksand";
+				boolQuicksandAirliftViolation = true;
+			elseif (Mod.Settings.QuicksandBlockAirliftsIntoTerritory==true and Mod.PublicGameData.QuicksandData[TOterritoryID] ~= nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since target territory has quicksand, and quicksand is configured so you cannot ".. strCardType .." into quicksand";
+				boolQuicksandAirliftViolation = true;
+			elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[FROMterritoryID] ~= nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since source territory has quicksand, and quicksand is configured so you cannot ".. strCardType .." out of quicksand";
+				boolQuicksandAirliftViolation = true;
+			else
+				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
+				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
+			end
+
+			--skip the order if a violation was flagged in the IF structure above
+			if (boolQuicksandAirliftViolation==true) then
+				strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an ".. strCardType .." from "..getTerritoryName (FROMterritoryID, game).." to "..getTerritoryName(TOterritoryID, game);
+				print ("[".. strCardType .."/QUICKSAND] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..FROMterritoryID .."/"..getTerritoryName (FROMterritoryID, game).."::, to="..TOterritoryID .."/"..getTerritoryName(TOterritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
+				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
+				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+			end
+		end
+
+		--if there's no IsolationData, do nothing (b/c there's nothing to check)
+		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[TOterritoryID] == nil and Mod.PublicGameData.IsolationData[FROMterritoryID] == nil)) then
+			--do nothing, there are no Isolation operations in place, permit these orders
+			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
+		else
+			--block airlifts IN/OUT of the isolated territory as per the mod settings
+			strAirliftSkipOrder_Message="";
+			if (Mod.PublicGameData.IsolationData[TOterritoryID] ~= nil and Mod.PublicGameData.IsolationData[FROMterritoryID] ~= nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since source and target territories are isolated";
+			elseif (Mod.PublicGameData.IsolationData[TOterritoryID] ~= nil and Mod.PublicGameData.IsolationData[FROMterritoryID] == nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since target territory is isolated";
+			elseif (Mod.PublicGameData.IsolationData[TOterritoryID] == nil and Mod.PublicGameData.IsolationData[FROMterritoryID] ~= nil) then
+				strAirliftSkipOrder_Message=strCardType .." failed since source territory is isolated";
+			else
+				strAirliftSkipOrder_Message=strCardType .." failed due to unknown isolation conditions";
+			end
+			strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an ".. strCardType .." from "..getTerritoryName (FROMterritoryID, game).." to "..getTerritoryName(TOterritoryID, game);
+			print ("[".. strCardType .."/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..FROMterritoryID .."/"..getTerritoryName (FROMterritoryID, game).."::, to="..TOterritoryID .."/"..getTerritoryName(TOterritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
+			addOrder(WL.GameOrderEvent.Create (gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
 	end
 end
@@ -292,34 +380,18 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 end
 
 --airstrike TODOs:
---enforce FROM must be owned by order player
---if TO is no longer an enemy, it becomes a transfer (regular airlift, just replace it with an airlift? w/o need a card)
---if attack successful, elim all armies+units in FROM and then do airlift of surviving units to TO? that way we get the arrow animation
 --add options for ability to target Commander, Specials, fogged territories, neutrals
---add effect for Deployment yield % -- enforced only when FROM is enemy; if FROM is neutral, then don't reduce units b/c there's no military enemy shooting back; or maybe just let it apply to neutrals too? To avoid just targeting bordering neutrals and attacking normally to avoid penalty?
 --add option to enable ability to send Commander/Specials or exclude them (similar ability to target them) -- and structures? option to enable/disable targeting territories with them? like Forts ... it gets tricky (impossible) to accurately handle them
---add UI option to select which units to send to TO territory for both #armies & Specials
---handle case when a Commander is killed! how to handle? can't just elim player b/c Resurrection could be in play; maybe just remove the Commander from the game for now? enter custom order to flag Resurrection that Commander died? need to check for card?
---      or just flag airstrike as not being compatible with Commanders?
---      or just make Commander invulnerable to Airstrike? kill everything else regardless of combat order but never the Commander?
---check for Immovables inside AIRSTRIKE maneuvers! don't like Airstrike override Immovables; can this be done easily with existing code? No ... b/c it's not a normal order
---      but probably can be done reasonably easily still
---on successful attack, ensure that only the remainder of the attacking army is ever sent to TO territory
---      eg: so if 500 armies+3 specials are present and airstrike of 400 armies+2 specials is sent and 350 armies+1 special is killed, then only 50+1 special is sent to TO territory, not the entie remaining 150 armies+2 specials
---for transfers (to self or teammate), just do a normal airlift (or manual move) of the units from FROM to TO territory
---make Airstrike compatible with Quicksand/Isolation (any others?)
+--handle case when a Commander is killed!
+--      if Resurrection card is in play & player has a card, send custom game order to Resurrection so it can handle this case
+--      if Res not in play or player has no card, eliminate the player
+--check for SUs where 'can airlift to self' or 'can airlift to teammates' is false; don't know which is which until _Order real time
+--      if not using airlift but doing Manual transfer -- must weed these out manually!
 --when doing transfers, currently it takes owner the territory & assigns to owner player -- should this permit? makes it distinctive from Airlift, hmmm
 --      problematic for Commanders ... but leave that to host/players to manage?\
 --      make sender take it over unless there's an allied Commander there, in which case leave it as orig owner? or just let them settle it themselves? esp case of sending a C to territory where allied C exists already - 2 C's of diff players on same territory, lol
 --      can fix by sending own C somewhere and gifting back to orig player; OR just don't send own C in this case? but then it might die b/c everything else goes and leaves the C vulnerable, hmmm
---during transfer, ensure Immovable specials are not moved
 --during transfer, take care of ownership of SUs already on the target territory (else they become unmovable)
---if Commander is killed during Airstrike -- how to handle? Currently it just removes it; but ... need to trigger Resurrection/player elimination/etc
---      solution: check if Resurrection card is in play! if card exists & onwer of C has a card, then send customorder to treat as a killed Commander; else (Resurrection not used or player has no card) eliminate the player
---auto-enable Airlift if not enabled already & make it weight 0, # pieces=999, # assigned per turn 0
---make Airstrike obey Shield, Monolith, Quicksand, Isolation rules (any others?)
---max # armies that can participate in the Airstrike doesn't include deployments b/c they're not in LatestStanding; but could load the orders so far, look @ deployments and use that figure -- but it's a bit of work, a bit of a pain
---for use with Quicksand/Isolation -- they should be aborted depending on the card settings for each but even if permitted, the Airlift maneuver will get canceled (but the attack damage still happens to each territory)
 --SUs should abide by "canAirlift" properties of the SU; minimally they'll get rejected during actualy Airlift operation if the properties are set to False even if they participate in the attack
 function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrder, cardOrderContentDetails)
 	local modDataContent = split(gameOrder.ModData, "|");
@@ -481,11 +553,16 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--     if Airlift is NOT in play, move them manually, no Airlift line appears
 	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
 	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
+	--ALSO, keep a list of game IDs to enforce manual move mode on; these are known games that use Late Airlifts or Transport Only Airlifts mods, which must use Manual Move mode and not Airlift move mode
+	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
+	local incompatibleMods_gameIDmap = {};
+	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
+	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
 
-	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line)
-	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil) then
+	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
+	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolForceManualMoveMode == false) then
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
-	--if Airlift is not in play, must do the move of surviving units manually
+	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
 		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, targetTerritory, attackingArmiesToAirlift);
 	end
@@ -640,242 +717,6 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	terrMod.AddSpecialUnits = {specialUnit}
 	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
 	return specialUnit;
-end
-
---process a manual attack sequence from AttackOrder [type NumArmies] on DefendingTerritory [type Territory] with respect to Specials & armies
---process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
---also treat Specials properly with respect to their specs, notably damage required to kill, health, attack/damage properties, etc
---return value is the result with updated AttackingArmiesKilled & DefendingArmiesKilled values
---also need some way of indicating overall success separately b/c can't change some properties of the result object directly
-function process_manual_attack (game, AttackingArmies, DefendingTerritory, result)
-	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
-	local DefendingArmies = DefendingTerritory.NumArmies;
-
-	local sortedAttackerSpecialUnits = {};
-	local sortedDefenderSpecialUnits = {};
-	local totalDefenderDefensePowerPercentage = 1.0;    --this is covered in defense power for an SU so don't actually need this
-	--local totalAttackerDefensePowerPercentage = 1.0;  --this is covered in defense power for an SU so don't need this
-	local totalAttackerAttackPowerPercentage = 1.0;     --this is covered in defense power for an SU so don't actually need this
-	--local totalDefenderAttackPowerPercentage = 1.0;   --this is covered in attack power for an SU so don't actually need this
-
-	printDebug ("[MANUAL ATTACK!] ATTACKER: #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits..", AttackingArmiesPower "..AttackingArmies.AttackPower..
-		"\nDEFENDER: #armies "..DefendingTerritory.NumArmies.NumArmies..", #SUs "..#DefendingTerritory.NumArmies.SpecialUnits..", DefendingTerritoryPower "..DefendingTerritory.NumArmies.DefensePower);
-
-	--this doesn't work; the AttackingArmies.SpecialUnits table is likely not totally compliant; it needs to be a sequential array table, not a key-value table
-	--table.sort(sortedAttackingArmies.SpecialUnits, function(a, b) printDebug ("COMPARE "..a.CombatOrder..", ".. b.CombatOrder..", "..tostring(a.CombatOrder < b.CombatOrder)); return (a.CombatOrder < b.CombatOrder); end);
-
-	--instead, rebuild AttackingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
-	for _, unit in pairs(AttackingArmies.SpecialUnits) do
-		table.insert(sortedAttackerSpecialUnits, unit);
-		-- if (unit.proxyType == "CustomSpecialUnit") then
-			--if (unit.AttackPowerPercentage ~= nil) then totalAttackerAttackPowerPercentage = totalAttackerAttackPowerPercentage * unit.AttackPowerPercentage; end
-			--if (unit.DefensePowerPercentage ~= nil) then totalAttackerDefensePowerPercentage = totalAttackerDefensePowerPercentage * unit.DefensePowerPercentage; end
-			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
-				--printDebug ("SPECIAL ATTACKER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
-		-- end
-	end
-	table.sort(sortedAttackerSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
-
-	--instead, rebuild DefendingArmies.SpecialUnits into a new sequential array & sort this new table by ascending CombatOrder and process that instead
-	for _, unit in pairs(DefendingArmies.SpecialUnits) do
-		table.insert(sortedDefenderSpecialUnits, unit);
-		-- if (unit.proxyType == "CustomSpecialUnit") then
-			--if (unit.AttackPowerPercentage ~= nil) then printDebug ("APP "..unit.Name,totalDefenderAttackPowerPercentage,unit.AttackPowerPercentage); totalDefenderAttackPowerPercentage = totalDefenderAttackPowerPercentage * unit.AttackPowerPercentage; end
-			--if (unit.DefensePowerPercentage ~= nil) then printDebug ("DPP "..unit.Name,totalDefenderDefensePowerPercentage,unit.DefensePowerPercentage); totalDefenderDefensePowerPercentage = totalDefenderDefensePowerPercentage * unit.DefensePowerPercentage; end
-			--do some math here; remember <0.0 is not possible, 0.0-1.0 is actually -100%-0%, 1.0-2.0 is 0%-100%, etc
-			--printDebug ("SPECIAL DEFENDER "..unit.Name..", APower% "..unit.AttackPowerPercentage..", DPower% "..unit.DefensePowerPercentage..", DmgAbsorb "..unit.DamageAbsorbedWhenAttacked..", DmgToKill "..unit.DamageToKill..", Health "..unit.Health);
-		-- end
-	end
-	table.sort(sortedDefenderSpecialUnits, function(a, b) return a.CombatOrder < b.CombatOrder; end)
-
-	local AttackPower = AttackingArmies.AttackPower;
-	printDebug ("=========================="..AttackingArmies.AttackPower);
-	local DefensePower = DefendingTerritory.NumArmies.DefensePower;
-	local AttackDamage = math.floor (AttackPower * game.Settings.OffenseKillRate * totalAttackerAttackPowerPercentage + 0.5);
-	local DefenseDamage = math.floor (DefensePower * game.Settings.DefenseKillRate * totalDefenderDefensePowerPercentage + 0.5);
-	--local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
-	--local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
-
-	--aply damage to Specials & armies of each Defender & Attacker; 
-
-	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
-	-- print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
-	printDebug ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
-	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage);
-	-- print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	printDebug ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage);
-	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
-	-- print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
-	printDebug ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
-	-- print ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned]");
-	printDebug ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned]");
-	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0) then
-		--defender is eliminated, attacker wins
-		boolAttackSuccessful = true;
-		printDebug ("[ATTACK SUCCESSFUL] attacker wins, defender is wiped out from target territory");
-	else
-		--defender survives, attacker may have lost some units
-		printDebug ("[ATTACK UNSUCCESSFUL] attacker unsuccessful, defender survives in target territory");
-	end
-	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful});
-end
-
---process damage quantity 'totalDamage' to the Specials in table 'sortedSpecialUnits' and the armies in 'armyCount'
---Specials are already stored in table in order of their CombatOrder
---the combo of (sortedSpecialUnits+armyCount) is either the Attacker and totalDamage is damage from defender units, or the combo is the Defender and totalDamage is damage from attacker units
---this function will be called once for each case, once for the Attacker and once for the Defender
-function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage)
-	local remainingDamage = totalDamage;
-	local boolArmiesProcessed = false;
-	local remainingArmies = armyCount;
-	local survivingSpecials = {};
-	local killedSpecials = {};
-	local clonedSpecials = {};
-
-	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType="|dummyPlaceholder|applyDamageToArmies"}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
-
-	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
-	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
-	for k,v in ipairs (sortedSpecialUnits) do
-		local newSpecialUnit_clone = nil;
-		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
-		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
-		printDebug ("[[[[SPECIAL]]]] "..k..", type "..v.proxyType.. ", combat order "..v.CombatOrder..", remaining damage "..remainingDamage);
-		local boolCurrentSpecialSurvives = true;
-
-		if (v.proxyType == "CustomSpecialUnit") then
-			printDebug ("CUSTOM SPECIAL name '"..v.Name.."', ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..tostring(v.Health)..", attack "..tostring(v.AttackPower)..", damage "..tostring(v.DefensePower)..", SPECIAL APower% "..tostring(v.AttackPowerPercentage)..
-			", DPower% "..tostring(v.DefensePowerPercentage)..", SPECIAL DmgAbsorb "..tostring(v.DamageAbsorbedWhenAttacked)..", DmgToKill "..tostring(v.DamageToKill)..", Health "..tostring(v.Health)..", remaining damage "..remainingDamage);
-		elseif (v.proxyType == "|dummyPlaceholder|applyDamageToArmies") then
-			printDebug ("DUMMY PLACEHOLDER for armies, remaining damage "..remainingDamage..", armies damage processed already? "..tostring(boolArmiesProcessed));
-			boolCurrentSpecialSurvives = false; --don't add this to the survivingSpecials table
-			--don't do anything other than let the loop continue 1 last iteration to apply damage to the armies
-			--this item has CombatOrder==0 but it is placed last into the table just to ensure that at least 1 element has >0 CombatOrder so that the loop will process damage on the armies if there is remainingDamage left
-		end
-
-		--if there's no more damage to apply, skip the code to apply any further damage; could also use 'break' to exit the loop		
-		--first check if CombatOrder indicates that it's time to apply damage to armies, then apply damage to Specials thereafter if damage is remaining
-		--1 iteration through loop can apply damage to both armies and then 1 Special (the current Special being iterated on in the loop representing the current element of the table being looped through)
-		if (remainingDamage >0) then
-			if (boolArmiesProcessed==false and v.CombatOrder >0) then --if armies haven't had damage applied yet and this Special has combat order of >0 then apply damage to armies
-				--apply damage to armies
-				if (remainingArmies == 0) then
-					printDebug ("[[[[ARMY DAMAGE]]]] no remaining armies present, remaining damage "..remainingDamage);
-				elseif (remainingDamage >= remainingArmies) then
-					remainingDamage = math.max (0, remainingDamage - remainingArmies);
-					remainingArmies = 0;
-					printDebug ("[[[[ARMY DAMAGE]]]] all armies die, remaining damage "..remainingDamage);
-				else
-					--apply damage to armies of amount remainingDamage
-					printDebug ("[[[[ARMY DAMAGE]]]] "..remainingDamage.." armies die, remaining armies "..remainingArmies-remainingDamage..", remaining damage 0");
-					remainingArmies = math.max (0, remainingArmies - remainingDamage);
-					remainingDamage = 0;
-				end
-				boolArmiesProcessed = true;
-			end
-
-			--damage to armies may have occurred already depending on CombatOrder value of current special, and this may have depleted all remaining damage
-			--if there's still damage to apply, apply it to this Special
-			if (remainingDamage > 0) then
-				printDebug ("apply damage to Special");
-				if (v.proxyType=="Commander") then
-					if (remainingDamage >=7) then
-						printDebug ("COMMANDER dies");
-						remainingDamage = math.max (0, remainingDamage - 7);
-						boolCurrentSpecialSurvives = false; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
-					else
-						printDebug ("COMMANDER survives, not enough damage done");
-						remainingDamage = 0; --commander survives, no more attacks to occur
-						boolCurrentSpecialSurvives = true; --add commander to survivingSpecials table
-					end
-				elseif (v.proxyType=="CustomSpecialUnit") then
-					--absorb damage only applies to SUs that don't use Health; if they use Health, DamageAbsorbedWhenAttacked is ignored during regular WZ attacks; mimic that functionality here (even if both DamageAbsorbedWhenAttacked & Health are specified on an SU)
-					--SUs use either (A) Health or (B) DamageToKill + DamageAbsorbedWhenAttacked; if Health is specified, the other 2 properties are ignored
-					if (v.DamageAbsorbedWhenAttacked ~= nil and v.Health == nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); printDebug ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
-					if (v.Health ~= nil) then --SU uses Health (not DamageToKill + DamageAbsorbedWhenAttacked)
-						if (v.Health == 0) then
-							printDebug ("SPECIAL already dead w/0 health, kill it/remove it");
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
-						elseif (remainingDamage >= v.Health) then
-							remainingDamage = remainingDamage - v.Health;
-							printDebug ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
-						else
-							--apply damage to special of amount remainingDamage
-							printDebug ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
-							--recreate the special with new health level
-							local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
-							newSpecialUnitBuilder.Health = v.Health - remainingDamage;
-							newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name .."(C)";
-							newSpecialUnit_clone = newSpecialUnitBuilder.Build();
-							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
-							remainingDamage = 0;
-						end
-					else   --SU uses DamageToKill + DamageAbsorbedWhenAttacked (not Health)
-						if (remainingDamage > v.DamageToKill) then
-							remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
-							printDebug ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
-							--printDebug ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
-						else
-							--apply damage to special of amount remainingDamage
-							printDebug ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
-							boolCurrentSpecialSurvives = true; --add special to survivingSpecials table
-							remainingDamage = 0;
-						end
-					end
-				end
-			end
-		end
-		if (remainingDamage<=0) then printDebug ("[damage remaining is "..remainingDamage.."]"); end
-
-		--the Special being analyzed this iteration through loop has already DIED or SURVIVED by this opint, add to survivingSpecials table if it survived
-		--printDebug ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
-		if (boolCurrentSpecialSurvives == true) then --the Special survived; but it may have (A) taken no damage, in which case just add it to the survivingSpecials table, or (B) taken damage (if so it has been cloned and need to replace it with the new cloned Special and add that to the table)
-			printDebug ("SPECIAL survived");
-			if (newSpecialUnit_clone == nil) then --the Special Unit survived the didn't need to be cloned, just add the original to the survivingSpecials table
-				table.insert (survivingSpecials, v);
-			else   --the Special Unit survived but needed to be cloned, add the new cloned Special to the survivingSpecials table & add the original to the killedSpecials table (this isn't totally accurate since it wasn't killed per se, 
-			       --but this mechanism is used to remove it from the source territory & not add it to the target territory if the attack if successful)
-				table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
-				table.insert (killedSpecials, v.ID); --add the original Special to the killedSpecials table
-				table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; if airstrike is unsuccessful, attacking SUs in this table need to be added to the source territory & defending SUs in this table need to be added to the target territory
-				--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
-			end
-		else
-			printDebug ("SPECIAL died");
-			if (v.proxyType ~= "|dummyPlaceholder|applyDamageToArmies") then table.insert (killedSpecials, v.ID); end --only add the Special to the killedSpecials table if it dies, ignore the dummy placeholder
-		end
-	end
-
-	printDebug ("[FINAL RESULT] remaining damage "..remainingDamage..", killed armies " .. math.max (0, armyCount-remainingArmies) ..", remaining armies "..remainingArmies.. ", #killedSpecials ".. #killedSpecials ..", #survivingSpecials "..#survivingSpecials);
-	local damageResult = {RemainingArmies=remainingArmies, KilledArmies=math.max (0, armyCount-remainingArmies), SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
-	return damageResult;
-
-	--reference
-	--[[local impactedTerritory = WL.TerritoryModification.Create(terrID);
-	local modifiedTerritories = {};
-	impactedTerritory.RemoveSpecialUnitsOpt = {shieldDataRecord.specialUnitID};
-	table.insert(modifiedTerritories, impactedTerritory);]]
-
-end
-
-function applyDamageToSpecials (intDamage, Specials, result)
-	local remainingDamage = intDamage;
-	for k,v in pairs (Specials) do
-		if (remainingDamage > 0) then
-			--if the Special is still alive, apply damage to it
-			local SpecialHealth = v.Health;
-			if (SpecialHealth > 0) then
-				local SpecialDamage = math.min (SpecialHealth, remainingDamage);
-				remainingDamage = remainingDamage - SpecialDamage;
-				result = WL.Armies.Create (result.NumArmies + SpecialDamage, result.SpecialUnits);
-			end
-		end
-	end
-	return result;
-
 end
 
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
