@@ -126,8 +126,8 @@ function replace_Commander_on_map (game, playerID, territoryID, addOrder, boolCo
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 
-	print ("[RESURRECTION PLACE ON MAP] player "..tostring(playerID).."/"..game.Game.Players[playerID].DisplayName(nil, false)..", terr "..tostring(territoryID).."/"..game.Map.Territories[territoryID].Name.."::");
-	local strResurrectionMsg = game.Game.Players[playerID].DisplayName(nil, false) .. " resurrects a Commander to " .. game.Map.Territories[territoryID].Name;
+	print ("[RESURRECTION PLACE ON MAP] player "..tostring(playerID).."/".. getPlayerName (game, playerID)..", terr "..tostring(territoryID).."/"..game.Map.Territories[territoryID].Name.."::");
+	local strResurrectionMsg = getPlayerName (game, playerID) .. " resurrects a Commander to " .. game.Map.Territories[territoryID].Name;
 	print (strResurrectionMsg);
 	local event = WL.GameOrderEvent.Create (playerID, strResurrectionMsg, {}, {impactedTerritory});
 	--addOrder (WL.GameOrderEvent.Create (playerID, strResurrectionMsg, {}, {impactedTerritory}));
@@ -164,13 +164,13 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 			local Commander_OwnerID = sp.OwnerID; --check owner of Commander, not the territory -- in case a foreign Commander is being killed on someone else's territory (don't check or consume the Resurrection card of the territory owner)
 			local CommanderOwner_ResurrectionCard = playerHasCard (Commander_OwnerID, Mod.Settings.ResurrectionCardID, game);
 			-- check if Commander_OwnerID holds a Resurrection card; note: don't check for owner of order.To just in case the Commander of another player exists on the territory
-			print ("Defender -- SP killed: "..k, sp.proxyType.."; SP owner ResCard=="..tostring(CommanderOwner_ResurrectionCard).."::");
+			print ("Defender -- SP killed: "..k, sp.proxyType.."; on territory "..targetTerritoryID.."/"..game.Map.Territories[targetTerritoryID].Name..", territory owner "..tostring (playerID).."/"..getPlayerName (game, playerID) ..", SP owner "..Commander_OwnerID.. "/".. getPlayerName (game, Commander_OwnerID)..", SP owner ResCard=="..tostring(CommanderOwner_ResurrectionCard).."::");
 			if (CommanderOwner_ResurrectionCard ~= nil) then
 				print ("[RESURRECTION CHECK & PREP] player has Res card - process Resurrection prep");
 				local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 				targetTerritory.RemoveSpecialUnitsOpt = {sp.ID}; --remove the C special unit from the territory
 				table.remove (ArmiesKilled_SpecialUnits, k); --remove the Commander from the list of specials being killed
-				local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
+				local event = WL.GameOrderEvent.Create (Commander_OwnerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 				replacementOrderRequired = true; --rewrite the original order without the dying Commander in place @ end of function
@@ -178,8 +178,7 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
 				local publicGameData = Mod.PublicGameData;
 				if (publicGameData.ResurrectionData == nil) then publicGameData.ResurrectionData = {}; end
-				--publicGameData.ResurrectionData[playerID] = true;
-				publicGameData.ResurrectionData[playerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
+				publicGameData.ResurrectionData[Commander_OwnerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
 				Mod.PublicGameData = publicGameData;
 			else
 				print ("[RESURRECTION] player doesn't have Resurrection card - let the Commander die");
@@ -201,7 +200,7 @@ function check_for_Resurrection_conditions_and_execute_preparation (game,order,r
 
 		local playerID_Attacker = order.PlayerID;
 		local playerID_Defender = game.ServerGame.LatestTurnStanding.Territories[order.To].OwnerPlayerID;
-		
+
 		--the following 2 values aren't relevant; they indicate whether the territory owners have Resurrection cards as opposed to the owners of the Specials that are dying (which can be different from the territory owners, notably the Defending territory)
 		--local DefenderResurrectionCard = playerHasCard (playerID_Defender, Mod.Settings.ResurrectionCardID, game);
 		--local AttackerResurrectionCard = playerHasCard (playerID_Attacker, Mod.Settings.ResurrectionCardID, game);
@@ -249,4 +248,18 @@ function split(inputstr, sep)
 			i = i + 1
 	end
 	return t
+end
+
+function getPlayerName(game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs(game.Game.Players) do
+			if(tonumber(playerid) == tonumber(playerinfo.ID))then
+				return (playerinfo.DisplayName(nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end
