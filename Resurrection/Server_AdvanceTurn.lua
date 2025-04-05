@@ -116,6 +116,16 @@ function replace_Commander_on_map (game, playerID, territoryID, addOrder, boolCo
 	local impactedTerritory = WL.TerritoryModification.Create(territoryID);
 	impactedTerritory.AddSpecialUnits = {specialUnit};
 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	if (playerID == nil or playerID <= 0) then playerID = 1552145; end
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+
 	print ("[RESURRECTION PLACE ON MAP] player "..tostring(playerID).."/"..game.Game.Players[playerID].DisplayName(nil, false)..", terr "..tostring(territoryID).."/"..game.Map.Territories[territoryID].Name.."::");
 	local strResurrectionMsg = game.Game.Players[playerID].DisplayName(nil, false) .. " resurrects a Commander to " .. game.Map.Territories[territoryID].Name;
 	print (strResurrectionMsg);
