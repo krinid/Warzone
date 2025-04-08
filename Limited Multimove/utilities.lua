@@ -209,7 +209,7 @@ end
 function eliminatePlayer (playerID, territories, removeSpecialUnits, isSinglePlayer)
 	local modifiedTerritories = {};
 	local canRemoveSpecialUnits = removeSpecialUnits and ((not isSinglePlayer) or (isSinglePlayer and WL and WL.IsVersionOrHigher and WL.IsVersionOrHigher('5.22')));
-	if (playerID == nil or playerID <= 0) then return nil; end
+	if (playerID == nil or playerID <= 1) then return nil; end
 
 	for _, territory in pairs(territories) do
 		local specialUnitsToRemove = {};
@@ -553,7 +553,7 @@ function playerHasCard (playerID, cardID, game)
 	if (cardID==nil) then print ("cardID is nil"); return nil; end
 	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
 	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
-		if (v.CardID == tonumber(cardID)) then print (k); return k; end
+		if (v.CardID == cardID) then return k; end
 	end
 	return nil;
 end
@@ -561,7 +561,7 @@ end
 --return card instance for a given card type by name that belongs to a given player
 function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
 	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
-	local cardID = tonumber (getCardID (strCardNameToMatch, game));
+	local cardID = getCardID (strCardNameToMatch, game);
 	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
 	if (cardID==nil) then print ("cardID is nil"); return nil; end
 	return getCardInstanceID (playerID, cardID, game);
@@ -623,18 +623,6 @@ function getPlayerName(game, playerid)
 		end
 	end
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
-end
-
---return the # of armies deployed to territory terrID so far this turn
-function getArmiesDeployedThisTurnSoFar (game, terrID)
-	for k,existingGameOrder in pairs (game.Orders) do
-		--print (k,existingGameOrder.proxyType);
-		if (existingGameOrder.proxyType == "GameOrderDeploy") then
-			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
-			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
-		end
-	end
-	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
 end
 
 function initialize_CardData (game)

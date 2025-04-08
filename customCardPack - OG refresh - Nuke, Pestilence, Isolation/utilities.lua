@@ -203,55 +203,42 @@ end
 --- END of Fizzer's functions
 
 --- START of DanWL's functions
-function eliminatePlayer (playerIds, territories, removeSpecialUnits, isSinglePlayer)
-	-- https://www.warzone.com/wiki/Mod_API_Reference:TerritoryModification RemoveSpecialUnitsOpt 5.22
-	-- there are times when special units are not on the same territory as who owns the territory
-	-- eliminating a player should always remove all their special units, regardless of which territory they are on
-	-- if special units can be removed
-
-	local mods = {};
+--heavily modified version of DanWL's eliminate function; reduced to only eliminate a single specified playerID
+--change all territories for the specified player to neutral to eliminate the player
+--remove all Special Units owned by that player even if they are on territories not owned by that player
+function eliminatePlayer (playerID, territories, removeSpecialUnits, isSinglePlayer)
+	local modifiedTerritories = {};
 	local canRemoveSpecialUnits = removeSpecialUnits and ((not isSinglePlayer) or (isSinglePlayer and WL and WL.IsVersionOrHigher and WL.IsVersionOrHigher('5.22')));
+	if (playerID == nil or playerID <= 0) then return nil; end
 
-	for tId, territory in pairs(territories) do
-		local mod = nil;
+	for _, territory in pairs(territories) do
 		local specialUnitsToRemove = {};
+		local terrMod = nil;
 
-		for _, playerId in ipairs(playerIds) do
-			if territory.OwnerPlayerID == playerId then
-				if not mod then
-					mod = WL.TerritoryModification.Create(territory.ID);
-				end
+		--if territory is owned by specified player, make it neutral
+		if (territory.OwnerPlayerID == playerID) then
+			terrMod = WL.TerritoryModification.Create (territory.ID);
+			terrMod.SetOwnerOpt = WL.PlayerID.Neutral;
+		end
 
-				mod.SetOwnerOpt = WL.PlayerID.Neutral;
-
-				if not canRemoveSpecialUnits then
-					break;
-				end
-			end
-
-			if canRemoveSpecialUnits then
-				for _, su in pairs(territory.NumArmies.SpecialUnits) do
-					if su.OwnerID == playerId then
-						if not mod then
-							mod = WL.TerritoryModification.Create(territory.ID);
-						end
-
-						table.insert(specialUnitsToRemove, su.ID);
-					end
+		--if territory has SUs owned by specified player, remove them, even if the territory is owned by another player
+		if (canRemoveSpecialUnits) then
+			for _, SU in pairs(territory.NumArmies.SpecialUnits) do
+				if (SU.OwnerID == playerID) then
+					if (terrMod == nil) then terrMod = WL.TerritoryModification.Create (territory.ID); end
+					table.insert(specialUnitsToRemove, SU.ID);
 				end
 			end
 		end
 
-		if mod then
-			if #specialUnitsToRemove > 0 then
-				mod.RemoveSpecialUnitsOpt = specialUnitsToRemove;
-			end
-
-			table.insert(mods, mod);
+		--if any changes were made (territory owner set to neutral and/or any SUs removed)
+		if (terrMod ~= nil) then
+			if (#specialUnitsToRemove > 0) then terrMod.RemoveSpecialUnitsOpt = specialUnitsToRemove; end
+			table.insert(modifiedTerritories, terrMod);
 		end
 	end
 
-	return mods;
+	return (modifiedTerritories);
 end
 --- END of DanWL's functions
 
@@ -284,31 +271,6 @@ local function tableToString(tbl, indent)
 	local result = "{" --"{\n"
 	for k, v in pairs(tbl) do
 		result = result .. indent .. "  " .. tostring(k) .. " = " .. tableToString(v, indent .. "  ") .. ","; --\n"
-	end
-	result = result .. indent .. "}"
-	return result
-end
-
---[[function tableToString_(tbl)
-    if type(tbl) ~= "table" then
-        return tostring(tbl)  -- Return the value as-is if it's not a table
-    end
-    local result = "{"
-    for k, v in pairs(tbl) do
-        result = result .. tostring(k) .. "=" .. tostring(v) .. ", "
-    end
-    result = result:sub(1, -3) .. "}"  -- Remove the trailing comma and space
-    return result
-end]]
-
-local function tableToString_ORIG(tbl, indent)
-	if type(tbl) ~= "table" then
-		return tostring(tbl)  -- Return the value as-is if it's not a table
-	end
-	indent = indent or ""  -- Indentation for nested tables
-	local result = "{\n"
-	for k, v in pairs(tbl) do
-		result = result .. indent .. "  " .. tostring(k) .. " = " .. tableToString(v, indent .. "  ") .. ",\n"
 	end
 	result = result .. indent .. "}"
 	return result
@@ -542,7 +504,6 @@ end
 --return list of all cards defined in this game; includes custom cards
 --generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
 function getDefinedCardList (game)
-    --print ("[CARDS DEFINED IN THIS GAME]");
     local count = 0;
     local cards = {};
 	local publicGameData = Mod.PublicGameData;
@@ -552,29 +513,17 @@ function getDefinedCardList (game)
 
 	--if (false) then --publicGameData.CardData.DefinedCards ~= nil) then
 	if (publicGameData.CardData.DefinedCards ~= nil) then
-		--print ("[CARDS ALREADY DEFINED] don't regen list, just return existing table");
 		return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
 	else
-		--print ("[CARDS NOT DEFINED] generate the list, store it in publicGameData.CardData.DefinedCards");
 		if (game==nil) then print ("game is nil"); return nil; end
 		if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
 		if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
-		--[[print ("game==nil --> "..tostring (game==nil).."::");
-		print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
-		print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
-		print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-		print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-		print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
-		print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
 
 		for cardID, cardConfig in pairs(game.Settings.Cards) do
 			local strCardName = getCardName_fromObject(cardConfig);
-			--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
 			cards[cardID] = strCardName;
 			count = count +1
-			--printObjectDetails (cardConfig, "cardConfig");
 		end
-		--printObjectDetails (cards, "card", count .." defined cards total");
 		return cards;
 	end
 end
@@ -583,34 +532,36 @@ end
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
 	local cards={};
-	--[[print ("[getCardID] match name=="..strCardNameToMatch.."::");
-	print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-	print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-	print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
-	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
-	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
-		--print ("run function");
+	if (Mod.PublicGameData.CardData == nil or Mod.PublicGameData.CardData.DefinedCards == nil) then
+		print ("run function");
 		cards = getDefinedCardList (game);
 	else
-		--print ("get from pgd");
 		cards = Mod.PublicGameData.CardData.DefinedCards;
 	end
 
-	--print ("[getCardID] tablelength=="..tablelength (cards));
 	for cardID, strCardName in pairs(cards) do
-		--print ("[getCardID] cardID=="..cardID..", cardName=="..strCardName.."::");
 		if (strCardName == strCardNameToMatch) then
-			--print ("[getCardID] matching card cardID=="..cardID.."::");
 			return cardID;
 		end
 	end
 	return nil; --cardName not found
 end
 
+--return cardInstace if playerID possesses card of type cardID, otherwise return nil
+function playerHasCard (playerID, cardID, game)
+	if (playerID<=0) then print ("playerID is neutral (has no cards)"); return nil; end
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
+		if (v.CardID == tonumber(cardID)) then print (k); return k; end
+	end
+	return nil;
+end
+
 --return card instance for a given card type by name that belongs to a given player
 function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
 	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
-	local cardID = getCardID (strCardNameToMatch, game);
+	local cardID = tonumber (getCardID (strCardNameToMatch, game));
 	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
 	if (cardID==nil) then print ("cardID is nil"); return nil; end
 	return getCardInstanceID (playerID, cardID, game);
@@ -674,23 +625,27 @@ function getPlayerName(game, playerid)
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end
 
+--return the # of armies deployed to territory terrID so far this turn
+function getArmiesDeployedThisTurnSoFar (game, terrID)
+	for k,existingGameOrder in pairs (game.Orders) do
+		--print (k,existingGameOrder.proxyType);
+		if (existingGameOrder.proxyType == "GameOrderDeploy") then
+			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
+			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
+		end
+	end
+	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
+end
+
 function initialize_CardData (game)
     local publicGameData = Mod.PublicGameData;
 
     publicGameData.CardData = {};
     publicGameData.CardData.DefinedCards = nil;
     publicGameData.CardData.CardPiecesCardID = nil;
+	publicGameData.CardData.ResurrectionCardID = nil;
     Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
     publicGameData = Mod.PublicGameData;
-
-    --[[print ("[init] 0pre");
-    print ("game==nil --> "..tostring (game==nil).."::");
-    print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
-    print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
-    print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-    print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-    print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
-    print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));]]
 
     publicGameData.CardData.DefinedCards = getDefinedCardList (game);
     Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
@@ -700,39 +655,9 @@ function initialize_CardData (game)
     if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
     if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
 
-    --[[print ("[init] pre");
-    print ("game==nil --> "..tostring (game==nil).."::");
-    print ("game.Settings==nil --> "..tostring (game.Settings==nil).."::");
-    print ("game.Settings.Cards==nil --> "..tostring (game.Settings.Cards==nil).."::");
-    print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-    print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-    print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
-    print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
-    print ("[init] post");]]
-
-    --print ("CardPiece=="..tostring(getCardID ("Card Piece")));
     publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
+	publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection"));
     Mod.PublicGameData = publicGameData;
-
-    --printObjectDetails (Mod.PublicGameData.CardData.DefinedCards, "card PGD", "");--count .." defined cards total", game);
-
-    --if Mod.Settings.CardPiecesCardID is set, grab the cardID from this setting
-    --standalone app can't grab this yet, need a new version
---[[    if (Mod.Settings.CardPiecesCardID == nil) then
-        print ("[CardPiece CardID] get from getCardID function");
-        publicGameData.CardData.CardPiecesCardID = getCardID ("Card Piece");
-        print ("10----------------------");
-    else
-        print ("[CardPiece CardID] acquired from Mod.Settings.CardPiecesCardID");
-        publicGameData.CardData.CardPiecesCardID = Mod.Settings.CardPiecesCardID;
-        print ("11----------------------");
-    end]]
-
-	--[[print ("[CardPiece CardID] Mod.Settings.CardPiecesCardID=="..tostring (Mod.Settings.CardPiecesCardID));
-    print ("[CardPiece CardID] Mod.PublicGameData.CardData.CardPiecesCardID=="..tostring (Mod.PublicGameData.CardData.CardPiecesCardID));
-    print ("12----------------------");]]
-
-    --Mod.PublicGameData = publicGameData;
 end
 
 --initialize the Mod.PublicGameData.Debug structure and all member properties

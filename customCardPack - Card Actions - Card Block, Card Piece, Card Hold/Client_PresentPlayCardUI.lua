@@ -749,16 +749,16 @@ function updateAirstrikePanelDetails ()
 	generateStringOfSelectedSUs (); --generate table of selected SUs from the checkbox panel & store result in airstrikeObject.FROMselectedSUs
 	print ("#selected SUs "..#airstrikeObject.FROMselectedSUs);
     airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower or nil;
-    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower or nil;
+    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or nil;
     airstrikeObject.FROMarmies = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0;
 	airstrikeObject.FROMselectedArmies = math.max (0, airstrikeObject.NIFarmies.GetValue ()); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
 
-    airstrikeObject.TOarmies = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies or 0;
+    airstrikeObject.TOarmies = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or 0;
     airstrikeObject.FROMnumSpecials = SourceTerritoryID ~= nil and #Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.TOnumSpecials = TargetTerritoryID ~= nil and #Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.DeploymentYield = 0.75; --default to 75%
     if (Mod.Settings.AirstrikeDeploymentYield ~= nil) then airstrikeObject.DeploymentYield = Mod.Settings.AirstrikeDeploymentYield/100; end --if mod setting is set, use that value instead of the default
-    airstrikeObject.DeploymentYieldLoss = math.floor ((1-airstrikeObject.DeploymentYield) * airstrikeObject.FROMarmies + 0.5);
+    airstrikeObject.DeploymentYieldLoss = math.floor ((1-airstrikeObject.DeploymentYield) * airstrikeObject.FROMselectedArmies + 0.5);
     airstrikeObject.AttackTransfer = "tbd";
 	if (airstrikeObject.FROMplayerID == nil or airstrikeObject.TOplayerID == nil) then airstrikeObject.AttackTransfer = "tbd";
 	elseif (airstrikeObject.FROMplayerID ~= airstrikeObject.TOplayerID and (airstrikeObject.FROMplayerTeam==-1 or airstrikeObject.FROMplayerTeam>0 and airstrikeObject.FROMplayerTeam ~= airstrikeObject.TOplayerTeam)) then airstrikeObject.AttackTransfer = "Attack";
@@ -768,10 +768,20 @@ function updateAirstrikePanelDetails ()
 	airstrikeObject.attackingArmies = nil;
 	airstrikeObject.defendingArmies = nil;
 	airstrikeObject.FROMactualAttackPower = 0;
+    airstrikeObject.FROMattackPower_SelectedUnits = nil;
+    local intFROMattackPower_kills = nil;
+    local intTOdefensePower_kills = nil;
 	-- if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
-	if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, airstrikeObject.FROMselectedSUs); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
-	if (TargetTerritoryID~=nil) then airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits); end
-    airstrikeObject.FROMattackPower_SelectedUnits = SourceTerritoryID ~= nil and airstrikeObject.attackingArmies.AttackPower or nil;
+	if (SourceTerritoryID~=nil) then
+        airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, airstrikeObject.FROMselectedSUs);
+        airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower;
+        airstrikeObject.FROMattackPower_SelectedUnits = airstrikeObject.attackingArmies.AttackPower;
+        intFROMattackPower_kills = math.floor (airstrikeObject.FROMattackPower_SelectedUnits * Game.Settings.OffenseKillRate + 0.5)
+    end
+	if (TargetTerritoryID~=nil) then
+        airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits);
+        intTOdefensePower_kills = math.floor (airstrikeObject.TOdefensePower * Game.Settings.DefenseKillRate + 0.5);
+    end
 
     airstrikeObject.FROMTOhorz = CreateHorz (airstrikeObject.airstrikeSUvert).SetFlexibleWidth(1.0);
     airstrikeObject.FROMvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
@@ -782,7 +792,8 @@ function updateAirstrikePanelDetails ()
     CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
     CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(getPlayerName(Game, airstrikeObject.FROMplayerID))..strFROMteamText);
     --CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower) .." [".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits));
+    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .. " [kills ".. tostring (intFROMattackPower_kills) .."]");
+
     -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
     CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring (airstrikeObject.FROMselectedArmies));
     -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (#airstrikeObject.FROMselectedSUs) .."]");
@@ -790,7 +801,7 @@ function updateAirstrikePanelDetails ()
     airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
     CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(getPlayerName (Game, airstrikeObject.TOplayerID))..strTOteamText);
-    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower));
+    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower) .. " [kills ".. tostring (intTOdefensePower_kills) .."]");
     CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
     CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
     --CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
@@ -831,7 +842,7 @@ function SourceTerritoryClicked_Airstrike(terrDetails)
         SourceTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
-		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
+		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
 		airstrikeObject.NIFarmies.SetSliderMaxValue (intNumArmiesPresent);  --set max slider value for input field to # of armies on territory for ease of use (sum of current state + current deployments to source territory)
 		--if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
 		airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
@@ -871,18 +882,6 @@ function TerritoryClicked_Airstrike(terrDetails)
         TargetTerritoryName = terrDetails.Name;
         updateAirstrikePanelDetails ();
 	end
-end
-
---return the # of armies deployed to territory terrID so far this turn
-function getArmiesDeployedThisTurnSoFar (terrID)
-	for k,existingGameOrder in pairs (Game.Orders) do
-		--print (k,existingGameOrder.proxyType);
-		if (existingGameOrder.proxyType == "GameOrderDeploy") then
-			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
-			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
-		end
-	end
-	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
 end
 
 function populateSUpanel ()
@@ -938,6 +937,7 @@ function generateStringOfSelectedSUs ()
 	airstrikeObject.strSelectedSUguids = "";
 	airstrikeObject.strSelectedSUs_Names = "";
     airstrikeObject.FROMselectedSUs = {}; --to store the actual SU objects in order make a WL.Armies object and get its Attack Power
+    if (airstrikeObject.SUcheckboxes == nil) then airstrikeObject.SUcheckboxes = {}; end
 	if (#airstrikeObject.SUcheckboxes==0) then return; end --set empty strings if there are no checkboxes (no SUs)
 
 	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do

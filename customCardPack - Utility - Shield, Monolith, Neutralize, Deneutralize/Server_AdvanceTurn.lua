@@ -5,6 +5,9 @@ require("Manual_Attack");
 local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
 local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
+---Server_AdvanceTurn_End hook
+---@param game GameServerHook
+---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E]::func start");
 
@@ -22,7 +25,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	--local boolHaltCodeExecutionAtEndofTurn = true;
+	-- local boolHaltCodeExecutionAtEndofTurn = true;
 	local intHaltOnTurnNumber = 1;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
@@ -66,6 +69,10 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 
 	print ("[Server_AdvanceTurn_Start] -----------------------------------------------------------------");
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber);
+
+	--testing purposes only! delme
+	--[[ local modifiedTerritories = eliminatePlayer (1, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
+	addNewOrder(WL.GameOrderEvent.Create(1, getPlayerName (game, commanderOwner).." was eliminated! [commander died/LMM]", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped ]]
 
 	--change this FROM: loop through all players then loop through all orders they have
 	--              TO: just loop through all orders and check playerID against various conditions
@@ -487,7 +494,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	local airstrikeResult = nil;
 	if (boolIsAttack == true) then --Airstrike order is an attack
-		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
+		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder);
 		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
 		--airstrikeResult.DefenderResult is armies object for defender
@@ -703,7 +710,7 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	if (DefensePowerPercentage ~= nil) then builder.DefensePowerPercentage = DefensePowerPercentage; else --[[builder.DefensePowerPercentage = 0;]] end
 	if (DamageToKill ~= nil) then builder.DamageToKill = DamageToKill; else builder.DamageToKill = 0; end
 	if (DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = DamageAbsorbedWhenAttacked; --[[else builder.DamageAbsorbedWhenAttacked = 0;]] end
-	if (Health ~= nil) then builder.Health = Health; else builder.Health = 0; end
+	if (Health ~= nil) then builder.Health = Health; else builder.Health = nil; end
 	if (CombatOrder ~= nil) then builder.CombatOrder = CombatOrder; else builder.CombatOrder = 0; end
 	if (CanBeGiftedWithGiftCard ~= nil) then builder.CanBeGiftedWithGiftCard = CanBeGiftedWithGiftCard; else builder.CanBeGiftedWithGiftCard = false; end
 	if (CanBeTransferredToTeammate ~= nil) then builder.CanBeTransferredToTeammate = CanBeTransferredToTeammate; else builder.CanBeTransferredToTeammate = false; end

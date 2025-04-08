@@ -1,3 +1,5 @@
+require ('utilities');
+
 --This code is used to process a manual attack when the built-in WZ attack mechanics can't be leveraged for the desired result
 --3 use cases at this point are:
 --          1) Limited Multimove - the transfers involved caused the WZ engine to leave units behind and not process attacks properly
@@ -16,7 +18,7 @@
 --     - [Limited Multimove] true indicates whether this is a standard WZ attack order and we're manipulating 'result' to let WZ handle the result of the battle
 --     - [Airstrike]         false indicates that this isn't being done with an attack order, usually b/c the FROM and TO territories are not adjacent and the standard WZ engine can't process these attacks; in this case the result is handled by this code, either FROM/TO directly modified + optional airlift to visibly move units when attack is successful
 --return value is the result with updated AttackingArmiesKilled, DefendingArmiesKilled values & a true/false AttackIsSuccessful indicator
-function process_manual_attack (game, AttackingArmies, DefendingTerritory, result, boolWZattackTransferOrder)
+function process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, boolWZattackTransferOrder)
 	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
 	local DefendingArmies = DefendingTerritory.NumArmies;
 
@@ -70,10 +72,10 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	-- print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
 	printDebug ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
-	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, boolWZattackTransferOrder);
+	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, game, addNewOrder, boolWZattackTransferOrder);
 	-- print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
 	printDebug ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, boolWZattackTransferOrder);
+	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, game, addNewOrder, boolWZattackTransferOrder);
 	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
 	-- print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
 	printDebug ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned, "..tablelength (defenderResult.DamageToSpecialUnits).." damaged]");
@@ -102,6 +104,8 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 		result.DefendingArmiesKilled = WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects);
 		result.DamageToSpecialUnits = damageToAllSpecialUnits; --assign damage done to SUs for both attacker & defender
 	end
+	-- ^^ this doesn't work; the 'result' object isn't updating properly, so must leave it to the calling function to update itself
+	-- the 'result' object received here is likely a Lua copy of the original object, so changes don't propagate back to the original object when _Order function ends
 
 	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful, DamageToSpecialUnits=damageToAllSpecialUnits, Result=result, AttackingArmiesKilled=WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects), DefendingArmiesKilled=WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects)});
 end
@@ -111,7 +115,7 @@ end
 --the combo of (sortedSpecialUnits+armyCount) is either the Attacker and totalDamage is damage from defender units, or the combo is the Defender and totalDamage is damage from attacker units
 --this function will be called once for each case, once for the Attacker and once for the Defender
 --boolWZattackTransferOrder of true - ...document me...
-function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, boolWZattackTransferOrder)
+function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, game, addNewOrder, boolWZattackTransferOrder)
 	local remainingDamage = totalDamage;
 	local boolArmiesProcessed = false;
 	local remainingArmies = armyCount;
@@ -120,8 +124,9 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	local killedSpecialsObjects = {};
 	local clonedSpecials = {};
     local damageToSpecialUnits = {};
+	local strDummyPlaceHolder = "|dummyPlaceholder|applyDamageToArmies";
 
-	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType="|dummyPlaceholder|applyDamageToArmies"}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
+	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType=strDummyPlaceHolder}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
 	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
@@ -136,8 +141,8 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 		if (v.proxyType == "CustomSpecialUnit") then
 			printDebug ("CUSTOM SPECIAL name '"..v.Name.."', ModID "..v.ModID..", combat order "..v.CombatOrder..", health "..tostring(v.Health)..", attackPower "..tostring(v.AttackPower)..", defensePower "..tostring(v.DefensePower)..", APower% "..tostring(v.AttackPowerPercentage)..
 			", DPower% "..tostring(v.DefensePowerPercentage)..", DmgAbsorb "..tostring(v.DamageAbsorbedWhenAttacked)..", DmgToKill "..tostring(v.DamageToKill)..", Health "..tostring(v.Health)..", remaining damage "..remainingDamage);
-		elseif (v.proxyType == "|dummyPlaceholder|applyDamageToArmies") then
-			printDebug ("DUMMY PLACEHOLDER for armies, remaining damage "..remainingDamage..", armies damage processed already? "..tostring(boolArmiesProcessed));
+		elseif (v.proxyType == strDummyPlaceHolder) then
+			printDebug ("DUMMY PLACEHOLDER SU for armies, remaining damage "..remainingDamage..", armies damage processed already? "..tostring(boolArmiesProcessed));
 			boolCurrentSpecialSurvives = false; --don't add this to the survivingSpecials table
 			--don't do anything other than let the loop continue 1 last iteration to apply damage to the armies
 			--this item has CombatOrder==0 but it is placed last into the table just to ensure that at least 1 element has >0 CombatOrder so that the loop will process damage on the armies if there is remainingDamage left
@@ -179,6 +184,26 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						--    (C) if Res cards are in play but Commander owner doesn't have a Res card, eliminate the player
 						--    (D) if Res cards are in play and Commander owner has a Res card, remove the Commander, submit CustomGameOrder directed @ Resurrection mod indicating that Commander has died and should be Resurrected
 						--reference: 	addNewOrder(WL.GameOrderEvent.Create(winnerId, 'Decided random winner', {}, eliminate(votes.players, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer)));
+						-- addOrder (addAirLiftCardEvent, false); --add the event to the game order list, ensure 'false' so this order isn't skipped when we skip the Airstrike order
+						-- addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
+						local publicGameData = Mod.PublicGameData;
+						local commanderOwner = v.OwnerID;
+						if (publicGameData.CardData == nil) then publicGameData.CardData = {}; end
+						publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection", game));
+						local CommanderOwner_ResurrectionCard = playerHasCard (commanderOwner, publicGameData.CardData.ResurrectionCardID, game); --get card instance ID of player's Resurrection card
+						print ("[RESURRECTION CHECK] Res cardID " ..tostring (publicGameData.CardData.ResurrectionCardID)..", Res card instance ID ".. tostring (CommanderOwner_ResurrectionCard));
+
+						if (CommanderOwner_ResurrectionCard~=nil) then
+							print ("[RESURRECTION CHECK RESULT] Commander dies, player "..commanderOwner .."/"..getPlayerName (game, commanderOwner) .." has Resurrection card, add order to inform Resurrection mod");
+							--reference: WL.GameOrderCustom.Create(playerID PlayerID, message string, payload string, costOpt Table<ResourceType (enum),integer>) (static) returns GameOrderCustom:
+							addNewOrder(WL.GameOrderCustom.Create(commanderOwner, "Resurrection - commander died", "Resurrection-Invoke|"..commanderOwner.."|"..tostring(CommanderOwner_ResurrectionCard), nil), true); --add order, use 'true' so this new order is skipped if the order that kills the Commander is skipped
+							--local event = WL.GameOrderEvent.Create(caqaaastingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
+						else
+							print ("[RESURRECTION CHECK RESULT] Commander dies, player "..commanderOwner.."/"..getPlayerName (game, commanderOwner) .." does not have Resurrection card, eliminate player");
+							--local event = WL.GameOrderEvent.Create(caqaaastingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
+							addNewOrder(WL.GameOrderEvent.Create(commanderOwner, getPlayerName (game, commanderOwner).." was eliminated! [commander died/LMM]", {}, {}, {}, {}), true); --add event, use 'false' so this order is skipped if the order that kills the Commander is skipped
+							--reference: WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
+						end
 					else
 						printDebug ("COMMANDER survives, not enough damage done");
 						remainingDamage = 0; --commander survives, no more attacks to occur
@@ -281,7 +306,7 @@ print ("KSO+1 "..#killedSpecialsObjects);
 			-- SAME ACTION:
 				-- CASE: non-attackorder + dies = add to killedSpecialsGUIDs & killedSpecialsObjects
 				-- CASE: attackorder + dies = add to killedSpecialsGUIDs & killedSpecialsObjects
-			if (v.proxyType ~= "|dummyPlaceholder|applyDamageToArmies") then table.insert (killedSpecialsGUIDs, v.ID); table.insert (killedSpecialsObjects, v); end --only add the Special to the killedSpecialsGUIDs & killedSpecialsObjects table if it dies, ignore the dummy placeholder
+			if (v.proxyType ~= strDummyPlaceHolder) then table.insert (killedSpecialsGUIDs, v.ID); table.insert (killedSpecialsObjects, v); end --only add the Special to the killedSpecialsGUIDs & killedSpecialsObjects table if it dies, ignore the dummy placeholder
 		end
 	end
 
@@ -321,4 +346,73 @@ function concatenateArrays (array1, array2)
 		result[k] = array2[k];
 	end
 	return result
+end
+
+--return list of all cards defined in this game; includes custom cards
+--generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
+function getDefinedCardList (game)
+	local count = 0;
+	local cards = {};
+	local publicGameData = Mod.PublicGameData;
+
+	--if CardData structure isn't defined (eg: from an ongoing game before this was done this way), then initialize the variable and populate the list here
+	if (publicGameData.CardData==nil) then publicGameData.CardData = {}; publicGameData.CardData.DefinedCards = nil; end
+
+	--if (false) then --publicGameData.CardData.DefinedCards ~= nil) then
+	if (publicGameData.CardData.DefinedCards ~= nil) then
+		return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+	else
+		if (game==nil) then print ("game is nil"); return nil; end
+		if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+		if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+
+		for cardID, cardConfig in pairs(game.Settings.Cards) do
+			local strCardName = getCardName_fromObject(cardConfig);
+			cards[cardID] = strCardName;
+			count = count +1
+		end
+		return cards;
+	end
+end
+
+--given a card name, return it's cardID (not card instance ID), ie: represents the card type, not the instance of the card
+function getCardID (strCardNameToMatch, game)
+	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
+	local cards={};
+	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
+		--print ("run function");
+		cards = getDefinedCardList (game);
+	else
+		cards = Mod.PublicGameData.CardData.DefinedCards;
+	end
+
+	for cardID, strCardName in pairs(cards) do
+		if (strCardName == strCardNameToMatch) then
+			return cardID;
+		end
+	end
+	return nil; --cardName not found
+end
+
+function initialize_CardData (game)
+    local publicGameData = Mod.PublicGameData;
+
+    publicGameData.CardData = {};
+    publicGameData.CardData.DefinedCards = nil;
+    publicGameData.CardData.CardPiecesCardID = nil;
+	publicGameData.CardData.Resurrection = nil;
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    if (game==nil) then print ("game is nil"); return nil; end
+    if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+    if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+
+    publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
+	publicGameData.CardData.Resurrection = tostring(getCardID ("Resurrection"));
+    Mod.PublicGameData = publicGameData;
 end

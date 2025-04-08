@@ -23,6 +23,36 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
+	-- cards=getDefinedCardList (game);
+	-- for cardID, cardConfig in pairs(game.Settings.Cards) do
+	-- 	local strCardName = getCardName_fromObject(cardConfig);
+	-- 	cards[cardID] = strCardName;
+	-- 	--count = count +1
+	-- 	print ("**"..cardID,strCardName,type(cardID));
+	-- end
+
+	-- local publicGameData = Mod.PublicGameData;
+	-- publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection", game));
+	-- commanderOwner = 1; realcardID = 1000006;
+	-- playerID = 1; cardID = publicGameData.CardData.ResurrectionCardID;
+	-- -- cardID = realcardID;
+	-- jork=nil;
+	-- for k,v in pairs (game.LatestStanding.Cards[playerID].WholeCards) do
+	-- 	--print (playerID,v.CardID,k);
+	-- 	if (v.CardID == tonumber(cardID)) then print (playerID,v.CardID,k); CommanderOwner_ResurrectionCard= k; end
+	-- 	jork=k;
+	-- 	jork2=v;
+	-- end
+	-- print ("[RESURRECTION CHECK] Res cardID " ..tostring (publicGameData.CardData.ResurrectionCardID)..", Res card instance ID ".. tostring (CommanderOwner_ResurrectionCard));
+	-- print (cardID.."::",type(cardID))
+	-- print (realcardID.."::",type(realcardID))
+	-- print (publicGameData.CardData.ResurrectionCardID.."::",type (publicGameData.CardData.ResurrectionCardID))
+	-- print (jork.."::",type(jork))
+	-- print (jork2.CardID.."::",type(jork2.CardID))
+	-- print (tostring (realcardID == publicGameData.CardData.ResurrectionCardID));
+	-- print (tostring (cardID == publicGameData.CardData.ResurrectionCardID));
+	-- print (tostring (realcardID == cardID));
+
 	--debug info for debug authorized user only
 	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
 
@@ -58,7 +88,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     for k,gameOrder in pairs (game.Orders) do
         print (k..", "..gameOrder.proxyType);
         if (gameOrder.proxyType == "GameOrderAttackTransfer") then
-            print ("player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
+            print ("[ATTACK/TRANSFER] player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
         end
     end
 
@@ -249,8 +279,12 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
 				if (boolCurrentTerritoryHeaderDisplayed == false) then
-					UI.CreateLabel (UIdisplay).SetText ("\n["..terr.ID.. "/".. game.Map.Territories[terr.ID].Name.."] Attack Power "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", Defense Power "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower..
-						", #Armies ".. game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies ..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading")); 
+					local intFROMnumArmiesPresent = (game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (game, terr.ID)); --includes armies deployed this turn
+					local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits);
+					UI.CreateLabel (UIdisplay).SetText ("\n["..terr.ID.. "/".. game.Map.Territories[terr.ID].Name..
+					"] Attack Power "..FROMfullAttackingForce.AttackPower.. " [kills ".. math.floor (FROMfullAttackingForce.AttackPower * game.Settings.OffenseKillRate + 0.5).."]"..
+					", Defense Power "..FROMfullAttackingForce.DefensePower.. " [kills ".. math.floor (FROMfullAttackingForce.DefensePower * game.Settings.DefenseKillRate + 0.5).."]"..
+					", #Armies ".. intFROMnumArmiesPresent..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading"));
 					boolCurrentTerritoryHeaderDisplayed = true;
 				end
 				if (numSpecialsOnTerritory>1) then UI.CreateLabel (UIdisplay).SetText ("_").SetColor ("#000000"); end --spacer between SUs, but don't leave space between territory heading and 1st SU
@@ -448,21 +482,23 @@ function populateUnitInspectorContents ()
 	local line = UI.CreateHorizontalLayoutGroup (vertTerritoryInfoAndUnitInspectorList);
 	UI.CreateLabel(line).SetText("INSPECTING Territory: ");
 	UI.CreateLabel(line).SetText(Inspector_territory.ID .. "/" .. Inspector_territory.Name).SetColor ("#00FF00");
-	local attackPower = Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.AttackPower;
-	local defensePower = Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.DefensePower;
+
+	local intFROMnumArmiesPresent = (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
+	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits);
+
+	local attackPower = FROMfullAttackingForce.AttackPower;
+	local defensePower = FROMfullAttackingForce.DefensePower;
 	local intAttackKillQuantity = math.floor (attackPower * Game.Settings.OffenseKillRate + 0.5);
 	local intDefenseKillQuantity = math.floor (defensePower * Game.Settings.DefenseKillRate + 0.5);
 
 	local UIdisplay = vertTerritoryInfoAndUnitInspectorList;
 	UI.CreateLabel(UIdisplay).SetText("    Attack Power: ".. attackPower .. " [kills ".. intAttackKillQuantity .."], Defense Power: " .. defensePower .. " [kills "..intDefenseKillQuantity.."]"..
-		"\n    Units present -- Armies: ".. Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.NumArmies..", Special Units: "..#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
-	-- local sps = Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits;
-	-- local numSpecialsOnTerritory = #sps;
+		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
 	UnitInspector_TerritorySelectButton.SetText ("Click here to inspect a different territory");
 	intInspector_territory = Inspector_territory.ID; --set global variable to value of selected territory
 
 	if (#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits == 0) then
-		CreateLabel(UnitInspectorRoot).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
+		CreateLabel(UIdisplay).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
 	else
 		for k,specialUnit in pairs (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits) do
 			local strSUownerName = getPlayerName (Game, specialUnit.OwnerID);
@@ -769,13 +805,13 @@ function showCombatOrder_Window (rootParent, setMaxSize, setScrollable, game, cl
 	CurrentDisplayRoot = UnitInspector_CombatOrderRoot;
 end
 
-function showCombatOrder(callback, sp, UnitInspectorRoot)
+function showCombatOrder()
 	--DestroyWindow();
 	--SetWindow("CombatOrder");
 	Game.CreateDialog (showCombatOrder_Window);
 	--CreateButton(UnitInspectorRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(callback);
 
-	local order = {[0] = {Units = {"Normal army"}, Positions = {}}};
+	local order = {[0] = {Units = {"Armies"}, Positions = {}}};
 	for _, terr in pairs(Game.LatestStanding.Territories) do
 		if not tableIsEmpty(terr.NumArmies.SpecialUnits) then
 			for _, unit in pairs(terr.NumArmies.SpecialUnits) do
@@ -805,17 +841,14 @@ function showCombatOrder(callback, sp, UnitInspectorRoot)
 	order = t;
 
 	CreateEmpty(CurrentDisplayRoot).SetPreferredHeight(10);
-	CreateLabel(CurrentDisplayRoot).SetText("This is the order in which units take damage. Note that the units listed below are only the ones visible to you, there might be units hidden by the fog").SetColor(colors.TextColor);
+	CreateLabel(CurrentDisplayRoot).SetText("This is the order in which units take damage. This list only includes units that are visible to you; there might be other units hidden in the fog").SetColor(colors.TextColor);
 
 	local c = 1;
-	for _, arr in pairs(order) do
+	for k, arr in pairs(order) do
 		local line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
-		if sp ~= nil and arr.CombatOrder == sp.CombatOrder then
-			CreateLabel(line).SetText(c .. ". ").SetColor(colors.Green);
-		else
-			CreateLabel(line).SetText(c .. ". ").SetColor(colors.TextColor);
-		end
-		
+		--CreateLabel(line).SetText(c .. ". [".. arr.CombatOrder .."]").SetColor(colors.TextColor);
+		CreateLabel(line).SetText(c .. ". ").SetColor(colors.TextColor);
+
 		local t = {};
 		for _, unit in pairs(arr.Units) do
 			if not valueInTable(t, getUnitName(unit)) then
@@ -829,8 +862,10 @@ function showCombatOrder(callback, sp, UnitInspectorRoot)
 			label.SetColor("#EEEEEE");
 		end
 		CreateEmpty(line).SetFlexibleWidth(1);
-		CreateButton(line).SetText("Where?").SetColor(colors.Blue).SetOnClick(function() Game.HighlightTerritories(arr.Positions) for _, terrID in pairs(arr.Positions) do Game.CreateLocatorCircle(Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
-		
+		CreateLabel(line).SetText("[".. arr.CombatOrder .."]").SetColor(colors.TextColor);
+		local whereButton = CreateButton(line).SetText("Where?").SetColor(colors.Blue).SetOnClick(function() Game.HighlightTerritories(arr.Positions) for _, terrID in pairs(arr.Positions) do Game.CreateLocatorCircle(Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
+		if (arr.CombatOrder == 0 and #arr.Units == 1) then whereButton.SetInteractable (false); end;
+
 		c = c + 1;
 	end
 end

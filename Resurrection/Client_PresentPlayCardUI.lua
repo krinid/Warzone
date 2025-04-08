@@ -24,7 +24,7 @@ end
 
 function activate_Resurrection (game, cardInstance, playCard)
     print("[RESURRECTION CARD PLAY] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
-    
+
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
@@ -132,7 +132,8 @@ function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel,
 end
 
 function TerritoryClicked(terrDetails)
-	TargetTerritoryBtn.SetInteractable(true);
+	if (UI.IsDestroyed (TargetTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable, do nothing, just return
+    TargetTerritoryBtn.SetInteractable(true);
 
 	if (terrDetails == nil) then
 		--The click request was cancelled.   Return to our default state.
