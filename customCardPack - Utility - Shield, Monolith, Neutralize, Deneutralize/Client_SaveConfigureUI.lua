@@ -90,7 +90,7 @@ function createCards_newCards(alert, addCard);
 		print("CardBlockPiecesPerTurn="..tostring(Mod.Settings.CardBlockPiecesPerTurn))
 
 		local strCardBlockDesc = "Block an opponent from playing cards ";
-		if (Mod.Settings.CardBlockDuration == -1) then
+		if (Mod.Settings.CardBlockDuration <= -1) then
 				strCardBlockDesc = strCardBlockDesc .. "permanently.";
 		else
 				strCardBlockDesc = strCardBlockDesc .. "for " .. Mod.Settings.CardBlockDuration .. " turn"..plural(Mod.Settings.CardBlockDuration)..".";
@@ -125,7 +125,7 @@ function createCards_newCards(alert, addCard);
 		print("NeutralizePiecesPerTurn="..tostring(Mod.Settings.NeutralizePiecesPerTurn))
 
 		local strNeutralizeDesc = "Turn a territory owned by a player to neutral ";
-		if (Mod.Settings.NeutralizeDuration>=1) then
+		if (Mod.Settings.NeutralizeDuration>=0) then
 				strNeutralizeDesc = strNeutralizeDesc .. "for " .. Mod.Settings.NeutralizeDuration .. " turns. If it is still neutral at that time, it will revert ownership to the prior owner.";
 		else
 				strNeutralizeDesc = strNeutralizeDesc .. "permanently.";
@@ -184,7 +184,7 @@ function createCards_newCards(alert, addCard);
 		print("EarthquakePiecesPerTurn="..tostring(Mod.Settings.EarthquakePiecesPerTurn))
 
 		local strEarthquakeDesc = "Invoke an earthquake that causes "..Mod.Settings.EarthquakeStrength.." damage to all territories in a selected bonus for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
-		if (Mod.Settings.EarthquakeDuration == -1) then
+		if (Mod.Settings.EarthquakeDuration <= -1) then
 		strEarthquakeDesc = strEarthquakeDesc .. "The effect is permanent.";
 		end
 		Mod.Settings.EarthquakeCardID = addCard("Earthquake", strEarthquakeDesc, "earthquake_130x180.png", Mod.Settings.EarthquakePiecesNeeded, Mod.Settings.EarthquakePiecesPerTurn, Mod.Settings.EarthquakeStartPieces, Mod.Settings.EarthquakeCardWeight, Mod.Settings.EarthquakeDuration);
@@ -201,7 +201,7 @@ function createCards_newCards(alert, addCard);
 		print("TornadoPiecesPerTurn="..tostring(Mod.Settings.TornadoNumPiecesPerTurn))
 
 		local strTornadoDesc = "Cause a tornado to develop on a territory, causing ".. Mod.Settings.TornadoStrength.." damage ";
-		if (Mod.Settings.TornadoDuration == -1) then
+		if (Mod.Settings.TornadoDuration <= -1) then
 				strTornadoDesc = strTornadoDesc .. "per turn. The tornado continues permanently.";
 		else
 				strTornadoDesc = strTornadoDesc .. "for " .. Mod.Settings.TornadoDuration .. " turn" .. plural(Mod.Settings.TornadoDuration) .. ".";
@@ -226,7 +226,7 @@ function createCards_newCards(alert, addCard);
 		print("QuicksandPiecesPerTurn="..tostring(Mod.Settings.QuicksandPiecesPerTurn))
 
 		local strQuicksandDesc = "Transform a territory into quicksand ";
-		if (Mod.Settings.QuicksandDuration == -1) then
+		if (Mod.Settings.QuicksandDuration <= -1) then
 				strQuicksandDesc = strQuicksandDesc .. "The effect is permanent.";
 		else
 				strQuicksandDesc = strQuicksandDesc .. "for " .. Mod.Settings.QuicksandDuration .. " turn" .. plural(Mod.Settings.QuicksandDuration) .. ".";
@@ -375,7 +375,7 @@ function createCards_originalCCP_cards (alert, addCard)
 
 		local strIsolationDesc = "Isolate a territory ";
 
-		if (Mod.Settings.IsolationDuration>=1) then
+		if (Mod.Settings.IsolationDuration>=0) then
 				strIsolationDesc = strIsolationDesc .. "for "..Mod.Settings.IsolationDuration.." turns.\n\nNo units can attack or transfer to or from the territory during this duration.";
 		else
 				strIsolationDesc = strIsolationDesc .. "permanently.\n\nNo units can attack or transfer to or from the territory after Isolation is invoked.";
