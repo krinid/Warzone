@@ -314,7 +314,8 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 				--new code utilizing Manual Attack routine:
 
 				print ("======================================Manual Attack; boolMoveUnitsTransferredIn == true [use full armies on territory]");
-				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
+				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result, addNewOrder, true);
+				--reference: function process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, boolWZattackTransferOrder)
 				print ("MAR.DR.KA type/# ".. type(manualAttackResult.DefenderResult.KilledArmies).."/"..tostring (manualAttackResult.DefenderResult.KilledArmies)..", MAR.DR.KS type/# "..type (manualAttackResult.DefenderResult.KilledSpecials).."/".. tablelength (manualAttackResult.DefenderResult.KilledSpecialsObjects)..", #MAR.DR.DTSU "..tablelength (manualAttackResult.DefenderResult.DamageToSpecialUnits));
 				print ("MAR.AR.KA type/# ".. type(manualAttackResult.AttackerResult.KilledArmies).."/"..tostring (manualAttackResult.AttackerResult.KilledArmies)..", MAR.AR.KS type/# "..type (manualAttackResult.AttackerResult.KilledSpecials).."/".. tablelength (manualAttackResult.AttackerResult.KilledSpecialsObjects)..", #MAR.AR.DTSU "..tablelength (manualAttackResult.AttackerResult.DamageToSpecialUnits));
 				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecials) do print ("AR.KS "..k,v); end
@@ -412,7 +413,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 				--new code utilizing Manual Attack routine:
 				print ("======================================Manual Attack; boolMoveUnitsTransferredIn == false [utilize map2 values]");
-				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result);
+				local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result, addNewOrder, true);
 				print ("MAR.DR.KA type/# ".. type(manualAttackResult.DefenderResult.KilledArmies).."/"..tostring (manualAttackResult.DefenderResult.KilledArmies)..", MAR.DR.KS type/# "..type (manualAttackResult.DefenderResult.KilledSpecials).."/".. tablelength (manualAttackResult.DefenderResult.KilledSpecialsObjects)..", #MAR.DR.DTSU "..tablelength (manualAttackResult.DefenderResult.DamageToSpecialUnits));
 				print ("MAR.AR.KA type/# ".. type(manualAttackResult.AttackerResult.KilledArmies).."/"..tostring (manualAttackResult.AttackerResult.KilledArmies)..", MAR.AR.KS type/# "..type (manualAttackResult.AttackerResult.KilledSpecials).."/".. tablelength (manualAttackResult.AttackerResult.KilledSpecialsObjects)..", #MAR.AR.DTSU "..tablelength (manualAttackResult.AttackerResult.DamageToSpecialUnits));
 				for k,v in pairs (manualAttackResult.AttackerResult.KilledSpecials) do print ("AR.KS "..k,v); end
@@ -497,8 +498,10 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
 end
 
-function process_entire_manual_attack (game, AttackingArmies, DefendingTerritory, result)
-	local manualAttackResult = process_manual_attack (game, AttackingArmies, DefendingTerritory, result);
+function process_entire_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder)
+	local manualAttackResult = process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, true);
+	--local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result, addNewOrder, true);
+
 --&&&
 	--manualAttackResult.AttackerResult is armies object for attacker
 	--manualAttackResult.DefenderResult is armies object for defender

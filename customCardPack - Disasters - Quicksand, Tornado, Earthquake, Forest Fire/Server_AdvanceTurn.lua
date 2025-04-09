@@ -494,7 +494,8 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	local airstrikeResult = nil;
 	if (boolIsAttack == true) then --Airstrike order is an attack
-		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder);
+		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder, false);
+
 		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
 		--airstrikeResult.DefenderResult is armies object for defender
@@ -726,6 +727,19 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	return specialUnit;
 end
 
+function territoryHasActiveShield (game, terrID)
+	local territory = game.ServerGame.LatestTurnStanding.Territories[terrID];
+	if not territory then return false; end
+
+	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
+		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
+			return (true);
+		end
+	end
+
+	return (false);
+end
+
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
@@ -743,6 +757,19 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 		--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5));
 		--print ("[QUICKSAND] TEMP POST attack/transfer into Quicksand! AttackingArmiesKilled=="..result.AttackingArmiesKilled.NumArmies..", DefendingArmesKilled=="..result.DefendingArmiesKilled.NumArmies..", IsSuccessful=="..tostring(result.IsSuccessful).."::");
 		--return;
+
+		--if there is no shield data, do nothing, as there is nothing to check
+		--if order is an attack and the target territory has an active shield, nullify all damage; this is required b/c WZ engine applies the damage nullifying property of the Shield SU only to accompanying allied armies involved in attack but not other SUs
+		--thus, other SUs in the territory with the shield will still give out defense damage to attack units, which shouldn't be the case for a Shield; so nullify that damage here
+		if (Mod.PrivateGameData.ShieldData ~= nil and result.IsAttack == true) then
+			local boolTOterritoryHasActiveShield = territoryHasActiveShield (game, gameOrder.To);
+			if (boolTOterritoryHasActiveShield == true) then
+				result.AttackingArmiesKilled = WL.Armies.Create (0, {}); --no attacking armies or SUs die
+				result.DefendingArmiesKilled = WL.Armies.Create (0, {}); --no defending armies or SUs die
+				result.DamageToSpecialUnits = {}; --no attacking or defending SUs take damage
+				print ("[ATTACK/TRANSFER] [SHIELD on TARGET TERRITORY] nullify all damage");
+			end
+		end
 
 		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then

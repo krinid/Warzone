@@ -64,10 +64,16 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	local DefensePower = DefendingTerritory.NumArmies.DefensePower;
 	local AttackDamage = math.floor (AttackPower * game.Settings.OffenseKillRate * totalAttackerAttackPowerPercentage + 0.5);
 	local DefenseDamage = math.floor (DefensePower * game.Settings.DefenseKillRate * totalDefenderDefensePowerPercentage + 0.5);
-	--local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
-	--local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
 
-	--aply damage to Specials & armies of each Defender & Attacker; 
+	--assume order is an attack (otherwise don't call process_manual_attack)
+	--if the target territory has an active shield, nullify all damage by zeroing out AttackDamage & DefenseDamage; this is required b/c WZ engine applies the damage nullifying property of the Shield SU only to accompanying allied armies involved in attack but not other SUs
+	--thus, other SUs in the territory with the shield will still give out defense damage to attack units, which shouldn't be the case for a Shield; so nullify that damage here
+	local boolTOterritoryHasActiveShield = territoryHasActiveShield (DefendingTerritory);
+	if (boolTOterritoryHasActiveShield == true) then
+		AttackDamage = 0;
+		DefenseDamage = 0;
+		print ("[ATTACK/TRANSFER] [SHIELD on TARGET TERRITORY] nullify all damage");
+	end
 
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	-- print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
@@ -108,6 +114,18 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	-- the 'result' object received here is likely a Lua copy of the original object, so changes don't propagate back to the original object when _Order function ends
 
 	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful, DamageToSpecialUnits=damageToAllSpecialUnits, Result=result, AttackingArmiesKilled=WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects), DefendingArmiesKilled=WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects)});
+end
+
+function territoryHasActiveShield (territory)
+	if not territory then return false; end
+
+	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
+		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
+			return (true);
+		end
+	end
+
+	return (false);
 end
 
 --process damage quantity 'totalDamage' to the Specials in table 'sortedSpecialUnits' and the armies in 'armyCount'
@@ -210,7 +228,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							--local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 							--ELIM player!
 							local modifiedTerritories = eliminatePlayer (commanderOwner, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
-							addNewOrder(WL.GameOrderEvent.Create(commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
+							addNewOrder(WL.GameOrderEvent.Create (commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
 							--reference: WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
 
 							--reference: function eliminatePlayer (playerIds, territories, removeSpecialUnits, isSinglePlayer)
@@ -392,7 +410,7 @@ end
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
 	local cards={};
-	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
+	if (Mod.PublicGameData.CardData == nil or Mod.PublicGameData.CardData.DefinedCards == nil) then
 		--print ("run function");
 		cards = getDefinedCardList (game);
 	else
