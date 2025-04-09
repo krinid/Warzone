@@ -103,7 +103,12 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 	if (strArrayOrderData[2] == "AttackTransfer") then
 		print ("[FORCE ORDER] "..order.Payload);
 		--print ("[FORCE ORDER] prep - "..order.Payload);
-		local numArmies = WL.Armies.Create(strArrayOrderData[8], {});
+
+		local numArmies = WL.Armies.Create (strArrayOrderData[8], game.ServerGame.LatestTurnStanding.Territories[strArrayOrderData[4]].NumArmies.SpecialUnits); --send all Special Units with the armies
+		--local numArmies = WL.Armies.Create(strArrayOrderData[8], {}); --don't send Special Units, just armies
+		--local numArmies = WL.Armies.Create(0, game.ServerGame.LatestTurnStanding.Territories[strArrayOrderData[5]].NumArmies.SpecialUnits); --send only Special Units, no armies
+
+		--reference: local strForcedOrder = "ForcedOrders|AttackTransfer|"..targetPlayer.."|"..gameOrder.From.."|"..gameOrder.To.."|"..tostring (gameOrder.AttackTransfer) .."|"..tostring (gameOrder.ByPercent) .."|"..gameOrder.NumArmies.NumArmies.."|".. tostring (gameOrder.AttackTeammates);
 		--print ("[FORCE ORDER] start - "..order.Payload);
 		local forcedAttackTransfer = WL.GameOrderAttackTransfer.Create(strArrayOrderData[3], strArrayOrderData[4], strArrayOrderData[5], tonumber (strArrayOrderData[6]), toboolean (strArrayOrderData[7]), numArmies, toboolean (strArrayOrderData[9]));
 		--reference: replacementOrder = WL.GameOrderAttackTransfer.Create(targetPlayer, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, gameOrder.NumArmies, gameOrder.AttackTeammates);

@@ -13,7 +13,10 @@ function Client_GameOrderCreated (game, gameOrder, skip)
 			--create a custom game order & handle it in Server_TurnAdvance_Order
 			local orders = game.Orders;
 			local strForcedOrder = "ForcedOrders|AttackTransfer|"..targetPlayer.."|"..gameOrder.From.."|"..gameOrder.To.."|"..tostring (gameOrder.AttackTransfer) .."|"..tostring (gameOrder.ByPercent) .."|"..gameOrder.NumArmies.NumArmies.."|".. tostring (gameOrder.AttackTeammates);
+			--local objForcedOrder = {mod="ForcedOrders", proxyType="AttackTransfer", targetPlayer=targetPlayer, From=gameOrder.From, To=gameOrder.To, AttackTransfer=gameOrder.AttackTransfer, ByPercent=gameOrder.ByPercent, NumArmies=gameOrder.NumArmies, intNumArmies=gameOrder.NumArmies.NumArmies, SpecialUnits=gameOrder.NumArmies.SpecialUnits, AttackTeammates=gameOrder.AttackTeammates, fullOrder=gameOrder};
 			table.insert(orders, WL.GameOrderCustom.Create(game.Us.ID, "Create AI move: " .. strForcedOrder, strForcedOrder));
+			--table.insert(orders, WL.GameOrderCustom.Create(game.Us.ID, "Create AI move: " .. strForcedOrder, objForcedOrder));
+
 			print ("Create AI move: " .. strForcedOrder);
 			game.Orders = orders;
 			skip (WL.ModOrderControl.Skip, false); --skip the original order, replaced with a move for AI1

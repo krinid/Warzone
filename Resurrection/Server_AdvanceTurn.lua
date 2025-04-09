@@ -144,9 +144,9 @@ function replace_Commander_on_map (game, playerID, territoryID, addOrder, boolCo
 		print ("[RESURRECTION PLACE ON MAP] do not consume Resurrection wholecard b/c player played card themselves");
 	end
 
-	addOrder(event, false); --add the order containing the placement of the Commander on the map & if appropriate consumption of the Resurrection card (if player didn't play it himself and it is being played on their behalf automatically)
+	addOrder (event, false); --add the order containing the placement of the Commander on the map & if appropriate consumption of the Resurrection card (if player didn't play it himself and it is being played on their behalf automatically)
 
-	--update ResurrectionData
+	--update ResurrectionData (remove the pending Resurrection for this player from the table)
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.ResurrectionData==nil) then publicGameData.ResurrectionData = {}; end
 	publicGameData.ResurrectionData[playerID] = nil; --clear the Resurrection data for this player
@@ -158,6 +158,7 @@ end
 --if (A) but not (B) then let the Commander die
 --this function is called once for the Defending special units killed & once for the Attacking special units killed
 function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKilled_SpecialUnits, targetTerritoryID, addOrder)
+	local placeholderCommanderUnits = {};
 	for k,sp in pairs (ArmiesKilled_SpecialUnits) do
 		if (sp.proxyType == "Commander") then --if not a Commander, don't do anything
 			local Commander_OwnerID = sp.OwnerID; --check owner of Commander, not the territory -- in case a foreign Commander is being killed on someone else's territory (don't check or consume the Resurrection card of the territory owner)
@@ -178,12 +179,20 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 				--local event = WL.GameOrderEvent.Create (Commander_OwnerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." may have been killed", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				local event = WL.GameOrderEvent.Create (Commander_OwnerID, "[spirits are restless]", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
 				--local event = WL.GameOrderEvent.Create (Commander_OwnerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away", {}, {targetTerritory}); -- create Event object to send back to addOrder function parameter
-				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-				addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
+				event.JumpToActionSpotOpt = WL.RectangleVM.Create (game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+				--addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
+				--GLOBAL_order_swapPlaceholderIn = event;
+				table.insert (GLOBAL_table_orders_swapPlaceholderIn, event);
 				local strPlaceholderCommanderMsg = "Resurrection|Placeholder-Check|"..Commander_OwnerID.."|"..targetTerritoryID.."|"..replacementCommander.ID.."|"..CommanderOwner_ResurrectionCard;
+				--&&& if this placeholder belongs to the attacker, must add it to the attacking armies to be included in the replacement order
 
-				--GLOBAL_event1 = event;
-				GLOBAL_custom1 = WL.GameOrderCustom.Create (Commander_OwnerID, "Resurrection|Placeholder-Check", strPlaceholderCommanderMsg);
+				table.insert (GLOBAL_table_orders_checkPlaceholder, WL.GameOrderCustom.Create (Commander_OwnerID, "Resurrection|Placeholder-Check", strPlaceholderCommanderMsg));
+				table.insert (placeholderCommanderUnits, replacementCommander);
+
+				--&&& technically here could be multiple orders of this kind if multiple Commanders die in this single order; actually need to create a table or orders and submit them all in sequence to check against the placeholder Commanders for each actual Commander
+				--but these placeholder-check orders need to be submitted after the replacement order is placed; and the replacement order must have the placeholder included in the attacks in place of the original commanders
+
+				--addOrder (GLOBAL_order_replacementOrder, false); --create custom order to check for placeholder Commander
 				--addOrder (WL.GameOrderCustom.Create (Commander_OwnerID, "Resurrection|Placeholder-Check", strPlaceholderCommanderMsg), false); --create custom order to check for placeholder Commander
 				print ("\n\n\n[PRCAP] ".. strPlaceholderCommanderMsg);
 
@@ -197,6 +206,7 @@ function process_resurrection_Checks_and_Preparation (game, playerID, ArmiesKill
 			end
 		end
 	end
+	return (placeholderCommanderUnits);
 end
 
 --create a new special unit
@@ -245,6 +255,7 @@ function process_resurrection_InvokeFromAnotherMod (game, playerID, addOrder)
 		-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 		addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 		replacementOrderRequired = false; --don't need to rewrite the original order without the dying Commander in place @ end of function, b/c the mod invoking this order is responsible for handling with the Commander
+		initiateResurrectionSequence (game, playerID); --initiate Resurrection sequence for this player; they must play the Resurrection card on the following turn
 
 	else
 		print ("[RESURRECTION] player doesn't have Resurrection card - let the Commander die");
@@ -252,8 +263,15 @@ function process_resurrection_InvokeFromAnotherMod (game, playerID, addOrder)
 end
 
 --check if Resurrection conditions are in place (Commander died & Commander owner has Resurrection card), and if so remove the dying Commanders to be replaced (resurrected) to the map next turn & replace the original order with one w/o the dying commanders on the map
+--NOTE: order sequene is critical, proper sequence is: original order, skip original order, swap Commander w/Placeholder [spirits are restless], replacement order (w/Placeholders not Commanders), check for Placeholder, then either (A) replace Commanders (glitch in the matrix) [replacement order was skipped, Commander not dead] or (B) initiate Resurrection sequence [replacement order not skipped, Commander died]
 function check_for_Resurrection_conditions_and_execute_preparation (game,order,result,skip,addOrder)
 	replacementOrderRequired = false; -- not local, so can be accessed in process_resurrection_Checks_and_Preparation
+	GLOBAL_table_orders_swapPlaceholderIn = {}; --table of orders, each 1 swaps out a Commander and swaps in a Placeholder Commander for each Commander involved in the order
+	GLOBAL_table_orders_revertCommander = {}; --table of orders to replace Commanders after the Placeholder check is complete
+	GLOBAL_table_orders_checkPlaceholder = {}; --table of orders to check if Placeholder Commanders are still alive, 1 order for each Placeholder
+	GLOBAL_order_replacementOrder = nil; --to be assigned a single order (not a table)
+	GLOBAL_table_orders_whiskedAway = {}; --table of orders to indicate that a Commander has died/whisked away and will be Resurrected
+	--&&& when replacing C w/PH C for the attacker, need to ensure it's participating in the attack! else it just stays behind and never dies, never Resurrects
 
     --if order is an attack on a territory with special units and >0 is set to die, check if a Commander is about to die; if so, check if they have a Resurrection card in hand
     --don't check for and result.IsSuccessful b/c it's possible there are >=1 Commanders and/or other units (Monolith, etc) with higher combat order whereby Commander still dies even if the territory isn't captured
@@ -271,20 +289,21 @@ function check_for_Resurrection_conditions_and_execute_preparation (game,order,r
 
 		print ("Res card ID=="..Mod.Settings.ResurrectionCardID.."; DefenderResCard=="..tostring (DefenderResurrectionCard).."; AttackerResCard=="..tostring (AttackerResurrectionCard).."::");
 
---testing!!
-GLOBAL_custom1 = nil;
-GLOBAL_event1 = nil;
-
 		--process check & implement Resurrections measures for DEFENDING Commanders (on territory order.To)
-		process_resurrection_Checks_and_Preparation (game, playerID_Defender, result.DefendingArmiesKilled.SpecialUnits, order.To, addOrder);
-		process_resurrection_Checks_and_Preparation (game, playerID_Attacker, result.AttackingArmiesKilled.SpecialUnits, order.From, addOrder);
+		local placeholderCommanders_Defender = process_resurrection_Checks_and_Preparation (game, playerID_Defender, result.DefendingArmiesKilled.SpecialUnits, order.To, addOrder); --actually don't need this return value since they are being attacked (stationary) on TO territory
+		local placeholderCommanders_Attacker = process_resurrection_Checks_and_Preparation (game, playerID_Attacker, result.AttackingArmiesKilled.SpecialUnits, order.From, addOrder); --the Commanders in this return value must be added to the attacking armies in the replacement order
+		local newAttackingSUs = concatenateTables (order.NumArmies.SpecialUnits, placeholderCommanders_Attacker); --table of new attacking special units to be added to the replacement order
+		print ("[###\n###\n###] #placeholderCommanders_Defender "..#placeholderCommanders_Defender..", #placeholderCommanders_Attacker "..#placeholderCommanders_Attacker.. ", #newAttackingSUs ".. #newAttackingSUs);
+		local newNumArmies = WL.Armies.Create (order.NumArmies.NumArmies, newAttackingSUs); --create new NumArmies object to be used in the replacement order
 
 		--if Resurrection applies, create replica of original order without the dying command involved; otherwise do nothing (which covers cases of no dying Commanders involved but also dying Commanders whose players didn't hold Resurrection cards)
 		if (replacementOrderRequired == true) then
-			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, order.NumArmies, order.AttackTeammates);
+			--local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, order.NumArmies, order.AttackTeammates);
+			local replacementOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, newNumArmies, order.AttackTeammates);
 			--skip (WL.ModOrderControl.Skip);
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
-			addOrder (replacementOrder);
+			--addOrder (replacementOrder);
+			GLOBAL_order_replacementOrder = replacementOrder;
 		end
 
 		print ("[CFRCAEP] proxyType==" ..order.proxyType.. " IsAttack ".. tostring (result.IsAttack).." #specials ".. #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits .." #specialKilled ".. #result.DefendingArmiesKilled.SpecialUnits.."::");
@@ -308,6 +327,7 @@ GLOBAL_event1 = nil;
 		local replacementCommanderID = payloadContent [5];
 		local resurrectionCardIDinstance = payloadContent [6];
 		print ("\n\n\n[CFRCAEP] Resurrection|Placeholder-Check| playerID "..tostring(playerID).."/"..getPlayerName (game, playerID)..", territoryID "..tostring(targetTerritoryID).."/"..tostring (getTerritoryName (targetTerritoryID, game))..", replacementCommanderID "..tostring(replacementCommanderID)..", resurrectionCardIDinstance "..tostring(resurrectionCardIDinstance));
+		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip the "Resurrection|Placeholder-Check|" message; its purpose was to kick off this code cycle, the order itself has no need to be in the order list
 
 		local placeholderCommander = getSpecialUnitOnTerritory (game, targetTerritoryID, replacementCommanderID);
 		if (placeholderCommander ~= nil) then
@@ -317,28 +337,43 @@ GLOBAL_event1 = nil;
 			local specialUnit = WL.Commander.Create(playerID);
 			targetTerritory.AddSpecialUnits = {specialUnit};
 
-			local event = WL.GameOrderEvent.Create (playerID, "[glitch in the matrix]", {}, {targetTerritory}); -- create Event object to remove Placeholder Commander & re-add original Commander to target territory
+			local event = WL.GameOrderEvent.Create (playerID, "[spiritual glitch in the matrix]", {}, {targetTerritory}); -- create Event object to remove Placeholder Commander & re-add original Commander to target territory
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create (game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-			print ("[CFRCAEP] [glitch in the matrix]"); -- create Event object to remove Placeholder Commander & re-add original Commander to target territory
-			GLOBAL_event1 = event;
+			print ("[CFRCAEP] [spiritual glitch in the matrix]"); -- create Event object to remove Placeholder Commander & re-add original Commander to target territory
+			--GLOBAL_order_revertCommander = event;
 			--addOrder (event, false);
+			table.insert (GLOBAL_table_orders_revertCommander, event);
 
 		else
 			print ("[CFRCAEP] Placeholder Commander is absent from territory -- Commander-killing-order was executed -> Commander died -> process Resurrection");
 			local event = WL.GameOrderEvent.Create (playerID, "Commander on "..game.Map.Territories[targetTerritoryID].Name.." was killed, but their spirit was whisked away"); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-			addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
+			table.insert (GLOBAL_table_orders_whiskedAway, event);
+			--addOrder (event, false); --add order to remove the Commander from the TO territory & jump to location
 
 			--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
-			local publicGameData = Mod.PublicGameData;
-			if (publicGameData.ResurrectionData == nil) then publicGameData.ResurrectionData = {}; end
-			publicGameData.ResurrectionData[playerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
-			Mod.PublicGameData = publicGameData;
+			initiateResurrectionSequence (game, playerID);
+			-- local publicGameData = Mod.PublicGameData;
+			-- if (publicGameData.ResurrectionData == nil) then publicGameData.ResurrectionData = {}; end
+			-- publicGameData.ResurrectionData[playerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
+			-- Mod.PublicGameData = publicGameData;
 		end
 	end
 
-	if (GLOBAL_custom1 ~= nil) then addOrder (GLOBAL_custom1, false); GLOBAL_custom1 = nil; print ("[GLOBAL_custom1]________________===============________"); end
-	if (GLOBAL_event1 ~= nil) then addOrder (GLOBAL_event1, false); GLOBAL_event1 = nil; print ("[GLOBAL_event1]________________===============________"); end
+	if (#GLOBAL_table_orders_swapPlaceholderIn >0) then for _,v in pairs (GLOBAL_table_orders_swapPlaceholderIn) do addOrder (v, false); print ("[GLOBAL_table_orders_swapPlaceholderIn]________________===============________"); end end
+	if (GLOBAL_order_replacementOrder ~= nil) then addOrder (GLOBAL_order_replacementOrder, false); print ("[GLOBAL_order_replacementOrder]________________===============________"); end
+	if (#GLOBAL_table_orders_checkPlaceholder >0) then for _,v in pairs (GLOBAL_table_orders_checkPlaceholder) do addOrder (v, false); print ("[GLOBAL_table_orders_checkPlaceholder]________________===============________"); end end
+	if (#GLOBAL_table_orders_revertCommander >0) then for _,v in pairs (GLOBAL_table_orders_revertCommander) do addOrder (v, false); print ("[GLOBAL_table_orders_revertCommander]________________===============________"); end end
+	if (#GLOBAL_table_orders_whiskedAway >0) then for _,v in pairs (GLOBAL_table_orders_whiskedAway) do addOrder (v, false); print ("[GLOBAL_table_orders_whiskedAway]________________===============________"); end end
+end
+
+--initiative Resurrection sequence on the following turn for the specified playerID
+function initiateResurrectionSequence (game, playerID)
+	--save data in PublicGameData to be retrieved in Client_GameRefresh & Client_GameCommit so player can place Commander on the board
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.ResurrectionData == nil) then publicGameData.ResurrectionData = {}; end
+	publicGameData.ResurrectionData[playerID] = game.Game.TurnNumber+1; --assign the turn# where the Resurrection card must be played (1 turn directly following death of Commander)
+	Mod.PublicGameData = publicGameData;
 end
 
 function getSpecialUnitOnTerritory (game, territoryID, specialUnitID)
@@ -393,4 +428,13 @@ end
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
 	return (game.Map.Territories[intTerrID].Name);
+end
+
+--concatenate elements of 2 tables, return resulting table -- use table.insert
+function concatenateTables (array1, array2)
+	local result = array1; --start with the first array, then add the elements of the 2nd array to it
+	for k,v in pairs (array2) do
+		table.insert (result, v);
+	end
+	return result
 end
