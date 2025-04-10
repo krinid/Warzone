@@ -597,7 +597,6 @@ function applyDamageToSpecials (intDamage, Specials, result)
 		end
 	end
 	return result;
-
 end
 
 function generateSkipMessage (order, game)

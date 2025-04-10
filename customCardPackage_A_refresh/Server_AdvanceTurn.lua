@@ -547,6 +547,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	--prep the event; if Airlift card will be used to transfer units for successful attack, add the Airlift card pieces as part of this order
 	local airstrikeEvent = WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirStrikeResultText, {}, {sourceTerritory, targetTerritory});
+	airstrikeEvent.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
 
 	--if Airlift is in game, add granting of airlift whole card here; how to handle Late Airlifts & Transport Only Airlifts? or Card Block? <-- actually this would have stopped the Airstrike itself so not a concern
 	--add Airlift card to player hand if it is in the game; this is done here so that the player can use it to move armies from the source territory to the target territory
@@ -562,7 +563,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
 	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
 	--ALSO, keep a list of game IDs to enforce manual move mode on; these are known games that use Late Airlifts or Transport Only Airlifts mods, which must use Manual Move mode and not Airlift move mode
-	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
+	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods that should be forced to use Manual Mode
 	local incompatibleMods_gameIDmap = {};
 	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
 	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
@@ -596,7 +597,9 @@ function manual_move_units (addOrder, playerID, sourceTerritory, targetTerritory
 	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
 	for _,v in pairs (specialsToAdd) do
 		targetTerritory.AddSpecialUnits = v; --add Specials to target territory that are moving from source territory
-		addOrder (WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify), true);
+		local event = WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify);
+		event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
+		addOrder (event, true);
 		targetTerritory.AddArmies = 0; --reset the armies to 0 after 1st iteration, so that the next order doesn't add more armies to the target territory
 		territoriesToModify = {targetTerritory}; --on 2nd and after iterations, just modify target territory with Special Units
 	end
@@ -727,8 +730,7 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	return specialUnit;
 end
 
-function territoryHasActiveShield (game, terrID)
-	local territory = game.ServerGame.LatestTurnStanding.Territories[terrID];
+function territoryHasActiveShield (territory)
 	if not territory then return false; end
 
 	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
@@ -762,7 +764,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 		--if order is an attack and the target territory has an active shield, nullify all damage; this is required b/c WZ engine applies the damage nullifying property of the Shield SU only to accompanying allied armies involved in attack but not other SUs
 		--thus, other SUs in the territory with the shield will still give out defense damage to attack units, which shouldn't be the case for a Shield; so nullify that damage here
 		if (Mod.PrivateGameData.ShieldData ~= nil and result.IsAttack == true) then
-			local boolTOterritoryHasActiveShield = territoryHasActiveShield (game, gameOrder.To);
+			local boolTOterritoryHasActiveShield = territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[gameOrder.To]);
 			if (boolTOterritoryHasActiveShield == true) then
 				result.AttackingArmiesKilled = WL.Armies.Create (0, {}); --no attacking armies or SUs die
 				result.DefendingArmiesKilled = WL.Armies.Create (0, {}); --no defending armies or SUs die
@@ -965,7 +967,7 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
-    impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
+    if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	--[[WL.RectangleVM.Create(
@@ -973,7 +975,7 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
          game.Map.Territories[targetTerritoryID].MiddlePointY,
          game.Map.Territories[targetTerritoryID].MiddlePointX,
          game.Map.Territories[targetTerritoryID].MiddlePointY);]]
-	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, 0)};
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
     addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
@@ -1027,7 +1029,7 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
          game.Map.Territories[targetTerritoryID].MiddlePointY,
          game.Map.Territories[targetTerritoryID].MiddlePointX,
          game.Map.Territories[targetTerritoryID].MiddlePointY);]]
-	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, 10)};
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, getColourInteger (255, 0, 0))}; --use Red colour for Quicksand
 	addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.QuicksandData == nil) then publicGameData.QuicksandData = {}; end
@@ -1077,13 +1079,20 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 
     local castingPlayerID = gameOrder.PlayerID;
     local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
-    event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-        game.Map.Territories[targetTerritoryID].MiddlePointX,
-        game.Map.Territories[targetTerritoryID].MiddlePointY,
-        game.Map.Territories[targetTerritoryID].MiddlePointX,
-        game.Map.Territories[targetTerritoryID].MiddlePointY
-    );
-    addOrder(event, true);
+    -- event.JumpToActionSpotOpt = WL.RectangleVM.Create(
+    --     game.Map.Territories[targetTerritoryID].MiddlePointX,
+    --     game.Map.Territories[targetTerritoryID].MiddlePointY,
+    --     game.Map.Territories[targetTerritoryID].MiddlePointX,
+    --     game.Map.Territories[targetTerritoryID].MiddlePointY
+    -- );
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	--[[WL.RectangleVM.Create(
+         game.Map.Territories[targetTerritoryID].MiddlePointX,
+         game.Map.Territories[targetTerritoryID].MiddlePointY,
+         game.Map.Territories[targetTerritoryID].MiddlePointX,
+         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger (0, 0, 255))}; --use Blue for Shield
+	addOrder(event, true);
 
     local privateGameData = Mod.PrivateGameData;
     local turnNumber_ShieldExpires = -1;
@@ -1132,25 +1141,28 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		local strUnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]";
 		--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
 		builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
-	
+
 		local specialUnit_Monolith = builder.Build(); --save this in a table somewhere to destroy later
-	
+
 		--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
 		impactedTerritory.AddSpecialUnits = {specialUnit_Monolith}; --add special unit
 		--table.insert (modifiedTerritories, impactedTerritory);
 		--printObjectDetails (specialUnit_Monolith, "Monolith specialUnit", "Monolith"); --show contents of the Monolith special unit
-		
+
 		local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Monolith action
 		--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
 		local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
-		event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
+		-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 10, getColourInteger (0, 0, 255))}; --use Blue colour for Monolith
 	
+		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
+
 		--save data in Mod.PublicGameData so the special unit can be destroyed later
 		local privateGameData = Mod.PrivateGameData;
 		local turnNumber_MonolithExpires = -1;
 		printObjectDetails (privateGameData.MonolithData, "[PRE  Monolith data]", "Execute Monolith operation");
-		
+
 		if (Mod.Settings.MonolithDuration==0) then  --if Monolith duration is Permanent (don't auto-revert), set expiration turn to -1
 			turnNumber_MonolithExpires = -1; 
 		else --otherwise, set expire turn as current turn # + card Duration
@@ -1207,7 +1219,10 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
 	--actually think we can get away with just Event
 	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
-	event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+	-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Isolation", 10, getColourInteger (128, 128, 128))}; --use Medium Grey colour for Isolation
+
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
 
 	--save data in Mod.PublicGameData so the special unit can be destroyed later
@@ -1349,8 +1364,10 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			local strDeneutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
 			--print ("message=="..strDeneutralizeOrderMessage);
 			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, strDeneutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+			-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 10, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
+					addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 		else
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
 			skip(WL.ModOrderControl.Skip);
@@ -1505,7 +1522,9 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Neutralize action
 			local strNeutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' neutralized ' .. targetTerritoryName;
 			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, strNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+			-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 10, getColourInteger (128, 128, 128))}; --use Medium Grey colour for Neutralize
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
 
 			--save data in Mod.PublicGameData so the territory can be reverted to normal state later
@@ -1556,13 +1575,13 @@ function process_Isolation_expirations (game,addOrder)
 		print ("[ISOLATION EXPIRATIONS] no pending Isolation data");
 		return;
 	end
-	
+
 	--Duration==-1 means permanently Isolated, just leave the special unit there forever -- exit function, do nothing
 	if (Mod.Settings.IsolationDuration == -1) then
 		print ("ISOLATION is Permanent! Do not expire, do not delete the Special Unit");
 		return;
 	end
-	
+
 	print ("tablelength (IsolationData)=="..tablelength (IsolationData));
 	if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then print ("IsolationData is empty"); return; end
 
@@ -1580,10 +1599,10 @@ function process_Isolation_expirations (game,addOrder)
 			print ("[EXECUTE Isolation revert]");
 			local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 			local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
-			
+
 			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the special unit from the territory
 			local strRevertIsolationOrderMessage = "Isolation ends";
-	
+
 			local event = WL.GameOrderEvent.Create(territoryOwnerID_current, strRevertIsolationOrderMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
@@ -1701,7 +1720,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	--local targetTerritoryID = tonumber(split(order.ModData,'|')[2]);
 	local targetTerritory;
 	local targetTerritoryName = game.Map.Territories[targetTerritoryID].Name;
-	
+
 	--print ("[newstyle]EXECUTE NUKE on "..targetTerritoryName.."//"..targetTerritoryID.."::");--" blastRadius=="..Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo.."::");
 	print ("[EXECUTE NUKE] on "..targetTerritoryName.."//"..targetTerritoryID..":: blastRadius=="..Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo.."::");
 	print ("[EXECUTE NUKE] maindam%=="..Mod.Settings.NukeCardMainTerritoryDamage..", maindamFix=="..Mod.Settings.NukeCardMainTerritoryFixedDamage..", conndam%=="..Mod.Settings.NukeCardConnectedTerritoryDamage.. ", conndamFix="..Mod.Settings.NukeCardConnectedTerritoryFixedDamage..", connTerrSpreadDelta==".. Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta .."::");
@@ -1780,7 +1799,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 		--if there's no unprocessed territories left in the next cycle to process, it means all territories connected to the epicenter have been processed, and any further
 		--alternatively, if the damageFactor has reached 0, stop processing as there's no point in assigning 0 damage to territories
 		--don't check (#nuke_territoriesInThisSpreadPhase > 0) b/c #table only evaluates arrays, ie: tables with numeric indeces that have no gaps! So if the table has assigned values for keys 2,5,10 but not 1,3,4,6,7,8,9 then it will return erattic results
-			
+
 			for terrID,_ in pairs (nuke_territoriesInThisSpreadPhase) do --loop through each territory in the current spreadphase; for phase 1, this will always be the target territory (epicenter)
 				print ("___loop on terr=".. game.Map.Territories[terrID].Name.."//"..terrID..", alreadyProcessed==" .. tostring(nuke_alreadyProcessed[terrID]~=nil) .. ", alreadyNuked==".. tostring(nuke_territoriesAlreadyNuked[terrID]~=nil).."::");
 
@@ -1806,7 +1825,8 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 								local totalDamageWithFactor = totalDamageBeforeFactor * damageFactor;
 								local roundedDamage = math.floor(totalDamageWithFactor);
 								local damageActuallyTaken = -1 * roundedDamage;
-								
+								if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[conn.ID]) == false) then damageActuallyTaken = 0; end --reduce armies on territory iff not protected by Shield
+
 								-- Print intermediate results
 								print ("---===---===---");
 								print("numArmies:", numArmies ..":: factor=="..damageFactor);
@@ -1852,7 +1872,9 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 
 	local strNukeOrderMessage = toPlayerName(order.PlayerID, game) ..' nuked ' .. game.Map.Territories[targetTerritoryID].Name;
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strNukeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-	event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+	-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (100, 0, 0))}; --use Dark Red colour for Nuke epicenter
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 -- GameOrderEventWL Create (playerID: PlayerID, message: string, visibleToOpt: HashSet<PlayerID> | nil, terrModsOpt?: TerritoryModification[], setResoucesOpt: table<PlayerID, table<EnumResourceType, integer>> | nil, incomeModsOpt: IncomeMod[] | nil): GameOrderEvent # Creates a GameOrderEvent object
 -- Create (playerID, message, visibileToOppenets - nil is ok, terrMods OPTIONAL, resources OPTIONAL - nil is ok, incomeMods OPTIONAL - nil is ok)
@@ -1904,11 +1926,12 @@ function Tornado_processEndOfTurn(game, addOrder)
     if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
     for terrID, record in pairs(publicGameData.TornadoData) do
 		local strTerritoryName = tostring(getTerritoryName(terrID, game));
-		print ("[TORNADO] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.EarthquakeStrength.." damage");
+		print ("[TORNADO] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.TornadoStrength.." damage");
 		local impactedTerritory = WL.TerritoryModification.Create(terrID);
-		impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength;
+		if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
 		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado ravages "..strTerritoryName, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+		event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 		addOrder(event, true);
 		--put a special unit here ... but can't at the moment b/c already have 5 special units in this mod! doh
 
@@ -1955,7 +1978,7 @@ function Earthquake_processEndOfTurn(game, addOrder)
 		for _, terrID in pairs(game.Map.Bonuses[bonusID].Territories) do
 			print ("[EARTHQUAKE] " ..terrID .."/".. tostring(getTerritoryName(terrID, game)) .." takes "..Mod.Settings.EarthquakeStrength.." damage");
 			local impactedTerritory = WL.TerritoryModification.Create(terrID);
-			impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength;
+			if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength; end --reduce armies on territory iff not protected by a Shield
 			table.insert(modifiedTerritories, impactedTerritory);
 		end
 
@@ -1967,6 +1990,7 @@ function Earthquake_processEndOfTurn(game, addOrder)
 
 		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
+		-- event.TerritoryAnnotationsOpt = {[modifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (50, 50, 50))}; --use Dark Grey colour for Earthquake
 		addOrder(event, true);
 
 		--publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
@@ -1974,10 +1998,7 @@ function Earthquake_processEndOfTurn(game, addOrder)
             local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ended on bonus " .. getBonusName (bonusID, game), {}, {});
 			--event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.average_X, XYbonusCoords.average_Y, XYbonusCoords.average_X, XYbonusCoords.average_Y);
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
-			--[[game.Map.Bonuses[bonusID].MiddlePointX,
-				game.Map.Bonuses[bonusID].MiddlePointY,
-				game.Map.Bonuses[bonusID].MiddlePointX,
-				game.Map.Bonuses[bonusID].MiddlePointY);]]
+			-- event.TerritoryAnnotationsOpt = {[modifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (255, 0, 0))}; --use Red colour for Earthquake
 			addOrder(event, true);
             publicGameData.EarthquakeData[bonusID] = nil;
         end
@@ -2219,7 +2240,7 @@ function Pestilence_processEndOfTurn (game, addOrder)
 
 				--fields are Pestilence|playerID target|player ID caster|turn# Pestilence warning|turn# Pestilence begins|turn# Pestilence ends
 				--publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.playerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
-			
+
 				local pestilenceModifiedTerritories={}; --table of all territories being modified by the Pestilence operation
 
 				local numTerritoriesImpacted = 0;
@@ -2230,10 +2251,12 @@ function Pestilence_processEndOfTurn (game, addOrder)
 						local numArmies = terr.NumArmies.NumArmies;
 						local impactedTerritory = WL.TerritoryModification.Create (terr.ID);
 
-						--reduce armies by amount of Pestilence strength
-						impactedTerritory.AddArmies = (-1 * Mod.Settings.PestilenceStrength);   --current territory being modified
-						numTerritoriesImpacted = numTerritoriesImpacted + 1; --don't actually need this, just use it for debugging/checking
-				
+						--reduce armies by amount of Pestilence strength iff it is not protected by a Shield
+						if (territoryHasActiveShield (terr) == false) then
+							impactedTerritory.AddArmies = (-1 * Mod.Settings.PestilenceStrength);   --current territory being modified
+							numTerritoriesImpacted = numTerritoriesImpacted + 1; --don't actually need this, just use it for debugging/checking
+						end
+
 						--Special Units are unaffected by Pestilence - if territory has Special Units (commander or otherwise), do not turn to neutral
 						--if no Special Units are present, check if territory now has 0 armies, and if so turn it neutral
 						if (#terr.NumArmies.SpecialUnits <= 0 and numArmies <= Mod.Settings.PestilenceStrength) then
@@ -2246,7 +2269,10 @@ function Pestilence_processEndOfTurn (game, addOrder)
 
 				local strPestilenceMsg = "Pestilence ravages " .. toPlayerName(targetPlayerID, game)..", invoked by "..toPlayerName(castingPlayerID, game);
 
-				addOrder (WL.GameOrderEvent.Create(targetPlayerID, strPestilenceMsg, nil, pestilenceModifiedTerritories));
+				local event = WL.GameOrderEvent.Create(targetPlayerID, strPestilenceMsg, nil, pestilenceModifiedTerritories);
+				-- event.TerritoryAnnotationsOpt = {[pestilenceModifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (50, 50, 50))}; --use Dark Grey colour for Pestilence
+				addOrder (event);
+
 				print ("[PESTILENCE EVENT] "..strPestilenceMsg);
 				print ("[PESTILENCE SUMMARY] #terr impacted=="..numTerritoriesImpacted..", tablelength(pestilenceModifiedTerritories)=="..tablelength(pestilenceModifiedTerritories));
 
