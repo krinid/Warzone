@@ -17,7 +17,7 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			local strShieldData = "";
 			for k,v in pairs (Mod.PrivateGameData.ShieldData) do
 				if (strShieldData ~= "") then strShieldData = strShieldData .. "\n"; end
-				strShieldData = strShieldData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.targetTerritoryID, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
+				strShieldData = strShieldData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
 			end
 			setReturn ({strShieldData});
 		end

@@ -1096,7 +1096,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 
     local privateGameData = Mod.PrivateGameData;
     local turnNumber_ShieldExpires = -1;
-    if (Mod.Settings.ShieldDuration > 0) then
+    if (Mod.Settings.ShieldDuration >= 0) then
         turnNumber_ShieldExpires = game.Game.TurnNumber + Mod.Settings.ShieldDuration;
     end
     local ShieldDataRecord = {
@@ -1112,11 +1112,11 @@ end
 
 function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryID)
 		print ("[PROCESS MONOLITH START] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::".."description="..gameOrder.Description.."::");
-	
+
 		-- create territory object, assign special unit to it, add an order associated with the territory
 		local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 		local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
-	
+
 		-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
 		local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Monolith action)
 		builder.Name = 'Monolith';
@@ -1155,7 +1155,7 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 10, getColourInteger (0, 0, 255))}; --use Blue colour for Monolith
-	
+
 		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function; this actually adds the game order that changes territory to neutral & adds the special unit
 
 		--save data in Mod.PublicGameData so the special unit can be destroyed later
@@ -1163,10 +1163,10 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		local turnNumber_MonolithExpires = -1;
 		printObjectDetails (privateGameData.MonolithData, "[PRE  Monolith data]", "Execute Monolith operation");
 
-		if (Mod.Settings.MonolithDuration==0) then  --if Monolith duration is Permanent (don't auto-revert), set expiration turn to -1
-			turnNumber_MonolithExpires = -1; 
+		if (Mod.Settings.MonolithDuration<0) then  --if Monolith duration is Permanent (don't auto-revert), set expiration turn to -1
+			turnNumber_MonolithExpires = -1;
 		else --otherwise, set expire turn as current turn # + card Duration
-			turnNumber_MonolithExpires = game.Game.TurnNumber + Mod.Settings.MonolithDuration; 
+			turnNumber_MonolithExpires = game.Game.TurnNumber + Mod.Settings.MonolithDuration;
 		end
 		print ("expire turn#="..turnNumber_MonolithExpires.."::duration=="..Mod.Settings.MonolithDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."::");
 		--even if Monolith duration==0, still make a note of the details of the Monolith action - probably not required though
@@ -2077,7 +2077,7 @@ function Quicksand_processEndOfTurn(game, addOrder)
     print("[QUICKSAND] processEndOfTurn END");
 end
 
---remove expired Shield Specials
+--remove expired Shield Special Units from map & pop off the Shield records from ShieldData
 function Shield_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
@@ -2086,52 +2086,120 @@ function Shield_processEndOfTurn(game, addOrder)
 	if (Mod.Settings.ShieldEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.ShieldDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
-    print("[SHIELD] processEndOfTurn START");
-    if (privateGameData.ShieldData == nil) then print("[SHIELD] no Shield data"); return; end
+    print("[SHIELD EXPIRE] processEndOfTurn START");
+    if (privateGameData.ShieldData == nil) then print("[SHIELD EXPIRE] no Shield data"); return; end
 
-    for key, shieldDataRecord in pairs(privateGameData.ShieldData) do
-        print("[SHIELD] 1 record");
-        printObjectDetails(shieldDataRecord, "Shield data record", "Shield processEOT");
-        print("[SHIELD] record, player=="..shieldDataRecord.castingPlayer.."/"..toPlayerName(shieldDataRecord.castingPlayer, game)..", expiryTurn="..shieldDataRecord.turnNumberShieldEnds..", specialUnitID=="..shieldDataRecord.specialUnitID.."::");
-        if (shieldDataRecord.turnNumberShieldEnds > 0 and turnNumber >= shieldDataRecord.turnNumberShieldEnds) then
-            print("[SHIELD] expire turn, time to remove");
+    for key, shieldDataRecord in pairs (privateGameData.ShieldData) do
+        --printObjectDetails(shieldDataRecord, "Shield data record", "Shield processEOT");
+        print("[SHIELD EXPIRE] record, territory=="..tostring (shieldDataRecord.territory) .."/".. tostring (getTerritoryName (shieldDataRecord.territory, game)) ..", castingPlayer=="..shieldDataRecord.castingPlayer.."/"..toPlayerName(shieldDataRecord.castingPlayer, game)..
+			", territoryOwner=="..shieldDataRecord.territoryOwner.."/"..toPlayerName(shieldDataRecord.territoryOwner, game).. ", expiryTurn==T"..shieldDataRecord.turnNumberShieldEnds..", specialUnitID=="..shieldDataRecord.specialUnitID.."::");
 
-            local terrID = findSpecialUnit(shieldDataRecord.specialUnitID, game);
+		--if shield expires this turn or on a previous turn (and was somehow missed), remove the SU from the territory & pop the record off of Mod.PrivateGameData.ShieldData
+		if (shieldDataRecord.turnNumberShieldEnds > 0 and turnNumber >= shieldDataRecord.turnNumberShieldEnds) then
+            print("[SHIELD] expiration occurs now (or is somehow already late); remove & pop record off ShieldData");
+			local modifiedTerritories = {};
+			local strShieldExpires = "Shield expired on ".. tostring (getTerritoryName (shieldDataRecord.territory, game));
+			local jumpToActionSpotObject = nil;
 
-            if (terrID ~= nil) then
-                print("found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
+			--remove the Shield SU with the matching GUID from the territory it is found on; ideally this should be on shieldDataRecord.territory but it's possible another mod could move it (Portals? etc)
+			local terrID = findSpecialUnit(shieldDataRecord.specialUnitID, game);
+            if (terrID ~= shieldDataRecord.territory) then
+				print ("[SHIELD EXPIRE] Shield Special Unit found on different territory than it was created on; created=="..tostring (shieldDataRecord.territory) .."/".. tostring (getTerritoryName (shieldDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
+			end
+			if (terrID ~= nil) then
+                print("[SHIELD EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
                 local impactedTerritory = WL.TerritoryModification.Create(terrID);
-                local modifiedTerritories = {};
                 impactedTerritory.RemoveSpecialUnitsOpt = {shieldDataRecord.specialUnitID};
                 table.insert(modifiedTerritories, impactedTerritory);
-                local strShieldExpires = "Shield expired";
-                local event = WL.GameOrderEvent.Create(shieldDataRecord.castingPlayer, strShieldExpires, {}, modifiedTerritories);
-                event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-                addOrder(event, true);
-                print("[SHIELD] "..strShieldExpires.."; delete special=="..shieldDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
-                privateGameData.ShieldData[key] = nil;
-                Mod.PrivateGameData = privateGameData;
-                print("[SHIELD] POST tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
-                print("[SHIELD] processEndOfTurn END");
-                return;
+                jumpToActionSpotObject = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
+                print("[SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..shieldDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+			else
+				--Shield SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
+				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)
+				--Other possible reason: some other mod moved it (Portals?, etc)
+				print ("[SHIELD EXPIRE] Shield Special Unit not found on any territory; can't remove SU, but still popping off record from ShieldData");
             end
-        end
+
+			local event = WL.GameOrderEvent.Create (shieldDataRecord.castingPlayer, strShieldExpires, {}, modifiedTerritories);
+			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
+			addOrder(event, true);
+			privateGameData.ShieldData[key] = nil;
+			--Mod.PrivateGameData = privateGameData;
+			print("[SHIELD EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
+		end
     end
 
-    print("[SHIELD] POST tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
-    print("[SHIELD] processEndOfTurn END");
+    print("[SHIELD EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
+    print("[SHIELD EXPIRE] processEndOfTurn END");
+    Mod.PrivateGameData = privateGameData;
+end
+
+--remove expired Monolith Special Units from map & pop off the Monolith records from MonolithData
+function Monolith_processEndOfTurn(game, addOrder)
+    local privateGameData = Mod.PrivateGameData;
+    local turnNumber = tonumber(game.Game.TurnNumber);
+
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.MonolithEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.MonolithDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+    print("[Monolith EXPIRE] processEndOfTurn START");
+    if (privateGameData.MonolithData == nil) then print("[MONOLITH EXPIRE] no Monolith data"); return; end
+
+    for key, monolithDataRecord in pairs (privateGameData.MonolithData) do
+        --printObjectDetails(MonolithDataRecord, "Monolith data record", "Monolith processEOT");
+        print("[MONOLITH EXPIRE] record, territory=="..tostring (monolithDataRecord.territory) .."/".. tostring (getTerritoryName (monolithDataRecord.territory, game)) ..", castingPlayer=="..monolithDataRecord.castingPlayer.."/"..toPlayerName(monolithDataRecord.castingPlayer, game)..
+			", territoryOwner=="..monolithDataRecord.territoryOwner.."/"..toPlayerName(monolithDataRecord.territoryOwner, game).. ", expiryTurn==T"..monolithDataRecord.turnNumberMonolithEnds..", specialUnitID=="..monolithDataRecord.specialUnitID.."::");
+
+		--if monolith expires this turn or on a previous turn (and was somehow missed), remove the SU from the territory & pop the record off of Mod.PrivateGameData.MonolithData
+		if (monolithDataRecord.turnNumberMonolithEnds > 0 and turnNumber >= monolithDataRecord.turnNumberMonolithEnds) then
+            print("[MONOLITH] expiration occurs now (or is somehow already late); remove & pop record off MonolithData");
+			local modifiedTerritories = {};
+			local strMonolithExpires = "Monolith expired on ".. tostring (getTerritoryName (monolithDataRecord.territory, game));
+			local jumpToActionSpotObject = nil;
+
+			--remove the Monolith SU with the matching GUID from the territory it is found on; ideally this should be on monolithDataRecord.territory but it's possible another mod could move it (Portals? etc)
+			local terrID = findSpecialUnit(monolithDataRecord.specialUnitID, game);
+            if (terrID ~= monolithDataRecord.territory) then
+				print ("[MONOLITH EXPIRE] Monolith Special Unit found on different territory than it was created on; created=="..tostring (monolithDataRecord.territory) .."/".. tostring (getTerritoryName (monolithDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
+			end
+			if (terrID ~= nil) then
+                print("[MONOLITH EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
+                local impactedTerritory = WL.TerritoryModification.Create(terrID);
+                impactedTerritory.RemoveSpecialUnitsOpt = {monolithDataRecord.specialUnitID};
+                table.insert(modifiedTerritories, impactedTerritory);
+                jumpToActionSpotObject = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
+                print("[Monolith EXPIRE] "..strMonolithExpires.."; remove special=="..monolithDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+			else
+				--Monolith SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
+				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)
+				--Other possible reason: some other mod moved it (Portals?, etc)
+				print ("[MONOLITH EXPIRE] Monolith Special Unit not found on any territory; can't remove SU, but still popping off record from MonolithData");
+            end
+
+			local event = WL.GameOrderEvent.Create (monolithDataRecord.castingPlayer, strMonolithExpires, {}, modifiedTerritories);
+			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
+			addOrder(event, true);
+			privateGameData.MonolithData[key] = nil;
+			--Mod.PrivateGameData = privateGameData;
+			print("[MONOLITH EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.MonolithData))
+		end
+    end
+
+    print("[MONOLITH EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.MonolithData))
+    print("[MONOLITH EXPIRE] processEndOfTurn END");
     Mod.PrivateGameData = privateGameData;
 end
 
 --remove expired Monolith Specials
-function Monolith_processEndOfTurn (game, addOrder)
+function Monolith_processEndOfTurn_OLD (game, addOrder)
 	local privateGameData = Mod.PrivateGameData;
 	local turnNumber = tonumber (game.Game.TurnNumber);
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.MonolithEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.MonolithDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
-	
+
 	print ("[MONOLITH] processEndOfTurn START");
 	if (privateGameData.MonolithData == nil) then print ("[MONOLIGHT] no Monolith data"); return; end
 
@@ -2171,25 +2239,6 @@ function Monolith_processEndOfTurn (game, addOrder)
 	print ("[MONOLITH] processEndOfTurn END");
 	Mod.PrivateGameData = privateGameData;
 
-end
-
---find & return the territory ID where a given special unit is
-function findSpecialUnit (specialUnitID, game)
-	print ("fsu, find=="..specialUnitID);
-	for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
-		print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
-		if (#terr.NumArmies.SpecialUnits >= 1) then
-			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
-				print ("1 special on "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
-				printObjectDetails (specialUnit, "[FSU]", "specialUnit details");
-				if (specialUnitID == specialUnit.ID) then
-					print ("FOUND @ "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
-					return terr.ID;
-				end
-			end
-		end
-	end
-	return nil;
 end
 
 function Pestilence_processEndOfTurn (game, addOrder)

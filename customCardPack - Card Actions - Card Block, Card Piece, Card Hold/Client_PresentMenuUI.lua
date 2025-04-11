@@ -23,6 +23,12 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
+	-- print (WL.AttackTransferEnum.Attack);
+	-- print (WL.AttackTransferEnum.Transfer);
+	-- print (WL.AttackTransferEnum.AttackTransfer);
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Attack));
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Transfer));
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.AttackTransfer));
 	-- cards=getDefinedCardList (game);
 	-- for cardID, cardConfig in pairs(game.Settings.Cards) do
 	-- 	local strCardName = getCardName_fromObject(cardConfig);

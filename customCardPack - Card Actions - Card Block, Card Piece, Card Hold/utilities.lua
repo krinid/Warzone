@@ -703,6 +703,25 @@ function isSpecialUnitAnImmovableUnit (unit)
 	end
 end
 
+--find & return the territory ID where a given special unit is
+function findSpecialUnit (specialUnitID, game)
+	print ("fsu, find=="..specialUnitID);
+	for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		--print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
+		if (#terr.NumArmies.SpecialUnits >= 1) then
+			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
+				--print ("1 special on "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
+				--printObjectDetails (specialUnit, "[FSU]", "specialUnit details");
+				if (specialUnitID == specialUnit.ID) then
+					print ("FOUND @ "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
+					return terr.ID;
+				end
+			end
+		end
+	end
+	return nil;
+end
+
 --called from Server_GameCustomMessage which is in turn called by client hooks, in order to clear data elements retrieved by the client hook (so they aren't continually redisplayed on client side)
 function trimDebug (intLastReadKey)
 	local publicGameData = Mod.PublicGameData;

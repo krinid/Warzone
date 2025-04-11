@@ -101,7 +101,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
-	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+	if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
@@ -183,6 +183,12 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 	local TOowner = game.ServerGame.LatestTurnStanding.Territories[order.To].OwnerPlayerID;
 	local FROMowner = game.ServerGame.LatestTurnStanding.Territories[order.From].OwnerPlayerID;
+	local TOownerTeam = -1;
+	local FROMownerTeam = -1;
+	if (TOowner ~= nil and TOowner ~= WL.PlayerID.Neutral) then TOownerTeam = game.ServerGame.Game.Players[TOowner].Team; end
+	if (FROMowner ~= nil and FROMowner ~= WL.PlayerID.Neutral) then FROMownerTeam = game.ServerGame.Game.Players[FROMowner].Team; end
+	print ("\n\n\n\n"..game.ServerGame.Game.Players[1].Team)
+
 	local boolUnitsPresentOnTOterritory = false;
 	local boolUnitsPresentOnFROMterritory = false;
 
@@ -212,14 +218,53 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	intNumArmies_actualOriginal = numArmies;
 
 	print ("- - - - - - - - - - - - - - - - - - - - - PRE");
-	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
-	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
+	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..
+		", AttackTransfer "..tostring(order.AttackTransfer).." [".. tostring(WL.AttackTransferEnum.ToString (order.AttackTransfer)) .."], AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent));
+	print ("FROM owner "..FROMowner.." [team "..tostring (FROMownerTeam) .. "], TO owner "..TOowner.." [team ".. tostring (TOownerTeam) .."], AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
-	", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
+		", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
 	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
+
+	--ensure that order.AttackTransfer settings align with the ownership of the FROM/TO territories
+	--NOTE: don't need to check anything if order.AttackTransfer == WL.AttackTransferEnum.AttackTransfer b/c this means anything is acceptable; just let the order proceed, no action required
+	--		but if            order.AttackTransfer==WL.AttackTransferEnum.Transfer and owner of FROM != owner of TO (or from same team), then skip the order b/c it would be an Attack
+	--		and similarly if  order.AttackTransfer==WL.AttackTransferEnum.Attack and owner of FROM == owner of TO, then skip the order b/c it would be a Transfer
+	--		BUT for teams: if order.AttackTransfer==WL.AttackTransferEnum.Attack and owner of FROM is from same team as owner of TO and order.AttackTeammates==false, then skip the order b/c it would be a Transfer
+	--		BUT if            order.AttackTransfer==WL.AttackTransferEnum.Attack and owner of FROM is from same team as owner of TO and order.AttackTeammates==true, then allow it b/c they have opted to treat the teammate as enemy
+	--      NOTE: team of -1 = no teams defined; actual team #'s start from 0
+	--this IF structure will identify the above cases to be handled and skip these orders & execute a 'return' to avoid any further processing, and let everything else process normally
+	local boolSkipOrderDueToAttackTransfer = false;
+	local strSkipOrderDueToAttackTransfer = nil;
+	--print ("\n\n\n"..order.AttackTransfer.."/"..WL.AttackTransferEnum.ToString (order.AttackTransfer),FROMowner,FROMownerTeam,TOowner,TOownerTeam);
+	--print (tostring (order.AttackTransfer == WL.AttackTransferEnum.AttackTransfer), tostring (order.AttackTransfer == WL.AttackTransferEnum.Attack), tostring (order.AttackTransfer == WL.AttackTransferEnum.Transfer));
+	if (order.AttackTransfer==WL.AttackTransferEnum.Transfer and FROMowner == TOowner) then --order is Transfer to self - always permit this; this is here to override the priority of this being a Success over the other types of transfers
+		boolSkipOrderDueToAttackTransfer = false; --permit this order
+	elseif (order.AttackTransfer==WL.AttackTransferEnum.Transfer and FROMowner ~= TOowner and FROMownerTeam >= 0 and FROMownerTeam == TOownerTeam) then --order is Transfer to teammate - always permit this; this is here to override the priority of this being a Success over the other types of transfers
+		boolSkipOrderDueToAttackTransfer = false; --permit this order
+	elseif (order.AttackTransfer==WL.AttackTransferEnum.Transfer and FROMowner ~= TOowner and FROMownerTeam >= 0) then --transfer to enemy w/teams enabled - skip the order
+		boolSkipOrderDueToAttackTransfer = true; strSkipOrderDueToAttackTransfer = "Transfer to enemy or neutral (teams in play)";
+	elseif (order.AttackTransfer==WL.AttackTransferEnum.Transfer and FROMowner ~= TOowner) then --transfer to enemy w/o teams enabled - skip the order
+		boolSkipOrderDueToAttackTransfer = true; strSkipOrderDueToAttackTransfer = "Transfer to enemy or neutral (no teams)";
+	elseif (order.AttackTransfer==WL.AttackTransferEnum.Attack and FROMowner == TOowner) then --order is Attack on self
+		boolSkipOrderDueToAttackTransfer = true; strSkipOrderDueToAttackTransfer = "Attack on self";
+	elseif (order.AttackTransfer==WL.AttackTransferEnum.Attack and FROMownerTeam >= 0 and FROMownerTeam == TOownerTeam and order.AttackTeammates==false) then --order is Attack on teammate but 'Treat teammates as enemies' is not enabled
+		boolSkipOrderDueToAttackTransfer = true; strSkipOrderDueToAttackTransfer = "Attack on teammates but 'Treat teammates as enemies' is not set";
+	end
+	if (boolSkipOrderDueToAttackTransfer == true) then --if one of the AttackTransfer check criteria above is met, skip the order
+		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		strSkipOrderDueToAttackTransfer = "Order skipped, reason: ".. strSkipOrderDueToAttackTransfer .. "; Original order: " ..generateSkipMessage (order, game);
+		addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, strSkipOrderDueToAttackTransfer, {}, {},{}));
+		return; --don't process any further, just skip the order and return in order to process the next order
+	end
+	--print ("&&&&&&&&&&"..tostring (strSkipOrderDueToAttackTransfer));
+
+	-- print (WL.AttackTransferEnum.Attack);
+	-- print (WL.AttackTransferEnum.Transfer);
+	-- print (WL.AttackTransferEnum.AttackTransfer);
+
 
 	--[[ - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - START OF FIZZ TRANSFER GLITCH TROUBLESHOOTING -- - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -488,13 +533,14 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	end
 
 	print ("- - - - - - - - - - - - - - - - - - - - - POST");
-	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..", AttackTransfer "..tostring(order.AttackTransfer)..", by% "..tostring (order.ByPercent));
-	print ("FROM owner "..FROMowner..", TO owner "..TOowner..", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
+	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..
+		", AttackTransfer "..tostring(order.AttackTransfer)..", AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent));
+	print ("FROM owner "..FROMowner.." [team "..tostring (FROMownerTeam) .. "], TO owner "..TOowner.."[".. tostring (TOownerteam) .."], AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
-	", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
+		", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
 	print ("map1FROM "..tostring (map1[order.From])..", map1TO "..tostring (map1[order.To])..", " ..map2message..", map3FROM "..map3[order.From]..", map3TO "..map3[order.To]);
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
-	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower);
+	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
 	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
 end
 
