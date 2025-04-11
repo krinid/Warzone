@@ -13,6 +13,13 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			setReturn ({publicGameData.Debug.DebugMode});
 		elseif (payload.action == "initializedebug") then
 			if (Mod.PublicGameData.Debug == nil) then initialize_debug_data (); end --initialize data structures for outputting debug data from Server hooks to Client hooks for local client side display
+		elseif (payload.action =="shielddata") then
+			local strShieldData = "";
+			for k,v in pairs (Mod.PrivateGameData.ShieldData) do
+				if (strShieldData ~= "") then strShieldData = strShieldData .. "\n"; end
+				strShieldData = strShieldData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.targetTerritoryID, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
+			end
+			setReturn ({strShieldData});
 		end
 	end
 	--initialize_debug_data ();
