@@ -187,7 +187,6 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	local FROMownerTeam = -1;
 	if (TOowner ~= nil and TOowner ~= WL.PlayerID.Neutral) then TOownerTeam = game.ServerGame.Game.Players[TOowner].Team; end
 	if (FROMowner ~= nil and FROMowner ~= WL.PlayerID.Neutral) then FROMownerTeam = game.ServerGame.Game.Players[FROMowner].Team; end
-	print ("\n\n\n\n"..game.ServerGame.Game.Players[1].Team)
 
 	local boolUnitsPresentOnTOterritory = false;
 	local boolUnitsPresentOnFROMterritory = false;
