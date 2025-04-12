@@ -1,0 +1,4 @@
+Adds more customization for bomb cards; the host can now choose to change the amount of armies killed as well as whether the card happens at the normal time or at the end of players' turn. If all armies are killed by the bomb card, targeted territory turns neutral. Make sure to check game settings to know the exact changes! A fake discard orders will happen in your order list.
+
+UPDATE:
+You can not decide whether presence of special units prevents territory from turning neutral.

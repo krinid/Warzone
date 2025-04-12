@@ -769,7 +769,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				result.AttackingArmiesKilled = WL.Armies.Create (0, {}); --no attacking armies or SUs die
 				result.DefendingArmiesKilled = WL.Armies.Create (0, {}); --no defending armies or SUs die
 				result.DamageToSpecialUnits = {}; --no attacking or defending SUs take damage
-				print ("[ATTACK/TRANSFER] [SHIELD on TARGET TERRITORY] nullify all damage");
+				print ("[ATTACK/TRANSFER] [SHIELD on TARGET TERRITORY] nullify all damage including defend damage from SUs (WZ engine permits this natively so block it via code to enforce Shield power)");
 			end
 		end
 
@@ -1729,37 +1729,24 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	if (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID ~= order.PlayerID or Mod.Settings.NukeFriendlyfire == true) then
 		print ("NUKE PRE  main territory="..targetTerritoryName.."//"..targetTerritoryID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies.."::");
 		impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID); --create territory object
-		impactedTerritory.AddArmies = math.floor (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardMainTerritoryDamage / 100)) -Mod.Settings.NukeCardMainTerritoryFixedDamage);
+		local intDamageToEpicenter = math.floor (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardMainTerritoryDamage / 100)) -Mod.Settings.NukeCardMainTerritoryFixedDamage);
+		if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == true) then intDamageToEpicenter = 0; end --apply damage to epicenter iff not protected by Shield
+		impactedTerritory.AddArmies = intDamageToEpicenter;
 		table.insert (modifiedTerritories, impactedTerritory); --add territory object to the table to be passed back to WZ to modify/add the order
 		print ("NUKE POST main territory="..targetTerritoryName.."//"..targetTerritoryID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies.."::#armiesKilled=="..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardMainTerritoryDamage / 100)) - Mod.Settings.NukeCardMainTerritoryFixedDamage);
 	end
-
-	--ORIG code
-	--apply damage to connected territories; FUTURE: to increase blast radius, must keep list of already impacted territories so they're not hit 2+ times since A->B which connects back to A (etc) but A is already impacted
-	--[[for _, conn in pairs(game.Map.Territories[targetTerritoryID].ConnectedTo) do
-		if game.ServerGame.LatestTurnStanding.Territories[conn.ID].OwnerPlayerID ~= order.PlayerID or Mod.Settings.NukeFriendlyfire == true then
-			print ("NUKE PRE  conn territory="..game.Map.Territories[conn.ID].Name.."//"..conn.ID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[conn.ID].NumArmies.NumArmies.."::");
-			impactedTerritory = nil;
-			impactedTerritory = WL.TerritoryModification.Create(conn.ID);
-			impactedTerritory.AddArmies = math.floor (game.ServerGame.LatestTurnStanding.Territories[conn.ID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardConnectedTerritoryDamage / 100)));
-			table.insert (modifiedTerritories, impactedTerritory);
-			print ("NUKE POST conn territory="..game.Map.Territories[conn.ID].Name.."//"..conn.ID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[conn.ID].NumArmies.NumArmies.."::#armiesKilled=="..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardConnectedTerritoryDamage / 100)));
-		end
-	end]]
 
 	local nuke_alreadyProcessed = {};              -- track territories whose connected territories have already been processed (looped through), so don't waste processing territories that have already been cycled through
 	local nuke_territoriesAlreadyNuked = {};       -- track territories already nuked, so territories are only applied damage once for the entire nuke action
 	local nuke_territoriesInThisSpreadPhase = {};  -- track territories in the current spread phase (# of territories from epicenter), apply damage to each connected territory in this list excepting those already nuked
 	nuke_territoriesAlreadyNuked [targetTerritoryID] = true;      -- add main territory so it doesn't get nuked again
 	nuke_territoriesInThisSpreadPhase [targetTerritoryID] = true; -- add main territory so can start processing connected territories from here
-	--table.insert (nuke_territoriesAlreadyNuked, targetTerritoryID);      -- add main territory
-	--table.insert (nuke_territoriesInThisSpreadPhase, targetTerritoryID); -- add main territory
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
+	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
 
 	local damageFactor = 1;
 	local cycleCount = 0; -- 1 cycle = processing 1 layer of territory connections out from the epicenter
@@ -1824,8 +1811,8 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 								local totalDamageBeforeFactor = percentageBasedDamage + fixedDamage;
 								local totalDamageWithFactor = totalDamageBeforeFactor * damageFactor;
 								local roundedDamage = math.floor(totalDamageWithFactor);
-								local damageActuallyTaken = -1 * roundedDamage;
-								if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[conn.ID]) == false) then damageActuallyTaken = 0; end --reduce armies on territory iff not protected by Shield
+								local damageActuallyTaken = -1 * roundedDamage; --multiply by -1 b/c we "add" negative armies to the territory to apply damage
+								if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[conn.ID]) == true) then damageActuallyTaken = 0; end --reduce armies on territory iff not protected by Shield
 
 								-- Print intermediate results
 								print ("---===---===---");
