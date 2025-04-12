@@ -32,6 +32,8 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
         play_Monolith_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed == "Shield") then
         play_Shield_card(game, cardInstance, playCard);
+    elseif (strCardBeingPlayed == "Phantom") then
+		play_Phantom_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Card Block") then
         play_CardBlock_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Earthquake") then
@@ -146,6 +148,43 @@ function play_Shield_card(game, cardInstance, playCard)
             newGame = game;
             newGame.Orders = orders;
             game = newGame;]]
+
+            close();
+        end);
+    end);
+end
+
+function play_Phantom_card(game, cardInstance, playCard)
+    print("[PHANTOM] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+
+    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
+        setMaxSize(400, 300);
+        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
+        CreateLabel(vert).SetText("[PHANTOM]\n\n").SetColor(getColourCode("card play heading"));
+
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        TargetTerritoryClicked("Select the territory to create a Phantom on.");
+
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+            if (TargetTerritoryID == nil) then
+                UI.Alert("No territory selected. Please select a territory.");
+                return;
+            end
+            if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then 
+                UI.Alert("You must select a territory you own.");
+                return;
+            end
+            print("[PHANTOM] order input::terr=" .. TargetTerritoryName .. "::Phantom|" .. TargetTerritoryID .. "::");
+
+            local strPhantomMessage = strPlayerName_cardPlayer .. " creates a Phantom on " .. TargetTerritoryName;
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, 0)}; --Black annotation background for Phantom
+                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
+            end
 
             close();
         end);

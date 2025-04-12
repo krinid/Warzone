@@ -14,7 +14,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 	Pestilence_processEndOfTurn (game, addOrder); --check for pending Pestilence orders, execute them if they start this turn or are already ongoing
 	Tornado_processEndOfTurn (game, addOrder);
 	Earthquake_processEndOfTurn (game, addOrder);
-    Shield_processEndOfTurn(game, addOrder);
+	Phantom_processEndOfTurn (game, addOrder);
+	Shield_processEndOfTurn(game, addOrder);
 	Monolith_processEndOfTurn (game, addOrder);
 	CardBlock_processEndOfTurn (game, addOrder);
     Quicksand_processEndOfTurn(game, addOrder);
@@ -304,7 +305,7 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		cardOrderContentDetails = nil; --global variable referenced in other functions in this Server Hook
 		strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
 		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
-		
+
 		print ("[S_AT_O] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
 		if (strCardTypeBeingPlayed == "Nuke" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then
 			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
@@ -316,6 +317,9 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 			execute_Shield_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Monolith" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true)) then
 			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
+		elseif (strCardTypeBeingPlayed == "Phantom" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true)) then
+print ("________________________fnata");
+			execute_Phantom_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Neutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true)) then
 			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Deneutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Deneutralize == true)) then
@@ -1058,6 +1062,64 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     };
     table.insert(privateGameData.ShieldData, ShieldDataRecord);
     Mod.PrivateGameData = privateGameData;
+end
+
+function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID)
+	print("[PROCESS PHANTOM START] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::description="..gameOrder.Description.."::");
+
+	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
+	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+
+	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);
+	builder.Name = 'Phantom';
+	builder.IncludeABeforeName = false;
+	builder.ImageFilename = 'phantom.png';
+	builder.AttackPower = 0;
+	--builder.AttackPowerPercentage = 0;
+	builder.DefensePower = 0;
+	--builder.DefensePowerPercentage = 0;
+	builder.DamageToKill = 0;
+	--builder.DamageAbsorbedWhenAttacked = 9999999;
+	--builder.Health = 0; 
+	builder.CombatOrder = 9999; --before Commanders (which are 10,000)
+	builder.CanBeGiftedWithGiftCard = true;
+	builder.CanBeGiftedWithGiftCard = true;
+	builder.CanBeTransferredToTeammate = true;
+	builder.CanBeAirliftedToSelf = true;
+	builder.CanBeAirliftedToTeammate = true;
+	builder.IsVisibleToAllPlayers = false;
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	local strUnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]";
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+	builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="garbage";};}[V1.1#JAD]';
+	--result of using DataConverter: [V1.1#JAD]{"Essentials"={"UnitDescription"="A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. Shields last 1 turn before expiring. [Created on turn 2, expires on turn 3]";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]
+	print ("[PHANTOM] ModData=="..tostring (builder.ModData));
+	local specialUnit_Phantom = builder.Build();
+	impactedTerritory.AddSpecialUnits = {specialUnit_Phantom};
+
+	local castingPlayerID = gameOrder.PlayerID;
+	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
+	event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, 0)}; --use Black for Phantom
+	addOrder(event, true);
+
+	local privateGameData = Mod.PrivateGameData;
+	local turnNumber_PhantomExpires = -1;
+	if (Mod.Settings.PhantomDuration >= 0) then
+		turnNumber_PhantomExpires = game.Game.TurnNumber + Mod.Settings.PhantomDuration;
+	end
+	local PhantomDataRecord = {
+		territory = targetTerritoryID,
+		castingPlayer = castingPlayerID,
+		territoryOwner = impactedTerritoryOwnerID,
+		turnNumberPhantomEnds = turnNumber_PhantomExpires,
+		specialUnitID = specialUnit_Phantom.ID
+	};
+	table.insert(privateGameData.PhantomData, PhantomDataRecord);
+	Mod.PrivateGameData = privateGameData;
 end
 
 function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryID)
@@ -2068,6 +2130,82 @@ function Shield_processEndOfTurn(game, addOrder)
 
     print("[SHIELD EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
     print("[SHIELD EXPIRE] processEndOfTurn END");
+    Mod.PrivateGameData = privateGameData;
+end
+
+--remove expired Phantom Special Units from map & pop off the Phantom records from PhantomData
+function Phantom_processEndOfTurn(game, addOrder)
+    local privateGameData = Mod.PrivateGameData;
+    local turnNumber = tonumber(game.Game.TurnNumber);
+
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+    print("[PHANTOM EOT] processEndOfTurn START");
+    print("[PHANTOM EOT] apply FOGMODs");
+	for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+		for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
+			if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
+				print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
+				local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.Fogged, 8999, {terrID}, nil);
+				--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+				local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+				event.FogModsOpt = {fogMod};
+				addOrder(event);
+			end
+		end
+	end
+
+	--removal
+	-- local event = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'Smoke bombs dissipate', {});
+	-- event.RemoveFogModsOpt = priv.FogModIDs;
+	-- addNewOrder(event);
+
+	if (privateGameData.PhantomData == nil) then print("[PHANTOM EXPIRE] no Phantom data"); return; end
+
+    for key, phantomDataRecord in pairs (privateGameData.PhantomData) do
+        --printObjectDetails(phantomDataRecord, "Phantom data record", "Phantom processEOT");
+        print("[PHANTOM EXPIRE] record, territory=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game)) ..", castingPlayer=="..phantomDataRecord.castingPlayer.."/"..toPlayerName(phantomDataRecord.castingPlayer, game)..
+			", territoryOwner=="..phantomDataRecord.territoryOwner.."/"..toPlayerName(phantomDataRecord.territoryOwner, game).. ", expiryTurn==T"..phantomDataRecord.turnNumberPhantomEnds..", specialUnitID=="..phantomDataRecord.specialUnitID.."::");
+
+		--if phantom expires this turn or on a previous turn (and was somehow missed), remove the SU from the territory & pop the record off of Mod.PrivateGameData.PhantomData
+		if (phantomDataRecord.turnNumberPhantomEnds > 0 and turnNumber >= phantomDataRecord.turnNumberPhantomEnds) then
+            print("[PHANTOM] expiration occurs now (or is somehow already late); remove & pop record off PhantomData");
+			local modifiedTerritories = {};
+			local strPhantomExpires = "Phantom expired on ".. tostring (getTerritoryName (phantomDataRecord.territory, game));
+			local jumpToActionSpotObject = nil;
+
+			--remove the Phantom SU with the matching GUID from the territory it is found on; ideally this should be on phantomDataRecord.territory but it's possible another mod could move it (Portals? etc)
+			local terrID = findSpecialUnit(phantomDataRecord.specialUnitID, game);
+            if (terrID ~= phantomDataRecord.territory) then
+				print ("[PHANTOM EXPIRE] Phantom Special Unit found on different territory than it was created on; created=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
+			end
+			if (terrID ~= nil) then
+                print("[PHANTOM EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
+                local impactedTerritory = WL.TerritoryModification.Create(terrID);
+                impactedTerritory.RemoveSpecialUnitsOpt = {phantomDataRecord.specialUnitID};
+                table.insert(modifiedTerritories, impactedTerritory);
+                jumpToActionSpotObject = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
+                print("[PHANTOM EXPIRE] "..strPhantomExpires.."; remove special=="..phantomDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+			else
+				--Phantom SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
+				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)
+				--Other possible reason: some other mod moved it (Portals?, etc)
+				print ("[PHANTOM EXPIRE] Phantom Special Unit not found on any territory; can't remove SU, but still popping off record from PhantomData");
+            end
+
+			local event = WL.GameOrderEvent.Create (phantomDataRecord.castingPlayer, strPhantomExpires, {}, modifiedTerritories);
+			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
+			addOrder(event, true);
+			privateGameData.PhantomData[key] = nil;
+			--Mod.PrivateGameData = privateGameData;
+			print("[PHANTOM EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.PhantomData))
+		end
+    end
+
+    print("[PHANTOM EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.PhantomData))
+    print("[PHANTOM EXPIRE] processEndOfTurn END");
     Mod.PrivateGameData = privateGameData;
 end
 

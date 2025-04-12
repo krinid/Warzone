@@ -52,7 +52,8 @@ function createCards_newCards(alert, addCard);
 		print("ShieldPiecesPerTurn="..tostring(Mod.Settings.ShieldPiecesPerTurn))
 		print("ShieldWeight="..tostring(Mod.Settings.ShieldWeight))
 
-		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
+		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed. It absorbs all incoming regular damage to the territory it resides on and nullifies any defense damage typically done to attackers. "..
+			"In addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Nukes, Tornados, Earthquakes, Pestilence, Airstrikes. A territory cannot be captured while a Shield unit resides on it. ";
 		if (Mod.Settings.ShieldDuration == -1) then
 			strShieldDesc = strShieldDesc .. "Shields never expire.";
 		else
@@ -79,6 +80,27 @@ function createCards_newCards(alert, addCard);
 		end
 		Mod.Settings.MonolithCardID = addCard("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
 		Mod.Settings.MonolithDescription = strMonolithDesc;
+	end
+
+	--card: phantom_130x180.png
+	--special unit: phantom.png
+	if Mod.Settings.PhantomEnabled == true then
+		print("Phantom settings:")
+		print("PhantomEnabled="..tostring(Mod.Settings.PhantomEnabled))
+		print("PhantomDuration="..tostring(Mod.Settings.PhantomDuration))
+		print("PhantomPiecesNeeded="..tostring(Mod.Settings.PhantomPiecesNeeded))
+		print("PhantomStartPieces="..tostring(Mod.Settings.PhantomStartPieces))
+		print("PhantomPiecesPerTurn="..tostring(Mod.Settings.PhantomPiecesPerTurn))
+		print("PhantomWeight="..tostring(Mod.Settings.PhantomWeight))
+
+		local strPhantomDesc = "A special unit that directionally absorbs light to obscure enemy visibility wherever it travels.";
+		if (Mod.Settings.PhantomDuration == -1) then
+				strPhantomDesc = strPhantomDesc .. "Phantoms never expire.";
+		else
+				strPhantomDesc = strPhantomDesc .. "Phantoms last " ..Mod.Settings.PhantomDuration .." turn"..plural(Mod.Settings.PhantomDuration) .." before expiring.";
+		end
+		Mod.Settings.PhantomCardID = addCard("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomWeight, Mod.Settings.PhantomDuration);
+		Mod.Settings.PhantomDescription = strPhantomDesc;
 	end
 
 	if Mod.Settings.CardBlockEnabled == true then

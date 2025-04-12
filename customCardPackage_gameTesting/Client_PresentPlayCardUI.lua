@@ -32,6 +32,8 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
         play_Monolith_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed == "Shield") then
         play_Shield_card(game, cardInstance, playCard);
+    elseif (strCardBeingPlayed == "Phantom") then
+		play_Phantom_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Card Block") then
         play_CardBlock_card(game, cardInstance, playCard);
     elseif (strCardBeingPlayed=="Earthquake") then
@@ -116,10 +118,13 @@ function play_Shield_card(game, cardInstance, playCard)
             print("[SHIELD] order input::terr=" .. TargetTerritoryName .. "::Shield|" .. TargetTerritoryID .. "::");
 
             local strShieldMessage = strPlayerName_cardPlayer .. " creates a Shield on " .. TargetTerritoryName;
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger(0,0,255))}; --blue annotation background for Shield
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger(0, 0, 255))}; --blue annotation background for Shield
+                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
+               else
+                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
+            end
 
             --for k,v in pairs (game.Orders) do print (k,v.proxyType); end
 
@@ -143,6 +148,43 @@ function play_Shield_card(game, cardInstance, playCard)
             newGame = game;
             newGame.Orders = orders;
             game = newGame;]]
+
+            close();
+        end);
+    end);
+end
+
+function play_Phantom_card(game, cardInstance, playCard)
+    print("[PHANTOM] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+
+    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
+        setMaxSize(400, 300);
+        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
+        CreateLabel(vert).SetText("[PHANTOM]\n\n").SetColor(getColourCode("card play heading"));
+
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        TargetTerritoryClicked("Select the territory to create a Phantom on.");
+
+        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+            if (TargetTerritoryID == nil) then
+                UI.Alert("No territory selected. Please select a territory.");
+                return;
+            end
+            if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then 
+                UI.Alert("You must select a territory you own.");
+                return;
+            end
+            print("[PHANTOM] order input::terr=" .. TargetTerritoryName .. "::Phantom|" .. TargetTerritoryID .. "::");
+
+            local strPhantomMessage = strPlayerName_cardPlayer .. " creates a Phantom on " .. TargetTerritoryName;
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, 0)}; --Black annotation background for Phantom
+                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
+            end
 
             close();
         end);
@@ -262,11 +304,14 @@ function play_Earthquake_card(game, cardInstance, playCard)
             --so just pick 1 territory in the bonus to show the Earthquake
             local EQterritories = {};
             for _, terrID in pairs(game.Map.Bonuses[Earthquake_SelectedBonus.ID].Territories) do
---              territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}; --red annotation background for Earthquake
+                if (WL.IsVersionOrHigher("5.34.1")) then territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger (255, 0, 0))}; end --red annotation background for Earthquake
             end
             local jumpToActionSpotOpt = createJumpToLocationObject_Bonus (game, Earthquake_SelectedBonus.ID);
---          playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
+            end
 
             --playCard(strEarthquakeMessage.."1", 'Earthquake1|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);--, territoryAnnotation, jumpToActionSpotOpt);
             --playCard(strEarthquakeMessage.."2", 'Earthquake2|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation);--, jumpToActionSpotOpt);
@@ -322,10 +367,13 @@ function play_Tornado_card(game, cardInstance, playCard)
             end
             print("[TORNADO] order input: territory=" .. TargetTerritoryName .. " :: Tornado|" .. TargetTerritoryID);
             local strTornadoMessage = strPlayerName_cardPlayer .. " invokes a Tornado on " .. TargetTerritoryName;
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger(255,0,0))}; --red annotation background for Tornado
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger (255, 0, 0))}; --red annotation background for Tornado
+                playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            end
             close();
         end);
     end);
@@ -347,10 +395,13 @@ function play_Quicksand_card(game, cardInstance, playCard)
             end
             print("[QUICKSAND] order input: territory=" .. TargetTerritoryName .. " :: Quicksand|" .. TargetTerritoryID);
             local strQuicksandMessage = strPlayerName_cardPlayer .. " transforms " .. TargetTerritoryName .. " into quicksand";
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, getColourInteger(255,0,0))}; --red annotation background for Quicksand
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, getColourInteger (255, 0, 0))}; --red annotation background for Quicksand
+                playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            end
             close();
         end);
     end);
@@ -383,10 +434,13 @@ function play_Monolith_card(game, cardInstance, playCard)
         print ("[MONOLITH] order input::terr=" .. TargetTerritoryName .."::Monolith|" .. TargetTerritoryID.."::");
 
         local strMonolithMessage = strPlayerName_cardPlayer.." creates a Monolith on " .. TargetTerritoryName;
-        --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 10, getColourInteger(0,0,255))}; --blue annotation background for Shield
         local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-        --playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-        playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+        if (WL.IsVersionOrHigher("5.34.1")) then
+            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 10, getColourInteger (0, 0, 255))}; --blue annotation background for Shield
+            playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+        else
+            playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+        end
         close();
         end);
     end);
@@ -430,10 +484,13 @@ function play_Deneutralize_card (game, cardInstance, playCard)
                     print ("territory="..TargetTerritoryName.."::,ID="..TargetTerritoryID.."::owner=="..game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID.."::neutralOwnerID="..WL.PlayerID.Neutral.."::assignToPlayerID="..assignToPlayerID.."::assignToPlayerName="..assignToPlayerName);
 
                     local strDeneutralizeMessage = strPlayerName_cardPlayer.." deneutralized " .. TargetTerritoryName ..", assigned to "..assignToPlayerName;
-                    --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 10, getColourInteger(0,0,255))}; --blue annotation background for Shield
                     local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-                    --playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-                    playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift);
+                    if (WL.IsVersionOrHigher("5.34.1")) then
+                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 10, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
+                        playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+                    else
+                        playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift);
+                    end
                     --official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
                     close(); --close the popup dialog
                 end
@@ -484,10 +541,13 @@ function play_Neutralize_card (game, cardInstance, playCard)
 
                     --implement order in ReceiveGold phase for now; doing it in BombCards phase causes error if opponents (AIs in my testing) move specials (commander) on the neutralized units; orders never reach Server_AdvanceTurn_Start or _Order
                     local strNeutralizeMessage = strPlayerName_cardPlayer.." neutralized " .. TargetTerritoryName;
-                    --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 10, getColourInteger(128,128,128))}; --grey annotation background for Neutralize
                     local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-                    --playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-                    playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+                    if (WL.IsVersionOrHigher("5.34.1")) then
+                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 10, getColourInteger (128, 128, 128))}; --use Light Grey colour for Neutralize
+                        playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+                    else
+                        playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+                    end
                     --official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
                     close(); --close the popup dialog
                 end
@@ -534,10 +594,13 @@ function play_Isolation_card(game, cardInstance, playCard)
             print ("Isolate order input::terr=" .. TargetTerritoryName .."::Isolation|" .. TargetTerritoryID.."::");
 
             local strIsolationMessage = strPlayerName_cardPlayer.." invoked isolation on " .. TargetTerritoryName;
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Isolation", 10, getColourInteger(128,128,128))}; --grey annotation background for Isolation
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Isolation", 10, getColourInteger (128, 128, 128))}; --Medium Grey annotation background for Isolation
+                playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+            end
             close();
         end);
     end);
@@ -649,17 +712,16 @@ function play_Nuke_card(game, cardInstance, playCard)
             print ("[!player!] nuke order input::terr=" .. TargetTerritoryName .."::Nuke|" .. TargetTerritoryID.."::");
 
             local strNukeMessage = strPlayerName_cardPlayer .." nukes " .. TargetTerritoryName;
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger(255,0,0))}; --red annotation background for Nuke
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
-            playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger(100, 0, 0))}; --Dark Red annotation background for Nuke
+                playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
+            else
+                playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);
+            end
             close();
         end);
     end);
-end
-
-function play_Airstrike_card_NotYet (game, cardInstance, playCard)
-    UI.Alert ("Airstrike card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine being able to launch an attack to any territory on the board (and potentially capture) with some reduction in power from the # of armies you're sending (eg: sending 100 units may do 75 units' worth of damage)");
 end
 
 function play_Airstrike_card (game, cardInstance, playCard)
@@ -673,6 +735,7 @@ function play_Airstrike_card (game, cardInstance, playCard)
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(600, 600);
         airstrikeObject = {}; --global variable
+		airstrikeObject.FROMselectedSUs = {}; --to store actual SU objects in order to create WL.Armies object to get its Attack Power
         airstrikeObject.vertTop = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
         CreateLabel (airstrikeObject.vertTop).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
         local vertTop = airstrikeObject.vertTop;
@@ -715,13 +778,16 @@ function play_Airstrike_card (game, cardInstance, playCard)
             --^^ don't cancel moves, treat like attacking a Diplo ... can let it get decided during _Order; if ownership issues persist, above results result, but if resolved, then proceed normally
 
 			generateStringOfSelectedSUs (); --generate the order text using friendly names of SUs & text for the order specifying GUIDs of SUs
-			local intArmiesToSend = airstrikeObject.NIFarmies.GetValue ();
+			local intArmiesToSend = math.max (0, airstrikeObject.NIFarmies.GetValue ());
 			local strAirstrikeMsg = strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName ..", sending ".. tostring(intArmiesToSend).. " armies and "..airstrikeObject.strSelectedSUs_Names;
             print ("[AIRSTRIKE] ".. strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids));
-            --local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger(255,0,0))}; --red annotation background for Nuke
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            --playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids), nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
-            playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids)); --, nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger(255,0,0))}; --red annotation background for Nuke
+                playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids), nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+            else
+                playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids)); --, nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+            end
             close();
         end);
         UI.CreateLabel (playCardButtonhorz).SetText (" ").SetFlexibleWidth(0.5);
@@ -745,16 +811,19 @@ function updateAirstrikePanelDetails ()
     airstrikeObject.TOplayerTeam = -1 or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team;
     --airstrikeObject.FROMplayerTeam = (nil or airstrikeObject.FROMplayerID~=nil and airstrikeObject.FROMplayerID>0 and Game.Game.Players[airstrikeObject.FROMplayerID].Team);
     --airstrikeObject.TOplayerTeam = (nil or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team);
+	generateStringOfSelectedSUs (); --generate table of selected SUs from the checkbox panel & store result in airstrikeObject.FROMselectedSUs
+	print ("#selected SUs "..#airstrikeObject.FROMselectedSUs);
     airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower or nil;
-    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower or nil;
+    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or nil;
     airstrikeObject.FROMarmies = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0;
-	airstrikeObject.FROMselectedArmies = airstrikeObject.NIFarmies.GetValue (); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
-    airstrikeObject.TOarmies = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies or 0;
+	airstrikeObject.FROMselectedArmies = math.max (0, airstrikeObject.NIFarmies.GetValue ()); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
+
+    airstrikeObject.TOarmies = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or 0;
     airstrikeObject.FROMnumSpecials = SourceTerritoryID ~= nil and #Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.TOnumSpecials = TargetTerritoryID ~= nil and #Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.DeploymentYield = 0.75; --default to 75%
     if (Mod.Settings.AirstrikeDeploymentYield ~= nil) then airstrikeObject.DeploymentYield = Mod.Settings.AirstrikeDeploymentYield/100; end --if mod setting is set, use that value instead of the default
-    airstrikeObject.DeploymentYieldLoss = math.floor ((1-airstrikeObject.DeploymentYield) * airstrikeObject.FROMarmies + 0.5);
+    airstrikeObject.DeploymentYieldLoss = math.floor ((1-airstrikeObject.DeploymentYield) * airstrikeObject.FROMselectedArmies + 0.5);
     airstrikeObject.AttackTransfer = "tbd";
 	if (airstrikeObject.FROMplayerID == nil or airstrikeObject.TOplayerID == nil) then airstrikeObject.AttackTransfer = "tbd";
 	elseif (airstrikeObject.FROMplayerID ~= airstrikeObject.TOplayerID and (airstrikeObject.FROMplayerTeam==-1 or airstrikeObject.FROMplayerTeam>0 and airstrikeObject.FROMplayerTeam ~= airstrikeObject.TOplayerTeam)) then airstrikeObject.AttackTransfer = "Attack";
@@ -764,34 +833,51 @@ function updateAirstrikePanelDetails ()
 	airstrikeObject.attackingArmies = nil;
 	airstrikeObject.defendingArmies = nil;
 	airstrikeObject.FROMactualAttackPower = 0;
-	if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
-	if (TargetTerritoryID~=nil) then airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits); end
-
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories become regular airlifts with no Yield Deployment loss");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+    airstrikeObject.FROMattackPower_SelectedUnits = nil;
+    local intFROMattackPower_kills = nil;
+    local intTOdefensePower_kills = nil;
+	-- if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
+	if (SourceTerritoryID~=nil) then
+        airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, airstrikeObject.FROMselectedSUs);
+        airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower;
+        airstrikeObject.FROMattackPower_SelectedUnits = airstrikeObject.attackingArmies.AttackPower;
+        intFROMattackPower_kills = math.floor (airstrikeObject.FROMattackPower_SelectedUnits * Game.Settings.OffenseKillRate + 0.5)
+    end
+	if (TargetTerritoryID~=nil) then
+        airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits);
+        intTOdefensePower_kills = math.floor (airstrikeObject.TOdefensePower * Game.Settings.DefenseKillRate + 0.5);
+    end
 
     airstrikeObject.FROMTOhorz = CreateHorz (airstrikeObject.airstrikeSUvert).SetFlexibleWidth(1.0);
     airstrikeObject.FROMvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
     airstrikeObject.TOvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
 
-    local strFROMteamText = ""; if (airstrikeObject.FROMplayerTeam) >=0 then airstrikeObject.FROMplayerTeam = "/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]"; end
-    local strTOteamText = ""; if (airstrikeObject.TOplayerTeam) >=0 then airstrikeObject.TOplayerTeam = "/[team ".. tostring(airstrikeObject.TOplayerTeam).."]"; end
+    local strFROMteamText = ""; if (airstrikeObject.FROMplayerTeam >=0) then airstrikeObject.FROMplayerTeam = "/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]"; end
+    local strTOteamText = ""; if (airstrikeObject.TOplayerTeam >=0) then airstrikeObject.TOplayerTeam = "/[team ".. tostring(airstrikeObject.TOplayerTeam).."]"; end
     CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
     CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(getPlayerName(Game, airstrikeObject.FROMplayerID))..strFROMteamText);
-    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower).. strTOteamText);
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (airstrikeObject.FROMnumSpecials) .."]");
+    --CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower) .." [".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .. " [kills ".. tostring (intFROMattackPower_kills) .."]");
+
+    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring (airstrikeObject.FROMselectedArmies));
+    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (#airstrikeObject.FROMselectedSUs) .."]");
+    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring (#airstrikeObject.FROMselectedSUs));
     airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
     CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(getPlayerName (Game, airstrikeObject.TOplayerID))..strTOteamText);
-    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower));
+    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower) .. " [kills ".. tostring (intTOdefensePower_kills) .."]");
     CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
     CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
     --CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
-    local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
+
+	CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+
+	local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
     CreateLabel (AttackTransferHorz).SetText ("Attack/Transfer: ");
     CreateLabel (AttackTransferHorz).SetText (airstrikeObject.AttackTransfer).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (AttackTransferHorz).SetText (" (at current time)");
@@ -821,7 +907,7 @@ function SourceTerritoryClicked_Airstrike(terrDetails)
         SourceTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
-		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
+		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
 		airstrikeObject.NIFarmies.SetSliderMaxValue (intNumArmiesPresent);  --set max slider value for input field to # of armies on territory for ease of use (sum of current state + current deployments to source territory)
 		--if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
 		airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
@@ -863,18 +949,6 @@ function TerritoryClicked_Airstrike(terrDetails)
 	end
 end
 
---return the # of armies deployed to territory terrID so far this turn
-function getArmiesDeployedThisTurnSoFar (terrID)
-	for k,existingGameOrder in pairs (Game.Orders) do
-		--print (k,existingGameOrder.proxyType);
-		if (existingGameOrder.proxyType == "GameOrderDeploy") then
-			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
-			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
-		end
-	end
-	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
-end
-
 function populateSUpanel ()
     if (not UI.IsDestroyed (airstrikeObject.SUitemsVert)) then UI.Destroy (airstrikeObject.SUitemsVert); end
     airstrikeObject.SUitemsVert = UI.CreateVerticalLayoutGroup (airstrikeObject.SUpanelVert).SetFlexibleWidth(1);
@@ -882,23 +956,38 @@ function populateSUpanel ()
 
 	--if there are SUs on the source territory, display the Select/Deselect/Toggle buttons
 	local buttonLine = UI.CreateHorizontalLayoutGroup (airstrikeObject.SUitemsVert).SetFlexibleWidth (1);
-	if (#Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits >0) then
-		UI.CreateLabel (buttonLine).SetText ("Special Units:").SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green).SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red).SetFlexibleWidth(0.25);
-		UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow).SetFlexibleWidth(0.25);
-	end
 
+    local boolNumSUsIncluded = 0
 	for k, SU in pairs (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits) do
         --print (k, SU.ID);
-        local strSUname = SU.proxyType; --this is accurate for Commander & Bosses
+        local strSUname = SU.proxyType; --this is accurate for Commander & Bosses (it makes the SU name 'Commander' or 'Boss 1/2/3/4')
+        local boolIncludeSU = true;
         if (SU.proxyType == "CustomSpecialUnit") then
             strSUname = SU.Name;
             if (SU.Health ~= nil) then strSUname = strSUname .. " [health "..tostring(SU.Health).."]"; end
+            if (isSpecialUnitAnImmovableUnit (SU) == true) then boolIncludeSU = false; end
         end
-        airstrikeObject.SUcheckboxes[k] = UI.CreateCheckBox (airstrikeObject.SUitemsVert).SetText (strSUname).SetIsChecked (true);
+        if (boolIncludeSU == true) then airstrikeObject.SUcheckboxes[k] = UI.CreateCheckBox (airstrikeObject.SUitemsVert).SetText (strSUname).SetIsChecked (true).SetOnValueChanged (updateAirstrikePanelDetails); boolNumSUsIncluded = boolNumSUsIncluded + 1; end
     end
+    if (boolNumSUsIncluded > 0) then
+        if (#Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits >0) then
+            UI.CreateLabel (buttonLine).SetText ("Special Units:").SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Select All").SetOnClick (SUpanel_selectAll).SetColor (WZcolours.Green).SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Deselect All").SetOnClick (SUpanel_deselectAll).SetColor(WZcolours.Red).SetFlexibleWidth(0.25);
+            UI.CreateButton (buttonLine).SetText ("Toggle All").SetOnClick (SUpanel_toggleAll).SetColor (WZcolours.Yellow).SetFlexibleWidth(0.25);
+        end
+    end
+	updateAirstrikePanelDetails ();
 end
+
+-- if (Mod.Settings.AirstrikeCanTargetNeutrals == nil) then Mod.Settings.AirstrikeCanTargetNeutrals = true; end
+-- if (Mod.Settings.AirstrikeCanTargetPlayers == nil) then Mod.Settings.AirstrikeCanTargetPlayers = true; end
+-- if (Mod.Settings.AirstrikeCanTargetFoggedTerritories == nil) then Mod.Settings.AirstrikeCanTargetFoggedTerritories = false; end
+-- if (Mod.Settings.AirstrikeCanTargetCommanders == nil) then Mod.Settings.AirstrikeCanTargetCommanders = false; end
+-- if (Mod.Settings.AirstrikeCanTargetSpecialUnits == nil) then Mod.Settings.AirstrikeCanTargetSpecialUnits = false; end
+-- if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = false; end
+-- if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = false; end
+
 
 function generateTableOfSelectedSUs ()
 	if (#airstrikeObject.SUcheckboxes==0) then return {}; end --return empty set if there are no checkboxes (no SUs)
@@ -912,6 +1001,8 @@ end
 function generateStringOfSelectedSUs ()
 	airstrikeObject.strSelectedSUguids = "";
 	airstrikeObject.strSelectedSUs_Names = "";
+    airstrikeObject.FROMselectedSUs = {}; --to store the actual SU objects in order make a WL.Armies object and get its Attack Power
+    if (airstrikeObject.SUcheckboxes == nil) then airstrikeObject.SUcheckboxes = {}; end
 	if (#airstrikeObject.SUcheckboxes==0) then return; end --set empty strings if there are no checkboxes (no SUs)
 
 	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do
@@ -919,10 +1010,11 @@ function generateStringOfSelectedSUs ()
 			if (airstrikeObject.strSelectedSUs_Names ~= "") then airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. ", "; airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. ","; end
 			airstrikeObject.strSelectedSUguids = airstrikeObject.strSelectedSUguids .. Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k].ID;
 			airstrikeObject.strSelectedSUs_Names = airstrikeObject.strSelectedSUs_Names .. cbox.GetText ();
+            table.insert (airstrikeObject.FROMselectedSUs, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits[k]); --add the SU to a table
 		end
 	end
-	print (airstrikeObject.strSelectedSUguids);
-	print (airstrikeObject.strSelectedSUs_Names);
+	print ("Selected SU GUID string: "..airstrikeObject.strSelectedSUguids);
+	print ("Selected SU name string: "..airstrikeObject.strSelectedSUs_Names);
 end
 
 function SUpanel_toggleAll ()

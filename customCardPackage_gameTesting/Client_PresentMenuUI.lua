@@ -23,12 +23,58 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
+	-- print (WL.AttackTransferEnum.Attack);
+	-- print (WL.AttackTransferEnum.Transfer);
+	-- print (WL.AttackTransferEnum.AttackTransfer);
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Attack));
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Transfer));
+	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.AttackTransfer));
+	-- cards=getDefinedCardList (game);
+	-- for cardID, cardConfig in pairs(game.Settings.Cards) do
+	-- 	local strCardName = getCardName_fromObject(cardConfig);
+	-- 	cards[cardID] = strCardName;
+	-- 	--count = count +1
+	-- 	print ("**"..cardID,strCardName,type(cardID));
+	-- end
+
+	-- local publicGameData = Mod.PublicGameData;
+	-- publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection", game));
+	-- commanderOwner = 1; realcardID = 1000006;
+	-- playerID = 1; cardID = publicGameData.CardData.ResurrectionCardID;
+	-- -- cardID = realcardID;
+	-- jork=nil;
+	-- for k,v in pairs (game.LatestStanding.Cards[playerID].WholeCards) do
+	-- 	--print (playerID,v.CardID,k);
+	-- 	if (v.CardID == tonumber(cardID)) then print (playerID,v.CardID,k); CommanderOwner_ResurrectionCard= k; end
+	-- 	jork=k;
+	-- 	jork2=v;
+	-- end
+	-- print ("[RESURRECTION CHECK] Res cardID " ..tostring (publicGameData.CardData.ResurrectionCardID)..", Res card instance ID ".. tostring (CommanderOwner_ResurrectionCard));
+	-- print (cardID.."::",type(cardID))
+	-- print (realcardID.."::",type(realcardID))
+	-- print (publicGameData.CardData.ResurrectionCardID.."::",type (publicGameData.CardData.ResurrectionCardID))
+	-- print (jork.."::",type(jork))
+	-- print (jork2.CardID.."::",type(jork2.CardID))
+	-- print (tostring (realcardID == publicGameData.CardData.ResurrectionCardID));
+	-- print (tostring (cardID == publicGameData.CardData.ResurrectionCardID));
+	-- print (tostring (realcardID == cardID));
+
 	--debug info for debug authorized user only
 	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
-	if (game.Us.ID == 1058239) then
-			--put debug panel here
+
+	if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
+		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
 	end
+
+	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
+	local incompatibleMods_gameIDmap = {};
+	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
+	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
+	--UI.CreateLabel (MenuWindow).SetText ("GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode));
+	--UI.CreateLabel (MenuWindow).SetText ("GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode));
+	TopLabel.SetText(TopLabel.GetText().."GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode).."\n\n");
+	--return;
 
 	create_UnitInspectorMenu ();
 
@@ -48,7 +94,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     for k,gameOrder in pairs (game.Orders) do
         print (k..", "..gameOrder.proxyType);
         if (gameOrder.proxyType == "GameOrderAttackTransfer") then
-            print ("player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
+            print ("[ATTACK/TRANSFER] player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
         end
     end
 
@@ -86,7 +132,11 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 
-	showDefinedCards (game);
+		if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield == true) then
+			Game.SendGameCustomMessage ("[getting shield data]", {action="shielddata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nShield data:\n"..shieldData[1]); end);
+		end
+
+		showDefinedCards (game);
 end
 
 --send message to Server hook to toggle debug mode and save result in Mod.PublicGameData
@@ -201,8 +251,8 @@ function showDefinedCards (game)
 end
 
 function create_UnitInspectorMenu ()
-	Game.CreateDialog (populateUnitInspectorMenu); --user friendly Unit Inspector
-	Game.CreateDialog (unitInspectorMenu);         --comprehensive Unit Inspector
+	Game.CreateDialog (showUnitInspectorMenu); --user friendly Unit Inspector, 1 selected territory at a time
+	Game.CreateDialog (wholeMapInspectorPanel);    --comprehensive Unit Inspector, all SUs on all territories in 1 pane
 end
 
 function createDialogWindow ()
@@ -220,12 +270,16 @@ function tableIsEmpty(t)
 	return true;
 end
 
-function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
+function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, close)
     setMaxSize(800, 600);
     --setScrollable(true);
 
-	local UIdisplay = UI.CreateVerticalLayoutGroup (rootParent);
+	local UIdisplay = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1).SetCenter(false);
+
 	UI.CreateLabel(UIdisplay).SetText("[UNIT INSPECTOR]").SetColor(getColourCode("main heading"));
+
+	local strDisplayType = "plain";
+	local boolVerboseMode = false;
 
 	for _,terr in pairs (game.LatestStanding.Territories) do
 		--print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
@@ -235,30 +289,46 @@ function unitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
 				if (boolCurrentTerritoryHeaderDisplayed == false) then
-					UI.CreateLabel (UIdisplay).SetText ("\n["..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name.."] Attack Power "..game.LatestStanding.Territories[terr.ID].NumArmies.AttackPower..", Defense Power "..game.LatestStanding.Territories[terr.ID].NumArmies.DefensePower..
-						", #Armies ".. game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies ..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading")); 
+					local intFROMnumArmiesPresent = (game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (game, terr.ID)); --includes armies deployed this turn
+					local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits);
+					UI.CreateLabel (UIdisplay).SetText ("\n["..terr.ID.. "/".. game.Map.Territories[terr.ID].Name..
+					"] Attack Power "..FROMfullAttackingForce.AttackPower.. " [kills ".. math.floor (FROMfullAttackingForce.AttackPower * game.Settings.OffenseKillRate + 0.5).."]"..
+					", Defense Power "..FROMfullAttackingForce.DefensePower.. " [kills ".. math.floor (FROMfullAttackingForce.DefensePower * game.Settings.DefenseKillRate + 0.5).."]"..
+					", #Armies ".. intFROMnumArmiesPresent..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading"));
 					boolCurrentTerritoryHeaderDisplayed = true;
 				end
-				if (numSpecialsOnTerritory>1) then UI.CreateLabel (UIdisplay).SetText (" "); end --spacer between SUs, but don't leave space between territory heading and 1st SU
-				UI.CreateLabel (UIdisplay).SetText ("<"..numSpecialsOnTerritory.."> "..specialUnit.proxyType..", owner "..specialUnit.OwnerID.."/"..getPlayerName (game, specialUnit.OwnerID)..", ID="..specialUnit.ID).SetColor (getColourCode("minor heading"));
+				if (numSpecialsOnTerritory>1) then UI.CreateLabel (UIdisplay).SetText ("_").SetColor ("#000000"); end --spacer between SUs, but don't leave space between territory heading and 1st SU
+				local strSUownerName = getPlayerName (game, specialUnit.OwnerID);
+				local strSUname = specialUnit.proxyType;
+				if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name ~= nil) then strSUname = specialUnit.Name; end
+
+				-- local line = UI.CreateHorizontalLayoutGroup (UIdisplay).SetFlexibleWidth(1);
+				local strSUdetailsLineHeader = "<"..numSpecialsOnTerritory.."> "..strSUname;
+				local strSUdetailsLineFooter = " ["..specialUnit.proxyType.."], owner "..specialUnit.OwnerID.."/"..strSUownerName..", ID="..specialUnit.ID;
+				local strSUdetailsLineFull = strSUdetailsLineHeader..strSUdetailsLineFooter;
+				-- UI.CreateLabel (line).SetText (strSUdetailsLineHeader).SetColor ("#FFFFFF");
+				-- UI.CreateLabel (line).SetText (strSUdetailsLineFooter).SetColor (getColourCode("minor heading"));
+				UI.CreateLabel (UIdisplay).SetText (strSUdetailsLineFull).SetColor (getColourCode("minor heading"));
+
+				print (strSUdetailsLineFull);
 
 				if (specialUnit.proxyType == "Commander") then
-					--reference: displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
-					displaySpecialUnitProperties (UIdisplay, "Commander", 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil);
+					--reference: displaySpecialUnitProperties (UIcontrol, strDisplayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Commander", 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil);
 				elseif (specialUnit.proxyType == "Boss3") then
-					displaySpecialUnitProperties (UIdisplay, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-					displaySpecialUnitProperties (UIdisplay, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
 				else
-					CreateLabel(UIdisplay).SetText("unknown unit type").SetColor(colors["Orange Red"]);
+					CreateLabel(UIdisplay).SetText("Unit type '" ..specialUnit.proxyType.."' not implemented yet").SetColor(colors["Orange Red"]);
 				end
 			end
 		end
 	end
 end
 
-function displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)
-	UI.CreateLabel (UIcontrol).SetText ("    Name: "..tostring(name)).SetColor ("#FFFFFF");
+--[[ function displaySpecialUnitProperties_plain (UIcontrol, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)
+	UI.CreateLabel (UIcontrol).SetText ("    Name: "..tostring(name)..", Owner: "..owner).SetColor ("#FFFFFF");
 	UI.CreateLabel (UIcontrol).SetText ("    Attack -- Power: "..tostring(attackPower)..", modifier factor: "..tostring(attackPowerPercentage));
 	UI.CreateLabel (UIcontrol).SetText ("    Defense -- Power: "..tostring(defensePower)..", modifier factor: "..tostring(defensePowerPercentage));
 	UI.CreateLabel (UIcontrol).SetText ("    Damage to kill: "..tostring(damageToKill)..", Health: "..tostring(health));
@@ -267,13 +337,120 @@ function displaySpecialUnitProperties (UIcontrol, name, attackPower, attackPower
 	UI.CreateLabel (UIcontrol).SetText ("    Teammate actions -- can be transferred: "..tostring(canBeTransferredToTeammate)..", can be airlifted: "..tostring(canBeAirliftedToTeammate));
 	UI.CreateLabel (UIcontrol).SetText ("    Visible to all players: "..tostring(isVisibleToAllPlayers));
 	UI.CreateLabel (UIcontrol).SetText ("    Mod data: "..tostring(modData));
+end ]]
+
+--displayType is a string, either "plain" or "colourful"; if neither then default to plain
+--boolVerbose indicates whether to add additional comments/descriptions or just minimize what's displayed
+function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)
+	attackPower = attackPower or 0; --default to 0 if not set
+	defensePower = defensePower or 0; --default to 0 if not set
+	attackPowerPercentage = attackPowerPercentage or 0; --default to 0 if not set
+	defensePowerPercentage = defensePowerPercentage or 0; --default to 0 if not set
+
+	if (boolVerbose == nil) then boolVerbose = false; end --default to false if not set
+	if (displayType == nil or displayType ~= "colourful") then --if "plain" or anything else other than "colourful" (including nil) was entered, default to "plain"
+		--plain style is always non-verbose, nothing to change here
+		--UI.CreateLabel (UIcontrol).SetText ("    Name: "..tostring(name)..", Owner: "..owner).SetColor ("#FFFFFF");
+		UI.CreateLabel (UIcontrol).SetText ("    Attack -- Power: "..tostring(attackPower)..", modifier factor: "..tostring(attackPowerPercentage));
+		UI.CreateLabel (UIcontrol).SetText ("    Defense -- Power: "..tostring(defensePower)..", modifier factor: "..tostring(defensePowerPercentage));
+		UI.CreateLabel (UIcontrol).SetText ("    Damage to kill: "..tostring(damageToKill)..", Health: "..tostring(health));
+		UI.CreateLabel (UIcontrol).SetText ("    Damage absorbed when attacked: "..tostring (damageAbsorbedWhenAttacked)..", Combat order: "..tostring(combatOrder));
+		UI.CreateLabel (UIcontrol).SetText ("    Can be gifted: "..tostring(canBeGifted)..", can be airlifted to self: "..tostring(canBeAirliftedToSelf));
+		UI.CreateLabel (UIcontrol).SetText ("    Teammate actions -- can be transferred: "..tostring(canBeTransferredToTeammate)..", can be airlifted: "..tostring(canBeAirliftedToTeammate));
+		UI.CreateLabel (UIcontrol).SetText ("    Visible to all players: "..tostring(isVisibleToAllPlayers));
+		UI.CreateLabel (UIcontrol).SetText ("    Mod data: "..tostring(modData));
+	else
+		if (boolVerbose == true) then
+			local line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+			CreateLabel(line).SetText("Attack -- Power: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (attackPower)).SetColor(colors.Cyan);
+			CreateLabel(line).SetText(", modifier factor: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (attackPowerPercentage)).SetColor(colors.Cyan);
+			if (boolVerbose == true) then CreateLabel(UIcontrol).SetText("(modifier affects damage of all armies participating in an attack with this unit; other Special Units are not impacted)").SetColor(colors["Dark Gray"]); end
+
+			if (boolVerbose == true) then line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+			else CreateLabel(line).SetText(";     ").SetColor(colors.TextColor);end
+
+			CreateLabel(line).SetText("Defense -- Power: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (defensePower)).SetColor(colors.Cyan);
+			CreateLabel(line).SetText(", modifier factor: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (defensePowerPercentage)).SetColor(colors.Cyan);
+			if (boolVerbose == true) then CreateLabel(UIcontrol).SetText("(defense modifier affects damage of all armies present on same territory with this Special Unit when defending against an incoming attack; other Special Units are not impacted)").SetColor(colors["Dark Gray"]); end
+		else
+			local line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+			CreateLabel(line).SetText("Attack Power: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (attackPower)).SetColor(colors.Cyan);
+			CreateLabel(line).SetText(", modifier: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (math.floor (attackPowerPercentage*100)/100)).SetColor(colors.Cyan);
+			CreateLabel(line).SetText("; Defense Power: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (math.floor (defensePower*100)/100)).SetColor(colors.Cyan);
+			CreateLabel(line).SetText(", modifier: ").SetColor(colors.TextColor);
+			CreateLabel(line).SetText(tostring (math.floor (defensePowerPercentage*100)/100)).SetColor(colors.Cyan);
+		end
+
+		if (boolVerbose == true) then UI.CreateLabel (UIcontrol).SetText ("_").SetColor("#000000"); end
+		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+		CreateLabel(line).SetText("Combat order: ").SetColor(colors.TextColor);
+		CreateLabel(line).SetText(tostring (combatOrder)).SetColor(colors.Cyan);
+		if (boolVerbose == true) then
+			if (combatOrder <0) then CreateLabel(line).SetText(" [before armies]").SetColor(colors.TextColor);
+			elseif (combatOrder ==0) then CreateLabel(line).SetText(" [ambiguous, same time as armies]").SetColor(colors.TextColor);
+			elseif (combatOrder >0 and combatOrder <10000)  then CreateLabel(line).SetText(" [after armies, before Commander]").SetColor(colors.TextColor);
+			elseif (combatOrder ==10000 and name=='Commander') then CreateLabel(line).SetText(" [reserved for Commander]").SetColor(colors.TextColor);
+			elseif (combatOrder ==10000) then CreateLabel(line).SetText(" [ambiguous - same time as Commander]").SetColor(colors.TextColor);
+			elseif (combatOrder >10000) then CreateLabel(line).SetText(" [after Commander]").SetColor(colors.TextColor); end
+		end
+
+		if (boolVerbose == true) then UI.CreateLabel (UIcontrol).SetText ("_").SetColor("#000000"); end
+		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+		UI.CreateLabel (line).SetText("Health: ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText(tostring(health)).SetColor(health and colors.Green or colors["Dark Gray"]);
+		UI.CreateLabel (line).SetText(", Damage to kill: ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText(tostring(damageToKill)).SetColor(damageToKill and colors.Green or colors["Dark Gray"]);
+		UI.CreateLabel (line).SetText(", Absorbs damage: ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText(tostring(damageAbsorbedWhenAttacked)).SetColor(damageAbsorbedWhenAttacked and colors.Green or colors["Dark Gray"]);
+		if (boolVerbose == true) then
+			if (health ~= nil) then
+				UI.CreateLabel(UIcontrol).SetText("- Unit has health, taking damage reduces its health, unit dies when health reaches 0").SetColor(colors.TextColor);
+			else
+				if (damageAbsorbedWhenAttacked ~= nil and damageAbsorbedWhenAttacked>0) then UI.CreateLabel(UIcontrol).SetText("- Unit absorbs and nullifies a specific amount of damage when involved in an attack").SetColor(colors.TextColor); end
+				if (damageToKill ~= nil and damageToKill>0) then UI.CreateLabel(UIcontrol).SetText("- Unit does not take damage and must be killed in a single attack").SetColor(colors.TextColor); end
+			end
+		end
+
+		if (boolVerbose == true) then UI.CreateLabel (UIcontrol).SetText ("_").SetColor("#000000"); end
+		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+		UI.CreateLabel (line).SetText("Can be gifted: ").SetColor(colors.TextColor);
+		UI.CreateLabel(line).SetText(tostring(canBeGifted)).SetColor(canBeGifted and colors.Green or colors.Red);
+		UI.CreateLabel (line).SetText (", can be airlifted to self: ");
+		UI.CreateLabel (line).SetText (tostring(canBeAirliftedToSelf)).SetColor(canBeAirliftedToSelf and colors.Green or colors.Red);
+
+		if (boolVerbose == true) then UI.CreateLabel (UIcontrol).SetText ("_").SetColor("#000000"); end
+		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+		UI.CreateLabel (line).SetText ("Teammate actions -- can be transferred: ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText (tostring(canBeTransferredToTeammate)).SetColor(canBeTransferredToTeammate and colors.Green or colors.Red);
+		UI.CreateLabel (line).SetText (", can be airlifted: ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText (tostring(canBeAirliftedToTeammate)).SetColor(canBeAirliftedToTeammate and colors.Green or colors.Red);
+
+		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+		CreateLabel(line).SetText("Permanently visible to all players: ").SetColor(colors.TextColor);
+		CreateLabel(line).SetText(tostring(isVisibleToAllPlayers)).SetColor(isVisibleToAllPlayers and colors.Green or colors.Red);
+
+		if (boolVerbose == true) then
+			--put on different lines b/c it wraps both lines and "Description" wraps over ~3+ lines for long descriptions
+			-- line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
+			CreateLabel(UIcontrol).SetText("Description: ").SetColor(colors.TextColor);
+			CreateLabel(UIcontrol).SetText(tostring(modData)).SetColor(colors["Mahogany"]);
+		end
+	end
 end
 
-function populateUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
+function showUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
     setMaxSize(600, 600);
     --setScrollable(true);
 	UnitInspectorRoot = rootParent;
 	inspectToolInUse = true;
+	Inspector_territory = nil; --initialize global variable to nil
 
 	--UnitInspector_selectorRoot = nil;
 	vertTerritoryInfoAndUnitInspectorList = nil;
@@ -289,25 +466,74 @@ function populateUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game,
 
 	inspectToolInUse = true;
 	--if (UI.IsDestroyed (UnitInspector_TerritorySelectButton)==true) then strButtonText = "Select another Territory"; end
-	--UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Select another Territory").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (populateUnitInspectorMenu); end);
-	UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Click on a territory to inspect it").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (populateUnitInspectorMenu); end);
+	--UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Select another Territory").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
+	UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Click a territory to inspect it").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
 	CreateButton(vert).SetText("Show combat order of visible Special Units").SetColor(colors.Orange).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
+	line = CreateHorz(vert).SetFlexibleWidth(1);
+	UI.CreateLabel (line).SetText (" ").SetPreferredWidth(0.6);
+	cboxVerbose = UI.CreateCheckBox (line).SetText ("Verbose").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(); end); --.SetPreferredWidth(0.2); --.SetOnClick --
+	cboxColourful = UI.CreateCheckBox (line).SetText ("Colourful").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(); end); --.SetPreferredWidth(0.2); --.SetOnClick --
+	intInspector_territory = nil;
 	UI.InterceptNextTerritoryClick(UnitInspector_clickedTerr);
 end
 
 function UnitInspector_clickedTerr(terrDetails)
 	if terrDetails == nil or not inspectToolInUse or UI.IsDestroyed(UnitInspectorRoot) then return WL.CancelClickIntercept; end
+	Inspector_territory = terrDetails; --set global variable to value of selected territory
+	populateUnitInspectorContents ();
+end
+
+function populateUnitInspectorContents ()
+	if (Inspector_territory == nil) then return; end --if territory hasn't been selected yet, do nothing
 	if (not UI.IsDestroyed(vertTerritoryInfoAndUnitInspectorList)) then UI.Destroy (vertTerritoryInfoAndUnitInspectorList); end
 	vertTerritoryInfoAndUnitInspectorList = UI.CreateVerticalLayoutGroup(UnitInspectorRoot).SetFlexibleWidth(1);
 	CurrentDisplayRoot = vertTerritoryInfoAndUnitInspectorList;
 	UI.CreateLabel(vertTerritoryInfoAndUnitInspectorList).SetText(" "); --vertical spacer
 	local line = UI.CreateHorizontalLayoutGroup (vertTerritoryInfoAndUnitInspectorList);
 	UI.CreateLabel(line).SetText("INSPECTING Territory: ");
-	UI.CreateLabel(line).SetText(terrDetails.ID .. "/" .. terrDetails.Name).SetColor ("#00FF00");
-	UI.CreateLabel(vertTerritoryInfoAndUnitInspectorList).SetText("    Attack Power: ".. Game.LatestStanding.Territories[terrDetails.ID].NumArmies.AttackPower .. ", Defense Power: " .. Game.LatestStanding.Territories[terrDetails.ID].NumArmies.DefensePower..
-		"\n    Units present -- Armies: ".. Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies..", Special Units: "..#Game.LatestStanding.Territories[terrDetails.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
-	local sps = Game.LatestStanding.Territories[terrDetails.ID].NumArmies.SpecialUnits;
-	if not tableIsEmpty(sps) then
+	UI.CreateLabel(line).SetText(Inspector_territory.ID .. "/" .. Inspector_territory.Name).SetColor ("#00FF00");
+
+	local intFROMnumArmiesPresent = (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
+	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits);
+
+	local attackPower = FROMfullAttackingForce.AttackPower;
+	local defensePower = FROMfullAttackingForce.DefensePower;
+	local intAttackKillQuantity = math.floor (attackPower * Game.Settings.OffenseKillRate + 0.5);
+	local intDefenseKillQuantity = math.floor (defensePower * Game.Settings.DefenseKillRate + 0.5);
+
+	local UIdisplay = vertTerritoryInfoAndUnitInspectorList;
+	UI.CreateLabel(UIdisplay).SetText("    Attack Power: ".. attackPower .. " [kills ".. intAttackKillQuantity .."], Defense Power: " .. defensePower .. " [kills "..intDefenseKillQuantity.."]"..
+		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
+	UnitInspector_TerritorySelectButton.SetText ("Click here to inspect a different territory");
+	intInspector_territory = Inspector_territory.ID; --set global variable to value of selected territory
+
+	if (#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits == 0) then
+		CreateLabel(UIdisplay).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
+	else
+		for k,specialUnit in pairs (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits) do
+			local strSUownerName = getPlayerName (Game, specialUnit.OwnerID);
+			local strSUname = specialUnit.proxyType;
+			if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name ~= nil) then strSUname = specialUnit.Name; end
+			local strSUdetails = strSUname ..", Owner: "..strSUownerName;
+			if (cboxVerbose.GetIsChecked() == true) then strSUdetails = " ["..specialUnit.proxyType.."], "..strSUname ..", owner "..specialUnit.OwnerID.."/"..strSUownerName..", ID="..specialUnit.ID; end
+				--" ".. specialUnit.proxyType..", owner "..specialUnit.OwnerID.."/"..strSUownerName..", ID="..specialUnit.ID;
+			UI.CreateLabel (UIdisplay).SetText ("\n<"..k.."> "..strSUdetails).SetColor (getColourCode("minor heading"));
+			print ("<"..k.."> "..strSUdetails);
+
+			strDisplayType = cboxColourful.GetIsChecked() and "colourful" or "plain";
+			if (specialUnit.proxyType == "Commander") then
+				--reference: displaySpecialUnitProperties (UIcontrol, displayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil);
+			elseif (specialUnit.proxyType == "Boss3") then
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
+			elseif (specialUnit.proxyType == "CustomSpecialUnit") then
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
+			else
+				CreateLabel(UIdisplay).SetText("undefined unit type").SetColor(colors["Orange Red"]);
+			end
+		end
+	end
+	--[[if not tableIsEmpty(sps) then
 		UnitInspector_TerritorySelectButton.SetText ("Click to select a different Territory to inspect");
 		pickUnitOfList(sps);
 		if (#sps == 1) then inspectUnit(sps[1], nil); end
@@ -316,9 +542,10 @@ function UnitInspector_clickedTerr(terrDetails)
 		--SetWindow("NoUnitFound");
 
 		--CreateButton(UnitInspectorRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(function() inspectToolInUse = false; showMainMenu(); end);
-		CreateLabel(UnitInspectorRoot).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
-	end
+	end ]]
 end
+
+
 
 function pickUnitOfList(list)
 	--DestroyWindow();
@@ -327,7 +554,7 @@ function pickUnitOfList(list)
 	CurrentDisplayRoot = UnitInspectorRoot;
 	UI.CreateLabel (CurrentDisplayRoot).SetText("\nSelect one of the Special Units to inspect:").SetFlexibleWidth(1).SetColor(colors.TextColor);
 
-	--CreateButton(CurrentDisplayRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(populateUnitInspectorMenu);
+	--CreateButton(CurrentDisplayRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(showUnitInspectorMenu);
 	CreateEmpty(CurrentDisplayRoot).SetPreferredHeight(5);
 	for _, sp in pairs(list) do
 		CreateButton(CurrentDisplayRoot).SetText(getUnitName(sp)).SetFlexibleWidth(1).SetColor(getOwnerColor(sp)).SetOnClick(function() inspectUnit(sp, function() pickUnitOfList(list); end); end)
@@ -349,24 +576,46 @@ function inspectUnit(sp, callback)
 	CreateEmpty(line).SetFlexibleWidth(0.33);
 	--CreateButton(line).SetText("Return").SetColor(colors.Orange).SetOnClick(callback);
 	CreateEmpty(line).SetFlexibleWidth(0.33);
-	CreateButton(line).SetText("Combat Order").SetColor(colors.Orange).SetOnClick(function() showCombatOrder(function() inspectUnit(sp, callback--[[, UnitInspectorRoot]]); end, sp); end);
+	CreateButton(line).SetText("Show Combat Order").SetColor(colors.Orange).SetOnClick(function() showCombatOrder(function() inspectUnit(sp, callback--[[, UnitInspectorRoot]]); end, sp); end);
 	CreateEmpty(line).SetFlexibleWidth(0.33);
 	CreateEmpty(CurrentDisplayRoot).SetPreferredHeight(5);
 
-	line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Unit type: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(getReadableString(sp.proxyType)).SetColor(colors.Tan);
-	line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
-	CreateLabel(line).SetText("Owner: ").SetColor(colors.TextColor);
-	CreateLabel(line).SetText(getPlayerName(Game, sp.OwnerID)).SetColor(colors.Tan);
+	--strDisplayType = cboxColourful.GetIsChecked() and "colourful" or "plain";
+	local strDisplayType = "colourful";
+
 	if sp.proxyType == "CustomSpecialUnit" then
-		inspectCustomUnit(sp, CurrentDisplayRoot);
+		--inspectCustomUnit(sp, CurrentDisplayRoot);
+		displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, getUnitDescription (sp));
 	else
-		inspectNormalUnit(sp, CurrentDisplayRoot);
+		--inspectNormalUnit(sp, CurrentDisplayRoot);
+		if sp.proxyType == "Commander" then
+			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
+		elseif sp.proxyType == "Boss3" then
+			local strBossDescription = "This unit is in Stage "..tostring (sp.Stage).." of 3. ";
+			if (sp.Stage == 3) then strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will NOT split into 4 smaller bosses. This unit is in it's last stage";
+			else
+				strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will split into 4 bosses with " .. sp.Power - 10 .. " health. These 4 bosses are randomly spawned at nearby territories, taking ownership of the territory unless it is already occupied by a commander, in which case it will choose another territory"
+			end
+			line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
+			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Boss", sp.Power, 1.0, sp.Power, 1.0, sp.Power, nil, nil, 10000+sp.Stage, false, false, false, true, false, strBossDescription);
+		else
+			CreateLabel(UnitInspectorRoot).SetText("Unit type '" ..sp.proxyType.."' not implemented yet").SetColor(colors.Red);
+		end
 	end
 end
 
 function inspectCustomUnit(sp, UnitInspectorRoot)
+	line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
+	CreateLabel(line).SetText("Unit type: ").SetColor(colors.TextColor);
+	CreateLabel(line).SetText(getReadableString(sp.proxyType)).SetColor(colors.Tan);
+	--line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
+	CreateLabel(line).SetText(", Owner: ").SetColor(colors.TextColor);
+	CreateLabel(line).SetText(getPlayerName(Game, sp.OwnerID)).SetColor(colors.Tan);
+
+	local strUnitName = sp.Name ~= nil and sp.Name or "None";
+	local strSUownerName = getPlayerName (Game, sp.OwnerID);
+
+	displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, getUnitDescription (sp));
 
 	local line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Name: ").SetColor(colors.TextColor);
@@ -472,6 +721,8 @@ end
 
 function inspectNormalUnit(sp, UnitInspectorRoot)
 	if sp.proxyType == "Commander" then
+		displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
+
 		local line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 		CreateLabel(line).SetText("Attack damage: ").SetColor(colors.TextColor);
 		CreateLabel(line).SetText("7").SetColor(colors.Cyan);
@@ -564,13 +815,13 @@ function showCombatOrder_Window (rootParent, setMaxSize, setScrollable, game, cl
 	CurrentDisplayRoot = UnitInspector_CombatOrderRoot;
 end
 
-function showCombatOrder(callback, sp, UnitInspectorRoot)
+function showCombatOrder()
 	--DestroyWindow();
 	--SetWindow("CombatOrder");
 	Game.CreateDialog (showCombatOrder_Window);
 	--CreateButton(UnitInspectorRoot).SetText("Return").SetColor(colors.Orange).SetOnClick(callback);
 
-	local order = {[0] = {Units = {"Normal army"}, Positions = {}}};
+	local order = {[0] = {Units = {"Armies"}, Positions = {}}};
 	for _, terr in pairs(Game.LatestStanding.Territories) do
 		if not tableIsEmpty(terr.NumArmies.SpecialUnits) then
 			for _, unit in pairs(terr.NumArmies.SpecialUnits) do
@@ -600,17 +851,14 @@ function showCombatOrder(callback, sp, UnitInspectorRoot)
 	order = t;
 
 	CreateEmpty(CurrentDisplayRoot).SetPreferredHeight(10);
-	CreateLabel(CurrentDisplayRoot).SetText("This is the order in which units take damage. Note that the units listed below are only the ones visible to you, there might be units hidden by the fog").SetColor(colors.TextColor);
+	CreateLabel(CurrentDisplayRoot).SetText("This is the order in which units take damage. This list only includes units that are visible to you; there might be other units hidden in the fog").SetColor(colors.TextColor);
 
 	local c = 1;
-	for _, arr in pairs(order) do
+	for k, arr in pairs(order) do
 		local line = CreateHorz(CurrentDisplayRoot).SetFlexibleWidth(1);
-		if sp ~= nil and arr.CombatOrder == sp.CombatOrder then
-			CreateLabel(line).SetText(c .. ". ").SetColor(colors.Green);
-		else
-			CreateLabel(line).SetText(c .. ". ").SetColor(colors.TextColor);
-		end
-		
+		--CreateLabel(line).SetText(c .. ". [".. arr.CombatOrder .."]").SetColor(colors.TextColor);
+		CreateLabel(line).SetText(c .. ". ").SetColor(colors.TextColor);
+
 		local t = {};
 		for _, unit in pairs(arr.Units) do
 			if not valueInTable(t, getUnitName(unit)) then
@@ -624,8 +872,10 @@ function showCombatOrder(callback, sp, UnitInspectorRoot)
 			label.SetColor("#EEEEEE");
 		end
 		CreateEmpty(line).SetFlexibleWidth(1);
-		CreateButton(line).SetText("Where?").SetColor(colors.Blue).SetOnClick(function() Game.HighlightTerritories(arr.Positions) for _, terrID in pairs(arr.Positions) do Game.CreateLocatorCircle(Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
-		
+		CreateLabel(line).SetText("[".. arr.CombatOrder .."]").SetColor(colors.TextColor);
+		local whereButton = CreateButton(line).SetText("Where?").SetColor(colors.Blue).SetOnClick(function() Game.HighlightTerritories(arr.Positions) for _, terrID in pairs(arr.Positions) do Game.CreateLocatorCircle(Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
+		if (arr.CombatOrder == 0 and #arr.Units == 1) then whereButton.SetInteractable (false); end;
+
 		c = c + 1;
 	end
 end
