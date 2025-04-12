@@ -196,75 +196,14 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 	end
 end
 
-function process_game_orders_RegularCards_ORIG_preAirstrike (game,gameOrder,result,skip,addOrder)
-	--check for regular card plays
-	if (gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
-		--check if Airlift is going in/out of Isolated territory or out of a Quicksanded territory; if so, cancel the move
-
-		print ("[AIRLIFT PLAYED] FROM "..gameOrder.FromTerritoryID.."/"..getTerritoryName (gameOrder.FromTerritoryID, game)..", TO "..gameOrder.ToTerritoryID.."/"..getTerritoryName (gameOrder.ToTerritoryID, game)..", #armies=="..gameOrder.Armies.NumArmies.."::");
-
-		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
-		local boolQuicksandAirliftViolation = false;
-		local strAirliftSkipOrder_Message="";
-		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] == nil)) then
-			--do nothing, there are no Quicksand operations in place, permit these orders
-			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
-		else
-			--block airlifts IN/OUT of the quicksand as per the mod settings
-			if (Mod.Settings.QuicksandBlockAirliftsIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] ~= nil and Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source and target territories have quicksand, and quicksand is configured so you can neither airlift in or out of quicksand";
-				boolQuicksandAirliftViolation = true;
-			elseif (Mod.Settings.QuicksandBlockAirliftsIntoTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.ToTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since target territory has quicksand, and quicksand is configured so you cannot airlift into quicksand";
-				boolQuicksandAirliftViolation = true;
-			elseif (Mod.Settings.QuicksandBlockAirliftsFromTerritory==true and Mod.PublicGameData.QuicksandData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source territory has quicksand, and quicksand is configured so you cannot airlift out of quicksand";
-				boolQuicksandAirliftViolation = true;
-			else
-				--arriving here means there are no conditions where the airlift direction is being blocked, so let it proceed
-				boolQuicksandAirliftViolation = false; --this is the default but restating it here for clarity
-			end
-
-			--skip the order if a violation was flagged in the IF structure above
-			if (boolQuicksandAirliftViolation==true) then
-				strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an Airlift from "..getTerritoryName (gameOrder.FromTerritoryID, game).." to "..getTerritoryName(gameOrder.ToTerritoryID, game);
-				print ("[AIRLIFT/QUICKSAND] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.FromTerritoryID .."/"..getTerritoryName (gameOrder.FromTerritoryID, game).."::, to="..gameOrder.ToTerritoryID .."/"..getTerritoryName(gameOrder.ToTerritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
-				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
-			end
-		end
-
-		--if there's no IsolationData, do nothing (b/c there's nothing to check)
-		if (Mod.PublicGameData.IsolationData == nil or (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil)) then
-			--do nothing, there are no Isolation operations in place, permit these orders
-			--weed out the cases above, then what's left are Airlifts to or from Isolated territories
-		else
-			--block airlifts IN/OUT of the isolated territory as per the mod settings
-			strAirliftSkipOrder_Message="";
-			if (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source and target territories are isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] ~= nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] == nil) then
-				strAirliftSkipOrder_Message="Airlift failed since target territory is isolated";
-			elseif (Mod.PublicGameData.IsolationData[gameOrder.ToTerritoryID] == nil and Mod.PublicGameData.IsolationData[gameOrder.FromTerritoryID] ~= nil) then
-				strAirliftSkipOrder_Message="Airlift failed since source territory is isolated";
-			else
-				strAirliftSkipOrder_Message="Airlift failed due to unknown isolation conditions";
-			end
-			strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an Airlift from "..getTerritoryName (gameOrder.FromTerritoryID, game).." to "..getTerritoryName(gameOrder.ToTerritoryID, game);
-			print ("[AIRLIFT/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.FromTerritoryID .."/"..getTerritoryName (gameOrder.FromTerritoryID, game).."::, to="..gameOrder.ToTerritoryID .."/"..getTerritoryName(gameOrder.ToTerritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
-		end
-	end
-end
-
 function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 	local FROMterritoryID, TOterritoryID, intNumArmies, intNumSUs, playerID, strCardType;
 
 	--process regular card plays that have special defined behaviour in this mod
 
 	--if a territory with an active Shield is being Bombed, nullify the damage
-	if (gameOrder.proxyType == 'GameOrderPlayCardBomb' and territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[gameOrder.TargetTerritoryID])) then
+	--also only process if Shield module is active (or if current game predates ActiveModule)
+	if (gameOrder.proxyType == 'GameOrderPlayCardBomb' and territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[gameOrder.TargetTerritoryID]) and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true)) then
 		--there is no way to nullify the damage of the existing Bomb Card order, so must skip that order, create a new order that mimics it but does no damage
 		--New order moves the camera, shows the "Bomb" annotation, consumes the Bomb card, but the Shield protects the territory
 
@@ -278,7 +217,7 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 		addOrder (event, false); --add new order that removes the played Bomb card + protects the territory (doesn't do any damage)
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
 	--check for Airlift or Airstrike plays TO or FROM territories impacted by Quicksand or Isolation
-	elseif ((gameOrder.proxyType == 'GameOrderPlayCardAirlift') or (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|"))) then
+	elseif ((gameOrder.proxyType == 'GameOrderPlayCardAirlift') or (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|") and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true))) then
 		if ((gameOrder.proxyType == 'GameOrderPlayCardAirlift')) then
 			FROMterritoryID = gameOrder.FromTerritoryID;
 			TOterritoryID = gameOrder.ToTerritoryID;
