@@ -2148,7 +2148,8 @@ function Phantom_processEndOfTurn(game, addOrder)
 		for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
 			if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 				print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
-				local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.Fogged, 8999, {terrID}, nil);
+				local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {terrID}, nil);
+				--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 				--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 				local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
 				event.FogModsOpt = {fogMod};

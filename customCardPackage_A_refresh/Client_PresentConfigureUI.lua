@@ -538,6 +538,14 @@ function phantomCheckboxClicked()
         CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent some games from ending)");
         PhantomDuration = CreateNumberInputField(horzPhantomDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PhantomDuration).SetWholeNumbers(true).SetInteractable(true);
 
+		horzPhantomFogLevel = CreateHorz(UIcontainer);
+		groupPhantomFogLevel = UI.CreateRadioButtonGroup(horzPhantomFogLevel);
+        CreateLabel(horzPhantomFogLevel).SetText("Fog level: ");
+		UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Full fog');
+		UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light fog');
+        --CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent some games from ending)");
+        --PhantomFogLevel = CreateNumberInputField(horzPhantomDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PhantomDuration).SetWholeNumbers(true).SetInteractable(true);
+
 		horzPhantomPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");
         PhantomPiecesNeeded = CreateNumberInputField(horzPhantomPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
