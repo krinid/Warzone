@@ -261,8 +261,24 @@ end
 function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 	local FROMterritoryID, TOterritoryID, intNumArmies, intNumSUs, playerID, strCardType;
 
-	--check for regular card plays or Airstrike (since it's essentially the same as Airlift)
-	if ((gameOrder.proxyType == 'GameOrderPlayCardAirlift') or (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|"))) then
+	--process regular card plays that have special defined behaviour in this mod
+
+	--if a territory with an active Shield is being Bombed, nullify the damage
+	if (gameOrder.proxyType == 'GameOrderPlayCardBomb' and territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[gameOrder.TargetTerritoryID])) then
+		--there is no way to nullify the damage of the existing Bomb Card order, so must skip that order, create a new order that mimics it but does no damage
+		--New order moves the camera, shows the "Bomb" annotation, consumes the Bomb card, but the Shield protects the territory
+
+		-- printObjectDetails (order, "order", "order details");
+		-- printObjectDetails (order.ResultObj, "order.ResultObj1", "order.ResultObj2");
+		-- printObjectDetails (result, "result", "result object");
+		local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, getPlayerName (game, gameOrder.PlayerID).. " bombs ".. game.Map.Territories[gameOrder.TargetTerritoryID].Name .. " (protected by Shield)", {}, {});
+		event.RemoveWholeCardsOpt = {[gameOrder.PlayerID] = gameOrder.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
+		event.TerritoryAnnotationsOpt = {[gameOrder.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 10, 0)}; --mimic the base "Bomb" annotation
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, gameOrder.TargetTerritoryID); --move the camera to the target territory
+		addOrder (event, false); --add new order that removes the played Bomb card + protects the territory (doesn't do any damage)
+		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
+	--check for Airlift or Airstrike plays TO or FROM territories impacted by Quicksand or Isolation
+	elseif ((gameOrder.proxyType == 'GameOrderPlayCardAirlift') or (gameOrder.proxyType=='GameOrderPlayCardCustom' and startsWith (gameOrder.ModData, "Airstrike|"))) then
 		if ((gameOrder.proxyType == 'GameOrderPlayCardAirlift')) then
 			FROMterritoryID = gameOrder.FromTerritoryID;
 			TOterritoryID = gameOrder.ToTerritoryID;
@@ -970,11 +986,6 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
     local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	--[[WL.RectangleVM.Create(
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY,
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
     addOrder(event, true);

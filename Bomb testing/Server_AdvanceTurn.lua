@@ -7,15 +7,17 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 end
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
 	if(order.proxyType == 'GameOrderPlayCardBomb')then
-		printObjectDetails (order, "order", "order details");
-		printObjectDetails (order.ResultObj, "order.ResultObj1", "order.ResultObj2");
-		printObjectDetails (result, "result", "result object");
+		-- printObjectDetails (order, "order", "order details");
+		-- printObjectDetails (order.ResultObj, "order.ResultObj1", "order.ResultObj2");
+		-- printObjectDetails (result, "result", "result object");
 		--addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, getPlayerName (game, order.PlayerID).. " bombs ".. game.Map.Territories[order.TargetTerritoryID].Name, {}, {terrMod}));
 		local event = WL.GameOrderEvent.Create (order.PlayerID, getPlayerName (game, order.PlayerID).. " bombs ".. game.Map.Territories[order.TargetTerritoryID].Name, {}, {});
 		event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID};
+		event.TerritoryAnnotationsOpt = {[order.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 10, 0)}; --mimic the base "Bomb" annotation
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.TargetTerritoryID);
 		addNewOrder (event, false); --add new order remove the Bomb card + protecting the territory (don't do any damage)
 		skipThisOrder(WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
-		breakMeNow ();
+		--breakMeNow ();
 	end
 end
 -- function Server_AdvanceTurn_End(game,addNewOrder)

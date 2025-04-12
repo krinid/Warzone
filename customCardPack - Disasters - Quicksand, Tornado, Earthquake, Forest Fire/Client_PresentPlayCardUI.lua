@@ -119,9 +119,9 @@ function play_Shield_card(game, cardInstance, playCard)
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
                 local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger(0, 0, 255))}; --blue annotation background for Shield
-                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            else
-                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.Gift);
+                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
+               else
+                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
             end
 
             --for k,v in pairs (game.Orders) do print (k,v.proxyType); end
