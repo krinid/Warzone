@@ -714,7 +714,7 @@ function play_Nuke_card(game, cardInstance, playCard)
             local strNukeMessage = strPlayerName_cardPlayer .." nukes " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger(100, 0, 0))}; --Dark Red annotation background for Nuke
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger(175, 0, 0))}; --Dark Red annotation background for Nuke
                 playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);

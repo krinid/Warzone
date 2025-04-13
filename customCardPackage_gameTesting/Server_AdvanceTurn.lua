@@ -71,6 +71,93 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	print ("[Server_AdvanceTurn_Start] -----------------------------------------------------------------");
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber);
 
+
+	local allFogs = {};
+	local allFogs2 = {};
+	local fogMod = nil;
+	local event = nil;
+	for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+		if (territory.OwnerPlayerID == 0) then
+			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+			table.insert (allFogs, terrID);
+		elseif (territory.OwnerPlayerID < 50) then
+			table.insert (allFogs2, terrID);
+		end
+
+	end
+	fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, allFogs, nil);
+	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
+	event.FogModsOpt = {fogMod};
+	-- addNewOrder(event);
+
+	fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.Fogged, 8999, allFogs2, nil);
+	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
+	event.FogModsOpt = {fogMod};
+	-- addNewOrder(event);
+
+	print ("[ORDERS]________________");
+	for playerID,arrayPlayerOrders in pairs (game.ServerGame.ActiveTurnOrders) do
+		print ("__[PLAYER] "..playerID);
+		for k,order in pairs (arrayPlayerOrders) do
+			print ("____[PLAYER ORDERS] ["..playerID.."] proxyType ".. order.proxyType..", order# "..k.. ", proxyID ".. order.__proxyID);
+			if (order.proxyType=='GameOrderAttackTransfer') then
+				print ("________[ORDER AttackTransfer] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));;
+				for _, specialUnit in pairs(game.ServerGame.LatestTurnStanding.Territories [order.From].NumArmies.SpecialUnits) do
+					--printObjectDetails (game.ServerGame.LatestTurnStanding.Territories [order.From], "FROM territory", "FROM");
+					print("[SU DETECTED] type ".. specialUnit.proxyType ..", Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
+					if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
+						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
+						local fogMod_FROM = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {order.From}, nil);
+						local fogMod_TO = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {order.To}, nil);
+						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+						local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+						event.FogModsOpt = {fogMod_FROM, fogMod_TO};
+						addNewOrder (event);
+						print("[FOGMODS applied to FROM & TO]");
+						-- local privateGameData = Mod.PrivateGameData;
+						-- if (privateGameData.PhantomData [specialUnit.ID] ~= nil) then
+
+						-- else
+						-- 	--error, data for this Phantom is missing; just delete the Phantom? it'll never get removed otherwise; maybe check if Phantoms are permanent or not first, don't remove a permanent one
+						-- end
+						-- if (privateGameData.PhantomData.FogModData[fogMod.ID] == nil) then privateGameData.PhantomData.FogModData[fogMod.ID] = {}; end
+						-- table.insert (privateGameData.PhantomData.FogModData[fogMod.ID], );
+
+					end
+				end
+			end
+
+			--printObjectDetails (v2);
+		end
+	end
+	-- for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+	-- 	local event = WL.GameOrderEvent.Create(0, 'clarity is achieved', {});
+	-- 	--event.FogModsOpt = {};
+	-- 	for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
+	-- 		if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
+	-- 			print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
+	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {terrID}, nil);
+	-- 			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+	-- 			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+	-- 			event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+	-- 			event.FogModsOpt = {fogMod};
+	-- 			local privateGameData = Mod.PrivateGameData;
+	-- 			if (privateGameData.PhantomData [specialUnit.ID] ~= nil) then
+
+	-- 			else
+	-- 				--error, data for this Phantom is missing; just delete the Phantom? it'll never get removed otherwise; maybe check if Phantoms are permanent or not first, don't remove a permanent one
+	-- 			end
+	-- 			if (privateGameData.PhantomData.FogModData[fogMod.ID] == nil) then privateGameData.PhantomData.FogModData[fogMod.ID] = {}; end
+	-- 			table.insert (privateGameData.PhantomData.FogModData[fogMod.ID], );
+
+	-- 		end
+	-- 	end
+	-- 	addOrder(event);
+	-- end
+
+
 	--testing purposes only! delme
 	--[[ local modifiedTerritories = eliminatePlayer (1, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
 	addNewOrder(WL.GameOrderEvent.Create(1, getPlayerName (game, commanderOwner).." was eliminated! [commander died/LMM]", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped ]]
@@ -318,7 +405,6 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif (strCardTypeBeingPlayed == "Monolith" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true)) then
 			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
 		elseif (strCardTypeBeingPlayed == "Phantom" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true)) then
-print ("________________________fnata");
 			execute_Phantom_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Neutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true)) then
 			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
@@ -1033,18 +1119,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 
     local castingPlayerID = gameOrder.PlayerID;
     local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
-    -- event.JumpToActionSpotOpt = WL.RectangleVM.Create(
-    --     game.Map.Territories[targetTerritoryID].MiddlePointX,
-    --     game.Map.Territories[targetTerritoryID].MiddlePointY,
-    --     game.Map.Territories[targetTerritoryID].MiddlePointX,
-    --     game.Map.Territories[targetTerritoryID].MiddlePointY
-    -- );
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	--[[WL.RectangleVM.Create(
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY,
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger (0, 0, 255))}; --use Blue for Shield
 	addOrder(event, true);
 
@@ -1116,9 +1191,11 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 		castingPlayer = castingPlayerID,
 		territoryOwner = impactedTerritoryOwnerID,
 		turnNumberPhantomEnds = turnNumber_PhantomExpires,
-		specialUnitID = specialUnit_Phantom.ID
+		specialUnitID = specialUnit_Phantom.ID,
+		FogMods = {}
 	};
-	table.insert(privateGameData.PhantomData, PhantomDataRecord);
+	--table.insert(privateGameData.PhantomData, PhantomDataRecord);
+	privateGameData.PhantomData [specialUnit_Phantom.ID] = PhantomDataRecord;
 	Mod.PrivateGameData = privateGameData;
 end
 
@@ -1753,15 +1830,10 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	local nuke_territoriesInThisSpreadPhase = {};  -- track territories in the current spread phase (# of territories from epicenter), apply damage to each connected territory in this list excepting those already nuked
 	nuke_territoriesAlreadyNuked [targetTerritoryID] = true;      -- add main territory so it doesn't get nuked again
 	nuke_territoriesInThisSpreadPhase [targetTerritoryID] = true; -- add main territory so can start processing connected territories from here
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..next(nuke_territoriesInThisSpreadPhase).."----------------------1");
-	-- print ("next(nuke_territoriesInThisSpreadPhase)=="..tostring(next(nuke_territoriesInThisSpreadPhase)==nil).."----------------------1");
 
 	local damageFactor = 1;
 	local cycleCount = 0; -- 1 cycle = processing 1 layer of territory connections out from the epicenter
+	local annotations = {}; --initialize annotations array, used to display "Nuke" on epicenter and "." on the territories it spreads to
 
 	-- loop while (A) damage is still being, (B) there are still territories that haven't been nuked yet, (C) still within blast range
 	while (damageFactor > 0 and next(nuke_territoriesInThisSpreadPhase) ~= nil and cycleCount < Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo) do
@@ -1843,6 +1915,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 
 								impactedTerritory.AddArmies = (damageActuallyTaken);
 								table.insert (modifiedTerritories, impactedTerritory);
+								annotations [conn.ID] = WL.TerritoryAnnotation.Create (".", 50, getColourInteger (125, 0, 0)); --add Annotation in Dark Red for Nuke
 								print ("NUKE POST conn territory="..game.Map.Territories[conn.ID].Name.."//"..conn.ID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[conn.ID].NumArmies.NumArmies.."::#armiesKilled=="..damageActuallyTaken);
 							end
 						else
@@ -1873,7 +1946,9 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strNukeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 	-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (100, 0, 0))}; --use Dark Red colour for Nuke epicenter
+	annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (175, 0, 0)); --overwrite the annotation done above (".") for the Epicenter
+	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (150, 0, 0))}; --use Dark Red colour for Nuke epicenter
+	event.TerritoryAnnotationsOpt = annotations;
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 -- GameOrderEventWL Create (playerID: PlayerID, message: string, visibleToOpt: HashSet<PlayerID> | nil, terrModsOpt?: TerritoryModification[], setResoucesOpt: table<PlayerID, table<EnumResourceType, integer>> | nil, incomeModsOpt: IncomeMod[] | nil): GameOrderEvent # Creates a GameOrderEvent object
 -- Create (playerID, message, visibileToOppenets - nil is ok, terrMods OPTIONAL, resources OPTIONAL - nil is ok, incomeMods OPTIONAL - nil is ok)
@@ -1959,19 +2034,22 @@ function Tornado_processEndOfTurn(game, addOrder)
 end
 
 function Earthquake_processEndOfTurn(game, addOrder)
-	local publicGameData = Mod.PublicGameData;
-    local turnNumber = tonumber(game.Game.TurnNumber);
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.EarthquakeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.EarthquakeDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
 	print("[EARTHQUAKE] processEndOfTurn START");
+	local publicGameData = Mod.PublicGameData;
+    local turnNumber = tonumber(game.Game.TurnNumber);
+
     if (publicGameData.EarthquakeData == nil) then print("[EARTHQUAKE] no data"); return; end --if no Earthquake data, skip everything, just return
 
 	for bonusID, record in pairs(publicGameData.EarthquakeData) do
 		--implement earthquake action (damge to bonus territories)
+		local annotations = {}; --initialize annotations array to store annotations for each territory impacted by earthquake
 		local modifiedTerritories = {};
 		local strBonusName = nil;
+		local terrID_somewhereInTheEarthquake = nil; --to be set to one of the territories in the Earthquake to write the "Earthquake" annotation (as opposed to the "." ones for the other impacted areas)
 		strBonusName = getBonusName (bonusID, game);
 		print ("[EARTHQUAKE] An earthquake ravages bonus " ..bonusID .."/".. strBonusName);
 		for _, terrID in pairs(game.Map.Bonuses[bonusID].Territories) do
@@ -1979,17 +2057,21 @@ function Earthquake_processEndOfTurn(game, addOrder)
 			local impactedTerritory = WL.TerritoryModification.Create(terrID);
 			if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength; end --reduce armies on territory iff not protected by a Shield
 			table.insert(modifiedTerritories, impactedTerritory);
+			annotations [terrID] = WL.TerritoryAnnotation.Create (".", 50, getColourInteger (255, 0, 0)); --add small sized Annotation in Red for Earthquake
+			terrID_somewhereInTheEarthquake = terrID; --the last territory written terrID will hold and become the target for the "Earthquake" annotation
 		end
 
 		--get XY coordinates of the bonus; note this is estimated since it's based on the midpoints of the territories in the bonus (that's all WZ provides)
 		local XYbonusCoords = getXYcoordsForBonus (bonusID, game);
 		--# of map units to add as buffer to min/max X values to zoom/pan on the bonus; do this to increase chance of territories being on screen, since the X/Y calcs WZ provides are midpoints of the territories (and thus the bonuses), not the actual left/right/top/bottom coordiantes
-		local X_buffer = 25; 
+		local X_buffer = 25;
 		local Y_buffer = 25;
 
 		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
 		-- event.TerritoryAnnotationsOpt = {[modifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (50, 50, 50))}; --use Dark Grey colour for Earthquake
+		annotations [terrID_somewhereInTheEarthquake] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger (200, 0, 0)); --overwrite the annotation done above (".") for one of the territories impacted by the Earthquake
+		event.TerritoryAnnotationsOpt = annotations;
 		addOrder(event, true);
 
 		--publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
@@ -2133,6 +2215,68 @@ function Shield_processEndOfTurn(game, addOrder)
     Mod.PrivateGameData = privateGameData;
 end
 
+-- Main function to print object details
+	function printObjectDetails_delme(object, strObjectName, strLocationHeader)
+		strObjectName = strObjectName or ""  -- Default blank value if not provided
+		strLocationHeader = strLocationHeader or ""  -- Default blank value if not provided
+		-- print("[" .. strLocationHeader .. "] object=" .. strObjectName .. ", tablelength==".. tablelength (object).."::");
+		-- print("[proactive display attempt] value==" .. tostring(object));
+	print ("jork");
+		-- Early return if object is nil or an empty table
+		if object == nil then
+			print("[invalid/empty object] object==nil")
+			return
+		elseif type(object) == "table" and next(object) == nil then
+			print("[invalid/empty object] object=={}  [empty table]")
+			return
+		end
+	
+		-- Handle tables
+		if type(object) == "table" then
+			-- Check and display readableKeys
+			if object.readableKeys then
+				for key, value in pairs(object.readableKeys) do
+					local propertyValue = object[value]
+					if type(propertyValue) == "table" then
+						print("  [readablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
+					else
+						print("  [readablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+					end
+				end
+			else
+				print("[R]**readableKeys DNE")
+			end
+	
+			-- Check and display writableKeys
+			if object.writableKeys then
+				for key, value in pairs(object.writableKeys) do
+					local propertyValue = object[value]
+					if type(propertyValue) == "table" then
+						print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue)) -- *** this is the last line of output that successfully executes
+					else
+						print("  [writablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+					end
+				end
+			else
+				print("[W]**writableKeys DNE")
+			end
+	
+			-- Display all base properties of the table
+			for key, value in pairs(object) do
+				if key ~= "readableKeys" and key ~= "writableKeys" then  -- Skip already processed keys
+					if type(value) == "table" then
+						print("[base_table] key==" .. tostring(key) .. ":: value==" .. tableToString(value))
+					else
+						print("[base_value] key==" .. tostring(key) .. ":: value==" .. tostring(value))
+					end
+				end
+			end
+		else
+			-- Handle non-table objects
+			print("[not table] value==" .. tostring(object))
+		end
+	end
+
 --remove expired Phantom Special Units from map & pop off the Phantom records from PhantomData
 function Phantom_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;
@@ -2144,18 +2288,69 @@ function Phantom_processEndOfTurn(game, addOrder)
 
     print("[PHANTOM EOT] processEndOfTurn START");
     print("[PHANTOM EOT] apply FOGMODs");
+	-- for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+	-- 	local event = WL.GameOrderEvent.Create(0, 'clarity is achieved', {});
+	-- 	--event.FogModsOpt = {};
+	-- 	for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
+	-- 		if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
+	-- 			print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
+	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {terrID}, nil);
+	-- 			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+	-- 			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+	-- 			event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+	-- 			event.FogModsOpt = {fogMod};
+	-- 			local privateGameData = Mod.PrivateGameData;
+	-- 			if (privateGameData.PhantomData [specialUnit.ID] ~= nil) then
+
+	-- 			else
+	-- 				--error, data for this Phantom is missing; just delete the Phantom? it'll never get removed otherwise; maybe check if Phantoms are permanent or not first, don't remove a permanent one
+	-- 			end
+	-- 			if (privateGameData.PhantomData.FogModData[fogMod.ID] == nil) then privateGameData.PhantomData.FogModData[fogMod.ID] = {}; end
+	-- 			table.insert (privateGameData.PhantomData.FogModData[fogMod.ID], );
+
+	-- 		end
+	-- 	end
+	-- 	addOrder(event);
+	-- end
+
+	-- local t = {};
+	-- local annotation = WL.TerritoryAnnotation.Create("kringe", 10, 0);
+	-- for terrID,_ in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+	-- 	-- print (terrID);
+	-- 	t[terrID] = annotation;
+	-- end
+	-- local event = WL.GameOrderEvent.Create (1, "kringe order"); --, {}, {});
+	-- event.TerritoryAnnotationsOpt = t;
+	-- addOrder(event);
+	-- print ("\n\n\nkringe owari");
+
+	--[[ local allTerrs = {};
+	local terrCount = 0;
+	local terrAnnots = {};
+	local event = WL.GameOrderEvent.Create(0, 'kringey annotations', {});;
 	for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-		for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
-			if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
-				print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
-				local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.Fogged, 8999, {terrID}, nil);
-				--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-				local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
-				event.FogModsOpt = {fogMod};
-				addOrder(event);
-			end
-		end
+		--printObjectDetails_delme (territory, "terr", "terr head");
+		terrCount = terrCount + 1;
+		allTerrs[terrCount] = tonumber (terrID);
+		terrAnnots[terrCount] = {[terrID] = WL.TerritoryAnnotation.Create ("kringe", 10, 0)};
+		event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
+		--event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0), [terrID+1] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
 	end
+	-- local event = WL.GameOrderEvent.Create(0, 'kringey annotations', {});
+	--event.TerritoryAnnotationsOpt = {allTerrs = WL.TerritoryAnnotation.Create ("kringe!", 10, 0)};
+	--event.TerritoryAnnotationsOpt = {[allTerrs] = WL.TerritoryAnnotation.Create ("#kringe", 10, 0)};
+	--event.TerritoryAnnotationsOpt = {[terrAnnots] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
+	-- event.TerritoryAnnotationsOpt = terrAnnots;
+	--event.FogModsOpt = {fogMod};
+	addOrder(event);
+	print ("jairj"); ]]
+
+	--TODOs:
+	-- figure out WL.StandingFogLevel.Fogged vs WL.StandingFogLevel.OwnerOnly vs WL.StandingFogLevel.Visible, currently .Fogged & .OwnerOnly both seem to provide regular full fog
+	-- remove the FogMods after some period of time
+	-- add Duration of fogmod (vs duration of Phantom unit itself)
+	-- change application time to during _Order, apply fogmod ahead of moves, so you can't see the units moving and then the fog apply @ End of turn
+
 
 	--removal
 	-- local event = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'Smoke bombs dissipate', {});
@@ -2164,7 +2359,7 @@ function Phantom_processEndOfTurn(game, addOrder)
 
 	if (privateGameData.PhantomData == nil) then print("[PHANTOM EXPIRE] no Phantom data"); return; end
 
-    for key, phantomDataRecord in pairs (privateGameData.PhantomData) do
+    for guid, phantomDataRecord in pairs (privateGameData.PhantomData) do
         --printObjectDetails(phantomDataRecord, "Phantom data record", "Phantom processEOT");
         print("[PHANTOM EXPIRE] record, territory=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game)) ..", castingPlayer=="..phantomDataRecord.castingPlayer.."/"..toPlayerName(phantomDataRecord.castingPlayer, game)..
 			", territoryOwner=="..phantomDataRecord.territoryOwner.."/"..toPlayerName(phantomDataRecord.territoryOwner, game).. ", expiryTurn==T"..phantomDataRecord.turnNumberPhantomEnds..", specialUnitID=="..phantomDataRecord.specialUnitID.."::");
@@ -2188,6 +2383,11 @@ function Phantom_processEndOfTurn(game, addOrder)
                 table.insert(modifiedTerritories, impactedTerritory);
                 jumpToActionSpotObject = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
                 print("[PHANTOM EXPIRE] "..strPhantomExpires.."; remove special=="..phantomDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+
+				--remove all associated FogMods with the expired Phantom
+				-- for k,v in pairs (phantomDataRecord.FogMods) do
+					---&&&phantom
+				-- end
 			else
 				--Phantom SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
 				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)
@@ -2198,7 +2398,7 @@ function Phantom_processEndOfTurn(game, addOrder)
 			local event = WL.GameOrderEvent.Create (phantomDataRecord.castingPlayer, strPhantomExpires, {}, modifiedTerritories);
 			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
 			addOrder(event, true);
-			privateGameData.PhantomData[key] = nil;
+			privateGameData.PhantomData[guid] = nil;
 			--Mod.PrivateGameData = privateGameData;
 			print("[PHANTOM EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.PhantomData))
 		end
@@ -2332,6 +2532,8 @@ function Pestilence_processEndOfTurn (game, addOrder)
 		--printObjectDetails (player, "a", "b");
 		--local targetPlayerID = player.PlayerID; --same content as pestilenceDataRecord[pestilenceTarget_playerID];
 		local targetPlayerID = ID;
+		local annotations = {}; --initialize annotations array to store annotations for each territory impacted by earthquake
+		local terrID_somewhereInThePestilence = nil; --to be set to one of the territories in the Pestilence to write the "Pestilence" annotation (as opposed to the "." ones for the other impacted areas)
 
 		print ("[PESTILENCE CHECK] for player "..targetPlayerID); --.."/"..toPlayerName(playerID), game);
 		--print ("[PESTILENCE CHECK] for player "..playerID.."/"..toPlayerName(playerID), game);
@@ -2370,7 +2572,7 @@ function Pestilence_processEndOfTurn (game, addOrder)
 				local numTerritoriesImpacted = 0;
 
 				--loop through territories to see if owned by current player, if so, apply Pestilence damage
-				for _,terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
+				for terrID,terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
 					if (terr.OwnerPlayerID == targetPlayerID) then
 						local numArmies = terr.NumArmies.NumArmies;
 						local impactedTerritory = WL.TerritoryModification.Create (terr.ID);
@@ -2388,13 +2590,20 @@ function Pestilence_processEndOfTurn (game, addOrder)
 						end
 
 						table.insert (pestilenceModifiedTerritories, impactedTerritory); --add territory object to the table to be passed back to WZ to modify/add the order for all impacted territories
+						annotations [terrID] = WL.TerritoryAnnotation.Create (".", 50, getColourInteger (255, 0, 0)); --add small sized Annotation in Red for Earthquake
+						terrID_somewhereInThePestilence = terrID;
 					end
 				end
 
 				local strPestilenceMsg = "Pestilence ravages " .. toPlayerName(targetPlayerID, game)..", invoked by "..toPlayerName(castingPlayerID, game);
 
 				local event = WL.GameOrderEvent.Create(targetPlayerID, strPestilenceMsg, nil, pestilenceModifiedTerritories);
-				-- event.TerritoryAnnotationsOpt = {[pestilenceModifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (50, 50, 50))}; --use Dark Grey colour for Pestilence
+
+				--add annotations; if terrID_somewhereInThePestilence==nil, then the above loop through that person's territories didn't execute b/c they have no territories, which likely means that that player is already eliminated and thus no damage or annotations to apply
+				if (terrID_somewhereInThePestilence ~= nil) then
+					annotations [terrID_somewhereInThePestilence] = WL.TerritoryAnnotation.Create ("Pestilence", 10, getColourInteger (200, 0, 0)); --overwrite the annotation done above (".") for one of the impacted territories to show "Pestilence"
+					event.TerritoryAnnotationsOpt = annotations;
+				end
 				addOrder (event);
 
 				print ("[PESTILENCE EVENT] "..strPestilenceMsg);
@@ -2418,5 +2627,5 @@ function Pestilence_processEndOfTurn (game, addOrder)
 	end
 	Mod.PublicGameData=publicGameData;
 
-	printObjectDetails (Mod.PublicGameData.PestilenceData, "Pestilence data", "full publicgamedata.Pestilence");
+	--printObjectDetails (Mod.PublicGameData.PestilenceData, "Pestilence data", "full publicgamedata.Pestilence");
 end
