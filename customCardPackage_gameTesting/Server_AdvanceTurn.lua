@@ -86,12 +86,12 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		end
 
 	end
-	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, allFogs, nil);
+	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8000, allFogs, {-1, 0, 1, 1058239});
 	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
 	event.FogModsOpt = {fogMod};
-	-- addNewOrder(event);
+	addNewOrder(event);
 
-	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.Fogged, 8999, allFogs2, nil);
+	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.Fogged, 8000, allFogs2, nil);
 	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
 	event.FogModsOpt = {fogMod};
 	-- addNewOrder(event);
@@ -111,8 +111,8 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
 						local intFogLevel = WL.StandingFogLevel.Fogged;
 						if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
-						local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {order.From}, nil);
-						local fogMod_TO = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {order.To}, nil);
+						local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
+						local fogMod_TO = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.To}, nil);
 						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 						local event = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'A disturbance clouds visibility', {});
@@ -139,7 +139,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	-- 	for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
 	-- 		if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 	-- 			print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
-	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {terrID}, nil);
+	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8000, {terrID}, nil);
 	-- 			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 	-- 			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 	-- 			event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
@@ -613,19 +613,25 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	local incompatibleMods_gameIDmap = {};
 	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
 	local boolForceManualMoveMode = (incompatibleMods_gameIDmap[game.Game.ID] == true); --force manual move mode if gameID is not in list
-
+--DELME DELME DELME DELME DELME DELME DELME 
+--DELME DELME DELME DELME DELME DELME DELME 
+--DELME DELME DELME DELME DELME DELME DELME 
+-- boolForceManualMoveMode = true;
+--DELME DELME DELME DELME DELME DELME DELME 
+--DELME DELME DELME DELME DELME DELME DELME 
+--DELME DELME DELME DELME DELME DELME DELME 
 	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
 	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolForceManualMoveMode == false) then
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
 	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
-		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, targetTerritory, attackingArmiesToAirlift);
+		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, attackingArmiesToAirlift);
 	end
 	boolAirliftCardGiftedAlready = false; --reset value to false for next iteration
 end
 
 --manually move units from one territory to another
-function manual_move_units (addOrder, playerID, sourceTerritory, targetTerritory, units)
+function manual_move_units (addOrder, playerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, units)
 	--adjust armies & SUs on FROM territory
 	sourceTerritory.AddArmies = -1 * units.NumArmies; --reduce source territory armies by the number of armies moving to target territory
 	sourceTerritory.RemoveSpecialUnitsOpt = convert_SUobjects_to_SUguids (units.SpecialUnits); --remove Specials from source territory that are moving to target territory
@@ -643,8 +649,12 @@ function manual_move_units (addOrder, playerID, sourceTerritory, targetTerritory
 	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
 	for _,v in pairs (specialsToAdd) do
 		targetTerritory.AddSpecialUnits = v; --add Specials to target territory that are moving from source territory
-		local event = WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify);
-		event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
+		local event = WL.GameOrderEvent.Create (playerID, "[manual units move]", {}, territoriesToModify);
+		local annotations = {};
+		annotations [sourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
+		annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
+		event.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
+		-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
 		addOrder (event, true);
 		targetTerritory.AddArmies = 0; --reset the armies to 0 after 1st iteration, so that the next order doesn't add more armies to the target territory
 		territoriesToModify = {targetTerritory}; --on 2nd and after iterations, just modify target territory with Special Units
@@ -1180,7 +1190,7 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	local intFogLevel = WL.StandingFogLevel.Fogged;
 	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
 	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
-	local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {targetTerritoryID}, nil);
+	local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {targetTerritoryID}, nil);
 	--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 	--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 	local event_FogMod = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'A disturbance clouds visibility', {});
@@ -2308,7 +2318,7 @@ function Phantom_processEndOfTurn(game, addOrder)
 	-- 	for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
 	-- 		if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 	-- 			print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
-	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {terrID}, nil);
+	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8000, {terrID}, nil);
 	-- 			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 	-- 			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 	-- 			event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
@@ -2359,17 +2369,10 @@ function Phantom_processEndOfTurn(game, addOrder)
 	addOrder(event);
 	print ("jairj"); ]]
 
-	--TODOs:
-	-- figure out WL.StandingFogLevel.Fogged vs WL.StandingFogLevel.OwnerOnly vs WL.StandingFogLevel.Visible, currently .Fogged & .OwnerOnly both seem to provide regular full fog
-	-- remove the FogMods after some period of time
-	-- add Duration of fogmod (vs duration of Phantom unit itself)
-	-- change application time to during _Order, apply fogmod ahead of moves, so you can't see the units moving and then the fog apply @ End of turn
-
-
-	--removal
-	-- local event = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'Smoke bombs dissipate', {});
-	-- event.RemoveFogModsOpt = priv.FogModIDs;
-	-- addNewOrder(event);
+	--Phantom TODOs:
+	-- fix clear background on SU image
+	-- form fix, checkboxes not working
+	-- try adding player tags to the FogMod (all but owner/teammates)
 
 	if (privateGameData.PhantomData == nil) then print("[PHANTOM EXPIRE] no Phantom data"); return; end
 
