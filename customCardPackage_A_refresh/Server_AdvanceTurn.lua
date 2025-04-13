@@ -86,16 +86,17 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		end
 
 	end
-	fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, allFogs, nil);
+	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, allFogs, nil);
 	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
 	event.FogModsOpt = {fogMod};
 	-- addNewOrder(event);
 
-	fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.Fogged, 8999, allFogs2, nil);
+	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.Fogged, 8999, allFogs2, nil);
 	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
 	event.FogModsOpt = {fogMod};
 	-- addNewOrder(event);
 
+	--
 	print ("[ORDERS]________________");
 	for playerID,arrayPlayerOrders in pairs (game.ServerGame.ActiveTurnOrders) do
 		print ("__[PLAYER] "..playerID);
@@ -108,23 +109,23 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 					print("[SU DETECTED] type ".. specialUnit.proxyType ..", Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
 					if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
-						local fogMod_FROM = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {order.From}, nil);
-						local fogMod_TO = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8999, {order.To}, nil);
+						local intFogLevel = WL.StandingFogLevel.Fogged;
+						if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
+						local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {order.From}, nil);
+						local fogMod_TO = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {order.To}, nil);
 						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-						local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+						local event = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'A disturbance clouds visibility', {});
+						-- local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
 						event.FogModsOpt = {fogMod_FROM, fogMod_TO};
 						addNewOrder (event);
 						print("[FOGMODS applied to FROM & TO]");
-						-- local privateGameData = Mod.PrivateGameData;
-						-- if (privateGameData.PhantomData [specialUnit.ID] ~= nil) then
-
-						-- else
-						-- 	--error, data for this Phantom is missing; just delete the Phantom? it'll never get removed otherwise; maybe check if Phantoms are permanent or not first, don't remove a permanent one
-						-- end
-						-- if (privateGameData.PhantomData.FogModData[fogMod.ID] == nil) then privateGameData.PhantomData.FogModData[fogMod.ID] = {}; end
-						-- table.insert (privateGameData.PhantomData.FogModData[fogMod.ID], );
-
+						local privateGameData = Mod.PrivateGameData;
+						local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;
+						table.insert (fogModList, fogMod_FROM.ID);
+						table.insert (fogModList, fogMod_TO.ID);
+						privateGameData.PhantomData [specialUnit.ID].FogMods = fogModList;
+						Mod.PrivateGameData = privateGameData;
 					end
 				end
 			end
@@ -1175,11 +1176,24 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	local specialUnit_Phantom = builder.Build();
 	impactedTerritory.AddSpecialUnits = {specialUnit_Phantom};
 
+	--fog the territory before creating the Phantom
+	local intFogLevel = WL.StandingFogLevel.Fogged;
+	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
+	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
+	local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8999, {targetTerritoryID}, nil);
+	--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+	--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+	local event_FogMod = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, 'A disturbance clouds visibility', {});
+	-- local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+	event_FogMod.FogModsOpt = {fogMod};
+	addOrder(event_FogMod, true);
+
+	--create the Phantom
 	local castingPlayerID = gameOrder.PlayerID;
 	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, 0)}; --use Black for Phantom
-	addOrder(event, true);
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, getColourInteger(0, 0, 50))}; --use Blacky Blue for Phantom
+	addOrder(event, true); --create Phantom
 
 	local privateGameData = Mod.PrivateGameData;
 	local turnNumber_PhantomExpires = -1;
@@ -2360,9 +2374,13 @@ function Phantom_processEndOfTurn(game, addOrder)
 	if (privateGameData.PhantomData == nil) then print("[PHANTOM EXPIRE] no Phantom data"); return; end
 
     for guid, phantomDataRecord in pairs (privateGameData.PhantomData) do
-        --printObjectDetails(phantomDataRecord, "Phantom data record", "Phantom processEOT");
-        print("[PHANTOM EXPIRE] record, territory=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game)) ..", castingPlayer=="..phantomDataRecord.castingPlayer.."/"..toPlayerName(phantomDataRecord.castingPlayer, game)..
+		--print ("Phantom - owner "..tostring (phantomDataRecord.castingPlayerID)..", expiry T".. tostring (phantomDataRecord.turnNumberPhantomEnds)..", ID ".. tostring (guid));
+		--reference: local PhantomDataRecord = {territory = targetTerritoryID, castingPlayer = castingPlayerID, territoryOwner = impactedTerritoryOwnerID, turnNumberPhantomEnds = turnNumber_PhantomExpires, specialUnitID = specialUnit_Phantom.ID, FogMods = {}};
+
+		--printObjectDetails(phantomDataRecord, "Phantom data record", "Phantom processEOT");
+        print("[PHANTOM EXPIRE] record, #FogMods ".. #phantomDataRecord.FogMods.. ", territory=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game)) ..", castingPlayer=="..phantomDataRecord.castingPlayer.."/"..toPlayerName(phantomDataRecord.castingPlayer, game)..
 			", territoryOwner=="..phantomDataRecord.territoryOwner.."/"..toPlayerName(phantomDataRecord.territoryOwner, game).. ", expiryTurn==T"..phantomDataRecord.turnNumberPhantomEnds..", specialUnitID=="..phantomDataRecord.specialUnitID.."::");
+		for k,v in pairs (phantomDataRecord.FogMods) do print ("   FogMod "..k,v); end
 
 		--if phantom expires this turn or on a previous turn (and was somehow missed), remove the SU from the territory & pop the record off of Mod.PrivateGameData.PhantomData
 		if (phantomDataRecord.turnNumberPhantomEnds > 0 and turnNumber >= phantomDataRecord.turnNumberPhantomEnds) then
@@ -2385,9 +2403,9 @@ function Phantom_processEndOfTurn(game, addOrder)
                 print("[PHANTOM EXPIRE] "..strPhantomExpires.."; remove special=="..phantomDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
 
 				--remove all associated FogMods with the expired Phantom
-				-- for k,v in pairs (phantomDataRecord.FogMods) do
-					---&&&phantom
-				-- end
+				local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance dissipates, restoring visibility', {});
+				event.RemoveFogModsOpt = phantomDataRecord.FogMods;
+				addOrder(event);
 			else
 				--Phantom SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
 				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)

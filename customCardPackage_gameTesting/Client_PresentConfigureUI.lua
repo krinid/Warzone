@@ -1164,6 +1164,7 @@ function setDefaultValues()
 	if (Mod.Settings.PhantomStartPieces == nil) then Mod.Settings.PhantomStartPieces = 1000; end
 	if (Mod.Settings.PhantomPiecesPerTurn == nil) then Mod.Settings.PhantomPiecesPerTurn = 1; end
 	if (Mod.Settings.PhantomCardWeight == nil) then Mod.Settings.PhantomCardWeight = 1.0; end
+	if (Mod.Settings.PhantomFogLevel == nil) then Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.Fogged; end --FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
 
 	if (Mod.Settings.MonolithEnabled == nil) then
 		Mod.Settings.MonolithEnabled = false;
@@ -1309,6 +1310,7 @@ function updateModSettingsFromUI()
 	--update Phantom settings
 	if (not UI.IsDestroyed (vertPhantomSettingsDetails)) then
         Mod.Settings.PhantomDuration = PhantomDuration.GetValue();
+		--need Fog Level setting control & value grab here &&&Phantom
         Mod.Settings.PhantomPiecesNeeded = PhantomPiecesNeeded.GetValue();
         Mod.Settings.PhantomStartPieces = PhantomStartPieces.GetValue();
         Mod.Settings.PhantomPiecesPerTurn = PhantomPiecesPerTurn.GetValue();

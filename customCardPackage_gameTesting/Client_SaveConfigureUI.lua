@@ -88,18 +88,26 @@ function createCards_newCards(alert, addCard);
 		print("Phantom settings:")
 		print("PhantomEnabled="..tostring(Mod.Settings.PhantomEnabled))
 		print("PhantomDuration="..tostring(Mod.Settings.PhantomDuration))
+		print("PhantomFogLevel="..tostring(Mod.Settings.PhantomFogLevel));
 		print("PhantomPiecesNeeded="..tostring(Mod.Settings.PhantomPiecesNeeded))
 		print("PhantomStartPieces="..tostring(Mod.Settings.PhantomStartPieces))
 		print("PhantomPiecesPerTurn="..tostring(Mod.Settings.PhantomPiecesPerTurn))
-		print("PhantomWeight="..tostring(Mod.Settings.PhantomWeight))
+		print("PhantomCardWeight="..tostring(Mod.Settings.PhantomCardWeight))
 
-		local strPhantomDesc = "A special unit that directionally absorbs light to obscure enemy visibility wherever it travels.";
+		 --FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
+		 local strPhantomDesc = "A special unit that directionally absorbs light to obscure enemy visibility wherever it travels. Enemies see impacted territories as ";
+		if (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.OwnerOnly) then strPhantomDesc = strPhantomDesc .. " lightly fogged (can only see the owner). ";
+		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Fogged) then strPhantomDesc = strPhantomDesc .. " fully fogged (cannot see owner or any units on the territory). ";
+		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Visible) then strPhantomDesc = strPhantomDesc .. " fully visible (can see owner and any units on the territory). ";
+		else strPhantomDesc = strPhantomDesc .. " [invalid Phanton Fog Level settings]. ";
+		end
+
 		if (Mod.Settings.PhantomDuration == -1) then
 				strPhantomDesc = strPhantomDesc .. "Phantoms never expire.";
 		else
 				strPhantomDesc = strPhantomDesc .. "Phantoms last " ..Mod.Settings.PhantomDuration .." turn"..plural(Mod.Settings.PhantomDuration) .." before expiring.";
 		end
-		Mod.Settings.PhantomCardID = addCard("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomWeight, Mod.Settings.PhantomDuration);
+		Mod.Settings.PhantomCardID = addCard("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomCardWeight, Mod.Settings.PhantomDuration);
 		Mod.Settings.PhantomDescription = strPhantomDesc;
 	end
 
