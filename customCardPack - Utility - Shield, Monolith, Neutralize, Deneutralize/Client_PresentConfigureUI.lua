@@ -518,6 +518,53 @@ function quicksandCheckboxClicked()
 	end
 end
 
+function phantomCheckboxClicked()
+	if (PhantomCardCheckbox==nil) then return; end --Phantom card isn't activated for this mod, don't process anything
+
+	Mod.Settings.PhantomEnabled = PhantomCardCheckbox.GetIsChecked();
+
+	if (PhantomCardCheckbox.GetIsChecked() == false) then
+        if (vertPhantomSettingsDetails ~= nil) then
+            updateModSettingsFromUI();
+            UI.Destroy(vertPhantomSettingsDetails);
+        else
+        end
+    else
+        vertPhantomSettingsDetails = CreateVert(vertPhantomSettingsHeading);
+        local UIcontainer = vertPhantomSettingsDetails;
+        CreateLabel(UIcontainer).SetText("Deploy a unit that absorbs light to obscure enemy visibility wherever it goes. Units attacking from the presence of a phantom carry the darkness with them.");
+
+		horzPhantomDuration = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomDuration).SetText("Duration: ");
+        CreateLabel(UIcontainer).SetText("(use -1 to make permanent)");
+        PhantomDuration = CreateNumberInputField(horzPhantomDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PhantomDuration).SetWholeNumbers(true).SetInteractable(true);
+
+		horzPhantomFogLevel = CreateHorz(UIcontainer);
+		groupPhantomFogLevel = UI.CreateRadioButtonGroup(horzPhantomFogLevel);
+        CreateLabel(horzPhantomFogLevel).SetText("Fog level: ");
+		PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
+		PhantomFog_Light = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly);
+        CreateLabel(UIcontainer).SetText("• Normal fog - can't see units or owner of Phantom fogged territories\n• Light fog - can see owner but not units");
+        --CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent some games from ending)");
+
+		horzPhantomPiecesNeeded = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        PhantomPiecesNeeded = CreateNumberInputField(horzPhantomPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+
+		horzPhantomStartPieces = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomStartPieces).SetText("Pieces given to each player at the start: ");
+        PhantomStartPieces = CreateNumberInputField(horzPhantomStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomStartPieces).SetWholeNumbers(true).SetInteractable(true);
+
+		horzPhantomPiecesPerTurn = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        PhantomPiecesPerTurn = CreateNumberInputField(horzPhantomPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+
+		horzPhantomCardWeight = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomCardWeight).SetText("Card weight (how common the card is): ");
+        PhantomCardWeight = CreateNumberInputField(horzPhantomCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomCardWeight).SetWholeNumbers(false).SetInteractable(true);
+    end
+end
+
 function shieldCheckboxClicked()
 	if (ShieldCardCheckbox==nil) then return; end --Shield card isn't activated for this mod, don't process anything
 
@@ -532,25 +579,25 @@ function shieldCheckboxClicked()
     else
         vertShieldSettingsDetails = CreateVert(vertShieldSettingsHeading);
         local UIcontainer = vertShieldSettingsDetails;
-        
-        horzShieldDuration = CreateHorz(UIcontainer);
+
+		horzShieldDuration = CreateHorz(UIcontainer);
         CreateLabel(horzShieldDuration).SetText("Duration: ");
-        CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent some games from ending)");
+        CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending b/c you can't capture a territory where a Shield is present)");
         ShieldDuration = CreateNumberInputField(horzShieldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ShieldDuration).SetWholeNumbers(true).SetInteractable(true);
-        
-        horzShieldPiecesNeeded = CreateHorz(UIcontainer);
+
+		horzShieldPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzShieldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
         ShieldPiecesNeeded = CreateNumberInputField(horzShieldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
-        
-        horzShieldStartPieces = CreateHorz(UIcontainer);
+
+		horzShieldStartPieces = CreateHorz(UIcontainer);
         CreateLabel(horzShieldStartPieces).SetText("Pieces given to each player at the start: ");
         ShieldStartPieces = CreateNumberInputField(horzShieldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldStartPieces).SetWholeNumbers(true).SetInteractable(true);
-        
-        horzShieldPiecesPerTurn = CreateHorz(UIcontainer);
+
+		horzShieldPiecesPerTurn = CreateHorz(UIcontainer);
         CreateLabel(horzShieldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
         ShieldPiecesPerTurn = CreateNumberInputField(horzShieldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
-        
-        horzShieldCardWeight = CreateHorz(UIcontainer);
+
+		horzShieldCardWeight = CreateHorz(UIcontainer);
         CreateLabel(horzShieldCardWeight).SetText("Card weight (how common the card is): ");
         ShieldCardWeight = CreateNumberInputField(horzShieldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldCardWeight).SetWholeNumbers(false).SetInteractable(true);
     end
@@ -574,7 +621,7 @@ function monolithCheckboxClicked()
 		horzMonolithDuration = CreateHorz(UIcontainer);
 
 		CreateLabel(horzMonolithDuration).SetText("Duration: ");
-		CreateLabel(UIcontainer).SetText("(use -1 to make permanent; but be cautioned that this may prevent some games from ending, because you can never eliminate a territory where a Monolith is present)");
+		CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending, because you can't capture a territory where a Monolith is present)");
 		MonolithDuration = CreateNumberInputField(horzMonolithDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.MonolithDuration).SetWholeNumbers(true).SetInteractable(true);
 
 		horzMonolithPiecesNeeded = CreateHorz(UIcontainer);
@@ -757,47 +804,36 @@ function airstrikeCheckboxClicked()
 		if (Mod.Settings.AirstrikeCanTargetCommanders == nil) then Mod.Settings.AirstrikeCanTargetCommanders = true; end
 		if (Mod.Settings.AirstrikeCanTargetSpecialUnits == nil) then Mod.Settings.AirstrikeCanTargetSpecialUnits = true; end
 		if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = true; end
+		if (Mod.Settings.AirstrikeCanSendRegularArmies == nil) then Mod.Settings.AirstrikeCanSendRegularArmies = true; end
 		if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = true; end
 
-		local horz = CreateHorz(UIcontainer);
-		--AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(true).SetText("Can target neutrals");
-		AirstrikeCanTargetNeutrals = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(false).SetText("Can target neutrals");
-
 		horz = CreateHorz(UIcontainer);
-		--AirstrikeCanTargetPlayers = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(true).SetText("Can target players");
-		AirstrikeCanTargetPlayers = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(false).SetText("Can target players");
-
-		horz = CreateHorz(UIcontainer);
-		--AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(true).SetText("Can target fogged territories");
-		AirstrikeCanTargetFoggedTerritories = CreateCheckBox(horz).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(false).SetText("Can target fogged territories");
-
-		-- AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
-		-- AirstrikeCanTargetCommanders = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
-		-- AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
-		-- AirstrikeCanTargetStructures = UI.CreateCheckBox (UIcontainer).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
-
-		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
-		AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
-		AirstrikeCanTargetCommanders = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
-		AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
-		AirstrikeCanTargetStructures = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
-		UI.CreateLabel (UIcontainer).SetText("(caution recommended; Structures would be ignored by Airstrike b/c different mods have no way to interact with one another)");
-		AirstrikeMoveUnitsWithAirliftCard = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Move units with airlift cards");
-		UI.CreateLabel (UIcontainer).SetText("    - true - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with mods Late Airlifts or Tranport Only Airlifts");
-		UI.CreateLabel (UIcontainer).SetText("    - false - moves units using mod code; does not create airlift travel arrows -- works with mods Late Airlifts or Tranport Only Airlifts");
-
-		horz = CreateHorz(UIcontainer);
-		CreateLabel(horz).SetText("Deployment yield (%): ");
+		CreateLabel(horz).SetText("Deployment yield (%): ").SetColor (getColourCode ("subheading"));
 		if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
 		AirstrikeDeploymentYield = CreateNumberInputField(horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
 		CreateLabel(UIcontainer).SetText("• % of units that are killed during Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
 		CreateLabel(UIcontainer).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
 		CreateLabel(UIcontainer).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
 		CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
-		--CreateLabel(UIcontainer).SetText("• % of units that survive deployment from the plane and parachuting to an enemy territory; the rest are considered to be shot out of the air on the way down");
-		--CreateLabel(UIcontainer).SetText("• 100% means that all units sent partipate in the attack");
-		--CreateLabel(UIcontainer).SetText("• 75% means that 75% of the units partipate in the attack, 25% die during deployment without contributing to the attack");
-		--CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting; no Special Units die during deployment");
+		CreateLabel(UIcontainer).SetText(" ");
+
+		AirstrikeMoveUnitsWithAirliftCard = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard).SetInteractable(true).SetText("Move units with airlift cards");
+		UI.CreateLabel (UIcontainer).SetText("• UNCHECK this if using Late Airlifts or Transport Only Airlifts mods").SetColor (getColourCode ("error"));
+		UI.CreateLabel (UIcontainer).SetText("• checked - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with mods Late Airlifts or Tranport Only Airlifts");
+		UI.CreateLabel (UIcontainer).SetText("• unchecked - moves units using mod code; does not create airlift travel arrows -- works with mods Late Airlifts or Transport Only Airlifts");
+
+		--local horz = CreateHorz(UIcontainer);
+		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
+		AirstrikeCanSendRegularArmies = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send regular armies");
+		AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
+		AirstrikeCanTargetFoggedTerritories = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(false).SetText("Can target fogged territories");
+		AirstrikeCanTargetNeutrals = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetInteractable(false).SetText("Can target neutrals");
+		AirstrikeCanTargetPlayers = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetInteractable(false).SetText("Can target players");
+		AirstrikeCanTargetCommanders = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
+		AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
+		AirstrikeCanTargetStructures = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
+		UI.CreateLabel (UIcontainer).SetText("(caution recommended; Structures would be ignored by Airstrike b/c different mods have no way to interact with one another)");
+
 		CreateLabel(UIcontainer).SetText(" ");
 
 		horz = CreateHorz(UIcontainer);
@@ -1112,6 +1148,14 @@ function setDefaultValues()
         Mod.Settings.ShieldCardWeight = 1.0;
     end
 
+	if (Mod.Settings.PhantomEnabled == nil) then Mod.Settings.PhantomEnabled = false; end
+	if (Mod.Settings.PhantomDuration == nil) then Mod.Settings.PhantomDuration = 3; end
+	if (Mod.Settings.PhantomFogLevel == nil) then Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.Fogged; end --FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
+	if (Mod.Settings.PhantomPiecesNeeded == nil) then Mod.Settings.PhantomPiecesNeeded = 10; end
+	if (Mod.Settings.PhantomStartPieces == nil) then Mod.Settings.PhantomStartPieces = 1000; end
+	if (Mod.Settings.PhantomPiecesPerTurn == nil) then Mod.Settings.PhantomPiecesPerTurn = 1; end
+	if (Mod.Settings.PhantomCardWeight == nil) then Mod.Settings.PhantomCardWeight = 1.0; end
+
 	if (Mod.Settings.MonolithEnabled == nil) then
 		Mod.Settings.MonolithEnabled = false;
 		Mod.Settings.MonolithDuration = 3;
@@ -1208,17 +1252,21 @@ function setDefaultValues()
 		Mod.Settings.DeneutralizeCardWeight = 1.0;
 	end
 
-	if (Mod.Settings.AirstrikeEnabled == nil) then
-		Mod.Settings.AirstrikeEnabled = false;
-		Mod.Settings.AirstrikeDeploymentYield = 75;
-		Mod.Settings.AirstrikeCanTargetNeutrals = true;
-		Mod.Settings.AirstrikeCanTargetPlayers = true;
-		Mod.Settings.AirstrikeCanTargetFoggedTerritories = true;
-		Mod.Settings.AirstrikePiecesNeeded = 10;
-		Mod.Settings.AirstrikeStartPieces = 1;
-		Mod.Settings.AirstrikePiecesPerTurn = 1;
-		Mod.Settings.AirstrikeCardWeight = 1.0;
-	end
+	if (Mod.Settings.AirstrikeEnabled == nil) then Mod.Settings.AirstrikeEnabled = false; end
+	if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
+	if (Mod.Settings.AirstrikeCanTargetNeutrals == nil) then Mod.Settings.AirstrikeCanTargetNeutrals = true; end
+	if (Mod.Settings.AirstrikeCanTargetPlayers == nil) then Mod.Settings.AirstrikeCanTargetPlayers = true; end
+	if (Mod.Settings.AirstrikeCanTargetFoggedTerritories == nil) then Mod.Settings.AirstrikeCanTargetFoggedTerritories = true; end
+	if (Mod.Settings.AirstrikeCanTargetCommanders == nil) then Mod.Settings.AirstrikeCanTargetCommanders = true; end
+	if (Mod.Settings.AirstrikeCanTargetSpecialUnits == nil) then Mod.Settings.AirstrikeCanTargetSpecialUnits = true; end
+	if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = true; end
+	if (Mod.Settings.AirstrikeCanSendRegularArmies == nil) then Mod.Settings.AirstrikeCanSendRegularArmies = true; end
+	if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = true; end
+	if (Mod.Settings.AirstrikePiecesNeeded == nil) then Mod.Settings.AirstrikePiecesNeeded = 10; end
+	if (Mod.Settings.AirstrikeStartPieces == nil) then Mod.Settings.AirstrikeStartPieces = 1; end
+	if (Mod.Settings.AirstrikePiecesPerTurn == nil) then Mod.Settings.AirstrikePiecesPerTurn = 1; end
+	if (Mod.Settings.AirstrikeCardWeight == nil) then Mod.Settings.AirstrikeCardWeight = 1.0; end
+	if (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard == nil) then Mod.Settings.AirstrikeMoveUnitsWithAirliftCard = true; end
 
 	if (Mod.Settings.ForestFireEnabled == nil) then
 		Mod.Settings.ForestFireEnabled = false;
@@ -1251,6 +1299,23 @@ function updateModSettingsFromUI()
         Mod.Settings.ShieldStartPieces = ShieldStartPieces.GetValue();
         Mod.Settings.ShieldPiecesPerTurn = ShieldPiecesPerTurn.GetValue();
         Mod.Settings.ShieldCardWeight = ShieldCardWeight.GetValue();
+    end
+
+	--update Phantom settings
+	if (not UI.IsDestroyed (vertPhantomSettingsDetails)) then
+        Mod.Settings.PhantomDuration = PhantomDuration.GetValue();
+
+		--only 2 radio buttons, so if 1st one (Normal fog) isn't checked, it's the 2nd one (Light fog)
+		--FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
+		if (PhantomFog_Normal.GetIsChecked () == true) then Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.Fogged; print ("Fogged");
+		else Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.OwnerOnly; print ("OwnerOnly");
+		end
+		print ("\n\n\nFOG "..tostring (PhantomFog_Normal.GetIsChecked ()), tostring (PhantomFog_Light.GetIsChecked ()),Mod.Settings.PhantomFogLevel,WL.StandingFogLevel.Fogged,WL.StandingFogLevel.OwnerOnly);
+
+        Mod.Settings.PhantomPiecesNeeded = PhantomPiecesNeeded.GetValue();
+        Mod.Settings.PhantomStartPieces = PhantomStartPieces.GetValue();
+        Mod.Settings.PhantomPiecesPerTurn = PhantomPiecesPerTurn.GetValue();
+        Mod.Settings.PhantomCardWeight = PhantomCardWeight.GetValue();
     end
 
     -- Update Card Block settings
@@ -1369,6 +1434,12 @@ function updateModSettingsFromUI()
 		Mod.Settings.AirstrikeCanTargetNeutrals = AirstrikeCanTargetNeutrals.GetIsChecked();
 		Mod.Settings.AirstrikeCanTargetPlayers = AirstrikeCanTargetPlayers.GetIsChecked();
 		Mod.Settings.AirstrikeCanTargetFoggedTerritories = AirstrikeCanTargetFoggedTerritories.GetIsChecked();
+		Mod.Settings.AirstrikeCanTargetCommanders = AirstrikeCanTargetCommanders.GetIsChecked();
+		Mod.Settings.AirstrikeCanTargetSpecialUnits = AirstrikeCanTargetSpecialUnits.GetIsChecked();
+		Mod.Settings.AirstrikeCanTargetStructures = AirstrikeCanTargetStructures.GetIsChecked();
+		Mod.Settings.AirstrikeCanSendRegularArmies = AirstrikeCanSendRegularArmies.GetIsChecked();
+		Mod.Settings.AirstrikeCanSendSpecialUnits = AirstrikeCanSendSpecialUnits.GetIsChecked();
+		Mod.Settings.AirstrikeMoveUnitsWithAirliftCard = AirstrikeMoveUnitsWithAirliftCard.GetIsChecked();
 		Mod.Settings.AirstrikePiecesNeeded = AirstrikeCardPiecesNeeded.GetValue();
 		Mod.Settings.AirstrikeStartPieces = AirstrikeCardStartPieces.GetValue();
 		Mod.Settings.AirstrikeCardWeight = AirstrikeCardWeight.GetValue();

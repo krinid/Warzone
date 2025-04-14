@@ -52,7 +52,8 @@ function createCards_newCards(alert, addCard);
 		print("ShieldPiecesPerTurn="..tostring(Mod.Settings.ShieldPiecesPerTurn))
 		print("ShieldWeight="..tostring(Mod.Settings.ShieldWeight))
 
-		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed and absorbs all incoming regular damage to the territory it resides on. A territory cannot be captured while a Shield unit resides on it. ";
+		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed. It absorbs all incoming regular damage to the territory it resides on and nullifies any defense damage typically done to attackers. "..
+			"In addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Nukes, Tornados, Earthquakes, Pestilence, Airstrikes. A territory cannot be captured while a Shield unit resides on it. ";
 		if (Mod.Settings.ShieldDuration == -1) then
 			strShieldDesc = strShieldDesc .. "Shields never expire.";
 		else
@@ -79,6 +80,33 @@ function createCards_newCards(alert, addCard);
 		end
 		Mod.Settings.MonolithCardID = addCard("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
 		Mod.Settings.MonolithDescription = strMonolithDesc;
+	end
+
+	if Mod.Settings.PhantomEnabled == true then
+		print("Phantom settings:")
+		print("PhantomEnabled="..tostring(Mod.Settings.PhantomEnabled))
+		print("PhantomDuration="..tostring(Mod.Settings.PhantomDuration))
+		print("PhantomFogLevel="..tostring(Mod.Settings.PhantomFogLevel));
+		print("PhantomPiecesNeeded="..tostring(Mod.Settings.PhantomPiecesNeeded))
+		print("PhantomStartPieces="..tostring(Mod.Settings.PhantomStartPieces))
+		print("PhantomPiecesPerTurn="..tostring(Mod.Settings.PhantomPiecesPerTurn))
+		print("PhantomCardWeight="..tostring(Mod.Settings.PhantomCardWeight))
+
+		--FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
+		local strPhantomDesc = "A special unit that directionally absorbs light to obscure enemy visibility wherever it travels. Units attacking from the presence of a phantom carry the darkness with them. Enemies see impacted territories as ";
+		if (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.OwnerOnly) then strPhantomDesc = strPhantomDesc .. " lightly fogged (can only see the owner). ";
+		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Fogged) then strPhantomDesc = strPhantomDesc .. " fully fogged (cannot see owner or any units on the territory). ";
+		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Visible) then strPhantomDesc = strPhantomDesc .. " fully visible (can see owner and any units on the territory). ";
+		else strPhantomDesc = strPhantomDesc .. " [invalid Phanton Fog Level settings]. ";
+		end
+
+		if (Mod.Settings.PhantomDuration == -1) then
+				strPhantomDesc = strPhantomDesc .. "Phantoms never expire.";
+		else
+				strPhantomDesc = strPhantomDesc .. "Phantoms last " ..Mod.Settings.PhantomDuration .." turn"..plural(Mod.Settings.PhantomDuration) .." before expiring.";
+		end
+		Mod.Settings.PhantomCardID = addCard("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomCardWeight, Mod.Settings.PhantomDuration);
+		Mod.Settings.PhantomDescription = strPhantomDesc;
 	end
 
 	if Mod.Settings.CardBlockEnabled == true then
@@ -241,6 +269,13 @@ function createCards_newCards(alert, addCard);
 		print("AirstrikeEnabled="..tostring(Mod.Settings.AirstrikeEnabled))
 		print("AirstrikeCanTargetNeutrals="..tostring(Mod.Settings.AirstrikeCanTargetNeutrals))
 		print("AirstrikeCanTargetPlayers="..tostring(Mod.Settings.AirstrikeCanTargetPlayers))
+		print("AirstrikeCanTargetCommanders="..tostring(Mod.Settings.AirstrikeCanTargetCommanders))
+		print("AirstrikeCanTargetSpecialUnits="..tostring(Mod.Settings.AirstrikeCanTargetSpecialUnits))
+		print("AirstrikeCanTargetStructures="..tostring(Mod.Settings.AirstrikeCanTargetStructures))
+		print("AirstrikeCanSendRegularArmies="..tostring(Mod.Settings.AirstrikeCanSendRegularArmies))
+		print("AirstrikeCanSendSpecialUnits="..tostring(Mod.Settings.AirstrikeCanSendSpecialUnits))
+		print("AirstrikeMoveUnitsWithAirliftCard="..tostring(Mod.Settings.AirstrikeMoveUnitsWithAirliftCard))
+		print("AirstrikeDeploymentYield="..tostring(Mod.Settings.AirstrikeDeploymentYield))
 		print("AirstrikeCanTargetFoggedTerritories="..tostring(Mod.Settings.AirstrikeCanTargetFoggedTerritories))
 		print("AirstrikePiecesNeeded="..tostring(Mod.Settings.AirstrikePiecesNeeded))
 		print("AirstrikeStartPieces="..tostring(Mod.Settings.AirstrikeStartPieces))

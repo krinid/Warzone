@@ -88,6 +88,22 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.ShieldCardWeight);
     end
 
+    if (Mod.Settings.PhantomEnabled == true) then
+        CreateLabel(UImain).SetText("\n[PHANTOM]").SetColor(getColourCode("card play heading"));
+        CreateLabel(UImain).SetText("Deploy a unit that absorbs light to obscure enemy visibility wherever it goes. Units attacking from the presence of a phantom carry the darkness with them.");
+        CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.PhantomDuration);
+        if (Mod.Settings.PhantomDuration == -1) then 
+            CreateLabel(UImain).SetText("(-1 indicates that the phantom remains permanently)");
+        end
+        local strFogLevel = "Normal fog (can't see units or owner of territory)";
+        if (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly) then strFogLevel = "Light fog (can see owner of territory but not units)"; end
+        CreateLabel(UImain).SetText("Fog level: " .. strFogLevel);
+        CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.PhantomPiecesNeeded);
+        CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.PhantomStartPieces);
+        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.PhantomPiecesPerTurn);
+        CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.PhantomCardWeight);
+    end
+
     if (Mod.Settings.MonolithEnabled == true) then
         CreateLabel(UImain).SetText("\n[MONOLITH]").SetColor(getColourCode("card play heading"));
         CreateLabel(UImain).SetText("Construct an immovable monument that prevents enemy capture but leaves units on the territory unprotected.");
