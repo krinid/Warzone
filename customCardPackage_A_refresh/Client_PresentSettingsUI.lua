@@ -168,13 +168,19 @@ function Client_PresentSettingsUI(rootParent)
 		CreateLabel(UImain).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
 		CreateLabel(UImain).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
 
-        CreateLabel(UImain).SetText("\nCan target neutrals: " .. tostring(Mod.Settings.AirstrikeCanTargetNeutrals));
-        CreateLabel(UImain).SetText("Can target players: " .. tostring(Mod.Settings.AirstrikeCanTargetPlayers));
-        CreateLabel(UImain).SetText("Can target fogged territories: " .. tostring(Mod.Settings.AirstrikeCanTargetFoggedTerritories));
-        CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.AirstrikePiecesNeeded);
-        CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.AirstrikeStartPieces);
-        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: 1"); -- .. Mod.Settings.AirstrikePiecesPerTurn); <-- this property doesn't exist yet, forgot to implement it
-        CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.AirstrikeCardWeight);
+        CreateLabel (UImain).SetText ("\nCan send regular armies: ".. tostring (Mod.Settings.AirstrikeCanSendRegularArmies));
+        CreateLabel (UImain).SetText ("Can send Special Units: ".. tostring (Mod.Settings.AirstrikeCanSendSpecialUnits));
+        CreateLabel (UImain).SetText ("Can target neutrals: " .. tostring(Mod.Settings.AirstrikeCanTargetNeutrals));
+        CreateLabel (UImain).SetText ("Can target players: " .. tostring(Mod.Settings.AirstrikeCanTargetPlayers));
+        CreateLabel (UImain).SetText ("Can target fogged territories: " .. tostring(Mod.Settings.AirstrikeCanTargetFoggedTerritories));
+        CreateLabel (UImain).SetText ("Can target structures: ".. tostring (Mod.Settings.AirstrikeCanTargetStructures));
+        CreateLabel (UImain).SetText ("Can target Special Units: ".. tostring (Mod.Settings.AirstrikeCanTargetSpecialUnits));
+        CreateLabel (UImain).SetText ("Can target Commanders: ".. tostring (Mod.Settings.AirstrikeCanTargetCommanders));
+        CreateLabel (UImain).SetText ("Number of pieces to divide the card into: " .. Mod.Settings.AirstrikePiecesNeeded);
+        CreateLabel (UImain).SetText ("Pieces given to each player at the start: " .. Mod.Settings.AirstrikeStartPieces);
+        CreateLabel (UImain).SetText ("Minimum pieces awarded per turn: 1"); -- .. Mod.Settings.AirstrikePiecesPerTurn); <-- this property doesn't exist yet, forgot to implement it
+        CreateLabel (UImain).SetText ("Card weight (how common the card is): " .. Mod.Settings.AirstrikeCardWeight);
+    
     end
 
     if (Mod.Settings.ForestFireEnabled == true) then

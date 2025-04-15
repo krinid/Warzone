@@ -443,10 +443,11 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	local modDataContent = split(gameOrder.ModData, "|");
 	printDebug ("[GameOrderPlayCardCustom] modData=="..gameOrder.ModData.."::");
 	--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
-	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData after "|" is the source territory ID
-	local targetTerritoryID = modDataContent[3]; --3rd component of ModData after "|" is the target territory ID
-	local intNumArmiesSpecified = tonumber (modDataContent[4]); --4th component of ModData after "|" is the # of armies to include in the Airstrike
-	local strSelectedSUsGUIDs = modDataContent[5]; --5th component of ModData after "|" is the CSV GUIDs of all SUs selected to include in Airstrike (not necessarily all SUs on the territory)
+	local sourceTerritoryID = modDataContent[2]; --2nd component of ModData is the source territory ID
+	local targetTerritoryID = modDataContent[3]; --3rd component of ModData is the target territory ID
+	local intNumArmiesSpecified = tonumber (modDataContent[4]); --4th component of ModData is the # of armies to include in the Airstrike
+	local strSelectedSUsGUIDs = modDataContent[5]; --5th component of ModData is the CSV GUIDs of all SUs selected to include in Airstrike (not necessarily all SUs on the territory)
+	local strSUsSent_PlainText = modDataContent[6]; --6th component of ModData is the plain text description of the SUs being sent (eg: Recruiter, Worker, Commander, Dragon, etc)
 	local intActualArmies = math.min (intNumArmiesSpecified, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.NumArmies); --actual #armies to include in Airstrike is lesser of specified units and currently present on the territory
 	--local SpecialUnitsSpecified = game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies.SpecialUnits; --make this user specifiable in future; for now use all SUs on FROM territory
 	local SpecialUnitsSpecified = generateSelectedSUtable (game, strSelectedSUsGUIDs, sourceTerritoryID);
@@ -545,6 +546,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		--adjust attacker results, so # of killed armies is increased by quantity of intArmiesDieDuringAttack
 		airstrikeResult.AttackerResult.KilledArmies = math.min (airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack, intActualArmies); --#armies killed are those from regular battle damage + loss due to Deployment Yield but not to exceed the actual # included in the Airstrike operation (if exceeds this amount, it would subtract units from the FROM territory even if they didn't participate in the Airstrike -- don't do that)
 		airstrikeResult.AttackerResult.RemainingArmies = math.max (0, attackingArmies.NumArmies - airstrikeResult.AttackerResult.KilledArmies);
+
+		--if attacker has no armies or SUs remaining, the airstrike is always unsuccessful; must have at least 1 unit either army or SU in order to capture the target territory
+		if (airstrikeResult.IsSuccessful == true and airstrikeResult.AttackerResult.RemainingArmies == 0 and #airstrikeResult.AttackerResult.SurvivingSpecials == 0) then airstrikeResult.IsSuccessful = false; end
 	else
 		--if not an attack, then it's a transfer; so just do a normal airlift of the units from the source territory to the target territory
 		local AttackerResult = {RemainingArmies=intArmiesToSend, KilledArmies=0, SurvivingSpecials=attackingArmies.SpecialUnits, KilledSpecials={}, ClonedSpecials={}}; --all units survive, nothing dies, nothing clones b/c this is a transfer
@@ -567,6 +571,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		strAirStrikeResultText = "Airstrike unsuccessful";
 		--leave target territory owned by defender, leave airlift army structure as nil to just draw an empty "0" airlift line
 	end
+	strAirStrikeResultText = strAirStrikeResultText .. " [FROM ".. getTerritoryName (sourceTerritoryID, game).. ", TO ".. getTerritoryName (targetTerritoryID, game).. "; sending ".. tostring(intArmiesToSend).. " armies";
+	if (strSUsSent_PlainText ~= nil) then strAirStrikeResultText = strAirStrikeResultText .." and ".. tostring (strSUsSent_PlainText).. "]"; end
+
 	printDebug ("[AIRSTRIKE RESULT] "..strAirStrikeResultText);
 	--reference: 	local damageResult = {RemainingArmies=remainingArmies, SurvivingSpecials=survivingSpecials, KilledSpecials=killedSpecials, ClonedSpecials=clonedSpecials};
 	printDebug ("ATTACKER #armies "..airstrikeResult.AttackerResult.RemainingArmies .." ("..airstrikeResult.AttackerResult.KilledArmies.." died), "..
@@ -586,7 +593,12 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	--prep the event; if Airlift card will be used to transfer units for successful attack, add the Airlift card pieces as part of this order
 	local airstrikeEvent = WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirStrikeResultText, {}, {sourceTerritory, targetTerritory});
-	airstrikeEvent.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
+	local annotations = {};
+	-- airstrikeEvent.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
+	annotations [sourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
+	annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
+	airstrikeEvent.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
+	-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
 
 	--if Airlift is in game, add granting of airlift whole card here; how to handle Late Airlifts & Transport Only Airlifts? or Card Block? <-- actually this would have stopped the Airstrike itself so not a concern
 	--add Airlift card to player hand if it is in the game; this is done here so that the player can use it to move armies from the source territory to the target territory

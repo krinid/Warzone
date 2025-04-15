@@ -755,13 +755,23 @@ function play_Airstrike_card (game, cardInstance, playCard)
         CreateLabel (line).SetText ("Number of armies to send  ");
         airstrikeObject.NIFarmies = CreateNumberInputField (line).SetValue(100).SetSliderMinValue(0).SetSliderMaxValue(1000);
         --CreateLabel (vertTop).SetText ("[all Special Units will be sent; unit selector coming soon]").SetColor (getColourCode ("subheading"));
-        airstrikeObject.SUpanelVert = UI.CreateVerticalLayoutGroup (vertTop).SetFlexibleWidth(1);
+
+		--if Mod Settings disallows sending Armies, force it to 0 (clearly to the player so it's obvious what's happening)
+		if (Mod.Settings.AirstrikeCanSendRegularArmies == nil or Mod.Settings.AirstrikeCanSendRegularArmies == false) then
+			airstrikeObject.NIFarmies.SetValue (0);
+			airstrikeObject.NIFarmies.SetInteractable (false);
+			CreateLabel (vertTop).SetText ("**This game is configured so you cannot send regular armies with an Airstrike").SetColor (getColourCode ("subheading"));
+			CreateLabel (vertTop).SetText (" "); --spacer
+		end
+
+		airstrikeObject.SUpanelVert = UI.CreateVerticalLayoutGroup (vertTop).SetFlexibleWidth(1);
         CreateLabel (vertTop).SetText (" "); --spacer
 
         local playCardButtonhorz = UI.CreateHorizontalLayoutGroup (vertTop).SetFlexibleWidth(1.0);
         UI.CreateButton(playCardButtonhorz).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetFlexibleWidth(0.5).SetOnClick(
         function()
-            --check for CANCELED request, ie: no territory selected
+			updateAirstrikePanelDetails (); --update all values, ensure variables are up to date as per latest visual controls on Airstrike popup window
+			--check for CANCELED request, ie: no territory selected
             if (SourceTerritoryID == nil and TargetTerritoryID == nil) then
                 UI.Alert("Select SOURCE and TARGET territories to send units TO and FROM"); return;
             elseif (SourceTerritoryID == nil) then
@@ -772,6 +782,8 @@ function play_Airstrike_card (game, cardInstance, playCard)
                 UI.Alert("Select unique SOURCE and TARGET territories to send units TO and FROM"); return;
             elseif (airstrikeObject.FROMplayerID ~= airstrikeObject.OrderPlayerID) then
                 UI.Alert("Select a SOURCE territory you own to send units FROM"); return;
+            elseif (airstrikeObject.FROMselectedArmies == 0 and #airstrikeObject.FROMselectedSUs == 0) then
+                UI.Alert("Airstrikes must send at least 1 army or special unit"); return;
             end
             --&&& check and warn if sending own C as a transfer to ally -- C will get left behind in Airlift (but not manual -- but make it so!)
             --&&& check and warn if sending units to ally who already has a C there -- usual function is take over the territory; if allied C is there, then can't take it over -- own C gets left behind, target territory remains owned by ally (still to be done)
@@ -779,18 +791,25 @@ function play_Airstrike_card (game, cardInstance, playCard)
 
 			generateStringOfSelectedSUs (); --generate the order text using friendly names of SUs & text for the order specifying GUIDs of SUs
 			local intArmiesToSend = math.max (0, airstrikeObject.NIFarmies.GetValue ());
-			local strAirstrikeMsg = strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName ..", sending ".. tostring(intArmiesToSend).. " armies and "..airstrikeObject.strSelectedSUs_Names;
-            print ("[AIRSTRIKE] ".. strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids));
+
+			local strAirstrikeMsg = strPlayerName_cardPlayer .." launches airstrike from " .. SourceTerritoryName .. " to " ..TargetTerritoryName ..", sending ".. tostring(intArmiesToSend).. " armies";
+			local strSUsSent_PlainText = "";
+			if (airstrikeObject.strSelectedSUs_Names ~= "") then
+				strSUsSent_PlainText = airstrikeObject.strSelectedSUs_Names; --the plain text description of the SUs being sent (eg: Recruiter, Worker, Commander, Dragon, etc)
+				strAirstrikeMsg = strAirstrikeMsg .. " and "..strSUsSent_PlainText;
+			end
+			local strAirstrikeOrder = 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids).."|".. strSUsSent_PlainText;
+            print ("[AIRSTRIKE] ".. strAirstrikeMsg, strAirstrikeOrder);
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
 				local territoryAnnotations = {};
 				territoryAnnotations [SourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
 				territoryAnnotations [TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
 				-- local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger(255,0,0))}; --red annotation background for Airstrike
-                playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids), nil, territoryAnnotations, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+                playCard(strAirstrikeMsg, strAirstrikeOrder, nil, territoryAnnotations, jumpToActionSpotOpt); --[[, intImplementationPhase]]
                 -- playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids), nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
             else
-                playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids));
+                playCard(strAirstrikeMsg, strAirstrikeOrder);
             end
             close();
         end);
@@ -807,7 +826,13 @@ function updateAirstrikePanelDetails ()
     --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
     --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); airstrikeObject.NIFarmies.SetValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
 
-    airstrikeObject.OrderPlayerID = Game.Us.ID;
+	--if Mod Settings disallows sending Armies, force it to 0 (clearly to the player so it's obvious what's happening)
+	if (Mod.Settings.AirstrikeCanSendRegularArmies == false) then
+		airstrikeObject.NIFarmies.SetValue (0);
+		airstrikeObject.NIFarmies.SetInteractable (false);
+	end
+
+	airstrikeObject.OrderPlayerID = Game.Us.ID;
     airstrikeObject.FROMplayerID = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].OwnerPlayerID or nil;
     airstrikeObject.TOplayerID = TargetTerritoryID ~= nil and Game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID or nil;
     airstrikeObject.OrderPlayerTeam = -1 or airstrikeObject.OrderPlayerID ~= nil and airstrikeObject.OrderPlayerID>0 and Game.Game.Players[airstrikeObject.OrderPlayerID].Team;
@@ -885,13 +910,15 @@ function updateAirstrikePanelDetails ()
     CreateLabel (AttackTransferHorz).SetText ("Attack/Transfer: ");
     CreateLabel (AttackTransferHorz).SetText (airstrikeObject.AttackTransfer).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
     CreateLabel (AttackTransferHorz).SetText (" (at current time)");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target fog: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target neutrals: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target enemies: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Special Units: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Commanders: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Special Units: tbd");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Commanders: tbd");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send regular armies: ".. tostring (Mod.Settings.AirstrikeCanSendRegularArmies));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Special Units: ".. tostring (Mod.Settings.AirstrikeCanSendSpecialUnits));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target fog: ".. tostring (Mod.Settings.AirstrikeCanTargetFoggedTerritories));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target neutrals: ".. tostring (Mod.Settings.AirstrikeCanTargetNeutrals));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target players: ".. tostring (Mod.Settings.AirstrikeCanTargetPlayers));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target structures: ".. tostring (Mod.Settings.AirstrikeCanTargetStructures));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Special Units: ".. tostring (Mod.Settings.AirstrikeCanTargetSpecialUnits));
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Commanders: ".. tostring (Mod.Settings.AirstrikeCanTargetCommanders));
+	--CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Commanders: tbd"); --.. tostring (Mod.Settings.AirstrikeCan));
 end
 
 function SourceTerritorySelectButton_Clicked_Airstrike(strLabelText) --airstrikeObject.SourceTerritoryClicked_Airstrike, SourceTerritoryBtn)

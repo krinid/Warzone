@@ -824,11 +824,11 @@ function airstrikeCheckboxClicked()
 
 		--local horz = CreateHorz(UIcontainer);
 		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
-		AirstrikeCanSendRegularArmies = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send regular armies");
+		AirstrikeCanSendRegularArmies = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendRegularArmies).SetInteractable(true).SetText("Can send regular armies");
 		AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
 		AirstrikeCanTargetFoggedTerritories = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked(Mod.Settings.AirstrikeCanTargetFoggedTerritories).SetInteractable(false).SetText("Can target fogged territories");
-		AirstrikeCanTargetNeutrals = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetInteractable(false).SetText("Can target neutrals");
-		AirstrikeCanTargetPlayers = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetInteractable(false).SetText("Can target players");
+		AirstrikeCanTargetNeutrals = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked(Mod.Settings.AirstrikeCanTargetNeutrals).SetInteractable(false).SetText("Can target neutrals");
+		AirstrikeCanTargetPlayers = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked(Mod.Settings.AirstrikeCanTargetPlayers).SetInteractable(false).SetText("Can target players");
 		AirstrikeCanTargetCommanders = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetCommanders).SetInteractable(false).SetText("Can target Commanders");
 		AirstrikeCanTargetSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetSpecialUnits).SetInteractable(false).SetText("Can target Special Units");
 		AirstrikeCanTargetStructures = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");

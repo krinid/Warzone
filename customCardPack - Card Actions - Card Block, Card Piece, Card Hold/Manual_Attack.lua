@@ -93,7 +93,9 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	for k,v in pairs (attackerResult.DamageToSpecialUnits) do print ("[SUD damage] SU "..k..", damage "..v); end
 	for k,v in pairs (damageToAllSpecialUnits) do print ("[SUB damage] SU "..k..", damage "..v); end
 
-	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0) then
+	--if all of defender's armies & SUs are killed & attacker still has at least 1 army or SU surviving, attack is successful, transfer the armies
+	--note that both sides reduced to 0 means attack is unsuccessful, territory not captured
+	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0 and (attackerResult.RemainingArmies >0 or #attackerResult.SurvivingSpecials >0)) then
 		--defender is eliminated, attacker wins
 		boolAttackSuccessful = true;
 		printDebug ("[ATTACK SUCCESSFUL] attacker wins, defender is wiped out from target territory");
