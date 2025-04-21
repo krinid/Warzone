@@ -811,7 +811,7 @@ function airstrikeCheckboxClicked()
 		CreateLabel(horz).SetText("Deployment yield (%): ").SetColor (getColourCode ("subheading"));
 		if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
 		AirstrikeDeploymentYield = CreateNumberInputField(horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("• % of units that are killed during Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
+		CreateLabel(UIcontainer).SetText("• % of units that survive Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
 		CreateLabel(UIcontainer).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
 		CreateLabel(UIcontainer).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
 		CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");

@@ -23,7 +23,7 @@ end
 function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
-	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.PlayerID="..order.PlayerID.."::");  -- <---- 
+	print ("[S_AdvanceTurn_Order - func start] ::ORDER.PlayerID="..order.PlayerID.."::");  -- <---- 
 	if (order.proxyType=='GameOrderAttackTransfer' and orderResult.IsAttack == true) then -- and 
 	--((#game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits >0 and #orderResult.DefendingArmiesKilled.SpecialUnits >0) or (#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits >0 and #orderResult.AttackingArmiesKilled.SpecialUnits >0))) then
 		print ("[CFRCAEP] proxyType==" ..order.proxyType.. " IsAttack ".. tostring (orderResult.IsAttack).." DEFENDER -- #specials ".. #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits .." #specialKilled ".. #orderResult.DefendingArmiesKilled.SpecialUnits);
@@ -35,7 +35,7 @@ function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNe
 		--if orderResult.IsSuccessful==true then attackers move to TO territory; killed defender SUs are captured by attacker and placed on TO territory, killed attacker SUs are retained (they don't die) by attacker and travel to TO territory
 		--if orderResult.IsSuccessful==false then killed defender SUs are captured by attacker and plaed on order.From territory, killed attacker SUs are captured by defender and placed on TO territory
 		if (orderResult.IsSuccessful == true) then
-			orderResult.AttackingArmiesKilled = WL.Armies.Create (orderResult.AttackingArmiesKilled.NumArmies, {});; --killed armies still die, but killed SUs do not die, and they shall move to the TO territory
+			orderResult.AttackingArmiesKilled = WL.Armies.Create (orderResult.AttackingArmiesKilled.NumArmies, {}); --killed armies still die, but killed SUs do not die, and they shall move to the TO territory
 			process_killed_SUs (game, playerID_Attacker, orderResult.DefendingArmiesKilled.SpecialUnits, order.To, addNewOrder); --put the cloned & ownership reassigned dead defender SUs on the TO territory
 		else
 			--clone dead attackers & give to defender, clone dead defenders & give to attacker
@@ -49,19 +49,19 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
-	if (game.Game.TurnNumber ~= 1) then return; end --only create SUs on T1
-	local SPsToCreate = {};
-	local modifiedTerritories = {};
-	for terrID,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
-		--create a bunch of SUs on T1 to start the action
-		if (v.OwnerPlayerID > 0) then
-			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, nil, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			local SP2 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, nil, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			local SP3 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, nil, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			local terrMod = WL.TerritoryModification.Create (terrID);
-			terrMod.AddSpecialUnits = {SP1, SP2, SP3};
-			table.insert (modifiedTerritories, terrMod);
-		end
+	-- if (game.Game.TurnNumber ~= 1) then return; end --only create SUs on T1
+	-- local SPsToCreate = {};
+	-- local modifiedTerritories = {};
+	-- for terrID,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+	-- 	--create a bunch of SUs on T1 to start the action
+	-- 	if (v.OwnerPlayerID > 0) then
+	-- 		local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+	-- 		local SP2 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+	-- 		local SP3 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+	-- 		local terrMod = WL.TerritoryModification.Create (terrID);
+	-- 		terrMod.AddSpecialUnits = {SP1, SP2, SP3};
+	-- 		table.insert (modifiedTerritories, terrMod);
+	-- 	end
 		--for reference:
 			-- local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
 			-- builder.Name = 'Recruiter';
@@ -77,9 +77,9 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 			-- builder.CanBeAirliftedToSelf = true;
 			-- builder.CanBeAirliftedToTeammate = true;
 			-- builder.IsVisibleToAllPlayers = false;
-	end
+	-- end
 
-	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "SUs created", {}, modifiedTerritories));
+	-- addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "SUs created", {}, modifiedTerritories));
 end
 
 --for each killed SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)

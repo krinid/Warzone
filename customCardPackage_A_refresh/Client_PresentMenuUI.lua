@@ -252,7 +252,7 @@ end
 
 function create_UnitInspectorMenu ()
 	Game.CreateDialog (showUnitInspectorMenu); --user friendly Unit Inspector, 1 selected territory at a time
-	Game.CreateDialog (wholeMapInspectorPanel);    --comprehensive Unit Inspector, all SUs on all territories in 1 pane
+	--Game.CreateDialog (wholeMapInspectorPanel);    --comprehensive Unit Inspector, all SUs on all territories in 1 pane
 end
 
 function createDialogWindow ()
@@ -276,7 +276,9 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 
 	local UIdisplay = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1).SetCenter(false);
 
-	UI.CreateLabel(UIdisplay).SetText("[UNIT INSPECTOR]").SetColor(getColourCode("main heading"));
+	local line = UI.CreateHorizontalLayoutGroup (UIdisplay);
+	UI.CreateLabel(line).SetText("[UNIT INSPECTOR]   ").SetColor(getColourCode("main heading"));
+	UI.CreateLabel(line).SetText("Showing data for all visible Special Units and territories they reside on").SetColor("#FFFFFF");
 
 	local strDisplayType = "plain";
 	local boolVerboseMode = false;
@@ -449,7 +451,7 @@ function showUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, clo
     setMaxSize(600, 600);
     --setScrollable(true);
 	UnitInspectorRoot = rootParent;
-	inspectToolInUse = true;
+	-- inspectToolInUse = true;
 	Inspector_territory = nil; --initialize global variable to nil
 
 	--UnitInspector_selectorRoot = nil;
@@ -460,15 +462,18 @@ function showUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, clo
 	colors = GetColors();
 
     local vert = UI.CreateVerticalLayoutGroup(UnitInspectorRoot).SetFlexibleWidth(1).SetCenter(false);
-	UI.CreateLabel(vert).SetText("[UNIT INSPECTOR]\n\n").SetColor(getColourCode("card play heading"));
-
+	UI.CreateLabel(vert).SetText("[UNIT INSPECTOR]").SetColor(getColourCode("card play heading"));
+	UI.CreateLabel(vert).SetText("_").SetColor ("#000000"); --vertical spacer
 	--CreateLabel(vert).SetText("\n\nClick a territory to inspect it").SetColor(colors.TextColor);
 
-	inspectToolInUse = true;
+	-- inspectToolInUse = true;
 	--if (UI.IsDestroyed (UnitInspector_TerritorySelectButton)==true) then strButtonText = "Select another Territory"; end
 	--UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Select another Territory").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
 	UnitInspector_TerritorySelectButton = CreateButton(vert).SetText("Click a territory to inspect it").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
 	CreateButton(vert).SetText("Show combat order of visible Special Units").SetColor(colors.Orange).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
+	CreateButton(vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() Game.CreateDialog (wholeMapInspectorPanel); end); --on button press, initiate comprehensive Unit Inspector, all SUs on all territories in 1 pane
+	-- CreateButton(vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
+
 	line = CreateHorz(vert).SetFlexibleWidth(1);
 	UI.CreateLabel (line).SetText (" ").SetPreferredWidth(0.6);
 	cboxVerbose = UI.CreateCheckBox (line).SetText ("Verbose").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(); end); --.SetPreferredWidth(0.2); --.SetOnClick --
@@ -478,7 +483,8 @@ function showUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, clo
 end
 
 function UnitInspector_clickedTerr(terrDetails)
-	if terrDetails == nil or not inspectToolInUse or UI.IsDestroyed(UnitInspectorRoot) then return WL.CancelClickIntercept; end
+	-- if terrDetails == nil or --[[not inspectToolInUse or]] UI.IsDestroyed(UnitInspectorRoot) then return WL.CancelClickIntercept; end
+	if (terrDetails == nil or UI.IsDestroyed(UnitInspectorRoot)) then return (WL.CancelClickIntercept); end
 	Inspector_territory = terrDetails; --set global variable to value of selected territory
 	populateUnitInspectorContents ();
 end
