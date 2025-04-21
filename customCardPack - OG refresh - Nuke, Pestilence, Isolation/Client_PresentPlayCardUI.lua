@@ -120,7 +120,7 @@ function play_Shield_card(game, cardInstance, playCard)
             local strShieldMessage = strPlayerName_cardPlayer .. " creates a Shield on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 10, getColourInteger(0, 0, 255))}; --blue annotation background for Shield
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 8, getColourInteger(0, 0, 255))}; --blue annotation background for Shield
                 playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
                else
                 playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
@@ -180,7 +180,7 @@ function play_Phantom_card(game, cardInstance, playCard)
             local strPhantomMessage = strPlayerName_cardPlayer .. " creates a Phantom on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 10, getColourInteger(0, 0, 50))}; --use Blacky Blue for Phantom
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 8, getColourInteger(0, 0, 50))}; --use Blacky Blue for Phantom
                 playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
@@ -304,7 +304,7 @@ function play_Earthquake_card(game, cardInstance, playCard)
             --so just pick 1 territory in the bonus to show the Earthquake
             local EQterritories = {};
             for _, terrID in pairs(game.Map.Bonuses[Earthquake_SelectedBonus.ID].Territories) do
-                if (WL.IsVersionOrHigher("5.34.1")) then territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger (255, 0, 0))}; end --red annotation background for Earthquake
+                if (WL.IsVersionOrHigher("5.34.1")) then territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 8, getColourInteger (255, 0, 0))}; end --red annotation background for Earthquake
             end
             local jumpToActionSpotOpt = createJumpToLocationObject_Bonus (game, Earthquake_SelectedBonus.ID);
             if (WL.IsVersionOrHigher("5.34.1")) then
@@ -369,7 +369,7 @@ function play_Tornado_card(game, cardInstance, playCard)
             local strTornadoMessage = strPlayerName_cardPlayer .. " invokes a Tornado on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 10, getColourInteger (255, 0, 0))}; --red annotation background for Tornado
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --red annotation background for Tornado
                 playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift);
@@ -397,7 +397,7 @@ function play_Quicksand_card(game, cardInstance, playCard)
             local strQuicksandMessage = strPlayerName_cardPlayer .. " transforms " .. TargetTerritoryName .. " into quicksand";
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 10, getColourInteger (255, 0, 0))}; --red annotation background for Quicksand
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 8, getColourInteger (255, 0, 0))}; --red annotation background for Quicksand
                 playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift);
@@ -436,7 +436,7 @@ function play_Monolith_card(game, cardInstance, playCard)
         local strMonolithMessage = strPlayerName_cardPlayer.." creates a Monolith on " .. TargetTerritoryName;
         local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
         if (WL.IsVersionOrHigher("5.34.1")) then
-            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 10, getColourInteger (0, 0, 255))}; --blue annotation background for Shield
+            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 8, getColourInteger (0, 0, 255))}; --blue annotation background for Shield
             playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
         else
             playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift);
@@ -486,7 +486,7 @@ function play_Deneutralize_card (game, cardInstance, playCard)
                     local strDeneutralizeMessage = strPlayerName_cardPlayer.." deneutralized " .. TargetTerritoryName ..", assigned to "..assignToPlayerName;
                     local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
                     if (WL.IsVersionOrHigher("5.34.1")) then
-                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 10, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
+                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
                         playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
                     else
                         playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift);
@@ -543,7 +543,7 @@ function play_Neutralize_card (game, cardInstance, playCard)
                     local strNeutralizeMessage = strPlayerName_cardPlayer.." neutralized " .. TargetTerritoryName;
                     local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
                     if (WL.IsVersionOrHigher("5.34.1")) then
-                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 10, getColourInteger (128, 128, 128))}; --use Light Grey colour for Neutralize
+                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 8, getColourInteger (128, 128, 128))}; --use Light Grey colour for Neutralize
                         playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
                     else
                         playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift);
@@ -596,7 +596,7 @@ function play_Isolation_card(game, cardInstance, playCard)
             local strIsolationMessage = strPlayerName_cardPlayer.." invoked isolation on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Isolation", 10, getColourInteger (128, 128, 128))}; --Medium Grey annotation background for Isolation
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Isolation", 8, getColourInteger (128, 128, 128))}; --Medium Grey annotation background for Isolation
                 playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strIsolationMessage, 'Isolation|' .. TargetTerritoryID, WL.TurnPhase.Gift);
@@ -714,7 +714,7 @@ function play_Nuke_card(game, cardInstance, playCard)
             local strNukeMessage = strPlayerName_cardPlayer .." nukes " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger(175, 0, 0))}; --Dark Red annotation background for Nuke
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 8, getColourInteger(175, 0, 0))}; --Dark Red annotation background for Nuke
                 playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
                 playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);
@@ -803,8 +803,8 @@ function play_Airstrike_card (game, cardInstance, playCard)
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
 				local territoryAnnotations = {};
-				territoryAnnotations [SourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
-				territoryAnnotations [TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
+				territoryAnnotations [SourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 3, getColourInteger (0, 255, 0)); --show source territory in Green annotation
+				territoryAnnotations [TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 3, getColourInteger (255, 0, 0)); --show target territory in Red annotation
 				-- local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger(255,0,0))}; --red annotation background for Airstrike
                 playCard(strAirstrikeMsg, strAirstrikeOrder, nil, territoryAnnotations, jumpToActionSpotOpt); --[[, intImplementationPhase]]
                 -- playCard(strAirstrikeMsg, 'Airstrike|' .. SourceTerritoryID .. "|" .. TargetTerritoryID.."|" .. intArmiesToSend.."|" .. tostring (airstrikeObject.strSelectedSUguids), nil, territoryAnnotation, jumpToActionSpotOpt); --[[, intImplementationPhase]]
