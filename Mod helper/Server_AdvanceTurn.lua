@@ -19,13 +19,17 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
-	if (game.Game.TurnNumber <=5) then return; end --only create SUs on T1~T5
+	if (game.Game.TurnNumber >=6) then return; end --only create SUs on T1~T5
 
+	--create 1 new SU on the 1st territory found for each player
 	local modifiedTerritories = {};
+	local playerReceivedSUalready = {};
 	for terrID,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
 		--create a bunch of SUs on T1 to start the action
-		if (v.OwnerPlayerID > 0) then
-			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+		if (v.OwnerPlayerID > 0 and playerReceivedSUalready [v.OwnerPlayerID] == nil) then
+			playerReceivedSUalready [v.OwnerPlayerID] = true;
+			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+			-- local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
 			-- local SP2 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
 			-- local SP3 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
 			-- local SP4 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
