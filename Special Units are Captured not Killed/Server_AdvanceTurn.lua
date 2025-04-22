@@ -90,7 +90,8 @@ function process_killed_SUs (game, otherPlayerID, ArmiesKilled_SpecialUnits, tar
 		if (sp.proxyType == "CustomSpecialUnit") then
 			local sp_OwnerID = sp.OwnerID;
 			--local builder = WL.CustomSpecialUnitBuilder.CreateCopy(sp);
-			local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name.." (C)", sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
+			local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
+			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name.." (C)", sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
 			-- builder.Name = sp.Name.." (C)";
 			-- builder.Owner = otherPlayerID;
 			-- local newSP = builder.Build();
