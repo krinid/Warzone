@@ -765,4 +765,11 @@ function concatenateArrays (array1, array2)
 	end
 	return result
 end
+
+function getModName (modID)
+	local modName = "unknown";
+	local allModNames = { [594] = "Dragons", [638] = "Army Recruiter", [639] = "Construction Worker", [999] = "CardPack - Disasters (Quicksand, Tornado, Earthquake, Forest Fire)", [1025] = "Behemoth", [1035] = "Special Units Captured not Killed", [1036] = "Mod Helper" }
+	if (allModNames[modID] ~= nil) then modName = allModNames[modID]; end
+	return modName;
+end
 --- END of krinid's functions

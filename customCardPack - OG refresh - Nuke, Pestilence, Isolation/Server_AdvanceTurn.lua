@@ -426,6 +426,8 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 end
 
 --airstrike TODOs:
+--support for Dragon Breath?
+--not really Airstrike ... but add support for 'TextOverHeadOpt', 'IncludeABeforeName' & 'ModID' in UnitInspector -- in verbose mode only? ModID should be everywhere actually - add list the mods by name? Put them in a list somewhere?
 --add options for ability to target Commander, Specials, fogged territories, neutrals
 --add option to enable ability to send Commander/Specials or exclude them (similar ability to target them) -- and structures? option to enable/disable targeting territories with them? like Forts ... it gets tricky (impossible) to accurately handle them
 --handle case when a Commander is killed!
@@ -533,7 +535,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	end
 
 	local airstrikeResult = nil;
+
 	if (boolIsAttack == true) then --Airstrike order is an attack
+		processDragonBreathAttacks (game, addOrder, attackingArmies, targetTerritoryID); --process Dragon Breath attacks if a Dragon with the ability is present in attackingArmies
 		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder, false);
 
 		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
@@ -635,6 +639,77 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, attackingArmiesToAirlift);
 	end
 	boolAirliftCardGiftedAlready = false; --reset value to false for next iteration
+end
+
+function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)
+	local dragonData = {};
+	dragonData.IsDragonBreathAttack = false; --default to false; if a Dragon with Dragon Breath attack is present in attackingArmies, then set this to true and process the Dragon Breath attack (separately from the main Airstrike attack)
+	dragonData.DragonBreathDamage = nil; --set to the real value if a Dragon with Dragon Breath attack is participating in the Airstrike
+
+	print ("\n\n\n[AIRSTRIKE - DRAGON BREATH CHECK] START");
+
+	local targetTerritory = game.Map.Territories[terrID];
+
+	for k,SP in pairs (attackingArmies.SpecialUnits) do
+		local SPowner = SP.OwnerID;
+		print ("[AIRSTRIKE - DRAGON BREATH CHECK] ModID "..tostring (SP.ModID));
+		if (SP.ModID ~= nil and SP.ModID == 594) then --unit is a Dragon; analyze the ModData to see if it has a 'Dragon Attack' comment
+			if (SP.ModData ~= nil) then
+				local intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Attack' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories"));
+				if (intDragonBreathDamage == nil) then intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Breath' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories")); end --same thing but check against "Dragon Breath" in case the text changes
+
+				if (intDragonBreathDamage ~= nil) then --if damage value was found, this Dragon has a Dragon Breath attack
+					dragonData.IsDragonBreathAttack = true;
+					dragonData.DragonBreathDamage = tonumber(intDragonBreathDamage);
+					local SUname = SP.Name and ("'" .. SP.Name .. "' ") or ""; --assign "" is Name is nil, else assign the name with quotes & space afterward so can be used in the line below by appending it regardless of whether it's nil or contains a Dragon's name
+					print ("[AIRSTRIKE - DRAGON BREATH] Found Dragon ".. tostring (SUname) .."w/Dragon Breath attack with damage " .. tostring (dragonData.DragonBreathDamage)..", apply to territories connected to ".. tostring (terrID).."/".. getTerritoryName (terrID, game));
+					local annotations = {}; --initialize annotations array, used to display "Dragon Breath" on attacked territory and "." on the connected territories that actually take damage
+					annotations [terrID] = WL.TerritoryAnnotation.Create ("Dragon Breath", 3, getColourInteger (175, 0, 0)); --Annotation in medium Red for Dragon Breath territory being attacked
+
+					if (intDragonBreathDamage) > 0 then
+						local modifiedTerritories = {};
+						for connID, _ in pairs (targetTerritory.ConnectedTo) do
+							local connTerr = game.ServerGame.LatestTurnStanding.Territories[connID]; --get the connected territory object
+							local boolDragonBreathAppliesToThisTerritory = true; --if this territory is owned by the owner of the Dragon or a teammate, change to false and don't apply damage
+							local SPownerTeam = (connTerr.OwnerPlayerID ~= WL.PlayerID.Neutral) and game.ServerGame.Game.Players[SPowner].Team or -1; --assign -1 if territory is neutral, otherwise get the team ID of the territory owner (which can still be -1 if teams aren't in play) --> Dragon owner should never be Neutral as this would imply that a Dragon owned by Neutral has somehow been involved in an Airstrike attack - but check for it to be safe
+							local connTerrOwnerTeam = (connTerr.OwnerPlayerID ~= WL.PlayerID.Neutral) and game.ServerGame.Game.Players[connTerr.OwnerPlayerID].Team or -1; --assign -1 if territory is neutral, otherwise get the team ID of the territory owner (which can still be -1 if teams aren't in play)
+							if (SPowner == connTerr.OwnerPlayerID or SPownerTeam >=0 and SPownerTeam == connTerrOwnerTeam) then boolDragonBreathAppliesToThisTerritory = false; end --if connected territory is owned by the Dragon owner or a teammate, don't apply damage
+
+							if (boolDragonBreathAppliesToThisTerritory == true) then
+								local impactedTerritory = WL.TerritoryModification.Create(connID);
+								impactedTerritory.AddArmies = -1 * math.min (game.ServerGame.LatestTurnStanding.Territories[connID].NumArmies.NumArmies, intDragonBreathDamage);
+								if impactedTerritory.AddArmies ~= 0 then
+									table.insert(modifiedTerritories, impactedTerritory);
+									annotations [connID] = WL.TerritoryAnnotation.Create (".", 2, getColourInteger (255, 0, 0)); --add Annotation in Red for "." for Dragon Breath
+								end
+							end
+						end
+						local event = WL.GameOrderEvent.Create(SPowner, "Dragon breath [".. SUname .."]", {}, modifiedTerritories);
+						event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY)
+						event.TerritoryAnnotationsOpt = annotations; --use Medium Red & Red colour for Dragon Breath annotations
+						addNewOrder(event, true);
+					end
+
+				else
+					print ("[AIRSTRIKE - DRAGON BREATH] Found Dragon with 0 Dragon Breath damage");
+					dragonData.IsDragonBreathAttack = false;
+					dragonData.DragonBreathDamage = 0;
+				end
+			end
+		--reference: ModData for a Dragon with Dragon Breath:
+			--[[ 		"This unit can be identified by it's White dragon icon. It also has the powerful 'Dragon Attack' ability. Whenever this unit attacks another territory, it will deal 25 damage to all the connected territories. Be aware of this!
+
+			This unit can be bought with 5 gold in the purchase menu (that is the same place where you buy cities)
+
+			Each player can have up to 5 of this particular unit type. Keep this in mind to gain an advantage over your enemies!"]]
+		--[[ Here is the description for a dragon that does not have Dragon Breath attacks:
+			"This unit can be identified by it's Red dragon icon. It does not have the 'Dragon Attack' ability, but still might be a powerful unit!
+
+			This unit can be bought with 3 gold in the purchase menu (that is the same place where you buy cities)
+
+			Each player can have up to 5 of this particular unit type. Keep this in mind to gain an advantage over your enemies!"]]
+		end
+	end
 end
 
 --manually move units from one territory to another
@@ -2325,7 +2400,8 @@ function Phantom_processEndOfTurn(game, addOrder)
 	print ("jairj"); ]]
 
 	--Phantom TODOs:
-	-- none?
+	-- adjust so when Phantom is spawned and attacks are made on the same turn, fog is still applied (it's not currently b/c the initial analysis is done in _Start not _Order); maybe keep a table showing territories where fog was applied by this player this turn and if current terr isn't among it, add it)
+	--     or just mark when a Phantom is created and if Phantom is created on a territory on same turn when an attack occurs, apply the fog during _Order instead of _Start
 
 	if (privateGameData.PhantomData == nil) then print("[PHANTOM EXPIRE] no Phantom data"); return; end
 

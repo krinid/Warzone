@@ -315,12 +315,12 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 				print (strSUdetailsLineFull);
 
 				if (specialUnit.proxyType == "Commander") then
-					--reference: displaySpecialUnitProperties (UIcontrol, strDisplayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
-					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Commander", 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil);
+					--reference: displaySpecialUnitProperties (UIcontrol, strDisplayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modID, modData)
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Commander", 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil, nil);
 				elseif (specialUnit.proxyType == "Boss3") then
-					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, nil, "Stage "..specialUnit.Stage.." of 3");
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
+					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, specialUnit.ModID, getUnitDescription (specialUnit));
 				else
 					CreateLabel(UIdisplay).SetText("Unit type '" ..specialUnit.proxyType.."' not implemented yet").SetColor(colors["Orange Red"]);
 				end
@@ -343,11 +343,12 @@ end ]]
 
 --displayType is a string, either "plain" or "colourful"; if neither then default to plain
 --boolVerbose indicates whether to add additional comments/descriptions or just minimize what's displayed
-function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)
+function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modID, modData)
 	attackPower = attackPower or 0; --default to 0 if not set
 	defensePower = defensePower or 0; --default to 0 if not set
 	attackPowerPercentage = attackPowerPercentage or 0; --default to 0 if not set
 	defensePowerPercentage = defensePowerPercentage or 0; --default to 0 if not set
+	local strModName = getModName (modID); --look up mod name for Mod# matching the ModID
 
 	if (boolVerbose == nil) then boolVerbose = false; end --default to false if not set
 	if (displayType == nil or displayType ~= "colourful") then --if "plain" or anything else other than "colourful" (including nil) was entered, default to "plain"
@@ -359,7 +360,7 @@ function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owne
 		UI.CreateLabel (UIcontrol).SetText ("    Damage absorbed when attacked: "..tostring (damageAbsorbedWhenAttacked)..", Combat order: "..tostring(combatOrder));
 		UI.CreateLabel (UIcontrol).SetText ("    Can be gifted: "..tostring(canBeGifted)..", can be airlifted to self: "..tostring(canBeAirliftedToSelf));
 		UI.CreateLabel (UIcontrol).SetText ("    Teammate actions -- can be transferred: "..tostring(canBeTransferredToTeammate)..", can be airlifted: "..tostring(canBeAirliftedToTeammate));
-		UI.CreateLabel (UIcontrol).SetText ("    Visible to all players: "..tostring(isVisibleToAllPlayers));
+		UI.CreateLabel (UIcontrol).SetText ("    Permanently visible to all players: "..tostring(isVisibleToAllPlayers).. ", Mod ID: "..tostring(modID).. " ["..strModName.."]");
 		UI.CreateLabel (UIcontrol).SetText ("    Mod data: "..tostring(modData));
 	else
 		if (boolVerbose == true) then
@@ -437,6 +438,8 @@ function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owne
 		line = CreateHorz(UIcontrol).SetFlexibleWidth(1);
 		CreateLabel(line).SetText("Permanently visible to all players: ").SetColor(colors.TextColor);
 		CreateLabel(line).SetText(tostring(isVisibleToAllPlayers)).SetColor(isVisibleToAllPlayers and colors.Green or colors.Red);
+
+		CreateLabel(UIcontrol).SetText("Created by Mod: #".. tostring (modID).. " ["..strModName.."]").SetColor(colors.TextColor);
 
 		if (boolVerbose == true) then
 			--put on different lines b/c it wraps both lines and "Description" wraps over ~3+ lines for long descriptions
@@ -529,11 +532,11 @@ function populateUnitInspectorContents ()
 			strDisplayType = cboxColourful.GetIsChecked() and "colourful" or "plain";
 			if (specialUnit.proxyType == "Commander") then
 				--reference: displaySpecialUnitProperties (UIcontrol, displayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modData)
-				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil);
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil, nil);
 			elseif (specialUnit.proxyType == "Boss3") then
-				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, "Stage "..specialUnit.Stage.." of 3");
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, nil, "Stage "..specialUnit.Stage.." of 3");
 			elseif (specialUnit.proxyType == "CustomSpecialUnit") then
-				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, getUnitDescription (specialUnit));
+				displaySpecialUnitProperties (UIdisplay, strDisplayType, cboxVerbose.GetIsChecked(), strSUownerName, strSUname, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, specialUnit.ModID, getUnitDescription (specialUnit));
 			else
 				CreateLabel(UIdisplay).SetText("undefined unit type").SetColor(colors["Orange Red"]);
 			end
@@ -591,11 +594,11 @@ function inspectUnit(sp, callback)
 
 	if sp.proxyType == "CustomSpecialUnit" then
 		--inspectCustomUnit(sp, CurrentDisplayRoot);
-		displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, getUnitDescription (sp));
+		displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, sp.ModID, getUnitDescription (sp));
 	else
 		--inspectNormalUnit(sp, CurrentDisplayRoot);
 		if sp.proxyType == "Commander" then
-			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
+			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, nil, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
 		elseif sp.proxyType == "Boss3" then
 			local strBossDescription = "This unit is in Stage "..tostring (sp.Stage).." of 3. ";
 			if (sp.Stage == 3) then strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will NOT split into 4 smaller bosses. This unit is in it's last stage";
@@ -603,7 +606,7 @@ function inspectUnit(sp, callback)
 				strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will split into 4 bosses with " .. sp.Power - 10 .. " health. These 4 bosses are randomly spawned at nearby territories, taking ownership of the territory unless it is already occupied by a commander, in which case it will choose another territory"
 			end
 			line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
-			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Boss", sp.Power, 1.0, sp.Power, 1.0, sp.Power, nil, nil, 10000+sp.Stage, false, false, false, true, false, strBossDescription);
+			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Boss", sp.Power, 1.0, sp.Power, 1.0, sp.Power, nil, nil, 10000+sp.Stage, false, false, false, true, false, nil, strBossDescription);
 		else
 			CreateLabel(UnitInspectorRoot).SetText("Unit type '" ..sp.proxyType.."' not implemented yet").SetColor(colors.Red);
 		end
@@ -621,7 +624,7 @@ function inspectCustomUnit(sp, UnitInspectorRoot)
 	local strUnitName = sp.Name ~= nil and sp.Name or "None";
 	local strSUownerName = getPlayerName (Game, sp.OwnerID);
 
-	displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, getUnitDescription (sp));
+	displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, sp.ModID, getUnitDescription (sp));
 
 	local line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 	CreateLabel(line).SetText("Name: ").SetColor(colors.TextColor);
@@ -727,7 +730,7 @@ end
 
 function inspectNormalUnit(sp, UnitInspectorRoot)
 	if sp.proxyType == "Commander" then
-		displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
+		displaySpecialUnitProperties (UnitInspectorRoot, "colourful", true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, nil, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
 
 		local line = CreateHorz(UnitInspectorRoot).SetFlexibleWidth(1);
 		CreateLabel(line).SetText("Attack damage: ").SetColor(colors.TextColor);
