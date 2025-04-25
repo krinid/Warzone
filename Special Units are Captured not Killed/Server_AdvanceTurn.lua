@@ -84,27 +84,31 @@ end
 
 --for each killed SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)
 function process_killed_SUs (game, otherPlayerID, ArmiesKilled_SpecialUnits, targetTerritoryID, addOrder)
+	print ("\n\n\n[pkSUs] START");
 	local clonedSUs = {};
 	for k,sp in pairs (ArmiesKilled_SpecialUnits) do
-		--don't check for Commanders - just let them die normally
+		--don't capture Commanders/Bosses/other built-in SUs - just let them die normally, only capture Custom SUs (CustomSpecialUnits)
 		if (sp.proxyType == "CustomSpecialUnit") then
 			local sp_OwnerID = sp.OwnerID;
-			--local builder = WL.CustomSpecialUnitBuilder.CreateCopy(sp);
-			local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
-			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name.." (C)", sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
-			-- builder.Name = sp.Name.." (C)";
-			-- builder.Owner = otherPlayerID;
-			-- local newSP = builder.Build();
+			--this code is to recreate a new SP of the same type with same properties -- not good b/c it needs all the PNG image files (which is limited to 5)
+			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
+
+			--this code is to clone an SU & change the owner -- a much nicer solution, don't need to recreate the SU, don't need to worry about PNG image files, works with all custom SUs
+			local builder = WL.CustomSpecialUnitBuilder.CreateCopy(sp);
+			builder.OwnerID = otherPlayerID;
+			local newSP = builder.Build();
 			print ("SP killed: "..k, sp.proxyType.."; , SP owner "..sp_OwnerID.. "/".. getPlayerName (game, sp_OwnerID)..", clone to " ..newSP.OwnerID.. "/".. getPlayerName (game, newSP.OwnerID));
 			table.insert (clonedSUs, newSP);
 		end
 	end
 
-	if (#clonedSUs == 0) then print ("[pkSUs] No SUs to clone"); return; end --no SUs to clone, do nothing, just exit the function; possibly there were Commanders/Bosses/non-CustomSpecialUnits that were involved/killed - ignore them
+	if (#clonedSUs == 0) then print ("[pkSUs] No SUs to clone"); return; --no SUs to clone, do nothing, just exit the function; possibly there were Commanders/Bosses/non-CustomSpecialUnits that were involved/killed - ignore them
+	else print ("[pkSUs] ".. #clonedSUs.. " SUs cloned");
+	end
 
 	--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
 	local specialsToAdd = split_table_into_blocks (clonedSUs, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
-	local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID)
+	local targetTerritory = WL.TerritoryModification.Create (targetTerritoryID)
 
 	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
 	for _,v in pairs (specialsToAdd) do
@@ -116,37 +120,6 @@ function process_killed_SUs (game, otherPlayerID, ArmiesKilled_SpecialUnits, tar
 		-- event.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
 		-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
 		addOrder (event, true); --skip the order if the original attack order gets skipped
-	end
-end
-
---manually move units from one territory to another
-function manual_move_units (addOrder, playerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, units)
-	--adjust armies & SUs on FROM territory
-	sourceTerritory.AddArmies = -1 * units.NumArmies; --reduce source territory armies by the number of armies moving to target territory
-	sourceTerritory.RemoveSpecialUnitsOpt = convert_SUobjects_to_SUguids (units.SpecialUnits); --remove Specials from source territory that are moving to target territory
-	--need to convert the table to get the SU GUIDs (needed to remove from Source territory) b/c it is stored as a table of SU objects (used to add to Target territory)
-
-	--adjust armies on TO territory
-	targetTerritory.AddArmies = units.NumArmies; --increase target territory armies by the number of armies moving from source territory
-	targetTerritory.RemoveSpecialUnitsOpt = {}; --reset the Specials to an empty table, so it's not constantly sending a list of SUs to remove that have already been removed
-
-	--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
-	local specialsToAdd = split_table_into_blocks (units.SpecialUnits, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
-	local territoriesToModify = {sourceTerritory, targetTerritory}; --on 1st iteration, modify source & territory, on 2nd and after just do target territory with Special Units
-	if (#specialsToAdd == 0) then addOrder (WL.GameOrderEvent.Create (playerID, "[manual move]", {}, territoriesToModify), true); end --if there are no Specials to add, do the order once for both territories
-
-	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
-	for _,v in pairs (specialsToAdd) do
-		targetTerritory.AddSpecialUnits = v; --add Specials to target territory that are moving from source territory
-		local event = WL.GameOrderEvent.Create (playerID, "[manual units move]", {}, territoriesToModify);
-		local annotations = {};
-		annotations [sourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
-		annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
-		event.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
-		-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
-		addOrder (event, true);
-		targetTerritory.AddArmies = 0; --reset the armies to 0 after 1st iteration, so that the next order doesn't add more armies to the target territory
-		territoriesToModify = {targetTerritory}; --on 2nd and after iterations, just modify target territory with Special Units
 	end
 end
 
