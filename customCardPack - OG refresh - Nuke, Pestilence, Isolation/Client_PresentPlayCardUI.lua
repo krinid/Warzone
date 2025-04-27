@@ -760,7 +760,7 @@ function play_Airstrike_card (game, cardInstance, playCard)
 		if (Mod.Settings.AirstrikeCanSendRegularArmies == nil or Mod.Settings.AirstrikeCanSendRegularArmies == false) then
 			airstrikeObject.NIFarmies.SetValue (0);
 			airstrikeObject.NIFarmies.SetInteractable (false);
-			CreateLabel (vertTop).SetText ("**This game is configured so you cannot send regular armies with an Airstrike").SetColor (getColourCode ("subheading"));
+			CreateLabel (vertTop).SetText ("** This game is configured so you cannot send regular armies with an Airstrike").SetColor (getColourCode ("subheading"));
 			CreateLabel (vertTop).SetText (" "); --spacer
 		end
 
@@ -827,7 +827,7 @@ function updateAirstrikePanelDetails ()
     --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); airstrikeObject.NIFarmies.SetValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
 
 	--if Mod Settings disallows sending Armies, force it to 0 (clearly to the player so it's obvious what's happening)
-	if (Mod.Settings.AirstrikeCanSendRegularArmies == false) then
+	if (Mod.Settings.AirstrikeCanSendRegularArmies == nil or Mod.Settings.AirstrikeCanSendRegularArmies == false) then
 		airstrikeObject.NIFarmies.SetValue (0);
 		airstrikeObject.NIFarmies.SetInteractable (false);
 	end
@@ -941,7 +941,13 @@ function SourceTerritoryClicked_Airstrike(terrDetails)
 		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
 		airstrikeObject.NIFarmies.SetSliderMaxValue (intNumArmiesPresent);  --set max slider value for input field to # of armies on territory for ease of use (sum of current state + current deployments to source territory)
 		--if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
-		airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
+
+        if (Mod.Settings.AirstrikeCanSendRegularArmies == nil or Mod.Settings.AirstrikeCanSendRegularArmies == false) then
+            airstrikeObject.NIFarmies.SetValue (0);
+            airstrikeObject.NIFarmies.SetInteractable (false);
+        else
+            airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
+        end
 
 		airstrikeObject.SourceTerritoryClicked_Airstrike.SetText("Selected territory: " .. terrDetails.Name);
 		SourceTerritoryID = terrDetails.ID;

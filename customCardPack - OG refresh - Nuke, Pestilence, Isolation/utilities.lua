@@ -608,6 +608,7 @@ end
 
 function getTerritoryName (intTerrID, game)
 	if (intTerrID) == nil then return nil; end
+	if (game.Map.Territories[intTerrID] == nil) then return nil; end --territory ID does not exist for this game/template/map
 	return (game.Map.Territories[intTerrID].Name);
 end
 

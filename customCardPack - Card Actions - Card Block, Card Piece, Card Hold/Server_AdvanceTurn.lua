@@ -2274,42 +2274,85 @@ function Quicksand_processEndOfTurn(game, addOrder)
     print("[QUICKSAND] processEndOfTurn END");
 end
 
+--remove Shields that glitched and weren't removed via normal means and are no longe present in Mod.PrivateGameData.ShieldData
+function removeGlitchedShields (game, addOrder)
+	local ShieldsToExpire = {
+		--Nate LOTR/ME Dragons game
+		["9912F6E769E1402DBFB151833B521E56"] = 16,
+		["4278676A9AA34A26B84DC613B1096F50"] = 562,
+		["9563DB8DFABA491AB745B27824B97313"] = 69,
+		["D2AD799F66E544EC80A96555BC17EECE"] = 72,
+		["523FB1B155814A6B38682E8CE77E4"] = 115,
+		["381DCEBA4E9047D0908D6E8444721D9F"] = 120,
+		["5D088E0A2410440196F730C7920D2723"] = 121,
+		["0BAB7D998F1E4247B7A49F95101F3119"] = 131,
+		["1BAD63D85ECC473B84BE51778BB11790"] = 144,
+		["E1030F8EF237432B84D5EBDF27E41EAB"] = 184,
+		["79D94EC9033D4BA684EE36D257BB6BEC"] = 311,
+		["3C7C93DF5959478BA27AB0B58819C88E"] = 851,
+		["6827001DDB99432BB33240779C80651E"] = 866,
+		["7DF910AC844C4437AA0294D6C33A1E99"] = 993,
+		["7F08695CF3F44BCAB54C024250A5F995"] = 994,
+		["075858B0A8BB44668C3A21DB16D19A64"] = 995,
+		["8EDA398982EC4E1F9E5CFB50460B66B3"] = 996,
+		["772976F94DD74B8B9C0D77BDD730DB0D"] = 1004,
+
+		--prenk/krinid test game
+		["53B8C0F770094862BBDAA629228BD9AD"] = 14, ["1A76723812A64D3E80C19059E97A7E80"] = 20
+	};
+	for SUkey, terrID in pairs (ShieldsToExpire) do
+		local impactedTerritory = WL.TerritoryModification.Create (terrID);
+		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
+		local strShieldExpires = "Shield expired on ".. tostring (getTerritoryName (terrID, game));
+		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
+		printDebug ("[FORCED SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..terrID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strShieldExpires, {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = jumpToActionSpotObject;
+		addOrder (event, false);
+	end
+end
+
 --remove expired Shield Special Units from map & pop off the Shield records from ShieldData
 function Shield_processEndOfTurn(game, addOrder)
-    local privateGameData = Mod.PrivateGameData;
+    print("[SHIELD EXPIRE] processEndOfTurn START");
+
+	local privateGameData = Mod.PrivateGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.ShieldEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.ShieldDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
-    print("[SHIELD EXPIRE] processEndOfTurn START");
-    if (privateGameData.ShieldData == nil) then print("[SHIELD EXPIRE] no Shield data"); return; end
+	--&&& ShieldFix
+	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
+	if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
+
+    if (privateGameData.ShieldData == nil) then print ("[SHIELD EXPIRE] no Shield data"); return; end
 
     for key, shieldDataRecord in pairs (privateGameData.ShieldData) do
         --printObjectDetails(shieldDataRecord, "Shield data record", "Shield processEOT");
-        print("[SHIELD EXPIRE] record, territory=="..tostring (shieldDataRecord.territory) .."/".. tostring (getTerritoryName (shieldDataRecord.territory, game)) ..", castingPlayer=="..shieldDataRecord.castingPlayer.."/"..toPlayerName(shieldDataRecord.castingPlayer, game)..
+        print ("[SHIELD EXPIRE] record, territory=="..tostring (shieldDataRecord.territory) .."/".. tostring (getTerritoryName (shieldDataRecord.territory, game)) ..", castingPlayer=="..shieldDataRecord.castingPlayer.."/"..toPlayerName(shieldDataRecord.castingPlayer, game)..
 			", territoryOwner=="..shieldDataRecord.territoryOwner.."/"..toPlayerName(shieldDataRecord.territoryOwner, game).. ", expiryTurn==T"..shieldDataRecord.turnNumberShieldEnds..", specialUnitID=="..shieldDataRecord.specialUnitID.."::");
 
 		--if shield expires this turn or on a previous turn (and was somehow missed), remove the SU from the territory & pop the record off of Mod.PrivateGameData.ShieldData
 		if (shieldDataRecord.turnNumberShieldEnds > 0 and turnNumber >= shieldDataRecord.turnNumberShieldEnds) then
-            print("[SHIELD] expiration occurs now (or is somehow already late); remove & pop record off ShieldData");
+            print ("[SHIELD] expiration occurs now (or is somehow already late); remove & pop record off ShieldData");
 			local modifiedTerritories = {};
 			local strShieldExpires = "Shield expired on ".. tostring (getTerritoryName (shieldDataRecord.territory, game));
 			local jumpToActionSpotObject = nil;
 
 			--remove the Shield SU with the matching GUID from the territory it is found on; ideally this should be on shieldDataRecord.territory but it's possible another mod could move it (Portals? etc)
-			local terrID = findSpecialUnit(shieldDataRecord.specialUnitID, game);
+			local terrID = findSpecialUnit (shieldDataRecord.specialUnitID, game);
             if (terrID ~= shieldDataRecord.territory) then
 				print ("[SHIELD EXPIRE] Shield Special Unit found on different territory than it was created on; created=="..tostring (shieldDataRecord.territory) .."/".. tostring (getTerritoryName (shieldDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
 			end
 			if (terrID ~= nil) then
-                print("[SHIELD EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
-                local impactedTerritory = WL.TerritoryModification.Create(terrID);
+                print ("[SHIELD EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
+                local impactedTerritory = WL.TerritoryModification.Create (terrID);
                 impactedTerritory.RemoveSpecialUnitsOpt = {shieldDataRecord.specialUnitID};
-                table.insert(modifiedTerritories, impactedTerritory);
-                jumpToActionSpotObject = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
-                print("[SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..shieldDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+                table.insert (modifiedTerritories, impactedTerritory);
+                jumpToActionSpotObject = WL.RectangleVM.Create (game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); --if there are >2 instances, the last one will overwrite the previous to become the jump-to-location territory
+                print ("[SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..shieldDataRecord.specialUnitID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
 			else
 				--Shield SU not found! Possible reason: it was cloned (creates new GUID) & original deleted, in which case it will never be found (if this happens a lot, could put the territory ID in ModData and find it that way); or it was blockaded/EB'd
 				--(could also change from searching for the appropriate SU to just put the expiry data itself in the SU ModData, then loop through all territories looking for the SU, if expiry time arrived or past, remove the SU)
@@ -2319,15 +2362,15 @@ function Shield_processEndOfTurn(game, addOrder)
 
 			local event = WL.GameOrderEvent.Create (shieldDataRecord.castingPlayer, strShieldExpires, {}, modifiedTerritories);
 			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
-			addOrder(event, true);
+			addOrder (event, true);
 			privateGameData.ShieldData[key] = nil;
 			--Mod.PrivateGameData = privateGameData;
-			print("[SHIELD EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
+			print ("[SHIELD EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
 		end
     end
 
-    print("[SHIELD EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
-    print("[SHIELD EXPIRE] processEndOfTurn END");
+    print ("[SHIELD EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.ShieldData))
+    print ("[SHIELD EXPIRE] processEndOfTurn END");
     Mod.PrivateGameData = privateGameData;
 end
 
