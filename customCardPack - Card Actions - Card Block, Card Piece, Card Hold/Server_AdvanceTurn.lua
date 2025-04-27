@@ -2305,7 +2305,7 @@ function removeGlitchedShields (game, addOrder)
 		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
 		local strShieldExpires = "Shield expired on ".. tostring (getTerritoryName (terrID, game));
 		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
-		printDebug ("[FORCED SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..terrID..", from "..terrID.."/"..game.Map.Territories[terrID].Name.."::");
+		printDebug ("[FORCED SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..terrID..", from "..terrID.."/"..getTerritoryName (terrID, game).."::");
 		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strShieldExpires, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = jumpToActionSpotObject;
 		addOrder (event, false);
