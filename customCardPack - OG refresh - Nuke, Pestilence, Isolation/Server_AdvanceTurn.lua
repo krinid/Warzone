@@ -2276,8 +2276,11 @@ end
 
 --remove Shields that glitched and weren't removed via normal means and are no longe present in Mod.PrivateGameData.ShieldData
 function removeGlitchedShields (game, addOrder)
-	local ShieldsToExpire = {
-		--Nate LOTR/ME Dragons game
+	local ShieldsToExpire = {};
+
+	--Nate LOTR/ME Dragons game
+	if (game.Game.ID == 40891958) then
+		ShieldsToExpire = {
 		["9912F6E769E1402DBFB151833B521E56"] = 16,
 		["4278676A9AA34A26B84DC613B1096F50"] = 562,
 		["9563DB8DFABA491AB745B27824B97313"] = 69,
@@ -2295,11 +2298,12 @@ function removeGlitchedShields (game, addOrder)
 		["7F08695CF3F44BCAB54C024250A5F995"] = 994,
 		["075858B0A8BB44668C3A21DB16D19A64"] = 995,
 		["8EDA398982EC4E1F9E5CFB50460B66B3"] = 996,
-		["772976F94DD74B8B9C0D77BDD730DB0D"] = 1004,
+		["772976F94DD74B8B9C0D77BDD730DB0D"] = 1004};
+	elseif (game.Game.ID == 40901887) then
+	--prenk/krinid test game
+		ShieldsToExpire = {["53B8C0F770094862BBDAA629228BD9AD"] = 14, ["1A76723812A64D3E80C19059E97A7E80"] = 20};
+	end
 
-		--prenk/krinid test game
-		["53B8C0F770094862BBDAA629228BD9AD"] = 14, ["1A76723812A64D3E80C19059E97A7E80"] = 20
-	};
 	for SUkey, terrID in pairs (ShieldsToExpire) do
 		local impactedTerritory = WL.TerritoryModification.Create (terrID);
 		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
