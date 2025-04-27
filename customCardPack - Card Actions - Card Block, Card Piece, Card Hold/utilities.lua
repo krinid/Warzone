@@ -705,6 +705,19 @@ function isSpecialUnitAnImmovableUnit (unit)
 	end
 end
 
+--given WL.Armies structure 'armies', return true/false indicating whether SU of type strSUtype is present in it; if boolPatternMatch is true then search for partial match (figuratively appending * to the end of strSUtype); if false then only do exact match; eg: Behemoth needs pattern matching b/c the name contains Power indicator; other SUs are okay with exact matches
+function isSpecialUnitInArmies (armies, strSUtype, boolPatternMatch)
+	if (armies == nil) then return false; end
+	if (#armies.SpecialUnits == 0) then return false; end
+
+	for _,specialUnit in pairs (armies.SpecialUnits) do
+		if (specialUnit.Name == strSUtype or (boolPatternMatch==true and left(specialUnit.Name, len(strSUtype)) == strSUtype)) then
+			return true;
+		end
+	end
+	return false;
+end
+
 --find & return the territory ID where a given special unit is
 function findSpecialUnit (specialUnitID, game)
 	print ("fsu, find=="..specialUnitID);
