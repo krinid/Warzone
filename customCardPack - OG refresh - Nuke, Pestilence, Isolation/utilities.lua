@@ -416,6 +416,7 @@ function isPlayerActive (playerID, game)
 end
 
 function createJumpToLocationObject (game, targetTerritoryID)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create(1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
 	return (WL.RectangleVM.Create(
 		game.Map.Territories[targetTerritoryID].MiddlePointX,
 		game.Map.Territories[targetTerritoryID].MiddlePointY,
