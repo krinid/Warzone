@@ -1,4 +1,4 @@
---require('Utilities');
+require ("behemoth");
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
     if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Behemoth|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
@@ -29,24 +29,6 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	if (order.CostOpt == nil) then
 		return; --shouldn't ever happen, unless another mod interferes
 	end
-
-	--[[local costFromOrder = order.CostOpt[WL.ResourceType.Gold]; --this is the cost from the order.  We can't trust this is accurate, as someone could hack their client and put whatever cost they want in there.  Therefore, we must calculate it ourselves, and only do the purchase if they match
-	local realCost = Mod.Settings.CostToBuyTank;
-	if (realCost > costFromOrder) then
-		return; --don't do the purchase if their cost didn't line up.  This would only really happen if they hacked their client or another mod interfered
-	end]]
-
-	--[[local numTanksAlreadyHave = 0;
-	for _,ts in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-		if (ts.OwnerPlayerID == order.PlayerID) then
-			numTanksAlreadyHave = numTanksAlreadyHave + NumTanksIn(ts.NumArmies);
-		end
-	end
-
-	if (numTanksAlreadyHave >= Mod.Settings.MaxTanks) then
-		addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, 'Skipping tank purchase since max is ' .. Mod.Settings.MaxTanks .. ' and you have ' .. numTanksAlreadyHave));
-		return; --this player already has the maximum number of tanks possible, so skip adding a new one.
-	end]]
 
 	--local behemothPower = math.max (behemothPowerFactor * (goldSpent^3) + behemothPowerFactor * (goldSpent^2) + behemothPowerFactor * goldSpent, 0);
 	--local behemothPower = math.max (behemothPowerFactor * (goldSpent^2), 1);
@@ -81,45 +63,45 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod}));
 end
 
-function getBehemothPowerFactor (behemothPower)
-	return (math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1)); --max factor of 0.3
-end
+-- function getBehemothPowerFactor (behemothPower)
+-- 	return (math.min (behemothPower/100, 0.1) + math.min (behemothPower/1000, 0.1) + math.min (behemothPower/10000, 0.1)); --max factor of 0.3
+-- end
 
-function getBehemothPower (goldSpent)
-	local power = 0;
-	if (goldSpent <= 0) then return 0; end
-	--if (goldSpent >= 1 and goldSpent <=50) then return (goldSpent/50)*goldSpent;
-	power = power + math.min ((goldSpent/50)*goldSpent, 25);
-	if (goldSpent >=50) then power = power + math.min ((goldSpent/100)*goldSpent, 100); end
-	if (goldSpent >= 100) then power = power + math.min ((goldSpent/500)*goldSpent, 500); end
-	if (goldSpent >= 500) then power = power + math.min ((goldSpent/1000)*goldSpent, 1000); end
-	if (goldSpent >= 1000) then power = power + math.min ((goldSpent/5000)*goldSpent, 5000); end
-	if (goldSpent >=5000) then power = power + (goldSpent/10000)*goldSpent; end
-	power = math.floor (math.max (1, power)+0.5);
+-- function getBehemothPower (goldSpent)
+-- 	local power = 0;
+-- 	if (goldSpent <= 0) then return 0; end
+-- 	--if (goldSpent >= 1 and goldSpent <=50) then return (goldSpent/50)*goldSpent;
+-- 	power = power + math.min ((goldSpent/50)*goldSpent, 25);
+-- 	if (goldSpent >=50) then power = power + math.min ((goldSpent/100)*goldSpent, 100); end
+-- 	if (goldSpent >= 100) then power = power + math.min ((goldSpent/500)*goldSpent, 500); end
+-- 	if (goldSpent >= 500) then power = power + math.min ((goldSpent/1000)*goldSpent, 1000); end
+-- 	if (goldSpent >= 1000) then power = power + math.min ((goldSpent/5000)*goldSpent, 5000); end
+-- 	if (goldSpent >=5000) then power = power + (goldSpent/10000)*goldSpent; end
+-- 	power = math.floor (math.max (1, power)+0.5);
 
-	power = 0;
-	--[[power = power + math.min ((goldSpent/75)*goldSpent, 50);
-	power = power + math.min ((goldSpent/150)*goldSpent, 100);
-	power = power + math.min ((goldSpent/600)*goldSpent, 500);
-	power = power + math.min ((goldSpent/1200)*goldSpent, 1000);
-	power = power + math.min ((goldSpent/6000)*goldSpent, 5000);
-	power = power + (goldSpent/10000)*goldSpent;
-	power = math.floor (math.max (1, power)+0.5);]]
+-- 	power = 0;
+-- 	--[[power = power + math.min ((goldSpent/75)*goldSpent, 50);
+-- 	power = power + math.min ((goldSpent/150)*goldSpent, 100);
+-- 	power = power + math.min ((goldSpent/600)*goldSpent, 500);
+-- 	power = power + math.min ((goldSpent/1200)*goldSpent, 1000);
+-- 	power = power + math.min ((goldSpent/6000)*goldSpent, 5000);
+-- 	power = power + (goldSpent/10000)*goldSpent;
+-- 	power = math.floor (math.max (1, power)+0.5);]]
 
-	local a = 50;  --while goldSpent < a, power < goldSpent
-	local b = 100; --while a < goldSpent < b, power >= b and grows slowly/linearly
-	local c = 1000; --while b < goldSpent < c, power grows faster/quadratically
-	               --while c < goldSpent, power grows even faster/exponentially
-	--power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) + math.max(0, math.exp(goldSpent - c) - (c - b)^2);
-	--print  (goldSpent ..", "..math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) ..", ".. math.max(0, math.exp(goldSpent - c) - (c - b)^2));
+-- 	local a = 50;  --while goldSpent < a, power < goldSpent
+-- 	local b = 100; --while a < goldSpent < b, power >= b and grows slowly/linearly
+-- 	local c = 1000; --while b < goldSpent < c, power grows faster/quadratically
+-- 	               --while c < goldSpent, power grows even faster/exponentially
+-- 	--power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) + math.max(0, math.exp(goldSpent - c) - (c - b)^2);
+-- 	--print  (goldSpent ..", "..math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, math.max (0, (goldSpent - b))^1.5 - (b - a) * 0.5) ..", ".. math.max(0, math.exp(goldSpent - c) - (c - b)^2));
 
-	power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, ((goldSpent - b)) * 1.0)^1 + math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5);
-	print  (goldSpent ..", ".. math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, ((goldSpent - b)) * 1.0)^1 ..", ".. math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5));
+-- 	power = math.min ((goldSpent/a)*goldSpent, a) + math.max(0, (goldSpent - a) * 1.5) + math.max(0, ((goldSpent - b)) * 1.0)^1 + math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5);
+-- 	print  (goldSpent ..", ".. math.min ((goldSpent/a)*goldSpent, a) ..", ".. math.max(0, (goldSpent - a) * 1.5) ..", ".. math.max(0, ((goldSpent - b)) * 1.0)^1 ..", ".. math.max(0, math.max (0, (goldSpent - c))^1.2 - (c - b) * 0.5));
 
-	return power;
-end
+-- 	return power;
+-- end
 
-function NumTanksIn(armies)
+function countSUinstances (armies)
 	local ret = 0;
 	for _,su in pairs(armies.SpecialUnits) do
 		if (su.proxyType == 'CustomSpecialUnit' and su.Name == 'Tank') then
