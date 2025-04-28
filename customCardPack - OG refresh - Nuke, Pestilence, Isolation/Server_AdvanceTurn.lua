@@ -129,7 +129,7 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 					if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
 						-- local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
-						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance is clouding your visibility", intFogLevel, 8000, {order.To}, nil);
+						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
 						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {specialUnit.OwnerID});
 						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
@@ -911,7 +911,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			end
 		end
 
-		--if a Phantom that was created this turn is attacking or transferring, fog the target territory b/c it wouldn't have been fogged in the _Start function call b/c it didn't exist yet
+		--[[--if a Phantom that was created this turn is attacking or transferring, fog the target territory b/c it wouldn't have been fogged in the _Start function call b/c it didn't exist yet
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true) then
 			local privateGameData = Mod.PrivateGameData;
 			for _, specialUnit in pairs(game.ServerGame.LatestTurnStanding.Territories [gameOrder.From].NumArmies.SpecialUnits) do
@@ -961,7 +961,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 				end
 			end
 			Mod.PrivateGameData.PhantomData = privateGameData; --save the updated PhantomData back to the mod data
-		end
+		end]]
 
 		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
@@ -1326,7 +1326,7 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
 	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
 	-- local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {targetTerritoryID}, nil);
-	local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {targetTerritoryID}, nil);
+	local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {targetTerritoryID}, nil);
 	local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, {castingPlayerID});
 	local fogModIDs = {};
 	local fogMods = {};
@@ -1335,19 +1335,51 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	table.insert (fogMods, fogMod_TO_fogOthers);
 	table.insert (fogMods, fogMod_TO_visibleSelf);
 
+	----------------------------start
+	--add fog to all territories that are attacked or transferred to from the target territory where the Phantom was just created; this happens @ start of turn but would have been missed b/c this Phantom didn't exist yet
+	print ("[PHANTOM - NEW DEPLOYMENT - FOGMOD PREP - ORDERS]________________");
+	for playerID,arrayPlayerOrders in pairs (game.ServerGame.ActiveTurnOrders) do
+		print ("__[PLAYER] "..playerID);
+		for k,order in pairs (arrayPlayerOrders) do
+			print ("____[PLAYER ORDERS] ["..playerID.."] proxyType ".. order.proxyType..", order# "..k.. ", proxyID ".. order.__proxyID);
+			if (order.proxyType=='GameOrderAttackTransfer' and order.From == targetTerritoryID) then
+				print ("________[ORDER AttackTransfer on territory w/new Phantom] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));;
+
+				local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
+				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {castingPlayerID});
+				-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
+				-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
+				-- local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
+				-- -- event.FogModsOpt = {fogMod_FROM, fogMod_TO};
+				-- event.FogModsOpt = {fogMod_TO_fogOthers, fogMod_TO_visibleSelf};
+				-- addNewOrder (event);
+				-- print("[FOGMODS applied to territories ATTACK/TRANSFERS are entered for]");
+				-- local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;
+				-- table.insert (fogModList, fogMod_FROM.ID);
+				-- table.insert (fogModList, fogMod_TO_fogOthers.ID);
+				-- table.insert (fogModList, fogMod_TO_visibleSelf.ID);
+				table.insert (fogModIDs, fogMod_TO_fogOthers.ID);
+				table.insert (fogModIDs, fogMod_TO_visibleSelf.ID);
+				table.insert (fogMods, fogMod_TO_fogOthers);
+				table.insert (fogMods, fogMod_TO_visibleSelf);
+				-- privateGameData.PhantomData [specialUnit.ID].FogMods = fogModList;
+			end
+		end
+	end
+	----------------------------end
+
 	--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 	--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-	local event_FogMod = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {});
-	-- local event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
+	local event_FogMod = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --use WL.PlayerID.Neutral and not specialUnit.OwnerID to avoid revealing who deployed a Phantom
 	-- event_FogMod.FogModsOpt = {fogMod_TO_fogOthers, fogMod_TO_visibleSelf};
 	event_FogMod.FogModsOpt = fogMods;
-	addOrder(event_FogMod, true);
+	addOrder (event_FogMod, true); --apply order for the FogMods before creating the Phantom, so the creation of the Phantom itself is also fogged
 
 	--create the Phantom
-	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
+	local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {castingPlayerID}, {impactedTerritory});
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 8, getColourInteger(0, 0, 50))}; --use Blacky Blue for Phantom
-	addOrder(event, true); --create Phantom
+	addOrder (event, true); --create Phantom
 
 	local privateGameData = Mod.PrivateGameData;
 	local turnNumber_PhantomExpires = -1;
@@ -1619,17 +1651,21 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			table.insert (modifiedTerritories, impactedTerritory);
 
 			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Deneutralize action
-			local strDeneutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
+			local strDeneutralizeOrderMessage = toPlayerName(castingPlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
 			--print ("message=="..strDeneutralizeOrderMessage);
-			local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, strDeneutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
+			local event = WL.GameOrderEvent.Create (castingPlayerID, strDeneutralizeOrderMessage, {castingPlayerID}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 			-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
-					addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 		else
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
-			skip(WL.ModOrderControl.Skip);
-		end		
+			addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
+			skip (WL.ModOrderControl.Skip);
+			local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
+			printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
+			addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+			addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
+			end
 	end
 end
 
