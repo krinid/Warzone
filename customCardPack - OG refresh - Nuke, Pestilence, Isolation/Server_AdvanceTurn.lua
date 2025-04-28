@@ -1343,7 +1343,7 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 		for k,order in pairs (arrayPlayerOrders) do
 			print ("____[PLAYER ORDERS] ["..playerID.."] proxyType ".. order.proxyType..", order# "..k.. ", proxyID ".. order.__proxyID);
 			if (order.proxyType=='GameOrderAttackTransfer' and order.From == targetTerritoryID) then
-				print ("________[ORDER AttackTransfer on territory w/new Phantom] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));;
+				print ("________[ORDER AttackTransfer on territory w/new Phantom] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));
 
 				local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
 				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {castingPlayerID});

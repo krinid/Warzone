@@ -1152,7 +1152,7 @@ function setDefaultValues()
 	if (Mod.Settings.PhantomDuration == nil) then Mod.Settings.PhantomDuration = 3; end
 	if (Mod.Settings.PhantomFogLevel == nil) then Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.Fogged; end --FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
 	if (Mod.Settings.PhantomPiecesNeeded == nil) then Mod.Settings.PhantomPiecesNeeded = 10; end
-	if (Mod.Settings.PhantomStartPieces == nil) then Mod.Settings.PhantomStartPieces = 1000; end
+	if (Mod.Settings.PhantomStartPieces == nil) then Mod.Settings.PhantomStartPieces = 1; end
 	if (Mod.Settings.PhantomPiecesPerTurn == nil) then Mod.Settings.PhantomPiecesPerTurn = 1; end
 	if (Mod.Settings.PhantomCardWeight == nil) then Mod.Settings.PhantomCardWeight = 1.0; end
 
