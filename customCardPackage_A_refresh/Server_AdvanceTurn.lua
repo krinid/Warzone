@@ -103,7 +103,8 @@ end
 --add FogMods to all territories where Phantoms currently reside and any territories that is being attacked from a territory where a Phantom resides, even if the Phantom itself isn't participating in the attack
 function Phantom_processStartOfTurn (game, addNewOrder)
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom ~= true) then return; end --do nothing if Phantom module is not active in this mod
-
+	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+UI.Alert (tostring (Mod.Settings.PhantomEnabled));
 	local privateGameData = Mod.PrivateGameData;
 
 	local FogModsToApply = {}; --table of all FogMods to add at start of turn; FogMods to be added for territories where Phantoms reside & all territories attacked from another territory where a Phantom resides, even if the Phantom isn't participating in the attack

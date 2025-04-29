@@ -30,11 +30,11 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	--getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get available gold including subtraction of any gold already spent this turn
 
 	--get values from Mod.Settings, if nil then assign default values
-	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or 100;
-	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or 500;
-	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or 1000;
-	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and true) or Mod.Settings.BehemothInvulnerableToNeutrals;
-	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or 5.0;
+	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
+	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
+	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
+	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
+	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
 
 	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately."..
 	"\n\n• < ".. tostring (intGoldLevel1).. " - inefficient [better to buy armies]"..
@@ -50,7 +50,7 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 			local behemothPower = getBehemothPower(BehemothGoldSpent);
 			local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 			Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
-				"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   Modifier - Attack ".. 1+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..
+				"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
 				"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
 				"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
 		end);
@@ -75,6 +75,10 @@ function getGoldSpentThisTurnSoFar (game, terrID)
 		end
 	end
 	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
+end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
 end
 
 --given a parameter 'armies' of type WL.Armies, return the # of a given SU present within it

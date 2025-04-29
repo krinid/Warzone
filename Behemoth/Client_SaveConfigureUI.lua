@@ -6,5 +6,4 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.BehemothStrengthAgainstNeutrals = neutralStrengthNIF.GetValue();
 	Mod.Settings.BehemothInvulnerableToNeutrals = invulnerableToNeutralsCBOX.GetIsChecked();
 
-	-- if (Mod.Settings.BehemothGoldLevel1 = 
 end

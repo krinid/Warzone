@@ -1,5 +1,13 @@
 require ("behemoth");
 
+function Server_AdvanceTurn_End(game, addOrder)
+	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
+	local boolHaltCodeExecutionAtEndofTurn = false;
+	--local boolHaltCodeExecutionAtEndofTurn = true;
+	local intHaltOnTurnNumber = 1;
+	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
+end
+
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
     if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Behemoth|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
 		local orderComponents = split(order.Payload, '|');
@@ -14,12 +22,55 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			print ("[BEHEMOTH] unsupported operation: " .. strOperation);
 			return;
 		end
+	elseif (order.proxyType=='GameOrderAttackTransfer' and game.ServerGame.LatestTurnStanding.Territories [order.To].IsNeutral == true) then
+		--order is an attack on a neutral territory (technically it's an Attack or a Transfer, but since the target is neutral, it can only be an attack)
+		--for any Behemoths in the order, do:
+			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage
+			--(B) ensure damage against the neutral is calculated correctly as per Mod.Settings.BehemothStrengthAgainstNeutrals
+
+		local strSUtype = "Behemoth";
+		for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
+			--if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
+			if (specialUnit.Name == strSUtype or (string.sub(specialUnit.Name, 1, string.len(strSUtype)) == strSUtype)) then
+				--unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
+				if Mod.Settings.BehemothInvulnerableToNeutrals == true then
+					--check if the Behemoth is slated to be killed & if so, remove it from the table result.AttackingArmiesKilled.SpecialUnits[specialunit]
+					--result.AttackingArmiesKilled.SpecialUnits is an array of special unit objects, where one property is ID; write code to check the array to see if the ID property of an element == specialUnit.ID, and if so, remove it from the array
+					local newAttackingArmiesKilled_SpecialUnits = result.AttackingArmiesKilled.SpecialUnits;
+					for key = #newAttackingArmiesKilled_SpecialUnits, 1, -1 do
+						if (newAttackingArmiesKilled_SpecialUnits[key].ID == specialUnit.ID) then
+							table.remove(newAttackingArmiesKilled_SpecialUnits, key);
+							print ("[BEHEMOTH] Killed attacking neutral -> nullify the kill; Name: ".. specialUnit.Name)
+						end
+					end
+					result.AttackingArmiesKilled = WL.Armies.Create (result.AttackingArmiesKilled.NumArmies, newAttackingArmiesKilled_SpecialUnits);
+
+					local newDamageToSpecialUnits = result.DamageToSpecialUnits;
+					--result.DamageToSpecialUnits is a table with key of the ID of a special unit; write code to check each element of the table to see if the ID matches specialUnit.ID and if so remove it from the table
+					--check if the Behemoth is slated to take damage, and if so remove it from the table result.DamageToSpecialUnits[guid]
+					for key, intDamage in pairs(result.DamageToSpecialUnits) do
+						if (key == specialUnit.ID) then
+							result.DamageToSpecialUnits[key] = nil;
+							print ("[BEHEMOTH] Damaged while attacking neutral -> nullify the damage; Damage ".. tostring (intDamage).. ", Name: ".. specialUnit.Name);
+						end
+					end
+					result.DamageToSpecialUnits = newDamageToSpecialUnits;
+				end
+
+				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor Mod.Settings.BehemothStrengthAgainstNeutrals
+
+				--calc gap between damage inclusive of Mod.Settings.BehemothStrengthAgainstNeutrals and the damage already included in the result w/o respect to Mod.Settings.BehemothStrengthAgainstNeutrals, then add it to result.DefendingArmiesKilled
+				--if ==1.0 -> no change in damage done to the neutrals; >1.0 -> increases damage done; <1.0 -> decreases damage done
+				local intDamageGap = (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) - (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate);
+				result.DefendingArmiesKilled = WL.Armies.Create (result.DefendingArmiesKilled.NumArmies + intDamageGap, result.DefendingArmiesKilled.SpecialUnits);
+				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. Mod.Settings.BehemothStrengthAgainstNeutrals .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) ..", apply gap " .. intDamageGap);
+			end
+		end
+
 	end
 end
 
 function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
-	--in Client_PresentMenuUI, we stuck the territory ID after BuyTank_.  Break it out and parse it to a number.
-
 	local targetTerritoryStanding = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
 
 	if (targetTerritoryStanding.OwnerPlayerID ~= order.PlayerID) then
@@ -42,7 +93,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	--builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels
 	builder.AttackPower = behemothPower * (1+behemothPowerFactor); --adds to attack power, never reduces
 	builder.DefensePower = behemothPower * behemothPowerFactor; --reduces defense power to the level of the behemothPowerFactor which ranges from 0 to 0.3; Behemoths are strong attackers, but weak defenders
-	builder.AttackPowerPercentage = 1+behemothPowerFactor;  --increase (never reduce) attack power of self + accompanying units by behemothPowerFactor; 0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
+	builder.AttackPowerPercentage = 0.9+behemothPowerFactor;  --increase (never reduce) attack power of self + accompanying units by behemothPowerFactor; 0.0 means -100% attack damage (the damage this unit does when attacking); 1.0=regular attack damage; >1.0 means bonus attack damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
 	builder.DefensePowerPercentage = 0.6+behemothPowerFactor; --weak attacker (starts @ 60% reduction of defense damage given) that scales to near normal (90%) as behemoth power increases --0.0 means -100% defense damage (the damage this unit does when attacking); 1.0=regular defense damage; >1.0 means bonus defense damage --> don't do this here, it is handled when processing the actual AttackTransfer orders in process_game_orders_AttackTransfers
 	builder.CombatOrder = -1; --fights before armies
 	--builder.CombatOrder = 50000; --fights after Commanders <--- for testing purposes only

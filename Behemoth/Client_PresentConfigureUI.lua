@@ -11,31 +11,38 @@ function Client_PresentConfigureUI(rootParent)
 	-- "If you wish Behemoths to be weak in the early game but strong in the late game, set a high G1 value to an amount that won't be achievable until mid game or late mid game, and set G2 and G3 to high values that players won't achieved until late in the game."..
 	"\n\nDefault values for Behemoths make them weak in the early game (of an average template), and strong in the late game, doing high damage, buffing attack rates and well suited to rip through blockaded territories");
 
+	--get values from Mod.Settings, if nil then assign default values
+	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
+	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
+	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
+	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
+	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
+
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
 	UI.CreateLabel (line).SetText ("Gold level 1 (G1)");
 	UI.CreateLabel (line).SetText ("_").SetColor ("#000000");
-	goldLevel1NIF = UI.CreateNumberInputField (line).SetValue (100);
+	goldLevel1NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel1);
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
 	UI.CreateLabel (line).SetText ("Gold level 2 (G2) ");
 	UI.CreateLabel (line).SetText ("_").SetColor ("#000000");
-	goldLevel2NIF = UI.CreateNumberInputField (line).SetValue (500);
+	goldLevel2NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel2);
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
 	UI.CreateLabel (line).SetText ("Gold level 3 (G3) ");
 	UI.CreateLabel (line).SetText ("_").SetColor ("#000000");
-	goldLevel3NIF = UI.CreateNumberInputField (line).SetValue (1000);
+	goldLevel3NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel3);
 
 	UI.CreateLabel (rootParent).SetText ("_").SetColor ("#000000");
-	invulnerableToNeutralsCBOX = UI.CreateCheckBox (rootParent).SetText ("Behemoths take no damage when attacking neutral territories").SetIsChecked (true);
+	invulnerableToNeutralsCBOX = UI.CreateCheckBox (rootParent).SetText ("Behemoths invulnerable vs neutrals: ").SetIsChecked (boolBehemothInvulnerableToNeutrals);
 	UI.CreateLabel (rootParent).SetText ("When checked, a Behemoth can attack neutral territories of any size without taking damage, cannot die during the attack");
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
 	UI.CreateLabel (line).SetText ("Strength against neutrals: ");
-	neutralStrengthNIF = UI.CreateNumberInputField (line).SetWholeNumbers(false).SetValue (5.0);
+	neutralStrengthNIF = UI.CreateNumberInputField (line).SetWholeNumbers(false).SetValue (intStrengthAgainstNeutrals);
 	UI.CreateLabel (rootParent).SetText ("• <1.0 - reduced damage vs neutrals");
 	UI.CreateLabel (rootParent).SetText ("• =1.0 - normal damage vs neutrals");
 	UI.CreateLabel (rootParent).SetText ("• >1.0 - increased damage vs neutrals");
-	UI.CreateLabel (rootParent).SetText ("•  5.0 - default value, 5x damage vs neutrals");
+	UI.CreateLabel (rootParent).SetText ("•  "..intStrengthAgainstNeutrals_default.." - default value, ".. intStrengthAgainstNeutrals_default.. "x damage vs neutrals");
 
 end
