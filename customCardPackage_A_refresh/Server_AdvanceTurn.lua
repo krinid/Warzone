@@ -60,6 +60,12 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
+
+	--testing only, DELME DELME
+	-- getTeamPlayers (game, 1058239);
+	-- killMeNow ();
+	--testing only, DELME DELME
+
 	strArrayModData = {};
 	Phantom_FogModsAddedThisTurn = {}; --GLOBAL array to track FogMods added this turn to remove FogMods if the player (or teammate) who owns the Phantom that caused a FogMod doesn't own the territory any longer (or never did, just attacked it and failed)
 
@@ -104,7 +110,6 @@ end
 function Phantom_processStartOfTurn (game, addNewOrder)
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom ~= true) then return; end --do nothing if Phantom module is not active in this mod
 	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
-UI.Alert (tostring (Mod.Settings.PhantomEnabled));
 	local privateGameData = Mod.PrivateGameData;
 
 	local FogModsToApply = {}; --table of all FogMods to add at start of turn; FogMods to be added for territories where Phantoms reside & all territories attacked from another territory where a Phantom resides, even if the Phantom isn't participating in the attack
@@ -130,8 +135,10 @@ UI.Alert (tostring (Mod.Settings.PhantomEnabled));
 					if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
 						-- local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
+						local arrPlayerIDsToMakeVisible = getTeamPlayers (game, specialUnit.OwnerID); --get all players on the same team as the Phantom owner
 						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
-						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {specialUnit.OwnerID});
+						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, arrPlayerIDsToMakeVisible);
+						-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {specialUnit.OwnerID});
 						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 						local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
@@ -1327,8 +1334,10 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
 	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
 	-- local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {targetTerritoryID}, nil);
+	local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner
 	local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {targetTerritoryID}, nil);
-	local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, {castingPlayerID});
+	local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, arrPlayerIDsToMakeVisible); --&&& Phantom teammates
+	-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, {castingPlayerID}); --&&& Phantom teammates
 	local fogModIDs = {};
 	local fogMods = {};
 	table.insert (fogModIDs, fogMod_TO_fogOthers.ID);
@@ -1346,8 +1355,10 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 			if (order.proxyType=='GameOrderAttackTransfer' and order.From == targetTerritoryID) then
 				print ("________[ORDER AttackTransfer on territory w/new Phantom] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));
 
+				local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner
 				local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
-				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {castingPlayerID});
+				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, arrPlayerIDsToMakeVisible);
+				-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {castingPlayerID});
 				-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
 				-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
 				-- local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
