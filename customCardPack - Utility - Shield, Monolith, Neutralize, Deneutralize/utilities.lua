@@ -788,3 +788,29 @@ function getModName (modID)
 	return modName;
 end
 --- END of krinid's functions
+
+--return an array of all playerIDs for the team that the parameter playerID belongs to, including playerID itself
+--if playerID is not on a team or teams aren't in use, return just the playerID itself (single element array)
+function getTeamPlayers (game, playerID)
+	local teamPlayerIDs = {};
+	--if playerID is nil, neutral or <1, return empty array and exit function; (technically Neutral is 0 so <1 so not requried, but include it here in case WL.PlayerID.Neutral changes someday)
+	if (playerID == nil or playerID == WL.PlayerID.Neutral or playerID <1) then return (teamPlayerIDs); end
+
+	print ("[GETTEAMPLAYERS] player " ..playerID.. "/" ..getPlayerName (game, playerID).. ", team " ..game.ServerGame.Game.Players[playerID].Team);
+
+	--playerID is not on a team, so return just playerID)
+	if (game.ServerGame.Game.Players[playerID].Team == -1) then
+		table.insert(teamPlayerIDs, playerID);
+		print ("[GETTEAMPLAYERS] no team - add single element only");
+	else
+		--playerID is on a team; looping through all players will inherently include playerID itself iff playerID is on a team (b/c -1==no team is specifically weeded out in the comparison in the loop), so no need to explicitly add playerID
+		for _,v in pairs (game.ServerGame.Game.Players) do
+			if (v.Team ~= -1 and v.Team == game.ServerGame.Game.Players[playerID].Team) then
+				table.insert(teamPlayerIDs, v.ID);
+			end
+		end
+	end
+	print ("\n\n\n\nTEAM player count ".. #teamPlayerIDs);
+	for k,v in pairs (teamPlayerIDs) do print ("team playerID #"..k..", "..v.."/"..getPlayerName (game, v)); end
+	return (teamPlayerIDs);
+end
