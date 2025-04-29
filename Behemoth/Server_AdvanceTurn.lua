@@ -31,7 +31,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		local strSUtype = "Behemoth";
 		for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
 			--if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
-			if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == strSUtype or (string.sub(specialUnit.Name, 1, string.len(strSUtype)) == strSUtype)) then
+			if (specialUnit.proxyType == 'CustomSpecialUnit' and (specialUnit.Name == strSUtype or string.sub(specialUnit.Name, 1, string.len(strSUtype)) == strSUtype)) then
 
 				--unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
 				if Mod.Settings.BehemothInvulnerableToNeutrals == true then
