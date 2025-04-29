@@ -138,10 +138,10 @@ function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, clo
 
 	--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
 
-	local behemothPower = 100;--getBehemothPower(BehemothGoldSpent);
+	local behemothPower = getBehemothPower(BehemothGoldSpent);
 	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 	UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
-		"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
+		"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 0.9+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 		"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
 	print ("name==Behemoth (power ".. tostring (math.floor (behemothPower*10)/10) ..')');
@@ -151,8 +151,8 @@ end
 
 function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	local behemothPower = getBehemothPower(BehemothGoldSpent);
-	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	-- local behemothPower = getBehemothPower(BehemothGoldSpent);
+	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to"); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
 	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
