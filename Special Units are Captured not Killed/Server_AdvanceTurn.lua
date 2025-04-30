@@ -1,3 +1,9 @@
+--TODOs:
+--create list of SUs to exclude -- all the Immovables, Phantoms, anything else?
+--don't clone any unit that relies on the ID being the same to expire
+--also add Phantom support to dynamically add expiry to all FogMods that have no FogMod records -- just make them expire in either 1 or X turns (X=Phantom duration)
+--but first ensure fix "local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;" b/c cloned Phantoms have new IDs which won't be in the table and throws an error
+
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
