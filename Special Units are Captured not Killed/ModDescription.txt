@@ -1,0 +1,15 @@
+When a Custom Special Unit** is killed in an attack, it is captured by the party that killed it and becomes their Special Unit.
+
+**Custom Special Units are created by mods. Examples: tanks, dragons, army recruiters, construction workers, I.S. units, medics, behemoths, phantoms, priests, diplomats, capitalists, etc.
+
+Note that some Special Units can't be killed (eg: Monolith, Shield) so they can never be captured.
+
+NOTE: Commanders die normally, no captures/ownership changes occur.
+
+DURING AN UNSUCCESSFUL ATTACK: (defender keeps their territory)
+- When an attacker's Special Unit dies, it is reassigned to the defender and placed on the defender's territory.
+- When an defender's Special Unit dies, it is reassigned to the attacker and placed on the attacker's territory.
+- It is possible for Special Units belonging to both attacker and defender to die during the attack, and each dead unit will be captured and reassigned to the other player appropriately.
+
+DURING A SUCCESSFUL ATTACK: (attacker captures defender's territory)
+- All Special Units killed during the attack become owned by the attacker and are placed on the newly captured territory.

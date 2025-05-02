@@ -168,6 +168,11 @@ function Client_PresentSettingsUI(rootParent)
 		CreateLabel(UImain).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
 		CreateLabel(UImain).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
 
+		UI.CreateLabel (UImain).SetText("\nMove units with airlift cards: " ..tostring (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard));
+        if (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard == true) then UI.CreateLabel (UImain).SetText("• uses airlift cards to move units, creates the standard airlift travel arrow (DOES NOT WORK with mods Late Airlifts or Tranport Only Airlifts)");
+        else UI.CreateLabel (UImain).SetText("• moves units using mod code; does not create airlift travel arrows -- works with mods Late Airlifts or Transport Only Airlifts");
+        end
+
         CreateLabel (UImain).SetText ("\nCan send regular armies: ".. tostring (Mod.Settings.AirstrikeCanSendRegularArmies));
         CreateLabel (UImain).SetText ("Can send Special Units: ".. tostring (Mod.Settings.AirstrikeCanSendSpecialUnits));
         CreateLabel (UImain).SetText ("Can target neutrals: " .. tostring(Mod.Settings.AirstrikeCanTargetNeutrals));
@@ -180,7 +185,6 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel (UImain).SetText ("Pieces given to each player at the start: " .. Mod.Settings.AirstrikeStartPieces);
         CreateLabel (UImain).SetText ("Minimum pieces awarded per turn: 1"); -- .. Mod.Settings.AirstrikePiecesPerTurn); <-- this property doesn't exist yet, forgot to implement it
         CreateLabel (UImain).SetText ("Card weight (how common the card is): " .. Mod.Settings.AirstrikeCardWeight);
-    
     end
 
     if (Mod.Settings.ForestFireEnabled == true) then

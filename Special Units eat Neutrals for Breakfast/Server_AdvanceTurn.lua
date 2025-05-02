@@ -28,12 +28,10 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage
 			--(B) ensure damage against the neutral is calculated correctly as per Mod.Settings.BehemothStrengthAgainstNeutrals
 
-
 		local strSUtype = "Behemoth";
 		for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
 			--if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
 			if (specialUnit.proxyType == 'CustomSpecialUnit' and (specialUnit.Name == strSUtype or string.sub(specialUnit.Name, 1, string.len(strSUtype)) == strSUtype)) then
-				print ("\n\n\n result.DefendingArmiesKilled.NumArmies == ".. tostring (result.DefendingArmiesKilled.NumArmies));
 
 				--unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
 				if Mod.Settings.BehemothInvulnerableToNeutrals == true then
@@ -62,56 +60,11 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 
 				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor Mod.Settings.BehemothStrengthAgainstNeutrals
 
-				-- print ("\n\n\n result.DefendingArmiesKilled.NumArmies == ".. tostring (result.DefendingArmiesKilled.NumArmies));
 				--calc gap between damage inclusive of Mod.Settings.BehemothStrengthAgainstNeutrals and the damage already included in the result w/o respect to Mod.Settings.BehemothStrengthAgainstNeutrals, then add it to result.DefendingArmiesKilled
 				--if ==1.0 -> no change in damage done to the neutrals; >1.0 -> increases damage done; <1.0 -> decreases damage done
-				-- local intFullAttackPower = result.ActualArmies.AttackPower;
-				local intFullSUdamage = math.floor (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate + 0.5); --full SU damage pre-modifier (which can increase or decrease the damage done to neutrals)
-				local intNewSUdamage = math.floor (intFullSUdamage * Mod.Settings.BehemothStrengthAgainstNeutrals + 0.5); --new damage done inclusive of the modifier
-				local intOldTotalDamage = result.DefendingArmiesKilled.NumArmies; --the original damage done, which can be < damage done by SU if #defending armies < damage done by SU
-				local intDamageGap = intNewSUdamage - intFullSUdamage; --the gap between current result.DefendingArmiesKilled.NumArmies and the new damage done by the SU with the modifier applied
-				local intFullAttackDamage = math.floor (order.NumArmies.AttackPower * game.Settings.OffenseKillRate + 0.5); --this is the total damage done by all attacking armies, including the SU; this is used to identify if the SU is the only attacker or if there are other SUs/armies involved (calc 2 below requires this knowledge)
-
-				-- assign new damage; if Mod.Settings.BehemothStrengthAgainstNeutrals == 1.0, the value stays the same (no change); if >1.0, it increases (this is easy)
-				-- but if <1.0 then it's tricky b/c result.DefendingArmiesKilled.NumArmies is received as min (damage done, actual # of defending armies) so can't just subtract full total damge of the SU and add the new damage, b/c it's possible for (full total damage) > (# defending armies) which makes subtracting full damage negative
-				-- so in this case, if #defending amies < new SU damage (post modifier), then new result damage = # armies; if #defending armies >= new SU damage (post modifier) then new result damage = new SU damage (post modifier)
-				local intNewTotalDamage = intOldTotalDamage; -- this covers case when Mod.Settings.BehemothStrengthAgainstNeutrals == 1.0
-				if (Mod.Settings.BehemothStrengthAgainstNeutrals > 1.0) then
-					--when >1.0, just add the additional damage to the total damage done -- no problems here, nothing to worry about
-					intNewTotalDamage = intOldTotalDamage + intDamageGap;
-				elseif (Mod.Settings.BehemothStrengthAgainstNeutrals < 1.0) then
-					--when <1.0, need to ensure we don't reduce the damage being done beyond what is the scope of the damage done by this particular SU
-					--this depends on whether the damage done is more or less than each of the SU damage post modifier & SU damage pre-modifier
-					if (intOldTotalDamage <= intNewSUdamage) then
-						--the current damage done is < the damage done by the SU post modifier (reduced), so just leave the damage as its current value (don't decrease it b/c it may go below 0)
-						--assumption is that the full pre-modifier (reduced) damage done contributed by this SU was sufficient to wipe all defending armies, and so is the post modifier (reduced) damage value
-						intNewTotalDamage = intOldTotalDamage;
-						-- print ("calc 1; DAM oldTot "..intOldTotalDamage.. ", newTot ".. intNewTotalDamage..", fullSU ".. intFullSUdamage.. ", newSU ".. intNewSUdamage);
-					elseif (intOldTotalDamage > intNewSUdamage and intOldTotalDamage < intFullSUdamage) then
-						--if SU is the only attacker (no other SUs, no armies) then reduce damage accordingly; but if ther are other SUs or armies, leave damage done at minimum of intOldTotalDamage in order to not risk reducing the damage done even though the other units are sufficient to do that damage even with the contribution from this SU
-						if (intFullAttackDamage == intFullSUdamage) then --SU is the only attacker (or at least the only attacker contributing to damage), so reduce damage accordingly based solely on SU damage
-							--damage done is > new SU damage post modifier (reduced) but < full SU damage pre-modifier, so just set it to intNewSUdamage
-							intNewTotalDamage = intNewSUdamage;
-							-- print ("calc 2A; DAM oldTot "..intOldTotalDamage.. ", newTot ".. intNewTotalDamage..", fullSU ".. intFullSUdamage.. ", newSU ".. intNewSUdamage);
-						else --SU is not the only attacker, so just set it to intOldTotalDamage to avoid reducing it below the amount of damage done by the other SUs/armies
-							--just keep the old damage to avoid reducing it below the amount of damage done by the other SUs/armies; b/c the intOldTotalDamage maxes out @ quantity of armies on target territory, in order to calculate this properly, would have to go through a full manual attack processing to see if the damage contributed from this SU is included in intOldTotalDamage
-							--so just use intOldTotalDamage as a reasonable estimate of reducing the impact of the SU damage on the neutrals; it'll be slightly inaccurate in just this 2B case
-							intNewTotalDamage = intOldTotalDamage;
-							-- print ("calc 2B; DAM oldTot "..intOldTotalDamage.. ", newTot ".. intNewTotalDamage..", fullSU ".. intFullSUdamage.. ", newSU ".. intNewSUdamage);
-						end
-						-- print ("calc 2; DAM oldTot "..intOldTotalDamage.. ", newTot ".. intNewTotalDamage..", fullSU ".. intFullSUdamage.. ", newSU ".. intNewSUdamage);
-					else
-						--damage done is > new SU damage post modifier (reduced) and > full SU damage pre-modifier, so now subtract intFullSUdamage, add intNewSUdamage
-						intNewTotalDamage = intOldTotalDamage + intDamageGap;
-						-- print ("calc 3; DAM oldTot "..intOldTotalDamage.. ", newTot ".. intNewTotalDamage..", fullSU ".. intFullSUdamage.. ", newSU ".. intNewSUdamage);
-					end
-				end
-
-				--this works for Mod.Settings.BehemothStrengthAgainstNeutrals >=1.0 but not Mod.Settings.BehemothStrengthAgainstNeutrals <1.0 b/c can't figure out how much of the damage done by the Behemoth is already included in intOldTotalDamage
-				--sometimes #territories is < total damage capable to do, thus intOldTotalDamage < total damage capable to do, thus can't just subtract total capable to do and add the gap between that and the real amount -- this may make damage go negative
-
-				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (intNewTotalDamage + 0.5), result.DefendingArmiesKilled.SpecialUnits);
-				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. Mod.Settings.BehemothStrengthAgainstNeutrals .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) ..", apply gap " .. intDamageGap.. ", old total damage "..intOldTotalDamage.. ", new total damage ".. intNewTotalDamage);
+				local intDamageGap = (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) - (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate);
+				result.DefendingArmiesKilled = WL.Armies.Create (result.DefendingArmiesKilled.NumArmies + intDamageGap, result.DefendingArmiesKilled.SpecialUnits);
+				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. Mod.Settings.BehemothStrengthAgainstNeutrals .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) ..", apply gap " .. intDamageGap);
 			end
 		end
 

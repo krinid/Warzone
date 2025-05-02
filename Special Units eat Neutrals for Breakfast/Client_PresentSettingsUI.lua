@@ -15,9 +15,9 @@ function Client_PresentSettingsUI(rootParent)
 
     UI.CreateLabel (rootParent).SetText ("Behemost cost is not fixed; strength increases with gold spent. "..
 	"\n\n• gold spent <" ..tostring (intGoldLevel1).. " --> inefficient [better to buy armies]"..
-	"\n• gold spent ≥" ..tostring (intGoldLevel1).. ", <" ..tostring (intGoldLevel2).. " --> efficient [may make sense to buy a Behemoth]"..
-	"\n• gold spent ≥" ..tostring (intGoldLevel2).. ", <" ..tostring (intGoldLevel3).. " --> highly efficient [valuable to buy a Behemoth]"..
-	"\n• gold spent ≥" ..tostring (intGoldLevel3).. " --> immensely efficient [incredibly beneficial to buy a Behemoth]").SetFlexibleWidth(1);
+	"\n• gold spent >=" ..tostring (intGoldLevel1).. ", <" ..tostring (intGoldLevel2).. " --> efficient [may make sense to buy a Behemoth]"..
+	"\n• gold spent >=" ..tostring (intGoldLevel2).. ", <" ..tostring (intGoldLevel3).. " --> highly efficient [valuable to buy a Behemoth]"..
+	"\n• gold spent >=" ..tostring (intGoldLevel3).. " --> immensely efficient [incredibly beneficial to buy a Behemoth]").SetFlexibleWidth(1);
 
 	-- UI.CreateLabel (rootParent).SetText ("Behemost cost is not fixed; strength increases with gold spent. "..
 	-- "\n\n• gold spent < G1 - inefficient [better to buy armies]"..
@@ -28,9 +28,9 @@ function Client_PresentSettingsUI(rootParent)
 	-- "If you wish Behemoths to be weak in the early game but strong in the late game, set a high G1 value to an amount that won't be achievable until mid game or late mid game, and set G2 and G3 to high values that players won't achieved until late in the game."..
 	-- "\n\nDefault values for Behemoths make them weak in the early game (of an average template), and strong in the late game, doing high damage, buffing attack rates and well suited to rip through blockaded territories");
 
-    -- UI.CreateLabel (rootParent).SetText ("\nGold level 1 (G1): "..tostring (intGoldLevel1)).SetFlexibleWidth(1);
-	-- UI.CreateLabel (rootParent).SetText ("Gold level 2 (G2): "..tostring (intGoldLevel2)).SetFlexibleWidth(1);
-	-- UI.CreateLabel (rootParent).SetText ("Gold level 3 (G3): "..tostring (intGoldLevel3)).SetFlexibleWidth(1);
+    UI.CreateLabel (rootParent).SetText ("\nGold level 1 (G1): "..tostring (intGoldLevel1)).SetFlexibleWidth(1);
+	UI.CreateLabel (rootParent).SetText ("Gold level 2 (G2): "..tostring (intGoldLevel2)).SetFlexibleWidth(1);
+	UI.CreateLabel (rootParent).SetText ("Gold level 3 (G3): "..tostring (intGoldLevel3)).SetFlexibleWidth(1);
 	UI.CreateLabel (rootParent).SetText (rootParent).SetText ("\nBehemoths invulnerable vs neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals)).SetFlexibleWidth(1);
 
     local strStrengthAgainstNeutrals;
