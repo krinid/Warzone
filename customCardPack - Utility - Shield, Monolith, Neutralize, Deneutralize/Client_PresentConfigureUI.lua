@@ -532,7 +532,7 @@ function phantomCheckboxClicked()
     else
         vertPhantomSettingsDetails = CreateVert(vertPhantomSettingsHeading);
         local UIcontainer = vertPhantomSettingsDetails;
-        CreateLabel(UIcontainer).SetText("Deploy a unit that absorbs light to obscure enemy visibility wherever it goes. Units attacking from the presence of a phantom carry the darkness with them.");
+        CreateLabel(UIcontainer).SetText("A unit that absorbs light to obscure enemy visibility. Enemies see fog on any territories where a Phantom is present, and also on territories targeted by an attack or transfer that originates from a territory where a Phantom is present.");
 
 		horzPhantomDuration = CreateHorz(UIcontainer);
         CreateLabel(horzPhantomDuration).SetText("Duration: ");
@@ -542,10 +542,9 @@ function phantomCheckboxClicked()
 		horzPhantomFogLevel = CreateHorz(UIcontainer);
 		groupPhantomFogLevel = UI.CreateRadioButtonGroup(horzPhantomFogLevel);
         CreateLabel(horzPhantomFogLevel).SetText("Fog level: ");
-		PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
-		PhantomFog_Light = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly);
-        CreateLabel(UIcontainer).SetText("• Normal fog - can't see units or owner of Phantom fogged territories\n• Light fog - can see owner but not units");
-        --CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent some games from ending)");
+		PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
+		PhantomFog_Light = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly);
+        CreateLabel(UIcontainer).SetText("• Normal Fog - can't see units or owner of Phantom fogged territories\n• Light Fog - can see owner but not units");
 
 		horzPhantomPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");

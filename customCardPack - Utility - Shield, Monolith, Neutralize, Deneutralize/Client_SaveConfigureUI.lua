@@ -93,11 +93,11 @@ function createCards_newCards(alert, addCard);
 		print("PhantomCardWeight="..tostring(Mod.Settings.PhantomCardWeight))
 
 		--FogMod level options: WL.StandingFogLevel.Visible, WL.StandingFogLevel.OwnerOnly, or WL.StandingFogLevel.Fogged
-		local strPhantomDesc = "A special unit that directionally absorbs light to obscure enemy visibility wherever it travels. Units attacking from the presence of a phantom carry the darkness with them. Enemies see impacted territories as ";
-		if (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.OwnerOnly) then strPhantomDesc = strPhantomDesc .. " lightly fogged (can only see the owner). ";
-		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Fogged) then strPhantomDesc = strPhantomDesc .. " fully fogged (cannot see owner or any units on the territory). ";
-		elseif (Mod.Settings.PhantonFogLevel == WL.StandingFogLevel.Visible) then strPhantomDesc = strPhantomDesc .. " fully visible (can see owner and any units on the territory). ";
-		else strPhantomDesc = strPhantomDesc .. " [invalid Phanton Fog Level settings]. ";
+		local strPhantomDesc = "A unit that absorbs light to obscure enemy visibility. Enemies see fog on any territories where a Phantom is present, and also on territories targeted by an attack or transfer that originates from a territory where a Phantom is present. Enemies see impacted territories as ";
+		if (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly) then strPhantomDesc = strPhantomDesc .. "Light Fog (can only see the owner). ";
+		elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged) then strPhantomDesc = strPhantomDesc .. "Normal Fog (cannot see owner or any units on the territory). ";
+		elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Visible) then strPhantomDesc = strPhantomDesc .. "Fully Visible (can see owner and any units on the territory). "; --this should never happen; only options on the configure page are Light & Normal Fog
+		else strPhantomDesc = strPhantomDesc .. " [invalid Phantom Fog Level settings]. ";
 		end
 
 		if (Mod.Settings.PhantomDuration == -1) then
