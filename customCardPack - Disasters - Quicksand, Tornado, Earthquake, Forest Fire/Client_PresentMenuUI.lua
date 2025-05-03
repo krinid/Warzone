@@ -17,7 +17,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if (Mod.PublicGameData.Debug == nil) then 	game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function	
 
-	displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
+	--displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
 
 	MenuWindow = rootParent;
 	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
@@ -65,6 +65,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
 		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
+		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
+		debugButtonTrimContent = UI.CreateButton (debugPanel).SetText ("Trim debug content [last trim @ " ..tostring(Mod.PublicGameData.Debug.OutputDataLastRead).. "]").SetOnClick (function () game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=Mod.PublicGameData.Debug.OutputDataCounter}, function () end); end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	end
 
 	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
@@ -141,13 +143,19 @@ end
 
 --send message to Server hook to toggle debug mode and save result in Mod.PublicGameData
 function debugModeButtonClick ()
+	--if debug mode is enabled, output the message about disabling it before disabling it (else it won't output)
+	if (Mod.PublicGameData.Debug.DebugMode == true) then Game.SendGameCustomMessage ("[send debug message]", {action="clientmessage", message="Debug mode changed to " ..tostring (not Mod.PublicGameData.Debug.DebugMode).. " on T".. tostring (Game.Game.TurnNumber).. " @ " ..tostring (Game.Game.ServerTime)}, function () end); end
+
 	Game.SendGameCustomMessage ("[toggling debug mode]", {action="debugmodetoggle"}, debugModeButtonClick_callback); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data
 end
 
 --return value is a 1 element table of value true/false indicating whether debugMode is active
 function debugModeButtonClick_callback (tableData)
 	debugButton.SetText ("Debug mode active: "..tostring (tableData[1]));
-	-- debugButton.SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode));
+
+	--only output if debug mode was just enabled; if it was just disabled, doing this won't output anyhow -- and this case is handled in debugModeButtonClick before disabling debug mode
+	if (Mod.PublicGameData.Debug.DebugMode == true) then Game.SendGameCustomMessage ("[send debug message]", {action="clientmessage", message="Debug mode changed to " ..tostring (tableData[1]).. " on T".. tostring (Game.Game.TurnNumber).. " @ " ..tostring (Game.Game.ServerTime)}, function () end); end
+	Game.SendGameCustomMessage ("[send debug message]", {action="clientmessage", message="Debug mode changed to " ..tostring (tableData[1]).. " on T".. tostring (Game.Game.TurnNumber).. " @ " ..tostring (Game.Game.ServerTime)}, function () end);
 end
 
 --not actually used; but keep it around as an example of how to use/return data using clientGame.SendGameCustomMessage

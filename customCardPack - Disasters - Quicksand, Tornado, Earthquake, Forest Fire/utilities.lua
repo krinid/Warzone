@@ -676,8 +676,11 @@ function initialize_debug_data ()
 end
 
 --call from server hooks to write data to be retrieved by client hooks later
-function printDebug (strOutputText)
+--if optional parameter boolClientMessage==true then prefix [C] to indicate the message was appended by a client hook; otherwise prefix [S] to indicate message was from a server hook
+function printDebug (strOutputText, boolClientMessage)
 	print (strOutputText); --in addition to storing for retrieval from client hook (see below), also output to Mod Log window (this will display normally when playing SP on standalone client)
+	local strPrefix = "[S]";
+	if (boolClientMessage == true) then strPrefix = "[C]"; end
 
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.Debug == nil) then publicGameData.Debug = {}; end
@@ -690,7 +693,7 @@ function printDebug (strOutputText)
 		if (publicGameData.Debug.OutputDataCounter == nil) then publicGameData.Debug.OutputDataCounter = 0; end
 		if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
 		publicGameData.Debug.OutputDataCounter = publicGameData.Debug.OutputDataCounter + 1;
-		publicGameData.Debug.OutputData [publicGameData.Debug.OutputDataCounter] = "[S]"..strOutputText;
+		publicGameData.Debug.OutputData [publicGameData.Debug.OutputDataCounter] = strPrefix.. strOutputText;
 		Mod.PublicGameData = publicGameData;
 	end
 end
@@ -768,7 +771,7 @@ function displayDebugInfoFromServer (game)
 		print (publicGameData.Debug.OutputData [k]); --output stored debug statement to local client Mod Log console
 	end
 	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
-	game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
+	-- game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
 end
 

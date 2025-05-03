@@ -20,6 +20,8 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 				strShieldData = strShieldData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
 			end
 			setReturn ({strShieldData});
+		elseif (payload.action == "clientmessage") then
+			printDebug (payload.message, true);
 		end
 	end
 	--initialize_debug_data ();

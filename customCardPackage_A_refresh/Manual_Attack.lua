@@ -108,12 +108,15 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--if it is not an actual WZ attack/transfer order, then just pass the results back and let the calling function handle the details in a manner appropriately for whatever the use case is
 	--result.IsSuccessful cannot be directly updated, but by updating the actual.AttackingArmies, actual.DefendingArmies, result.AttackingArmiesKilled & result.DefendingArmiesKilled, the result will be processed correctly by the WZ engine
 	if (boolWZattackTransferOrder == true) then
-		result.AttackingArmiesKilled = WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects);
-		result.DefendingArmiesKilled = WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects);
-		result.DamageToSpecialUnits = damageToAllSpecialUnits; --assign damage done to SUs for both attacker & defender
+		local newResult = result;
+		newResult.AttackingArmiesKilled = WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects);
+		newResult.DefendingArmiesKilled = WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects);
+		newResult.DamageToSpecialUnits = damageToAllSpecialUnits; --assign damage done to SUs for both attacker & defender
+		result = newResult;
 	end
 	-- ^^ this doesn't work; the 'result' object isn't updating properly, so must leave it to the calling function to update itself
 	-- the 'result' object received here is likely a Lua copy of the original object, so changes don't propagate back to the original object when _Order function ends
+	-- ^^^ but it should work now b/c instead of modifying result.X properties directly, it copies it to newResult, modifies those properties and saves it back to result=newResult -- this should work now
 
 	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful, DamageToSpecialUnits=damageToAllSpecialUnits, Result=result, AttackingArmiesKilled=WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects), DefendingArmiesKilled=WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects)});
 end
@@ -149,7 +152,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType=strDummyPlaceHolder}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
-	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
+	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits.. ", attackTransferOrder " ..tostring (boolWZattackTransferOrder));
 	for k,v in ipairs (sortedSpecialUnits) do
 		local newSpecialUnit_clone = nil;
         local boolCurrentSUdamaged = false;
@@ -263,6 +266,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 
 							--(applies to both case 1 & case 2)
 							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
+							boolCurrentSUdamaged = true; --indicates that this SU has been damaged, so it needs to be cloned and added to the survivingSpecials table
 							--(case 1) track damage done to SU
                             local intNewSUhealthAfterDamage = v.Health-remainingDamage;
                             damageToSpecialUnits [v.ID] = remainingDamage; --assign damage done to damageToSpecialUnits table so it can be applied to the SU via the WZ engine as part of the attackTransfer order
@@ -273,7 +277,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							if (boolWZattackTransferOrder == false) then
 								local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
 								newSpecialUnitBuilder.Health = intNewSUhealthAfterDamage;
-								newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name; -- .."(C)";
+								newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name.."(C)";
 								newSpecialUnit_clone = newSpecialUnitBuilder.Build();
 							end
 						end
@@ -327,9 +331,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						-- CASE: non-attackorder + survive + damage = add clone to clonedSpecials + survivingSpecials + damageToSpecialUnits + add orig to killedSpecialsGUIDs & killedSpecialsObjects
 						table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
 						table.insert (killedSpecialsGUIDs, v.ID); --add the GUID of the original Special to the killedSpecialsGUIDs table
-print ("KSO+1 "..#killedSpecialsObjects);
 						table.insert (killedSpecialsObjects, v);  --add the original Special object to the killedSpecialsGUIDs table
-print ("KSO+1 "..#killedSpecialsObjects);
 						table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; if attack is unsuccessful, attacking SUs in this table need to be added to the source territory & defending SUs in this table need to be added to the target territory
 						--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
 				end

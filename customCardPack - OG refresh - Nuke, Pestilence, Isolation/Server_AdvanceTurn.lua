@@ -671,8 +671,8 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 --DELME DELME DELME DELME DELME DELME DELME 
 
 	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
-	print ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID~=nil "..tostring (airliftCardID~=nil).."::airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil));
-	print ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
+	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID~=nil "..tostring (airliftCardID~=nil).."::airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil));
+	printDebug ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
 	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
 	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false) then
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
@@ -695,8 +695,8 @@ function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)
 	for k,SP in pairs (attackingArmies.SpecialUnits) do
 		local SPowner = SP.OwnerID;
 		local modID = nil; --initialize to nil and let this represent non-Custom SUs, ie: Commander, Boss, etc; for Custom SUs, set to the mod# the SU was created by
-		if (SP.proxyType == "") then modID = SP.ModID; end
-		print ("[AIRSTRIKE - DRAGON BREATH CHECK] ModID "..tostring (modID));
+		if (SP.proxyType == "CustomSpecialUnit") then modID = SP.ModID; end
+		printDebug ("[AIRSTRIKE - DRAGON BREATH CHECK] ModID "..tostring (modID));
 		if (modID ~= nil and modID == 594) then --unit is a Dragon; analyze the ModData to see if it has a 'Dragon Attack' comment
 			local intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Attack' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories"));
 			if (intDragonBreathDamage == nil) then intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Breath' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories")); end --same thing but check against "Dragon Breath" in case the text changes
@@ -705,7 +705,7 @@ function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)
 				dragonData.IsDragonBreathAttack = true;
 				dragonData.DragonBreathDamage = tonumber(intDragonBreathDamage);
 				local SUname = SP.Name and ("'" .. SP.Name .. "' ") or ""; --assign "" is Name is nil, else assign the name with quotes & space afterward so can be used in the line below by appending it regardless of whether it's nil or contains a Dragon's name
-				print ("[AIRSTRIKE - DRAGON BREATH] Found Dragon ".. tostring (SUname) .."w/Dragon Breath attack with damage " .. tostring (dragonData.DragonBreathDamage)..", apply to territories connected to ".. tostring (terrID).."/".. getTerritoryName (terrID, game));
+				printDebug ("[AIRSTRIKE - DRAGON BREATH] Found Dragon ".. tostring (SUname) .."w/Dragon Breath attack with damage " .. tostring (dragonData.DragonBreathDamage)..", apply to territories connected to ".. tostring (terrID).."/".. getTerritoryName (terrID, game));
 				local annotations = {}; --initialize annotations array, used to display "Dragon Breath" on attacked territory and "." on the connected territories that actually take damage
 				annotations [terrID] = WL.TerritoryAnnotation.Create ("Dragon Breath", 3, getColourInteger (175, 0, 0)); --Annotation in medium Red for Dragon Breath territory being attacked
 
@@ -734,7 +734,7 @@ function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)
 				end
 
 			else
-				print ("[AIRSTRIKE - DRAGON BREATH] Found Dragon with 0 or nil Dragon Breath damage");
+				printDebug ("[AIRSTRIKE - DRAGON BREATH] Found Dragon with 0 or nil Dragon Breath damage");
 				dragonData.IsDragonBreathAttack = false;
 				dragonData.DragonBreathDamage = 0;
 			end
