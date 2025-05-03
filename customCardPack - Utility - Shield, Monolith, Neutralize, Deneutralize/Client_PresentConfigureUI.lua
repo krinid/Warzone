@@ -9,6 +9,8 @@ Client_GameRefresh (Client_GameRefresh.lua) - whenever the client gets data abou
 Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player clicks the "Build" button (Commerce game)
 
 TODOs:
+- Airstrike - add support for SUs eat Neutrals / Behemoths for the invulnerable to neutrals & increased damage to neutrals; need to embed this in ModData somehow to convey the traits -- which is fine for Behemoth but not for SUs eat Neutrals b/c this must work for all SUs w/o
+-             being able to specify their ModData contents; T1 custom game order message conveyance?
 - TEST GAME: https://www.warzone.com/MultiPlayer?GameID=40398835
 	- Tested and working:
 		- Nuke - working fine, including showing that Nuke doesn't affect Specials
@@ -323,20 +325,20 @@ function cardHoldCheckboxClicked()
 		local horzCardHoldDuration = CreateHorz(UIcontainer);
 		CreateLabel(horzCardHoldDuration).SetText("Duration: ");
 		CardHoldDuration = CreateNumberInputField(horzCardHoldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardHoldDuration).SetWholeNumbers(true).SetInteractable(true);
-	   
+
 		local horzCardHoldNewCardHoldLimit = CreateHorz(UIcontainer);
 		CreateLabel(horzCardHoldNewCardHoldLimit).SetText("New card hold limit: ");
 		CardHoldNewCardHoldLimit = CreateNumberInputField(horzCardHoldNewCardHoldLimit).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldNewCardHoldLimit).SetWholeNumbers(true).SetInteractable(true);
 		CreateLabel(UIcontainer).SetText("(temporary new limit for # of cards that can be held before a player is forced to play or discard)");
-		
+
 		local horzCardHoldPiecesNeeded = CreateHorz(UIcontainer);
 		CreateLabel(horzCardHoldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
 		CardHoldPiecesNeeded = CreateNumberInputField(horzCardHoldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
-		
+
 		local horzCardHoldStartPieces = CreateHorz(UIcontainer);
 		CreateLabel(horzCardHoldStartPieces).SetText("Pieces given to each player at the start: ");
 		CardHoldStartPieces = CreateNumberInputField(horzCardHoldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldStartPieces).SetWholeNumbers(true).SetInteractable(true);
-		
+
 		local horzCardHoldPiecesPerTurn = CreateHorz(UIcontainer);
 		CreateLabel(horzCardHoldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
 		CardHoldPiecesPerTurn = CreateNumberInputField(horzCardHoldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
@@ -362,15 +364,15 @@ function cardBlockCheckboxClicked()
         local horzCardBlockDuration = CreateHorz(UIcontainer);
         CreateLabel(horzCardBlockDuration).SetText("Duration: ");
         CardBlockDuration = CreateNumberInputField(horzCardBlockDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardBlockDuration).SetWholeNumbers(true).SetInteractable(true);
-       
+
 		local horzCardBlockPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzCardBlockPiecesNeeded).SetText("Number of pieces to divide the card into: ");
         CardBlockPiecesNeeded = CreateNumberInputField(horzCardBlockPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
-        
+
 		local horzCardBlockStartPieces = CreateHorz(UIcontainer);
         CreateLabel(horzCardBlockStartPieces).SetText("Pieces given to each player at the start: ");
         CardBlockStartPieces = CreateNumberInputField(horzCardBlockStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockStartPieces).SetWholeNumbers(true).SetInteractable(true);
-        
+
 		local horzCardBlockPiecesPerTurn = CreateHorz(UIcontainer);
         CreateLabel(horzCardBlockPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
         CardBlockPiecesPerTurn = CreateNumberInputField(horzCardBlockPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
@@ -681,6 +683,10 @@ function neutralizeCheckboxClicked()
 		CreateLabel(horzNeutralizeStartPieces).SetText("Pieces given to each player at the start: ");
 		NeutralizeStartPieces = CreateNumberInputField(horzNeutralizeStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
+		local horzNeutralizePiecesPerTurn = CreateHorz(UIcontainer);
+		CreateLabel(horzNeutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		NeutralizePiecesPerTurn = CreateNumberInputField(horzNeutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+
 		local horzNeutralizeCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzNeutralizeCardWeight).SetText("Card weight: ");
 		NeutralizeCardWeight = CreateNumberInputField(horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
@@ -729,6 +735,10 @@ function deneutralizeCheckboxClicked()
 		CreateLabel (horzDeneutralizeCardStartPieces).SetText("Pieces given to each player at the start: ")
 		DeneutralizeCardStartPieces = CreateNumberInputField(horzDeneutralizeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
+		local horzDeneutralizePiecesPerTurn = CreateHorz(UIcontainer);
+		CreateLabel(horzDeneutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		DeneutralizePiecesPerTurn = CreateNumberInputField(horzDeneutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+
 		local horzDeneutralizeCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzDeneutralizeCardWeight).SetText("Card weight: ");
 		DeneutralizeCardWeight = CreateNumberInputField(horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
@@ -774,8 +784,12 @@ function cardPiecesCheckboxClicked()
 		CreateLabel(CardPiecesDetailsline6).SetText("   Pieces given to each player at the start: ");
 		CardPiecesStartPieces = CreateNumberInputField(CardPiecesDetailsline6).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
+		local horzCardPiecesPiecesPerTurn = CreateHorz(UIcontainer);
+		CreateLabel(horzCardPiecesPiecesPerTurn).SetText("  Minimum pieces awarded per turn: ");
+		CardPiecesPiecesPerTurn = CreateNumberInputField(horzCardPiecesPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+
 		local horzCardPiecesCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzCardPiecesCardWeight).SetText("Card weight: ");
+		CreateLabel(horzCardPiecesCardWeight).SetText("  Card weight: ");
 		CardPiecesCardWeight = CreateNumberInputField(horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
@@ -805,6 +819,11 @@ function airstrikeCheckboxClicked()
 		if (Mod.Settings.AirstrikeCanTargetStructures == nil) then Mod.Settings.AirstrikeCanTargetStructures = true; end
 		if (Mod.Settings.AirstrikeCanSendRegularArmies == nil) then Mod.Settings.AirstrikeCanSendRegularArmies = true; end
 		if (Mod.Settings.AirstrikeCanSendSpecialUnits == nil) then Mod.Settings.AirstrikeCanSendSpecialUnits = true; end
+		if (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard == nil) then Mod.Settings.AirstrikeMoveUnitsWithAirliftCard = true; end
+		if (Mod.Settings.AirstrikeCardPiecesNeeded == nil) then Mod.Settings.AirstrikeCardPiecesNeeded = 10; end
+		if (Mod.Settings.AirstrikeCardStartPieces == nil) then Mod.Settings.AirstrikeCardStartPieces = 1; end
+		if (Mod.Settings.AirstrikeCardWeight == nil) then Mod.Settings.AirstrikeCardWeight = 1; end
+
 
 		horz = CreateHorz(UIcontainer);
 		CreateLabel(horz).SetText("Deployment yield (%): ").SetColor (getColourCode ("subheading"));
@@ -842,6 +861,10 @@ function airstrikeCheckboxClicked()
 		horz = CreateHorz(UIcontainer);
 		CreateLabel(horz).SetText("Pieces given to each player at the start: ");
 		AirstrikeCardStartPieces = CreateNumberInputField(horz).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeStartPieces).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzAirstrikePiecesPerTurn = CreateHorz(UIcontainer);
+		CreateLabel(horzAirstrikePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		AirstrikeCardPiecesPerTurn = CreateNumberInputField(horzAirstrikePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
 		horz = CreateHorz(UIcontainer);
 		CreateLabel(horz).SetText("Card weight: ");
@@ -1333,6 +1356,7 @@ function updateModSettingsFromUI()
         Mod.Settings.CardPiecesPiecesNeeded = CardPiecesPiecesNeeded.GetValue();
         Mod.Settings.CardPiecesStartPieces = CardPiecesStartPieces.GetValue();
         Mod.Settings.CardPiecesCardWeight = CardPiecesCardWeight.GetValue();
+		Mod.Settings.CardPiecesPiecesPerTurn = CardPiecesPiecesPerTurn.GetValue();
     end
 
 	-- Update Card Hold settings
@@ -1416,6 +1440,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.NeutralizePiecesNeeded = NeutralizePiecesNeeded.GetValue();
 		Mod.Settings.NeutralizeStartPieces = NeutralizeStartPieces.GetValue();
 		Mod.Settings.NeutralizeCardWeight = NeutralizeCardWeight.GetValue();
+		Mod.Settings.NeutralizePiecesPerTurn = NeutralizePiecesPerTurn.GetValue();
 	end
 
 	if (not UI.IsDestroyed (vertDeneutralizeSettingsDetails)) then
@@ -1426,6 +1451,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.DeneutralizeCanAssignToSelf = DeneutralizeCanAssignToSelf.GetIsChecked();
 		Mod.Settings.DeneutralizeCanAssignToAnotherPlayer = DeneutralizeCanAssignToAnotherPlayer.GetIsChecked();
 		Mod.Settings.DeneutralizeCardWeight = DeneutralizeCardWeight.GetValue();
+		Mod.Settings.DeneutralizePiecesPerTurn = DeneutralizePiecesPerTurn.GetValue();
 	end
 
 	if (not UI.IsDestroyed (vertAirstrikeSettingsDetails)) then
@@ -1442,6 +1468,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.AirstrikePiecesNeeded = AirstrikeCardPiecesNeeded.GetValue();
 		Mod.Settings.AirstrikeStartPieces = AirstrikeCardStartPieces.GetValue();
 		Mod.Settings.AirstrikeCardWeight = AirstrikeCardWeight.GetValue();
+		Mod.Settings.AirstrikePiecesPerTurn = AirstrikeCardPiecesPerTurn.GetValue();
 	end
 
 	if (not UI.IsDestroyed (vertForestFireSettingsDetails)) then

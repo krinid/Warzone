@@ -89,9 +89,9 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	printDebug ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned, "..tablelength (attackerResult.DamageToSpecialUnits).." damaged]");
 	local damageToAllSpecialUnits = concatenateArrays (attackerResult.DamageToSpecialUnits, defenderResult.DamageToSpecialUnits); --combine elements from each array for attacker/defender to get a single array
 	printDebug ("[!DAMAGE SUs both DEFENDER & ATTACKER] #SUs "..tablelength (damageToAllSpecialUnits));
-	for k,v in pairs (defenderResult.DamageToSpecialUnits) do print ("[SUA damage] SU "..k..", damage "..v); end
-	for k,v in pairs (attackerResult.DamageToSpecialUnits) do print ("[SUD damage] SU "..k..", damage "..v); end
-	for k,v in pairs (damageToAllSpecialUnits) do print ("[SUB damage] SU "..k..", damage "..v); end
+	for k,v in pairs (defenderResult.DamageToSpecialUnits) do print ("[SU Def damage] SU "..k..", damage "..v); end
+	for k,v in pairs (attackerResult.DamageToSpecialUnits) do print ("[SU Att damage] SU "..k..", damage "..v); end
+	for k,v in pairs (damageToAllSpecialUnits) do print ("[SU Both damage] SU "..k..", damage "..v); end
 
 	--if all of defender's armies & SUs are killed & attacker still has at least 1 army or SU surviving, attack is successful, transfer the armies
 	--note that both sides reduced to 0 means attack is unsuccessful, territory not captured
