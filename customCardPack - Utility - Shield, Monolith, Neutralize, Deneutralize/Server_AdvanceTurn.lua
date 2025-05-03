@@ -670,14 +670,16 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 --DELME DELME DELME DELME DELME DELME DELME 
 --DELME DELME DELME DELME DELME DELME DELME 
 
-	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
-	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID~=nil "..tostring (airliftCardID~=nil).."::airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil));
-	printDebug ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
+	-- printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
+	-- printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID~=nil "..tostring (airliftCardID~=nil).."::airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil));
+	-- printDebug ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
 	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
 	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false) then
+		printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
 	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
+		printDebug ("[AIRSTRIKE/AIRLIFT] use Manual_Move transfer; #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
 		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, attackingArmiesToAirlift);
 	end
 	boolAirliftCardGiftedAlready = false; --reset value to false for next iteration
