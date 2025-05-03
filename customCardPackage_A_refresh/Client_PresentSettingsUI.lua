@@ -35,7 +35,7 @@ function Client_PresentSettingsUI(rootParent)
 				strNukeDesc = strNukeDesc .. "\n\nNegative damage has been configured, which transforms the result into a Healing Nuke. This will increase army counts on territories instead of reducing them.";
 		end]]
         CreateLabel(UImain).SetText(strNukeDesc);
-			
+
         CreateLabel(UImain).SetText("\nEpicenter damage (%): " .. Mod.Settings.NukeCardMainTerritoryDamage);
         CreateLabel(UImain).SetText("Epicenter fixed damage: " .. Mod.Settings.NukeCardMainTerritoryFixedDamage);
         CreateLabel(UImain).SetText("Bordering territory damage (%): " .. Mod.Settings.NukeCardConnectedTerritoryDamage);
@@ -95,8 +95,10 @@ function Client_PresentSettingsUI(rootParent)
         if (Mod.Settings.PhantomDuration == -1) then 
             CreateLabel(UImain).SetText("(-1 indicates that the phantom remains permanently)");
         end
-        local strFogLevel = "Normal fog (can't see units or owner of territory)";
-        if (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly) then strFogLevel = "Light fog (can see owner of territory but not units)"; end
+        local strFogLevel = "Normal Fog (can't see units or owner of territory)";
+        if (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly) then strFogLevel = "Light Fog (can see owner of territory but not units)";
+        elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Visible) then strFogLevel = "Fully Visible (can see owner and any units on the territory). "; --this should never happen; only options on the configure page are Light & Normal Fog
+        end
         CreateLabel(UImain).SetText("Fog level: " .. strFogLevel);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.PhantomPiecesNeeded);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.PhantomStartPieces);

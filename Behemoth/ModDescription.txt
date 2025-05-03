@@ -1,0 +1,1 @@
+Enable purchasing of Behemoths from the Commerce menu. Behemoths do not have a fixed cost, but instead their strength scales with the amount of gold you spend to create it. Using low quantities gold will result in a Behemoth weaker than the # of armies you would receive for the same gold. Behemoths can also be configured to be particularly strong against neutral territories.
