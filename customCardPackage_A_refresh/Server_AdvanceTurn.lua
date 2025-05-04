@@ -657,7 +657,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
 	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
 	--ALSO, keep a list of game IDs to enforce manual move mode on; these are known games that use Late Airlifts or Transport Only Airlifts mods, which must use Manual Move mode and not Airlift move mode
-	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods that should be forced to use Manual Mode
+	local incompatibleMods_gameIDlist = {41156280, 40891958, 40901887}; --list of game IDs using incopmatible mods that should be forced to use Manual Mode
 	local incompatibleMods_gameIDmap = {};
 	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
 	-- local boolForceManualMoveMode = Mod.Settings.AirstrikeMoveUnitsWithAirliftCard; --indicates whether to use Airlift or Manual Move; should use Manual Move is using mods Late Airlifts or Transport Only Airlifts
@@ -2474,7 +2474,7 @@ function Shield_processEndOfTurn(game, addOrder)
 
 	--&&& ShieldFix
 	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
-	if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
+	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 
     if (privateGameData.ShieldData == nil) then print ("[SHIELD EXPIRE] no Shield data"); return; end
 
