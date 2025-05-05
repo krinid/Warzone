@@ -134,11 +134,14 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 
-		if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield == true) then
-			Game.SendGameCustomMessage ("[getting shield data]", {action="shielddata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nShield data:\n"..shieldData[1]); end);
-		end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield == true) then
+		Game.SendGameCustomMessage ("[getting shield data]", {action="shielddata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nShield data:\n"..shieldData[1]); end);
+	end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith == true) then
+		Game.SendGameCustomMessage ("[getting monolith data]", {action="monolithdata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nMonolith data:\n"..shieldData[1]); end);
+	end
 
-		showDefinedCards (game);
+	showDefinedCards (game);
 end
 
 --send message to Server hook to toggle debug mode and save result in Mod.PublicGameData

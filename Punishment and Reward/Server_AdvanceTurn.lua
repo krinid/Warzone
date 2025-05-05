@@ -96,84 +96,13 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
 		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
-		--if Limited MultiAttack is enabled & move is a transfer, cancel the order & magically move the units to the destination - this should overrule the built-in WZ rule to halt transfers
-		if (order.proxyType=='GameOrderAttackTransfer' and result.IsAttack == false and game.ServerGame.LatestTurnStanding.Territories[order.From].OwnerPlayerID == order.PlayerID) then --this is not an attack -> it's a transfer
-			--worry about specials later, just do armies right now
-			local intNumArmiesToTransfer = result.ActualArmies.NumArmies;
-			local fromTerritory = WL.TerritoryModification.Create(order.From);
-			local toTerritory = WL.TerritoryModification.Create(order.To);
-			local modifiedTerritories = {};
-			fromTerritory.AddArmies = -1 * intNumArmiesToTransfer; --remove armies from FROM territory
-			toTerritory.AddArmies   =      intNumArmiesToTransfer; --add armies to TO territory
-			table.insert (modifiedTerritories, fromTerritory);
-			table.insert (modifiedTerritories, toTerritory);
-			local event = WL.GameOrderEvent.Create(order.PlayerID, "code moved "..intNumArmiesToTransfer.." armies from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game), {}, modifiedTerritories);
-			addOrder(event, false);
-			skip(WL.ModOrderControl.Skip); --cancel orig attack, b/c it'd stop the MA operations; hopefully this will let it continue indefinitely
-		end
-
-		--testing order adjustment/replacement; replace an attack order of 10 armies with one for 5 armies
-		--[[if (order.NumArmies.NumArmies==10) then
-			--local numArmies = orderArmies.Subtract(WL.Armies.Create(0, commanders));
-			local newOrder = nil;
-			print ("[TRIP!] "); --..order.ByPercent);
-			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(3), order.AttackTeammates);
-			newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(5), order.AttackTeammates);
-			addOrder(newOrder);
-			skip(WL.ModOrderControl.Skip);
-			return;
-	
-			--if isAttackTransfer then
-			--	newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, numArmies, order.AttackTeammates);
-			--elseif isAirlift then
-			--	newOrder = WL.GameOrderPlayCardAirlift.Create(order.CardInstanceID, order.PlayerID, order.FromTerritoryID, order.ToTerritoryID, numArmies);
-			--end
-		end]]
-
-		if (#order.NumArmies.SpecialUnits>0) then
-			--local numArmies = orderArmies.Subtract(WL.Armies.Create(0, commanders));
-			local newOrder = nil;
-			print ("[TRIP!] _________________________________"); --..order.ByPercent);
-			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(3), order.AttackTeammates);
-			--newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, WL.Armies.Create(order.NumArmies.NumArmies), order.AttackTeammates);
-			--addOrder(newOrder);
-			--skip(WL.ModOrderControl.Skip);
-
-			--remove commander = dies?
-			local impactedTerritory = WL.TerritoryModification.Create(order.From);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
-			local specialUnitID = nil;
-			specialUnitID = order.NumArmies.SpecialUnits[1].ID;
-			print ("terr=="..order.From..", SUID=="..specialUnitID);
-			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the C special unit from the territory
-			--impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
-			--local strDeneutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
-			--print ("message=="..strDeneutralizeOrderMessage);
-			local event = WL.GameOrderEvent.Create(order.PlayerID, "remove C", {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
-			addOrder (event, false); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-			print ("[END]");
-			skip(WL.ModOrderControl.Skip);
-
-			return;
-	
-			--if isAttackTransfer then
-			--	newOrder = WL.GameOrderAttackTransfer.Create(order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, numArmies, order.AttackTeammates);
-			--elseif isAirlift then
-			--	newOrder = WL.GameOrderPlayCardAirlift.Create(order.CardInstanceID, order.PlayerID, order.FromTerritoryID, order.ToTerritoryID, numArmies);
-			--end
-		end
 
 		if (result.IsAttack) then Attacks[playerID] = true; end
 		if (result.IsAttack and result.IsSuccessful) then Captures[playerID] = true; end
 
-		--just for testing (actually for CCPA Quicksand)
-		--result.AttackingArmiesKilled = WL.Armies.Create(math.floor(result.AttackingArmiesKilled.NumArmies*0.5+0.5), result.AttackingArmiesKilled.SpecialUnits);
-		--result.DefendingArmiesKilled = WL.Armies.Create(math.floor(result.DefendingArmiesKilled.NumArmies*1.5+0.5), result.DefendingArmiesKilled.SpecialUnits);
-			
-			print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-			", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
-			print ("[SPECIALS:]");
-			for k,v in pairs (result.DamageToSpecialUnits) do print ("damage to special "..k..", amount "..v.."::"); end
-		
+		print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
+		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+
 	end
 
     if (order.proxyType == 'GameOrderPlayCardSanctions') then
@@ -219,7 +148,7 @@ local function tableToString(tbl, indent)
     result = result .. indent .. "}"
     return result
 end
-    
+
 -- Main function to print object details
 function printObjectDetails(object, strObjectName, strLocationHeader)
     strObjectName = strObjectName or ""  -- Default blank value if not provided

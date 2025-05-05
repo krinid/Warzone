@@ -277,7 +277,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							if (boolWZattackTransferOrder == false) then
 								local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
 								newSpecialUnitBuilder.Health = intNewSUhealthAfterDamage;
-								newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name.."(C)";
+								newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name; --.."(C)";
 								newSpecialUnit_clone = newSpecialUnitBuilder.Build();
 							end
 						end

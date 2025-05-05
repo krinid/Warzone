@@ -604,7 +604,8 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
 	local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 	local strAirStrikeResultText = "";
-	local attackingArmiesToAirlift = nil; --if attack in unsuccessful, leave as nil, this indicates to send 0 armies and no specials, just draw the "0" airlift line
+	-- local attackingArmiesToAirlift = nil; --if attack in unsuccessful, leave as nil, this indicates to send 0 armies and no specials, just draw the "0" airlift line
+	local attackingArmiesToAirlift = WL.Armies.Create (0, {}); --if attack in unsuccessful, leave this as 0 armies, 0 SUs, just draw the "0" airlift line
 
 	if (airstrikeResult.IsSuccessful == true) then
 		targetTerritory.SetOwnerOpt = gameOrder.PlayerID; --territory ownership changes to attacker, b/c attack was successful
@@ -657,7 +658,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	--FOR UNSUCCESSFUL ATTACKS, units on both territories are accurate as they stand
 	--     if Airlift is in play, submit Airlift order to draw the empty "0" Airlift line
 	--ALSO, keep a list of game IDs to enforce manual move mode on; these are known games that use Late Airlifts or Transport Only Airlifts mods, which must use Manual Move mode and not Airlift move mode
-	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods that should be forced to use Manual Mode
+	local incompatibleMods_gameIDlist = {41156280, 40891958, 40901887}; --list of game IDs using incopmatible mods that should be forced to use Manual Mode
 	local incompatibleMods_gameIDmap = {};
 	for _, gameID in ipairs(incompatibleMods_gameIDlist) do incompatibleMods_gameIDmap[gameID] = true; end
 	-- local boolForceManualMoveMode = Mod.Settings.AirstrikeMoveUnitsWithAirliftCard; --indicates whether to use Airlift or Manual Move; should use Manual Move is using mods Late Airlifts or Transport Only Airlifts
@@ -675,7 +676,11 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	-- printDebug ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
 	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
 	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false) then
-		printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
+		-- if (attackingArmiesToAirlift == nil) then
+		-- 	printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", AIRLIFT UNSUCCESSFUL thus #armies 0, #SUs 0");
+		-- else
+			printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
+		-- end
 		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
 	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
@@ -2474,7 +2479,7 @@ function Shield_processEndOfTurn(game, addOrder)
 
 	--&&& ShieldFix
 	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
-	if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
+	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 
     if (privateGameData.ShieldData == nil) then print ("[SHIELD EXPIRE] no Shield data"); return; end
 

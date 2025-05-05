@@ -20,6 +20,13 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 				strShieldData = strShieldData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
 			end
 			setReturn ({strShieldData});
+		elseif (payload.action =="monolithdata") then
+			local strMonolithData = "";
+			for k,v in pairs (Mod.PrivateGameData.MonolithData) do
+				if (strMonolithData ~= "") then strMonolithData = strMonolithData .. "\n"; end
+				strMonolithData = strMonolithData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
+			end
+			setReturn ({strMonolithData});
 		elseif (payload.action == "clientmessage") then
 			printDebug (payload.message, true);
 		end
