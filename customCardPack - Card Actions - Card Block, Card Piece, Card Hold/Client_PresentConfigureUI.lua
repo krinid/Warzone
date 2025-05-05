@@ -11,6 +11,8 @@ Client_PresentCommercePurchaseUI (Client_PresentCommercePurchaseUI.lua) - player
 TODOs:
 - Airstrike - add support for SUs eat Neutrals / Behemoths for the invulnerable to neutrals & increased damage to neutrals; need to embed this in ModData somehow to convey the traits -- which is fine for Behemoth but not for SUs eat Neutrals b/c this must work for all SUs w/o
 -             being able to specify their ModData contents; T1 custom game order message conveyance?
+- add backwards compatibility for Custom Card Package v1 to work on already started games, then get dabo to replace the old code
+
 - TEST GAME: https://www.warzone.com/MultiPlayer?GameID=40398835
 	- Tested and working:
 		- Nuke - working fine, including showing that Nuke doesn't affect Specials

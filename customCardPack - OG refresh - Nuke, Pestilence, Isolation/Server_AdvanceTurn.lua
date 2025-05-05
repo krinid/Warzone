@@ -2416,16 +2416,44 @@ function Quicksand_processEndOfTurn(game, addOrder)
     print("[QUICKSAND] processEndOfTurn END");
 end
 
---remove Shields that glitched and weren't removed via normal means and are no longe present in Mod.PrivateGameData.ShieldData
-function removeGlitchedShields (game, addOrder)
+--remove SUs that glitched and weren't removed via normal means and are no longe present in Mod.Public/PrivateGameData.XXXX
+function removeGlitchedSUs (game, addOrder)
 	local ShieldsToExpire = {};
+	local MonolithsToExpire = {};
 
 	--Nate LOTR/ME Dragons game
-	if (game.Game.ID == 40891958) then
+	if (false) then
+	elseif (game.Game.ID == 40721800) then  --Limited Multimove game
+		MonolithsToExpire = {
+			["4B4EDD4B41BD4714AB43590026D35581"] = 18,
+			["C6D1DFD25C08446589447999E89969B0"] = 46,
+			["E225D77C6DC6403EACED1076195C3E19"] = 64,
+			["7B1EFAE12FDD4208AA7CA2E6B8EC3E37"] = 110,
+			["1224FF7BEA284DD393278FCAB42C9A84"] = 320,
+			["E6BDC60C5DF9438AADF8A0C376EFC57E"] = 712
+		};
 		ShieldsToExpire = {
+			["0D740D8620044D11B75FDDCBD0CFAA1F"] = 12,
+			["6D5CE51C636E4255906DB14F4AA7222C"] = 62,
+			["08FCE448E4174A899A0FE40B83A4E277"] = 133,
+			["2814BB0D77A54EB988F9F4FD172C56A4"] = 643,
+			["84E8C3069DEF4AB287449E4D51A9E2E7"] = 711
+		};
+	elseif (game.Game.ID == 41169187) then  --krind/prenk test game
+		MonolithsToExpire = {
+			["C232932AC64145FAA908B9EFCB987CA5"] = 1,
+			["49261E709CBF46199EBEA5E00BD9C3B4"] = 19
+		};
+		ShieldsToExpire = {
+			["9524EBB7CC6D46639AE43E9A39D123C7"] = 3,
+			["B87ED11576124F9D894B12F24971F5E3"] = 18
+		};
+
+	-- elseif (game.Game.ID == 40891958) then   --Nate LOTR ME Dragons game
+		-- ShieldsToExpire = {
 			--Shields created on T3 & T4 that glitched but were missed in the T8 end of turn removal
-			["523FB1B155814A84A6B38682E8CE77E4"] = 115,
-			["E1CF93EA52C243DD817DFBE116BC60B6"] = 313
+			-- ["523FB1B155814A84A6B38682E8CE77E4"] = 115,
+			-- ["E1CF93EA52C243DD817DFBE116BC60B6"] = 313
 			-- [115/Harrowdale] Attack Power 0 [kills 0], Defense Power 0 [kills 0], #Armies 0, #Special Units 1<1> Shield [CustomSpecialUnit], owner 1161950/Spider-Man42, ID=523FB1B155814A84A6B38682E8CE77E4
 			-- [313/Westmarch] Attack Power 0 [kills 0], Defense Power 0 [kills 0], #Armies 0, #Special Units 1<1> Shield [CustomSpecialUnit], owner 1543560/quan, ID=E1CF93EA52C243DD817DFBE116BC60B6
 
@@ -2448,19 +2476,24 @@ function removeGlitchedShields (game, addOrder)
 			-- ["075858B0A8BB44668C3A21DB16D19A64"] = 995,
 			-- ["8EDA398982EC4E1F9E5CFB50460B66B3"] = 996,
 			-- ["772976F94DD74B8B9C0D77BDD730DB0D"] = 1004
-		};
-	elseif (game.Game.ID == 40901887) then
-	--prenk/krinid test game
-		ShieldsToExpire = {["53B8C0F770094862BBDAA629228BD9AD"] = 14, ["1A76723812A64D3E80C19059E97A7E80"] = 20};
+		-- };
+	-- elseif (game.Game.ID == 40901887) then
+	-- --prenk/krinid test game
+	-- 	ShieldsToExpire = {["53B8C0F770094862BBDAA629228BD9AD"] = 14, ["1A76723812A64D3E80C19059E97A7E80"] = 20};
 	end
 
-	for SUkey, terrID in pairs (ShieldsToExpire) do
+	removeSUs (game, addOrder, ShieldsToExpire, "Shield");
+	removeSUs (game, addOrder, MonolithsToExpire, "Monolith");
+end
+
+function removeSUs (game, addOrder, SUsToExpire, strSUname)
+	for SUkey, terrID in pairs (SUsToExpire) do
 		local impactedTerritory = WL.TerritoryModification.Create (terrID);
 		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
-		local strShieldExpires = "Shield expired on ".. tostring (getTerritoryName (terrID, game));
+		local strSUExpiresMsg = strSUname.. " expired on ".. tostring (getTerritoryName (terrID, game));
 		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
-		printDebug ("[FORCED SHIELD EXPIRE] "..strShieldExpires.."; remove special=="..terrID..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
-		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strShieldExpires, {}, {impactedTerritory});
+		printDebug ("[FORCED SU EXPIRY] "..strSUExpiresMsg.."; remove special=="..terrID..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strSUExpiresMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = jumpToActionSpotObject;
 		addOrder (event, false);
 	end
