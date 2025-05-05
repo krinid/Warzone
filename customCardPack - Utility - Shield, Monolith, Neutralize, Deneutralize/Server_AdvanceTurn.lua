@@ -11,6 +11,16 @@ local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E]::func start");
 
+	--&&& Shield/Monolith Fix
+	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
+	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
+	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
+	if (game.Game.ID == 40721800 or game.Game.ID == 41169187) then  --krind/prenk test game
+		removeGlitchedSUs (game, addOrder); --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the game ID listed above
+	end
+
+	--Limited Multimove game - stale Shields/Monoliths force expiry
+
 	Pestilence_processEndOfTurn (game, addOrder); --check for pending Pestilence orders, execute them if they start this turn or are already ongoing
 	Tornado_processEndOfTurn (game, addOrder);
 	Earthquake_processEndOfTurn (game, addOrder);
@@ -2509,10 +2519,6 @@ function Shield_processEndOfTurn(game, addOrder)
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.ShieldEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.ShieldDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
-
-	--&&& ShieldFix
-	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
-	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 
     if (privateGameData.ShieldData == nil) then print ("[SHIELD EXPIRE] no Shield data"); return; end
 
