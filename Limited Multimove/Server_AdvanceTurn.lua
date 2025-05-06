@@ -2,6 +2,7 @@ require("Manual_Attack");
 
 --[[
 STILL TO DO:
+- add support for OMS (!) -- oopsie, didn't consider that
 - currently adding # of units moving into a territory to map3, and this is fine for transfers, but for attacks it will be too many units as some will die in the attack so need to subtract the # of attacks killed
 	^^ maybe skip the order & create new order with appropriate #'s in place instead of doing funky math, b/c "result.armies killed" will be wrong in many cases b/c we're changing the ActualArmies involved thus # attackers killed will change too
 	^^ if did this, would it put the order in the right spot? or would it append it to end of order list? for multimove orders to work, the order of the orders is key
@@ -101,7 +102,8 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
-	if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.proxyType); return; end
+	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.Skip); return; end
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
@@ -541,107 +543,6 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	print ("FROM attack power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.AttackPower.. ", FROM defense power "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.DefensePower..", TO attack power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.AttackPower..", TO defense power "..game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.DefensePower);
 	print ("Order attack power "..order.NumArmies.AttackPower..", Order defense power "..order.NumArmies.DefensePower..", Actual attack power "..result.ActualArmies.AttackPower..", Actual defense power "..result.ActualArmies.DefensePower..", Kill rates: att "..game.Settings.OffenseKillRate.."/def "..game.Settings.DefenseKillRate);
 	for k,v in pairs (result.DamageToSpecialUnits) do print ("Damage to SU: "..k..", "..v); end
-end
-
-function process_entire_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder)
-	local manualAttackResult = process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, true);
-	--local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result, addNewOrder, true);
-
---&&&
-	--manualAttackResult.AttackerResult is armies object for attacker
-	--manualAttackResult.DefenderResult is armies object for defender
-	--manualAttackResult.IsSuccessful is boolean indicating if the attack was successful, and thus whether:
-		--(A) attacker wins, defender units are wiped out, the attacker should move into the target territory and take ownership of it
-		--(B) attacker loses, attacker units are reduced or wiped out and source territory is updated, the defender units may be reduced but remain in the target territory and retain ownership of it
-
-	--adjust attacker results, so # of killed armies is increased by quantity of intArmiesDieDuringAttack
-	airstrikeResult.AttackerResult.KilledArmies = math.min (airstrikeResult.AttackerResult.KilledArmies + intArmiesDieDuringAttack, intActualArmies); --#armies killed are those from regular battle damage + loss due to Deployment Yield but not to exceed the actual # included in the Airstrike operation (if exceeds this amount, it would subtract units from the FROM territory even if they didn't participate in the Airstrike -- don't do that)
-	airstrikeResult.AttackerResult.RemainingArmies = math.max (0, attackingArmies.NumArmies - airstrikeResult.AttackerResult.KilledArmies);
-end
-
---process a manual attack sequence from AttackOrder [type NumArmies] on DefendingTerritory [type Territory] with respect to Specials & armies
---process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
---also treat Specials properly with respect to their specs, notably damage required to kill, health, attack/damage properties, etc
---return value is the result with updated AttackingArmiesKilled & DefendingArmiesKilled values
---also need some way of indicating overall success separately b/c can't change some properties of the result object directly
-function process_manual_attack_NOPE_seeUpdatedRoutine_canProbablyDeleteThisNow (game, AttackingArmies, DefendingTerritory, result)
-	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
-	local newResult = result;
-	local AttackPower = AttackingArmies.AttackPower;
-	local DefensePower = DefendingTerritory.NumArmies.DefensePower;
-	local AttackDamage = AttackPower * game.Settings.OffenseKillRate;
-	local DefenseDamage = DefensePower * game.Settings.DefenseKillRate;
-	local remainingAttackDamage = AttackDamage; --apply attack damage to defending units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
-	local remainingDefenseDamage = DefenseDamage; --apply defense damage to attacking units in order of their combat order, reduce this value as damage is applied and continue through the stack until all damage is applied
-
-	local boolArmiesProcessed = false;
-
-	print ("[MANUAL ATTACK] #armies "..AttackingArmies.NumArmies..", #SUs "..#AttackingArmies.SpecialUnits);
-	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
-	for k,v in pairs (AttackingArmies.SpecialUnits) do
-		--Properties Exist for Commander: ID, guid, proxyType, CombatOrder <--- and that's it!
-		--Properties DNE for Commander: AttackPower, AttackPowerPercentage, DamageAbsorbedWhenAttacked, DamageToKill, DefensePower, DefensePowerPercentage, Health
-		print ("SPECIAL type "..v.proxyType.. ", combat order "..v.CombatOrder);
-
-		if (v.proxyType == "CustomSpecialUnit") then
-			print ("SPECIAL name "..v.Name..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DamagePower);
-			print ("SPECIAL APower "..v.AttackPower..", DPower "..v.DamagePower);
-			print ("SPECIAL health "..v.Health);
-			print ("SPECIAL APower% "..v.AttackPowerPercentage..", DPower% "..v.DamagePowerP);
-			print ("SPECIAL DmgAbsorb "..v.DamageAbsorbedWhenAttacked..", DmgToKill "..v.DamageToKill..", Health "..v.Health);
-		end
-
-		--apply damage to this Special b/c combat order is <0 or armies have been processed already
-		if (boolArmiesProcessed==true or v.CombatOrder <0) then
-			print ("damage applied to Special");
-		else
-			--apply damage to armies
-			print ("damage applied to Armies");
-			boolArmiesProcessed = true;
-		end
-
-		--if (boolArmiesProcessed==false) then
-		--v.Name..", combat order "..v.CombatOrder..", health "..v.Health..", attack "..v.AttackPower..", damage "..v.DamagePower);
-		--[[if (v.proxyType == "Commander") then
-			--Commanders have a combat order of 10,000, so process them first
-			if (remainingDefenseDamage > 0) then
-				--if the Commander is still alive, apply damage to it
-				local CommanderHealth = v.Health;
-				if (CommanderHealth > 0) then
-					local CommanderDamage = math.min (CommanderHealth, remainingDefenseDamage);
-					remainingDefenseDamage = remainingDefenseDamage - CommanderDamage;
-					newResult.DefendingArmiesKilled = WL.Armies.Create (newResult.DefendingArmiesKilled.NumArmies + CommanderDamage, newResult.DefendingArmiesKilled.SpecialUnits);
-				end
-			end
-		elseif (v.proxyType == "CustomSpecialUnit") then
-			--CustomSpecialUnits have a combat order of 0, so process them after Commanders
-			if (remainingDefenseDamage > 0) then
-				--if the CustomSpecialUnit is still alive, apply damage to it
-				local SpecialHealth = v.Health;
-				if (SpecialHealth > 0) then
-					local SpecialDamage = math.min (SpecialHealth, remainingDefenseDamage);
-					remainingDefenseDamage = remainingDefenseDamage - SpecialDamage;
-					newResult.DefendingArmiesKilled = WL.Armies.Create (newResult.DefendingArmiesKilled.NumArmies + SpecialDamage, newResult.DefendingArmiesKilled.SpecialUnits);
-				end
-			end
-		end]]
-	end
-end
-
-function applyDamageToSpecials (intDamage, Specials, result)
-	local remainingDamage = intDamage;
-	for k,v in pairs (Specials) do
-		if (remainingDamage > 0) then
-			--if the Special is still alive, apply damage to it
-			local SpecialHealth = v.Health;
-			if (SpecialHealth > 0) then
-				local SpecialDamage = math.min (SpecialHealth, remainingDamage);
-				remainingDamage = remainingDamage - SpecialDamage;
-				result = WL.Armies.Create (result.NumArmies + SpecialDamage, result.SpecialUnits);
-			end
-		end
-	end
-	return result;
 end
 
 function generateSkipMessage (order, game)
