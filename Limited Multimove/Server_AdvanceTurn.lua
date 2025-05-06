@@ -102,7 +102,11 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
-	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.proxyType); return; end
+	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.PlayerID.."/".. order.proxyType); return; end
+	-- if (order.PlayerID < 50 and order.proxyType=="GameOrderAttackTransfer") then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.PlayerID.."/".. order.proxyType); return; end
+	--if (order.PlayerID < 50 and order.proxyType=="GameOrderAttackTransfer") then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+	-- print ("******"..order.PlayerID.."/".. order.proxyType);
+	-- if (order.proxyType == "GameOrderEvent") then print ("******"..order.PlayerID.."/".. order.proxyType.. ": ".. order.Message); end
 	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.Skip); return; end
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
@@ -174,6 +178,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	local map2TOspecials = nil;
 	local map3FROM = map3[order.From];
 	local map3TO = map3[order.To];
+	local boolOneMustStand = game.Settings.OneArmyStandsGuard; --get setting from One Army Must Stand Guard to be able to properly leave 1 army behind on the territory if this is set to true
 
 	if (map2[order.From] ~= nil) then map2FROMarmies = map2[order.From].NumArmies; map2FROMspecials = map2[order.From].SpecialUnits; end
 	if (map2[order.To] ~= nil) then map2TOarmies = map2[order.To].NumArmies; map2TOspecials = map2[order.To].SpecialUnits; end
@@ -216,11 +221,12 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		numArmies = math.min (math.floor (game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies / 100 * order.NumArmies.NumArmies + 0.5), game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies); --round to nearest int, then take the
 		--minimum of this amount and what's actually present on the territory
 	end
-	intNumArmies_actualOriginal = numArmies;
+	if (boolOneMustStand) then numArmies = math.max (numArmies - 1, 0); end --if One Must Stand is enabled, leave 1 army behind; if it's already 0, leave it as 0 -- this means 1+ SUs are doing the movement
+	intNumArmies_actualOriginal = numArmies; --save the value for reference later
 
 	print ("- - - - - - - - - - - - - - - - - - - - - PRE");
 	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..
-		", AttackTransfer "..tostring(order.AttackTransfer).." [".. tostring(WL.AttackTransferEnum.ToString (order.AttackTransfer)) .."], AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent));
+		", AttackTransfer "..tostring(order.AttackTransfer).." [".. tostring(WL.AttackTransferEnum.ToString (order.AttackTransfer)) .."], AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent).. ", OMS "..tostring (boolOneMustStand));
 	print ("FROM owner "..FROMowner.." [team "..tostring (FROMownerTeam) .. "], TO owner "..TOowner.." [team ".. tostring (TOownerTeam) .."], AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
 		", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
@@ -260,7 +266,6 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 		addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, strSkipOrderDueToAttackTransfer, {}, {},{}));
 		return; --don't process any further, just skip the order and return in order to process the next order
 	end
-	--print ("&&&&&&&&&&"..tostring (strSkipOrderDueToAttackTransfer));
 
 	-- print (WL.AttackTransferEnum.Attack);
 	-- print (WL.AttackTransferEnum.Transfer);
@@ -535,7 +540,7 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 
 	print ("- - - - - - - - - - - - - - - - - - - - - POST");
 	print ("FROM "..order.From.."/"..game.Map.Territories[order.From].Name..", TO "..order.To.."/"..game.Map.Territories[order.To].Name..", IsAttack "..tostring (result.IsAttack)..", IsSuccessful "..tostring(result.IsSuccessful) ..
-		", AttackTransfer "..tostring(order.AttackTransfer)..", AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent));
+		", AttackTransfer "..tostring(order.AttackTransfer).." [".. tostring(WL.AttackTransferEnum.ToString (order.AttackTransfer)) .."], AttackTeammates "..tostring (order.AttackTeammates)..", by% "..tostring (order.ByPercent).. ", OMS "..tostring (boolOneMustStand));
 	print ("FROM owner "..FROMowner.." [team "..tostring (FROMownerTeam) .. "], TO owner "..TOowner.."[".. tostring (TOownerteam) .."], AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies..", AttackingSpecialsKilled "..#result.AttackingArmiesKilled.SpecialUnits..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits);
 	print ("ORDER #armies "..order.NumArmies.NumArmies..", ORDER #SUs "..#order.NumArmies.SpecialUnits ..", ActualSpecials "..#result.ActualArmies.SpecialUnits..", ActualArmies "..result.ActualArmies.NumArmies..
 		", #ArmiesOnTerritory "..game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.NumArmies..", #specialsOnTerritory "..#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits);
