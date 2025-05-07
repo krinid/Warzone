@@ -1,3 +1,5 @@
+--TODOs:
+--   - add description for invulnerability to neutrals & strength vs neutrals to ModDescription.txt & purchase dialog
 require ("behemoth");
 
 function Server_AdvanceTurn_End(game, addOrder)

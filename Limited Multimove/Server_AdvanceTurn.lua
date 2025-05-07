@@ -2,7 +2,8 @@ require("Manual_Attack");
 
 --[[
 STILL TO DO:
-- add support for OMS (!) -- oopsie, didn't consider that
+- attacks can actually kill the OMS unit
+- a Behemoth (any SU with health) moving around takes 0 damage from the 2 neutrals (so guessing I did a bad rounding calc on the part of the algorithm that applies damage to SUs)
 - currently adding # of units moving into a territory to map3, and this is fine for transfers, but for attacks it will be too many units as some will die in the attack so need to subtract the # of attacks killed
 	^^ maybe skip the order & create new order with appropriate #'s in place instead of doing funky math, b/c "result.armies killed" will be wrong in many cases b/c we're changing the ActualArmies involved thus # attackers killed will change too
 	^^ if did this, would it put the order in the right spot? or would it append it to end of order list? for multimove orders to work, the order of the orders is key
