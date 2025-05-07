@@ -12,9 +12,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	MenuWindow = rootParent;
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
-	CreateLabel (MenuWindow).SetText ("Punishments: [none]");
-	CreateLabel (MenuWindow).SetText ("Rewards: [none]");
-	CreateLabel (MenuWindow).SetText ("\nAfter approx 10 turns, you will be assigned Punishments for having successive turns where you don't (A) make attacks, (B) make captures, (C) increase your territory count from previous turns. You will be granted rewards when you do");
+	UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
+	UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
+	UI.CreateLabel (MenuWindow).SetText ("\nAfter approx 10 turns, you will be assigned Punishments for having successive turns where you don't (A) make attacks, (B) make captures, (C) increase your territory count from previous turns. You will be granted rewards when you do");
 
 	--only display if Cities can be built or if Workers are in use (but how to check for workers? see if any are on the map already? that's the only way to know for sure b/c can't check the mods in play)
 	-- CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the # of cities is within 10% of the average cities per territories (#territories/#cities). There are no Punishments for city distribution");
