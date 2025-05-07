@@ -11,7 +11,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
 	MenuWindow = rootParent;
-	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
+	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
 	UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
 	UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
 	UI.CreateLabel (MenuWindow).SetText ("\nAfter approx 10 turns, you will be assigned Punishments for having successive turns where you don't (A) make attacks, (B) make captures, (C) increase your territory count from previous turns. You will be granted rewards when you do");
