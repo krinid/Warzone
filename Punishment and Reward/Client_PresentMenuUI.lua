@@ -14,10 +14,12 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	TopLabel = CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
 	CreateLabel (MenuWindow).SetText ("Punishments: [none]");
 	CreateLabel (MenuWindow).SetText ("Rewards: [none]");
-	CreateLabel (MenuWindow).SetText ("\nAfter approx 10 turns, you will be assigned Punishments for having successive turns where you don't make attacks and increase your territory count from previous turns, and will be granted rewards for those you do");
+	CreateLabel (MenuWindow).SetText ("\nAfter approx 10 turns, you will be assigned Punishments for having successive turns where you don't (A) make attacks, (B) make captures, (C) increase your territory count from previous turns. You will be granted rewards when you do");
 
 	--only display if Cities can be built or if Workers are in use (but how to check for workers? see if any are on the map already? that's the only way to know for sure b/c can't check the mods in play)
-	CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the cities # of territories will also be given for");
+	-- CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the # of cities is within 10% of the average cities per territories (#territories/#cities). There are no Punishments for city distribution");
+	-- CreateLabel (MenuWindow).SetText ("\n# territories: tbd, # cities: tbd, av cities/territory (ACT): tbd");
+	-- CreateLabel (MenuWindow).SetText ("\n# territories with city count within 10% ACT: tbd, Reward: xx% (yy gpt)");
 
 	--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
