@@ -31,6 +31,7 @@ function displayMenu (game, close)
 	local publicGameData = Mod.PublicGameData;
 	local localPlayerIsHost = game.Us.ID == game.Settings.StartedBy;
 	if (game.Game.ID == 41159857 and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Encirclement + Forts v2b" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
+	if (game.Game.ID == 40767112) then publicGameData.CardData.CardPricesFinalized = false; publicGameData.CardData.HostHasAdjustedPricing = false; end --for this game, re-assign card prices
 
 	--local buttonsCardPurchases = {};  --originally had these assigned but aren't actually using them, but leave them around until I'm sure they won't be required
 	local sliderCardPrices = {};
