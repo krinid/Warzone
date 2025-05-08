@@ -55,6 +55,35 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 				"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
 		end);
 	Behemoth_details_Label = UI.CreateLabel (rootParent);
+
+
+	-- root is a vertical layout group
+	local line = UI.CreateHorizontalLayoutGroup(root).SetFlexibleWidth(1);
+	-- Now create the UI objects you want
+	UI.CreateLabel(line).SetText("Setting name: ");
+	UI.CreateLabel(line).SetText("Value");
+	-- This is the mechanism that makes all the buttons line up:
+	UI.CreateEmpty(line).SetFlexibleWidth(1);
+	UI.CreateButton(line).SetText("?").SetOnClick(function() UI.Alert("Here is an explanation about this setting"); end);
+
+	--or if you want it in a function:
+	--This is a bit more clean if you want to have lots of these boxes
+	function createInfoButton(parent, func, msg)
+		local line = UI.CreateHorizontalLayoutGroup(parent).SetFlexibleWidth(1);
+		func(line);
+		UI.CreateEmpty(line).SetFlexibleWidth(1);
+		UI.CreateButton(line).SetText("?").SetOnClick(function() UI.Alert(msg); end);
+	end
+
+	-- And use it like this:
+	createInfoButton(root, 
+		function(line)
+			-- This function will be called with the created horizontal layout group
+			-- You can create any object here
+			UI.CreateLabel(line).SetText("Setting name: ");
+			UI.CreateLabel(line).SetText("Value");
+		end, "Here is an explanation about this setting");
+
 end
 
 --this never gets called b/c NIF has no OnChange event
