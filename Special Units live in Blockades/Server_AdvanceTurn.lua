@@ -15,7 +15,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
-	local boolHaltCodeExecutionAtEndofTurn = true;
+	-- local boolHaltCodeExecutionAtEndofTurn = true;
 	local intHaltOnTurnNumber = 1;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
 end
@@ -28,13 +28,24 @@ end
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
+	-- print ("[S_AdvanceTurn_Order - func start] ::ORDER.PlayerID="..order.PlayerID.."::");  -- <---- 
 
-	print ("[S_AdvanceTurn_Order - func start] ::ORDER.PlayerID="..order.PlayerID.."::");  -- <---- 
 	if (order.proxyType=='GameOrderPlayCardBlockade' or order.proxyType=='GameOrderPlayCardAbandon') then
-		print ("blockade -- multipy amount ".. tostring (game.Settings.Cards [order.CardID].MultiplyAmount).. ", multipy % " ..tostring (game.Settings.Cards [order.CardID].MultiplyPercentage));
+		print ("blockade -- multiply amount ".. tostring (game.Settings.Cards [order.CardID].MultiplyAmount).. ", multipy % " ..tostring (game.Settings.Cards [order.CardID].MultiplyPercentage));
+		print (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].OwnerPlayerID, order.PlayerID);
 
-		-- 	if (order.TargetTerritoryID )
-	-- --((#game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits >0 and #orderResult.DefendingArmiesKilled.SpecialUnits >0) or (#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits >0 and #orderResult.AttackingArmiesKilled.SpecialUnits >0))) then
+		if (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].OwnerPlayerID == order.PlayerID) then
+			local terrMod = WL.TerritoryModification.Create (order.TargetTerritoryID);
+			-- local newArmyCount = game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies * game.Settings.Cards [order.CardID].MultiplyAmount;
+
+			terrMod.SetOwnerOpt = WL.PlayerID.Neutral;
+			terrMod.AddArmies = game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies * game.Settings.Cards [order.CardID].MultiplyAmount - game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies; --add the armies to the territory
+			local event = WL.GameOrderEvent.Create (order.PlayerID, getPlayerName (game, order.PlayerID).. " blockades " ..getTerritoryName (game, order.TargetTerritoryID), nil, {terrMod});
+			addNewOrder (event, false);
+			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip the original Blockade order
+		end
+
+		-- --((#game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits >0 and #orderResult.DefendingArmiesKilled.SpecialUnits >0) or (#game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits >0 and #orderResult.AttackingArmiesKilled.SpecialUnits >0))) then
 	-- 	print ("[CFRCAEP] proxyType==" ..order.proxyType.. " IsAttack ".. tostring (orderResult.IsAttack).." DEFENDER -- #specials ".. #game.ServerGame.LatestTurnStanding.Territories[order.To].NumArmies.SpecialUnits .." #specialKilled ".. #orderResult.DefendingArmiesKilled.SpecialUnits);
 	-- 	print ("[CFRCAEP] proxyType==" ..order.proxyType.. " IsAttack ".. tostring (orderResult.IsAttack).." ATTACKER -- #specials ".. #game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits .." #specialKilled ".. #orderResult.AttackingArmiesKilled.SpecialUnits);
 
@@ -97,6 +108,12 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	-- end
 
 	-- addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "SUs created", {}, modifiedTerritories));
+
+	--this shows move order on ODD TURN #'s -- must invert it for EVEN TURN #'s
+	local moveOrder = game.ServerGame.CyclicMoveOrder; --Game.GetTurn (1);
+	for k,v in pairs (moveOrder) do
+		print (v, getPlayerName (game, v));
+	end
 end
 
 --for each killed SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)
@@ -195,4 +212,10 @@ function getPlayerName(game, playerid)
 		end
 	end
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
+end
+
+function getTerritoryName (game, intTerrID)
+	if (intTerrID) == nil then return nil; end
+	if (game.Map.Territories[intTerrID] == nil) then return nil; end --territory ID does not exist for this game/template/map
+	return (game.Map.Territories[intTerrID].Name);
 end

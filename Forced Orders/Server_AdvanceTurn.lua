@@ -18,10 +18,10 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 
 	--delete all AI orders
 	for k,v in pairs (game.ServerGame.ActiveTurnOrders) do
-		print ("[_START] "..k, v.__proxyID, v.proxyType, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
+		-- print ("[_START] "..k, v.__proxyID, v.proxyType, v);--.." "..v.proxyType);--.. "player "..v.PlayerID);
 		--printObjectDetails (v);
 		for k2,v2 in pairs (v) do
-			print ("[_START] __"..k2, v2.__proxyID, v2.proxyType, v2);--.." "..v2.proxyType);--.. "player "..v2.PlayerID);
+			-- print ("[_START] __"..k2, v2.__proxyID, v2.proxyType, v2);--.." "..v2.proxyType);--.. "player "..v2.PlayerID);
 			--printObjectDetails (v2);
 		end
 
@@ -63,7 +63,7 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 	--if (order.PlayerID == 1) then print ("PROXY: "..order.proxyType); end;
 	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); return; end
 
-	print ("[_ORDER] proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID..", processNextOrder "..tostring (boolPermitNextAIorder));
+	-- print ("[_ORDER] proxyType "..order.proxyType..", player "..order.PlayerID ..", table "..tostring (order)..", proxyID "..order.__proxyID..", processNextOrder "..tostring (boolPermitNextAIorder));
 
 	--this is just a snapshot of the entered orders; has same content as Server_AdvanceTurn_Start; doesn't show added orders, does show skipped orders
 	--maybe confirm this -- you were actually only looking at the order quantity, not the order content
@@ -81,7 +81,7 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 
 	if (order.proxyType == "GameOrderEvent") then print ("[GOE] ModID "..tostring(order.ModID)..", "..tostring(order.Message)); end
 
-	if ((order.proxyType == "GameOrderDeploy" or order.proxyType == "GameOrderAttackTransfer") and order.PlayerID==1) then
+	if ((order.proxyType == "GameOrderDeploy" or order.proxyType == "GameOrderAttackTransfer") and order.PlayerID<50) then
 	--if (order.proxyType == "GameOrderDeploy" and order.PlayerID==1) then
 	--if (order.proxyType == "GameOrderAttackTransfer" and order.PlayerID==1) then
 		--if (boolPermitNextAIorder==false) then skip (WL.ModOrderControl.Skip); return; end
