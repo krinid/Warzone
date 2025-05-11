@@ -15,6 +15,10 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	-- if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
 	local clientPlayerID = game.Us.ID;
+	local playerData = {};
+
+	if (Mod.PublicGameData.PRdataByID == nil or Mod.PublicGameData.PRdataByID [clientPlayerID] == nil) then return; end
+
 	local incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [clientPlayerID], game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
 
 	MenuWindow = rootParent;
