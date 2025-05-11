@@ -1,3 +1,5 @@
+require ("punishReward");
+
 --[[
 TODO:
 - implement territory count punishment/rewards
@@ -30,26 +32,99 @@ function Server_AdvanceTurn_End(game, addOrder)
 	if (historicalAttacks==nil) then historicalAttacks = {}; end;
 	if (historicalCaptures==nil) then historicalCaptures = {}; end;
 	if (historicalTerritoryCount==nil) then historicalTerritoryCount = {}; end;
-	numTurnsToTrack = 10; --track average values over 10 turns (make configurable)
+	local turnNumber = game.Game.TurnNumber;
+	local playerList = game.ServerGame.Game.PlayingPlayers;
+
+	--set any nil elements to 0; only elements (playerID) which had attacks/captures have values set; players with no attacks/captures are nil; to them to 0 so can do math with any element
+	-- Attacks = cleanElements (Attacks);
+	-- Captures = cleanElements (Captures);
+	-- Attacks = cleanElements (Attacks, turnNumber, playerList);
+	-- Captures = cleanElements (Captures, turnNumber, playerList);
+
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.PRdataByTurn == nil) then publicGameData.PRdataByTurn = {}; end
+	if (publicGameData.PRdataByTurn[turnNumber] == nil) then publicGameData.PRdataByTurn[turnNumber] = {}; end
+	if (publicGameData.PRdataByTurn[turnNumber].Attacks == nil) then publicGameData.PRdataByTurn[turnNumber].Attacks = {}; end
+	if (publicGameData.PRdataByTurn[turnNumber].Captures == nil) then publicGameData.PRdataByTurn[turnNumber].Captures = {}; end
+	if (publicGameData.PRdataByTurn[turnNumber].TerritoryCount == nil) then publicGameData.PRdataByTurn[turnNumber].TerritoryCount = {}; end
+	publicGameData.PRdataByTurn[turnNumber].Attacks = Attacks; --store Attacks for this turn; this is easily retrievable by turn#, then by playerID
+	publicGameData.PRdataByTurn[turnNumber].Captures = Captures; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
+
+	local intarrTerritoryCount_currentTurn = territoryCountAnalysis (game);
 
 	for ID,player in pairs (game.ServerGame.Game.PlayingPlayers) do
-		local reward = 0;
-        local punishment = 0;
-		local rewardIncrement = 0.1;
-		local punishmentIncrement = -0.05;
+		local intTerritoryCount_lastTurn = 0;
+		local intTerritoryCount_currentTurn = intarrTerritoryCount_currentTurn [ID];
+		local intPunishment_territoryCount = 0;
+		local intReward_territoryCount = 0;
+		local intPunishment_attack = 0;
+		local intReward_attack = 0;
+		local intPunishment_capture = 0;
+		local intReward_capture = 0;
+		local intPunishmentTotalUnits = 0;
+		local intRewardTotalUnits = 0;
+		local intPunishmentIncome = 0;
+		local intRewardIncome = 0;
 
-		reward = (Attacks[ID]~=nil and 1 or 0)*rewardIncrement + (Captures[ID]~=nil and 1 or 0)*rewardIncrement + (TerritoryIncrease[ID]~=nil and 1 or 0)*rewardIncrement;
-        punishment = (Attacks[ID]==nil and 1 or 0)*punishmentIncrement + (Captures[ID]==nil and 1 or 0)*punishmentIncrement + (TerritoryIncrease[ID]==nil and 1 or 0)*punishmentIncrement;
-        local income = player.Income(0, game.ServerGame.LatestTurnStanding, false, false).Total;
+		--assign value to intTerritoryCount_lastTurn; if turn ==1 then ignore b/c there is no previous value; if turn >1 then get territory count of previous turn; else leave as default value (0)
+		if (turnNumber >1 and publicGameData.PRdataByID ~= nil and publicGameData.PRdataByID[ID] ~= nil and publicGameData.PRdataByID[ID].TerritoryCount ~= nil and publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1] ~= nil) then intTerritoryCount_lastTurn = publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1]; end
+		-- if (turnNumber >1 and publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1] ~= nil) then intTerritoryCount_lastTurn = publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1]; end
 
-		print ("ID "..ID..", income="..income..", punishment="..punishment..", reward="..reward..", isAttack=="..tostring (Attacks[ID]~=nil)..", isCapture==".. tostring (Captures[ID])..", terrInc=="..tostring (TerritoryIncrease[ID]).."::");
-		addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, math.floor(income*punishment), "Punishment" .. math.floor(income*punishment))})); --floor = round down when negative (punishment)
-		addOrder (WL.GameOrderEvent.Create (ID, "Reward!", {}, {}, {}, {WL.IncomeMod.Create(ID, math.ceil(income*reward), "Reward" .. math.ceil(income*reward))})); --ceiling = round up (positive #'s)
+		--identify if territory count has gone up, stayed flat or reduced; if flat, use the values of 0 for both Punishment/Reward (these are the defaults, no action required)
+		if (intTerritoryCount_currentTurn < intTerritoryCount_lastTurn) then intPunishment_territoryCount = 1; --territory count reduced, add 1 unit of Punishment
+		else intReward_territoryCount = 1; --territory count increase, add 1 unit of Reward
+		end
+
+		if (publicGameData.PRdataByID == nil) then publicGameData.PRdataByID = {}; end
+		if (publicGameData.PRdataByID[ID] == nil) then publicGameData.PRdataByID[ID] = {}; end
+		if (publicGameData.PRdataByID[ID].Attacks == nil) then publicGameData.PRdataByID[ID].Attacks = {}; end
+		if (publicGameData.PRdataByID[ID].Captures == nil) then publicGameData.PRdataByID[ID].Captures = {}; end
+		if (publicGameData.PRdataByID[ID].TerritoryCount == nil) then publicGameData.PRdataByID[ID].TerritoryCount = {}; end
+		publicGameData.PRdataByID[ID].Attacks[turnNumber] = Attacks[ID]; --store Attacks for this turn; this is easily retrievable by playerID, then by turn#
+		publicGameData.PRdataByID[ID].Captures[turnNumber] = Captures[ID]; --store Captures for this turn; this is easily retrievable by playerID, then by turn#
+		-- print (ID,turnNumber,Attacks[ID],publicGameData.PRdataByID[ID].Attacks[turnNumber]);
+
+		historicalTerritoryCount[ID] = intTerritoryCount_currentTurn;
+		publicGameData.PRdataByID[ID].TerritoryCount[turnNumber] = intTerritoryCount_currentTurn; -- store TerritoryCount for this turn; this is easily retrievable by playerID, then by turn#
+
+		intReward_attack = Attacks[ID] or 0; --Attacks[ID]~=nil and 1 or 0; --assign 0 Reward units for no attacks made, assign 1 unit for 1+ attacks made
+		intPunishment_attack = 1 - intReward_attack; --assign 0 Punishment units for attacks made, assign 1 unit for no attacks made
+		intReward_capture = Captures[ID] or 0; --Captures[ID]==nil and 1 or 0; --assign 0 Reward units for no captures made, assign 1 unit for 1+ captures made
+		intPunishment_capture = 1 - intReward_attack; --assign 0 Punishment units for captures made, assign 1 unit for no attacks made
+
+		-- reward = (Attacks[ID]~=nil and 1 or 0)*rewardIncrement + (Captures[ID]~=nil and 1 or 0)*rewardIncrement + intReward_territoryCount*rewardIncrement;
+		-- punishment = (Attacks[ID]==nil and 1 or 0)*punishmentIncrement + (Captures[ID]==nil and 1 or 0)*punishmentIncrement + (TerritoryIncrease[ID]==nil and 1 or 0)*punishmentIncrement;
+		intRewardTotalUnits = intReward_attack + intReward_capture + intReward_territoryCount;
+		intPunishmentTotalUnits = intPunishment_attack + intPunishment_capture + intPunishment_territoryCount;
+		intRewardIncome = math.floor (intRewardTotalUnits * rewardIncrement + 0.5); --round up/down appropriately
+		intPunishmentIncome = math.floor (intPunishmentTotalUnits * punishmentIncrement); --just round down, never round up for punishments
+		-- reward = (intReward_attack + intReward_capture + intReward_territoryCount) * rewardIncrement;
+		-- punishment = (intPunishment_attack + intPunishment_capture + intPunishment_territoryCount) * punishmentIncrement;
+		local intIncome = player.Income (0, game.ServerGame.LatestTurnStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
+		--for reference: Income(armiesFromReinforcementCards integer, standing GameStanding, bypassArmyCap boolean, ignoreSanctionCards boolean) returns PlayerIncome: Determine's a player's income (number of armies they receive per turn)
+		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
+
+		print ("ID "..ID..", income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..intPunishmentTotalUnits.. "u], reward " ..intRewardIncome.. " [" ..intRewardTotalUnits.. "u], isAttack "..tostring (Attacks[ID])..", isCapture ".. tostring (Captures[ID])..", terrInc "..tostring (TerritoryIncrease[ID]));
+		addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment" .. intPunishmentIncome)})); --floor = round down for punishment
+		addOrder (WL.GameOrderEvent.Create (ID, "Reward!",     {}, {}, {}, {WL.IncomeMod.Create(ID, intRewardIncome,     "Reward"     .. intRewardIncome)})); --ceiling = round up for reward
 	end
 
-	table.insert (historicalTerritoryCount, territoryCountAnalysis (game));
-	print ("count "..#historicalTerritoryCount); --if length surpasses numTurnsToTrack, pop off a record (or just keep it all and just average over numTurnsToTrack? yea do that for now; actually that means have to count from end to end-numTurnsToTrack = not ideal)
-    --crashNow ();
+	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
+	print ("htc count "..#historicalTerritoryCount);
+	Mod.PublicGameData = publicGameData;
+
+	--crashNow ();
+end
+
+--remove nil elements, set them to 0
+function cleanElements (arrayToClean)
+print ("PRE  CLEAN count ".. tablelength (arrayToClean));
+	for k,v in pairs (arrayToClean) do
+print ("PRE  CLEAN "..k, tostring (arrayToClean[k]));
+		if arrayToClean[k]==nil then arrayToClean[k] = 0; end
+print ("POST CLEAN "..k, tostring (arrayToClean[k]));
+	end
+	return arrayToClean;
 end
 
 function territoryCountAnalysis (game)
@@ -59,7 +134,7 @@ function territoryCountAnalysis (game)
 			if (territoryCount [terr.OwnerPlayerID] == nil) then territoryCount [terr.OwnerPlayerID] = 0; end
 			territoryCount [terr.OwnerPlayerID] = territoryCount [terr.OwnerPlayerID] + 1;
 			print ("playerID "..terr.OwnerPlayerID..", terr "..ID.."/"..getTerritoryName (ID, game)..", count "..territoryCount [terr.OwnerPlayerID]);
-		end 
+		end
 	end
 	return territoryCount;
 end
@@ -72,7 +147,7 @@ end
 function Server_AdvanceTurn_Start(game,addOrder)
 	--move these to PublicGameData
 	disallowReverseSanctionsOnOthers = true;
-    disallowNormalSanctionsOnSelf = true;
+	disallowNormalSanctionsOnSelf = true;
 
 	--structure used for this turn order, initialize them to {} for each iteration
 	Attacks = {};
@@ -97,33 +172,36 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 
-		if (result.IsAttack) then Attacks[playerID] = true; end
-		if (result.IsAttack and result.IsSuccessful) then Captures[playerID] = true; end
+		--track when a player has made an attack or capture
+		if (result.IsAttack) then Attacks[playerID] = 1; end
+		if (result.IsAttack and result.IsSuccessful) then Captures[playerID] = 1; end
+
+		--&&& TODO: track damage done, in terms of # armies killed & amount of damage done to SUs (reduced health amount + damage-required-to-kill for killed SUs w/o health)
 
 		print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
 		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 	end
 
-    if (order.proxyType == 'GameOrderPlayCardSanctions') then
-        print ("[Sanction card] cast "..order.PlayerID..", target "..order.SanctionedPlayerID..", strength "..game.Settings.Cards[WL.CardID.Sanctions].Percentage);
-        --print ("[game.Settings.Cards[WL.CardID.Sanctions] "..WL.CardID.Sanctions);
-        --printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "WL.CardGameSanctions", "WZ def obj");
-        --for k,v in pairs(WL.CardGameSanctions) do print ("**"..k,v); end
-        --printObjectDetails (order, "Sanction cards", "played card");
-        --printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "Sanction config", "Card settings");
-        if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage>=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
-            print ("[Sanction card] self-sanction for +ve sanction SKIP");
-            addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self for positive sanctions is disallowed - Skipping order", {}, {},{}));
-            skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
+	if (order.proxyType == 'GameOrderPlayCardSanctions') then
+		print ("[Sanction card] cast "..order.PlayerID..", target "..order.SanctionedPlayerID..", strength "..game.Settings.Cards[WL.CardID.Sanctions].Percentage);
+		--print ("[game.Settings.Cards[WL.CardID.Sanctions] "..WL.CardID.Sanctions);
+		--printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "WL.CardGameSanctions", "WZ def obj");
+		--for k,v in pairs(WL.CardGameSanctions) do print ("**"..k,v); end
+		--printObjectDetails (order, "Sanction cards", "played card");
+		--printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "Sanction config", "Card settings");
+		if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage>=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
+			print ("[Sanction card] self-sanction for +ve sanction SKIP");
+			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self for positive sanctions is disallowed - Skipping order", {}, {},{}));
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		elseif (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
 			print ("[Sanction card] sanction on another for -ve sanction SKIP");
 			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning other for reverse sanctions is disallowed - Skipping order", {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		else
-            print ("[Sanction card] permitted sanction type");
-        end
-    end
+			print ("[Sanction card] permitted sanction type");
+		end
+	end
 end
 
 function tablelength(T)
@@ -136,77 +214,77 @@ end
 
 -- Helper function to convert a table to a string representation
 local function tableToString(tbl, indent)
-    if type(tbl) ~= "table" then
-        return tostring(tbl)  -- Return the value as-is if it's not a table
-    end
-    indent = indent or ""  -- Indentation for nested tables
-    indent = "";
-    local result = "{" --"{\n"
-    for k, v in pairs(tbl) do
-        result = result .. indent .. "  " .. tostring(k) .. " = " .. tableToString(v, indent .. "  ") .. ","; --\n"
-    end
-    result = result .. indent .. "}"
-    return result
+	if type(tbl) ~= "table" then
+		return tostring(tbl)  -- Return the value as-is if it's not a table
+	end
+	indent = indent or ""  -- Indentation for nested tables
+	indent = "";
+	local result = "{" --"{\n"
+	for k, v in pairs(tbl) do
+		result = result .. indent .. "  " .. tostring(k) .. " = " .. tableToString(v, indent .. "  ") .. ","; --\n"
+	end
+	result = result .. indent .. "}"
+	return result
 end
 
 -- Main function to print object details
 function printObjectDetails(object, strObjectName, strLocationHeader)
-    strObjectName = strObjectName or ""  -- Default blank value if not provided
-    strLocationHeader = strLocationHeader or ""  -- Default blank value if not provided
-    print("[" .. strLocationHeader .. "] object=" .. strObjectName .. ", tablelength==".. tablelength (object).."::");
-    print("[proactive display attempt] value==" .. tostring(object));
+	strObjectName = strObjectName or ""  -- Default blank value if not provided
+	strLocationHeader = strLocationHeader or ""  -- Default blank value if not provided
+	print("[" .. strLocationHeader .. "] object=" .. strObjectName .. ", tablelength==".. tablelength (object).."::");
+	print("[proactive display attempt] value==" .. tostring(object));
 
-    -- Early return if object is nil or an empty table
-    if object == nil then
-        print("[invalid/empty object] object==nil")
-        return
-    elseif type(object) == "table" and next(object) == nil then
-        print("[invalid/empty object] object=={}  [empty table]")
-        return
-    end
+	-- Early return if object is nil or an empty table
+	if object == nil then
+		print("[invalid/empty object] object==nil")
+		return
+	elseif type(object) == "table" and next(object) == nil then
+		print("[invalid/empty object] object=={}  [empty table]")
+		return
+	end
 
-    -- Handle tables
-    if type(object) == "table" then
-        -- Check and display readableKeys
-        if object.readableKeys then
-            for key, value in pairs(object.readableKeys) do
-                local propertyValue = object[value]
-                if type(propertyValue) == "table" then
-                    print("  [readablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
-                else
-                    print("  [readablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
-                end
-            end
-        else
-            print("[R]**readableKeys DNE")
-        end
+	-- Handle tables
+	if type(object) == "table" then
+		-- Check and display readableKeys
+		if object.readableKeys then
+			for key, value in pairs(object.readableKeys) do
+				local propertyValue = object[value]
+				if type(propertyValue) == "table" then
+					print("  [readablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
+				else
+					print("  [readablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+				end
+			end
+		else
+			print("[R]**readableKeys DNE")
+		end
 
-        -- Check and display writableKeys
-        if object.writableKeys then
-            for key, value in pairs(object.writableKeys) do
-                local propertyValue = object[value]
-                if type(propertyValue) == "table" then
-                    print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
-                else
-                    print("  [writablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
-                end
-            end
-        else
-            print("[W]**writableKeys DNE")
-        end
+		-- Check and display writableKeys
+		if object.writableKeys then
+			for key, value in pairs(object.writableKeys) do
+				local propertyValue = object[value]
+				if type(propertyValue) == "table" then
+					print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
+				else
+					print("  [writablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+				end
+			end
+		else
+			print("[W]**writableKeys DNE")
+		end
 
-        -- Display all base properties of the table
-        for key, value in pairs(object) do
-            if key ~= "readableKeys" and key ~= "writableKeys" then  -- Skip already processed keys
-                if type(value) == "table" then
-                    print("[base_table] key==" .. tostring(key) .. ":: value==" .. tableToString(value))
-                else
-                    print("[base_value] key==" .. tostring(key) .. ":: value==" .. tostring(value))
-                end
-            end
-        end
-    else
-        -- Handle non-table objects
-        print("[not table] value==" .. tostring(object))
-    end
+		-- Display all base properties of the table
+		for key, value in pairs(object) do
+			if key ~= "readableKeys" and key ~= "writableKeys" then  -- Skip already processed keys
+				if type(value) == "table" then
+					print("[base_table] key==" .. tostring(key) .. ":: value==" .. tableToString(value))
+				else
+					print("[base_value] key==" .. tostring(key) .. ":: value==" .. tostring(value))
+				end
+			end
+		end
+	else
+		-- Handle non-table objects
+		print("[not table] value==" .. tostring(object))
+	end
 end

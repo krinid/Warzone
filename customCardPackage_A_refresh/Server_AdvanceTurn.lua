@@ -5,6 +5,17 @@ require("Manual_Attack");
 local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
 local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
+--[[ error report from Tlnu in Game https://www.warzone.com/MultiPlayer?GameID=40991649
+window.onerror in https://warzonecdn.com/js/Release/ujs.js?v=638808435066191059:11540:473  op=206939 Uncaught Warzone Server returned ModFailed x=ModFailed: Mod "CardPack-Utility-Shield,Monolith,De+Neutra,Phantom" Failed: [string "Server_AdvanceTurn.lua"]:1729: attempt to index global 'addAirLiftCardEvent' (a nil value)
+execute_Deneutralize_operation (Server_AdvanceTurn.lua:1729)
+process_game_orders_CustomCards (Server_AdvanceTurn.lua:450)
+(Unknown Function) (Server_AdvanceTurn.lua:65)
+
+GameID=40991649
+Hook=Server_AdvanceTurn_Order Stack=
+ - 
+ stack=undefined ]]
+
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
@@ -1722,10 +1733,12 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 		else
-			addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
 			skip (WL.ModOrderControl.Skip);
+			-- addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
+			local addAirLiftCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
 			local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
 			printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
+			-- addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
 			addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
 			addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
 			end
