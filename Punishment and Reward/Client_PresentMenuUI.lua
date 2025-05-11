@@ -50,7 +50,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		print ("Long-term penalty " ..incomeAdjustments.LongTermPenalty.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
 	end
 
-	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nDetails:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of " ..tostring (1*punishmentIncrement*100).. "% on categories of Attacks, Captures & Increasing your territory count. The quantity of attacks/captures/new territories in a single turn doesn't matter.").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nDetails:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of " ..tostring (1*punishmentIncrement*100).. "% on each category of:\n(A) Attacks [at least 1 attack made]\n(B) Captures [at least 1 capture made]\n(C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("\nIn addition to the single turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 1-3 turns: no additional long term penalty").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces").SetFlexibleWidth (1.0);
