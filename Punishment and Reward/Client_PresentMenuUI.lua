@@ -16,15 +16,15 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	local clientPlayerID = game.Us.ID;
 	local playerData = {};
+	MenuWindow = rootParent;
+	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
+	-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
+	-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
 
 	if (Mod.PublicGameData.PRdataByID ~= nil and Mod.PublicGameData.PRdataByID [clientPlayerID] ~= nil) then
 
 		local incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [clientPlayerID], game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
 
-		MenuWindow = rootParent;
-		TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
-		-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
-		-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
 		UI.CreateLabel (MenuWindow).SetText ("\nCONSECUTIVE TURN PERIOD Punishments:").SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Block card piece receiving: " ..tostring (incomeAdjustments.BlockCardPieceReceiving)).SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Territories with 0 armies go neutral: " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral)).SetFlexibleWidth (1.0);
