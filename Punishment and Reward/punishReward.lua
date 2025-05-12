@@ -25,6 +25,14 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 	incomeAdjustments.ZeroArmiesGoNeutral = false; --whether or not territories with 0 armies post reduction go neutral or not
 	incomeAdjustments.BlockCardPieceReceiving = false; --whether to block card receiving pieces or not
 
+	incomeAdjustments.CurrTurn = {};
+	incomeAdjustments.CurrTurn.Attacks = 0;
+	incomeAdjustments.CurrTurn.Captures = 0;
+	incomeAdjustments.CurrTurn.TerritoryCount = 0;
+	incomeAdjustments.CurrTurn.TerritoryCountIncreased = 0;
+	incomeAdjustments.CurrTurn.RewardUnits = 0;
+	incomeAdjustments.CurrTurn.PunishmentUnits = 0;
+
 	local lowestIndex = math.max (1, currentTurnNumber - intNumTurnsToEvaluate - 1);
 	local intNumConsecutiveTurnsWithNoIncrease = 0;
 	local intTotalTurnsWithNoIncrease = 0;
