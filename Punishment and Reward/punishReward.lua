@@ -49,7 +49,7 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 
 		if (k>1) then prevValue = arrPlayerData.TerritoryCount[k-1]; end
 		if (prevValue == nil) then prevValue = 0; end
-		currValue = arrPlayerData.TerritoryCount[k];
+		currValue = arrPlayerData.TerritoryCount[k] and 1 or 0;
 		if (currValue > intHighestTerritoryCount) then intHighestTerritoryCount = currValue; end --capture largest territory count in last 10 turns
 		if (currValue == nil) then currValue = 0; end
 
