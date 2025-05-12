@@ -71,7 +71,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 		-- if (turnNumber >1 and publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1] ~= nil) then intTerritoryCount_lastTurn = publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1]; end
 
 		--identify if territory count has gone up, stayed flat or reduced; if flat, use the values of 0 for both Punishment/Reward (these are the defaults, no action required)
-		if (intTerritoryCount_currentTurn < intTerritoryCount_lastTurn) then intPunishment_territoryCount = 1; --territory count reduced, add 1 unit of Punishment
+		if (intTerritoryCount_currentTurn <= intTerritoryCount_lastTurn) then intPunishment_territoryCount = 1; --territory count reduced, add 1 unit of Punishment
 		else intReward_territoryCount = 1; --territory count increase, add 1 unit of Reward
 		end
 
@@ -94,17 +94,25 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 		-- reward = (Attacks[ID]~=nil and 1 or 0)*rewardIncrement + (Captures[ID]~=nil and 1 or 0)*rewardIncrement + intReward_territoryCount*rewardIncrement;
 		-- punishment = (Attacks[ID]==nil and 1 or 0)*punishmentIncrement + (Captures[ID]==nil and 1 or 0)*punishmentIncrement + (TerritoryIncrease[ID]==nil and 1 or 0)*punishmentIncrement;
-		intRewardTotalUnits = intReward_attack + intReward_capture + intReward_territoryCount;
-		intPunishmentTotalUnits = intPunishment_attack + intPunishment_capture + intPunishment_territoryCount;
-		intRewardIncome = math.floor (intRewardTotalUnits * rewardIncrement + 0.5); --round up/down appropriately
-		intPunishmentIncome = math.floor (intPunishmentTotalUnits * punishmentIncrement); --just round down, never round up for punishments
+		local intIncome = player.Income (0, game.ServerGame.LatestTurnStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
+-- 		intRewardTotalUnits = intReward_attack + intReward_capture + intReward_territoryCount;
+-- 		intPunishmentTotalUnits = intPunishment_attack + intPunishment_capture + intPunishment_territoryCount;
+-- 		intRewardIncome = math.floor (intRewardTotalUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
+-- 		intPunishmentIncome = math.ceil (intPunishmentTotalUnits * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
+-- print ("!"..intReward_attack, intReward_capture, intReward_territoryCount, intTerritoryCount_lastTurn, intTerritoryCount_currentTurn);
+-- print ("!"..intPunishmentTotalUnits, punishmentIncrement, intPunishmentIncome, intPunishment_attack, intPunishment_capture, intPunishment_territoryCount);
 		-- reward = (intReward_attack + intReward_capture + intReward_territoryCount) * rewardIncrement;
 		-- punishment = (intPunishment_attack + intPunishment_capture + intPunishment_territoryCount) * punishmentIncrement;
-		local intIncome = player.Income (0, game.ServerGame.LatestTurnStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
 		--for reference: Income(armiesFromReinforcementCards integer, standing GameStanding, bypassArmyCap boolean, ignoreSanctionCards boolean) returns PlayerIncome: Determine's a player's income (number of armies they receive per turn)
-		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
 
-		print ("ID "..ID..", income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..intPunishmentTotalUnits.. "u], reward " ..intRewardIncome.. " [" ..intRewardTotalUnits.. "u], isAttack "..tostring (Attacks[ID])..", isCapture ".. tostring (Captures[ID])..", terrInc "..tostring (TerritoryIncrease[ID]));
+		--calculate Punishments and Rewards
+		local incomeAdjustments = assessLongTermPunishment (publicGameData.PRdataByID [ID], game.Game.TurnNumber); --use actual current turn # b/c it just finished and should be included in the calculations
+		intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
+		intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPenalty + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
+		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
+		print ("LONG-TERM [ID " ..ID.. "] income penalty " ..incomeAdjustments.LongTermPenalty.. "PU, army reduction " ..incomeAdjustments.ArmyReduction.. "x, terr reduction " ..incomeAdjustments.TerritoryReduction.. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+		print ("CURR TURN [ID " ..ID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+
 		addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment" .. intPunishmentIncome)})); --floor = round down for punishment
 		addOrder (WL.GameOrderEvent.Create (ID, "Reward!",     {}, {}, {}, {WL.IncomeMod.Create(ID, intRewardIncome,     "Reward"     .. intRewardIncome)})); --ceiling = round up for reward
 	end
@@ -157,7 +165,11 @@ end
 
 function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 	local playerID = order.PlayerID;
-	--print ("proxyType=="..order.proxyType);
+	if (order.proxyType~='GameOrderAttackTransfer') then
+		if (order.proxyType ~= 'GameOrderEvent' or order.Message ~= "Mod skipped attack/transfer order") then
+			print ("proxyType=="..order.proxyType.. ", player ".. order.PlayerID);
+		end
+	end
 
 	if (order.proxyType=='GameOrderAttackTransfer') then
 		--AttackTeammates boolean:, AttackTransfer AttackTransferEnum (enum):, ByPercent boolean:, From TerritoryID:, NumArmies Armies:, Result GameOrderAttackTransferResult:, To TerritoryID:
@@ -181,9 +193,11 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
 		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
-	end
-
-	if (order.proxyType == 'GameOrderPlayCardSanctions') then
+	elseif (order.proxyType == 'GameOrderEvent') then
+		if (order.Message ~= "Mod skipped attack/transfer order") then print ("[EVENT] " ..order.Message); end
+		if (order.AddCardPiecesOpt ~= nil) then print ("[-----card pieces]"); end
+		-- if (order.Result.CardInstancesCreated ~= nil) then print ("[-----CardInstancesCreated card pieces]"); end
+	elseif (order.proxyType == 'GameOrderPlayCardSanctions') then
 		print ("[Sanction card] cast "..order.PlayerID..", target "..order.SanctionedPlayerID..", strength "..game.Settings.Cards[WL.CardID.Sanctions].Percentage);
 		--print ("[game.Settings.Cards[WL.CardID.Sanctions] "..WL.CardID.Sanctions);
 		--printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "WL.CardGameSanctions", "WZ def obj");

@@ -17,7 +17,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local clientPlayerID = game.Us.ID;
 	local playerData = {};
 	MenuWindow = rootParent;
-	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --future use?
+	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --use below to show Punishment/Reward values after some calculations are done, but define it here so it shows at the top of the form
 	-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
 	-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
 
@@ -36,18 +36,41 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		UI.CreateLabel (MenuWindow).SetText ("\nTurns where territory count didn't increase:").SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• #Total: " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. "   • #Consecutive: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("\nTerritory counts:").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("• Average: " ..tostring (incomeAdjustments.AverageTerritoryCount).. "   • Highest: " ..tostring (incomeAdjustments.HighestTerritoryCount)).SetFlexibleWidth (1.0);
+		UI.CreateLabel (MenuWindow).SetText ("• Average: " ..tostring (math.floor ((incomeAdjustments.AverageTerritoryCount) * 100 + 0.5)/100).. "   • Highest: " ..tostring (incomeAdjustments.HighestTerritoryCount)).SetFlexibleWidth (1.0);
 
 		print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
 		print ("Curr-turn Penalty " ..incomeAdjustments.CurrTurn.PunishmentUnits.. ", Reward " ..incomeAdjustments.CurrTurn.RewardUnits.. ", attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", captures " ..incomeAdjustments.CurrTurn.Captures.. ", #territories " ..incomeAdjustments.CurrTurn.TerritoryCount.. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
 		local strRewardText = "[none]";
 		local strPunishmentText = "[none]";
-		if (incomeAdjustments.CurrTurn.PunishmentUnits > 0) then strPunishmentText = tostring (incomeAdjustments.CurrTurn.PunishmentUnits * 100 * punishmentIncrement).. "% income"; end
-		if (incomeAdjustments.CurrTurn.RewardUnits > 0) then strRewardText = "+" ..tostring (incomeAdjustments.CurrTurn.RewardUnits * 100 * rewardIncrement).. "% income"; end
+		local strPunishmentText_Details = "";
+		local strRewardText_Details = "";
+
+		if (incomeAdjustments.CurrTurn.PunishmentUnits > 0) then
+			strPunishmentText = tostring (incomeAdjustments.CurrTurn.PunishmentUnits * 100 * punishmentIncrement).. "% income   [";
+			if (incomeAdjustments.CurrTurn.Attacks == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no attack"); end
+			if (incomeAdjustments.CurrTurn.Captures == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no capture"); end
+			if (incomeAdjustments.CurrTurn.TerritoryCountIncreased == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "territory count didn't increase"); end
+			strPunishmentText = strPunishmentText .. strPunishmentText_Details .. "]";
+		end
+		if (incomeAdjustments.CurrTurn.RewardUnits > 0) then
+			strRewardText = tostring (incomeAdjustments.CurrTurn.RewardUnits * 100 * rewardIncrement).. "% income   [";
+			if (incomeAdjustments.CurrTurn.Attacks > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ attack"); end
+			if (incomeAdjustments.CurrTurn.Captures > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ capture"); end
+			if (incomeAdjustments.CurrTurn.TerritoryCountIncreased > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "territory count increased"); end
+			strRewardText = strRewardText .. strRewardText_Details .. "]";
+		end
 		TopLabel.SetText ("\nCURRENT TURN:\nPunishments: " ..strPunishmentText.. "\nRewards: " ..strRewardText);
 
 		-- attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
-		print ("Long-term penalty " ..incomeAdjustments.LongTermPenalty.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+		-- print ("Long-term penalty " ..incomeAdjustments.LongTermPenalty.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+		local intIncome = game.Us.Income (0, game.LatestStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
+		local intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
+		local intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPenalty + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
+		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
+
+		print ("LONG-TERM [ID " ..clientPlayerID.. "] income penalty " ..tostring (incomeAdjustments.LongTermPenalty).. "PU, army reduction " ..tostring (incomeAdjustments.ArmyReduction).. "x, terr reduction " ..tostring (incomeAdjustments.TerritoryReduction).. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+		print ("CURR TURN [ID " ..clientPlayerID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+
 	end
 
 	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nDetails:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of " ..tostring (1*punishmentIncrement*100).. "% on each category of:\n(A) Attacks [at least 1 attack made]\n(B) Captures [at least 1 capture made]\n(C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
@@ -115,6 +138,14 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 		print(i, v);
 	end]]
 
+end
+
+function appendCommaSeparatedComponent (strText, strAppendText)
+	local strReturnString = ""
+	if (string.len (strText) ~= 0) then strReturnString = strText.. ", " ..strAppendText;
+	else strReturnString = strAppendText;
+	end
+	return (strReturnString);
 end
 
 function debugPrint (strText, UIlabel)
