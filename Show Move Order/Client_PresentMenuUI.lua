@@ -20,11 +20,17 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	cboxShowActivePlayersOnly = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(MenuWindow)).SetIsChecked (true).SetInteractable(true).SetText("Show active players only");
 
 	vertMoveOrder = UI.CreateVerticalLayoutGroup (MenuWindow); --show move order details in this control
+	showMoveOrderDetails ();
 end
 
 function showMoveOrderDetails ()
 	local vertMoveOrderDetails = UI.CreateVerticalLayoutGroup (vertMoveOrder);
 	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order for this turn:");
+
+	-- print (tostring (Mod.PublicGameData));
+	-- print (tostring (Mod.PublicGameData.MoveOrder));
+	-- if (Mod.PublicGameData == nil) then Mod.PublicGameData = {}; end
+	if (Mod.PublicGameData.MoveOrder == nil) then Game.SendGameCustomMessage ("[getting move order]", {action="getmoveorder"}, function () end); end
 
 	for k,v in pairs (Mod.PublicGameData.MoveOrder) do
 		if (cboxShowActivePlayersOnly == false or isPlayerActive (v.PlayerID) == true) then
