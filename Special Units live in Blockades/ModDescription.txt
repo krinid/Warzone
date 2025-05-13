@@ -2,4 +2,4 @@ Special Units remain as-is on territories when a Blockade or Emergency Blockade 
 
 Usually Special Units are killed when the territory is blockaded and becomes neutral, but with this mod, the Special Units remain on the neutral territory post blockade.
 
-The Special Units on the neutral territory will remain owned by the player who owns them before the blockade is played, but the owning player won't be able to control them. Note that capturing the neutral territory requires killing the Special Units, but some mods can enable reclaiming ownership of a neutral territory (eg: Buy Neutral, Deneutralize Card from CardPack Utility mod, etc).
+The Special Units on the neutral territory will remain owned by the player who owns them before the blockade is played, but the owning player won't be able to control them.
