@@ -27,6 +27,17 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 				strMonolithData = strMonolithData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
 			end
 			setReturn ({strMonolithData});
+		elseif (payload.action =="SUdata") then
+			local SUdata = "";
+			for k,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+				for k2,SU in pairs (terr.NumArmies.SpecialUnits) do
+					if (SU.proxyType == "CustomSpecialUnit") then
+						if (SUdata ~= "") then SUdata = SUdata .. "\n"; end
+						SUdata = SUdata .. tostring (terr.ID) .."|".. tostring (getTerritoryName (terr.ID, game))..", " .. tostring (terr.OwnerPlayerID) .. "|".. tostring (getPlayerName (game, terr.OwnerPlayerID).. "|".. SU.ID.. "|".. SU.Name .. "|".. SU.OwnerID); -- .. "|".. SU.ModData);
+					end
+				end
+			end
+			setReturn ({SUdata});
 		elseif (payload.action == "clientmessage") then
 			printDebug (payload.message, true);
 		end

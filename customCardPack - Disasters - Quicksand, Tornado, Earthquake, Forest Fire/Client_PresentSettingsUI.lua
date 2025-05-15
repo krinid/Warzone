@@ -77,7 +77,7 @@ function Client_PresentSettingsUI(rootParent)
 
     if (Mod.Settings.ShieldEnabled == true) then
         CreateLabel(UImain).SetText("\n[SHIELD]").SetColor(getColourCode("card play heading"));
-        CreateLabel(UImain).SetText("Deploy a immovable defensive unit that absorbs all incoming regular damage to the territory and prevents territory capture.");
+        CreateLabel(UImain).SetText("Deploy a immovable defensive unit that absorbs all incoming regular damage to the territory and prevents territory capture. Shields also protect against the following types of special attacks:\nSpecial damage types Shield defends against:\nBomb, Airstrike, Nuke, Tornado, Earthquake, Pestilence");
         CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.ShieldDuration);
         if (Mod.Settings.ShieldDuration == -1) then 
             CreateLabel(UImain).SetText("(-1 indicates that the shield remains permanently)");

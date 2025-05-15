@@ -138,7 +138,10 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		Game.SendGameCustomMessage ("[getting shield data]", {action="shielddata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nShield data:\n"..shieldData[1]); end);
 	end
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith == true) then
-		Game.SendGameCustomMessage ("[getting monolith data]", {action="monolithdata"}, function (shieldData) CreateLabel (MenuWindow).SetText ("\nMonolith data:\n"..shieldData[1]); end);
+		Game.SendGameCustomMessage ("[getting monolith data]", {action="monolithdata"}, function (monolithData) CreateLabel (MenuWindow).SetText ("\nMonolith data:\n"..monolithData[1]); end);
+	end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith == true) then
+		Game.SendGameCustomMessage ("[getting SU data]", {action="SUdata"}, function (SUData) CreateLabel (MenuWindow).SetText ("\nSU data:\n"..SUData[1]); end);
 	end
 
 	showDefinedCards (game);
