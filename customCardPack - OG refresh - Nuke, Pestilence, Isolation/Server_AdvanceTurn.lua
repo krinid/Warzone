@@ -26,7 +26,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
 	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
-	if (game.Game.ID == 40721800 or game.Game.ID == 41169187) then  --krind/prenk test game
+	if (game.Game.ID == 40767112) then  --Go Public Intro game
 		removeGlitchedSUs (game, addOrder); --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the game ID listed above
 	end
 
