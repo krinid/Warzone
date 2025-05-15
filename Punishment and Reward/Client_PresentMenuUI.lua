@@ -26,7 +26,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		local incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [clientPlayerID], game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
 
 		UI.CreateLabel (MenuWindow).SetText ("\nCONSECUTIVE TURN PERIOD Punishments:").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("• Block card piece receiving: " ..tostring (incomeAdjustments.BlockCardPieceReceiving)).SetFlexibleWidth (1.0);
+		UI.CreateLabel (MenuWindow).SetText ("• Nullify receiving card pieces: " ..tostring (incomeAdjustments.BlockCardPieceReceiving)).SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Territories with 0 armies go neutral: " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral)).SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Income reduction: " ..tostring (incomeAdjustments.LongTermPenalty * 100).. "%").SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Army reduction: " ..tostring (incomeAdjustments.ArmyReduction*100).. "%").SetFlexibleWidth (1.0);
@@ -37,6 +37,19 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		UI.CreateLabel (MenuWindow).SetText ("• #Total: " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. "   • #Consecutive: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("\nTerritory counts:").SetFlexibleWidth (1.0);
 		UI.CreateLabel (MenuWindow).SetText ("• Average: " ..tostring (math.floor ((incomeAdjustments.AverageTerritoryCount) * 100 + 0.5)/100).. "   • Highest: " ..tostring (incomeAdjustments.HighestTerritoryCount)).SetFlexibleWidth (1.0);
+
+		--check for presence of Workers -- flag it somewhere in PublicGameData, then display this iff Workers are in play or Can build cities (else it's irrelevant)
+		-- if (game.Settings.CommerceGame == false) then alert ("Commerce must be enabled to function properly.\n\nIf you wish to use this mod, enable Commerce. Otherwise, disable this mod to proceed."); end
+		if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.LatestStanding.Territories, "Worker")) then
+			local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[game.Us.ID] = game.Game.Players [game.Us.ID]});
+			UI.CreateLabel (MenuWindow).SetText ("\nCITY REWARDS:\n• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
+			-- UI.CreateLabel (MenuWindow).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
+			UI.CreateLabel (MenuWindow).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
+			-- UI.CreateLabel (MenuWindow).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+"..tostring (cityRewards[game.Us.ID].numCities * cityRewardIncrement * cityRewards[game.Us.ID].numCitiesWithinTolerance).. "]").SetFlexibleWidth (1.0);
+			UI.CreateLabel (MenuWindow).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForCityStacksWithinTolerance).. "]").SetFlexibleWidth (1.0);
+			-- UI.CreateLabel (MenuWindow).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities * cityRewards[game.Us.ID].numCitiesWithinTolerance * cityRewardIncrement).. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
+			UI.CreateLabel (MenuWindow).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].rewardTotal)).SetFlexibleWidth (1.0);--.. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
+		end
 
 		print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
 		print ("Curr-turn Penalty " ..incomeAdjustments.CurrTurn.PunishmentUnits.. ", Reward " ..incomeAdjustments.CurrTurn.RewardUnits.. ", attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", captures " ..incomeAdjustments.CurrTurn.Captures.. ", #territories " ..incomeAdjustments.CurrTurn.TerritoryCount.. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
@@ -73,12 +86,17 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	end
 
-	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nDetails:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of " ..tostring (1*punishmentIncrement*100).. "% on each category of:\n(A) Attacks [at least 1 attack made]\n(B) Captures [at least 1 capture made]\n(C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nDetails:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of +" ..tostring (1*rewardIncrement*100).. "% on each category of:\n(A) Attacks [at least 1 attack made]\n(B) Captures [at least 1 capture made]\n(C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("\nIn addition to the single turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 1-3 turns: no additional long term penalty").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, -5% armies on all territories & territories with 0 units go neutral & blockade (with added units)").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MenuWindow).SetText ("• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, -10% armies on all territories, territories with 0 units go neutral & blockade (with added units)").SetFlexibleWidth (1.0);
+
+	--only display if Cities can be built or if Workers are in use (but how to check for workers? see if any are on the map already? that's the only way to know for sure b/c can't check the mods in play)
+	-- CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the # of cities is within 10% of the average cities per territories (#territories/#cities). There are no Punishments for city distribution");
+	-- CreateLabel (MenuWindow).SetText ("\n# territories: tbd, # cities: tbd, av cities/territory (ACT): tbd");
+	-- CreateLabel (MenuWindow).SetText ("\n# territories with city count within 10% ACT: tbd, Reward: xx% (yy gpt)");
 
 	if (game.Us.ID == 1058239) then
 	-- if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
@@ -119,10 +137,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 			-- end
 		end
 	end
-	--only display if Cities can be built or if Workers are in use (but how to check for workers? see if any are on the map already? that's the only way to know for sure b/c can't check the mods in play)
-	-- CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the # of cities is within 10% of the average cities per territories (#territories/#cities). There are no Punishments for city distribution");
-	-- CreateLabel (MenuWindow).SetText ("\n# territories: tbd, # cities: tbd, av cities/territory (ACT): tbd");
-	-- CreateLabel (MenuWindow).SetText ("\n# territories with city count within 10% ACT: tbd, Reward: xx% (yy gpt)");
 
 	--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
@@ -138,14 +152,6 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 		print(i, v);
 	end]]
 
-end
-
-function appendCommaSeparatedComponent (strText, strAppendText)
-	local strReturnString = ""
-	if (string.len (strText) ~= 0) then strReturnString = strText.. ", " ..strAppendText;
-	else strReturnString = strAppendText;
-	end
-	return (strReturnString);
 end
 
 function debugPrint (strText, UIlabel)

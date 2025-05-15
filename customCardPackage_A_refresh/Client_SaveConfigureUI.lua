@@ -53,7 +53,7 @@ function createCards_newCards(alert, addCard);
 		print("ShieldWeight="..tostring(Mod.Settings.ShieldWeight))
 
 		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed. It absorbs all incoming regular damage to the territory it resides on and nullifies any defense damage typically done to attackers. "..
-			"In addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Nukes, Tornados, Earthquakes, Pestilence, Airstrikes. A territory cannot be captured while a Shield unit resides on it. ";
+			"In addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Airstrikes, Nukes, Tornados, Earthquakes, Pestilence. A territory cannot be captured while a Shield unit resides on it. ";
 		if (Mod.Settings.ShieldDuration == -1) then
 			strShieldDesc = strShieldDesc .. "Shields never expire.";
 		else
