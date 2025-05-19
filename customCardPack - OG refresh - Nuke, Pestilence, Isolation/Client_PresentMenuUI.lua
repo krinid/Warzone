@@ -372,18 +372,19 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
 					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, specialUnit.ModID, getUnitDescription (specialUnit));
 					strSUtype = specialUnit.Name;
-					strModSource = tostring (specialUnit.ModID);
 					strSUname = specialUnit.Name;
-					if (strSUtype ~= strSUname) then strSUtype = strSUtype .. " [" .. strSUname .. "]"; end;
-					if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUtype = "Behemoth [" .. strSUname .. "]"; end
+					strModSource = tostring (specialUnit.ModID);
+					-- if (specialUnit.TextOverHeadOpt ~= nil) then strSUtype = strSUtype .. " [" .. specialUnit.TextOverHeadOpt .. "]"; end;
+					-- if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUtype = "Behemoth [" .. strSUtype .. "]"; end
+					if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUname = "Behemoth"; end
 				else
 					CreateLabel(UIdisplay).SetText("Unit type '" ..specialUnit.proxyType.."' not implemented yet").SetColor(colors["Orange Red"]);
 					strSUtype = "Other";
 					strModSource = "---";
 					strSUname = "Other";
 				end
-				if (unitSummary [terr.OwnerPlayerID][strSUtype] == nil) then unitSummary [terr.OwnerPlayerID][strSUtype] = 0; end
-				unitSummary [terr.OwnerPlayerID][strSUtype] = unitSummary [terr.OwnerPlayerID][strSUtype] + 1; --increment SU type count for this player in summary table
+				if (unitSummary [terr.OwnerPlayerID][strSUname] == nil) then unitSummary [terr.OwnerPlayerID][strSUname] = 0; end
+				unitSummary [terr.OwnerPlayerID][strSUname] = unitSummary [terr.OwnerPlayerID][strSUname] + 1; --increment SU type count for this player in summary table
 			end
 		end
 	end
