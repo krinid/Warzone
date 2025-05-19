@@ -374,7 +374,8 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 					strSUtype = specialUnit.Name;
 					strModSource = tostring (specialUnit.ModID);
 					strSUname = specialUnit.Name;
-					if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUtype = "Behemoth"; end
+					if (strSUtype ~= strSUname) then strSUtype = strSUtype .. " [" .. strSUname .. "]"; end;
+					if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUtype = "Behemoth [" .. strSUname .. "]"; end
 				else
 					CreateLabel(UIdisplay).SetText("Unit type '" ..specialUnit.proxyType.."' not implemented yet").SetColor(colors["Orange Red"]);
 					strSUtype = "Other";
