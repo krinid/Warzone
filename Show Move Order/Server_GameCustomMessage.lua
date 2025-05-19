@@ -1,17 +1,29 @@
 function Server_GameCustomMessage(game,playerID,payload,setReturn)
 
-	for k,v in pairs (game.ServerGame.LastestTurnStanding) do
-		print (k,v.ID);
+	-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+	-- 	print (k,v.ID);
+	-- end
+
+	print ("[SCGM] NumberOfLogicalTurns ".. tostring (game.ServerGame.Game.NumberOfLogicalTurns).. ", NumberOfTurns ".. tostring (game.ServerGame.Game.NumberOfTurns));
+
+	if (game.ServerGame.PickOrder ~= nil) then --if ==nil then turn order hasn't been exposed to mods yet (happens once T1 advances to account for case of NLC), so can't access turn order yet, so just leave it as a nil value
+		print ("[SGCM] [Pick Order]");
+		for k,v in pairs (game.ServerGame.PickOrder) do
+			print (v.."/"..game.Game.Players[v].DisplayName(nil, false));
+		end
 	end
 
-	for k,v in pairs (game.ServerGame.CyclicMoveOrder) do
-		print (v, getPlayerName (game, v));
+	local publicGameData = Mod.PublicGameData;
+	if (game.ServerGame.CyclicMoveOrder ~= nil) then --if ==nil then turn order hasn't been exposed to mods yet (happens once T1 advances to account for case of NLC), so can't access turn order yet, so just leave it as a nil value
+		publicGameData.MoveOrder = {};
+		print ("[SGCM] [Move Order]");
+		for k,v in pairs (game.ServerGame.CyclicMoveOrder) do
+			print (v.."/"..game.Game.Players[v].DisplayName(nil, false));
+			table.insert (publicGameData.MoveOrder, v);
+		end
+		Mod.PublicGameData = publicGameData;
 	end
-
-	local moveOrder = game.ServerGame.CyclicMoveOrder;
-	for k,v in pairs (moveOrder) do
-		print (v, getPlayerName (game, v));
-	end
+	setReturn ({publicGameData.MoveOrder});
 end
 
 --[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)

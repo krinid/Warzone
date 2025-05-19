@@ -17,25 +17,59 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --required?
 	-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
 	-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
-	cboxShowActivePlayersOnly = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(MenuWindow)).SetIsChecked (true).SetInteractable(true).SetText("Show active players only");
+	cboxShowActivePlayersOnly = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(MenuWindow)).SetIsChecked (true).SetInteractable(true).SetText("Show active players only").SetOnValueChanged (showMoveOrderDetails);
 
 	vertMoveOrder = UI.CreateVerticalLayoutGroup (MenuWindow); --show move order details in this control
 	showMoveOrderDetails ();
 end
 
 function showMoveOrderDetails ()
+	--if turn order isn't defined in Mod.PublicGameData.MoveOrder, try to get it from a server hook, but if it's still nil after attempting to get it, then it's not exposed to mods yet, and the turn needs to advance to access it; thus it's not available going into T1
+	if (Mod.PublicGameData.MoveOrder == nil) then Game.SendGameCustomMessage ("[getting move order]", {action="getmoveorder"}, populateMoveOrderControl_CallBack); --function () end);
+	else
+		populateMoveOrderControl (Mod.PublicGameData.MoveOrder);
+	end
+
+
+end
+
+function populateMoveOrderControl_CallBack (moveOrder)
+	populateMoveOrderControl (moveOrder[1]);
+end
+
+function populateMoveOrderControl (moveOrderData)
+	UI.Destroy (vertMoveOrder);
+	vertMoveOrder = UI.CreateVerticalLayoutGroup (MenuWindow); --show move order details in this control
 	local vertMoveOrderDetails = UI.CreateVerticalLayoutGroup (vertMoveOrder);
-	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order for this turn:");
+	local boolReverseTurnOrder = false; --if true then turn order is in the order stored in Mod.PublicGameData.MoveOrder (taken from game.ServerGame.CyclicMoveOrder); if false, then reverse the order, start from highest element and go to lowest
+	--this is governed by Game.Game.NumberOfLogicalTurns, which treats picking phase in Manual Dist games as a turn thus reversing the move order cycle for T1 if Manual Dist is in play and leaving it as-is for Auto Dist
+	if (Game.Game.NumberOfLogicalTurns % 2 ~= 0) then boolReverseTurnOrder = true; end
 
-	-- print (tostring (Mod.PublicGameData));
-	-- print (tostring (Mod.PublicGameData.MoveOrder));
-	-- if (Mod.PublicGameData == nil) then Mod.PublicGameData = {}; end
-	if (Mod.PublicGameData.MoveOrder == nil) then Game.SendGameCustomMessage ("[getting move order]", {action="getmoveorder"}, function () end); end
+	print ("[CPMUI] NumberOfLogicalTurns ".. tostring (Game.Game.NumberOfLogicalTurns).. ", NumberOfTurns ".. tostring (Game.Game.NumberOfTurns).. ", NOLT % 2==".. tostring (Game.Game.NumberOfLogicalTurns % 2).. ", reverseOrder ".. tostring (boolReverseTurnOrder));
+	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order for Turn #" ..tostring (Game.Game.TurnNumber)..":");
+	if (moveOrderData == nil) then
+		UI.CreateLabel (vertMoveOrderDetails).SetText ("Turn order not exposed yet; need to advance turn to view");
+	else
+		local startIndex = 1;
+		local endIndex = #moveOrderData;
+		local increment = 1;
+		if (boolReverseTurnOrder == true) then
+			startIndex = #moveOrderData
+			endIndex = 1;
+			increment = -1;
+		end
 
-	for k,v in pairs (Mod.PublicGameData.MoveOrder) do
-		if (cboxShowActivePlayersOnly == false or isPlayerActive (v.PlayerID) == true) then
-			--game.ServerGame.Game.PlayingPlayers
-			UI.CreateLabel (vertMoveOrderDetails).SetText (k..". " ..getPlayerName (game, v.PlayerID));
+		local playerID;
+		local numItemsDisplayed = 0;
+		for k=startIndex, endIndex, increment do
+		-- for k,playerID in pairs (moveOrderData) do
+			playerID = moveOrderData [k];
+			print ("[CPMUI MO] ".. tostring(k),tostring(playerID),getPlayerName (Game, playerID),tostring(isPlayerActive (Game, playerID)).. ", cbox ".. tostring(cboxShowActivePlayersOnly.GetIsChecked()));
+			if (cboxShowActivePlayersOnly.GetIsChecked() == false or isPlayerActive (Game, playerID) == true) then
+				--game.ServerGame.Game.PlayingPlayers
+				numItemsDisplayed = numItemsDisplayed + 1;
+				UI.CreateLabel (vertMoveOrderDetails).SetText (numItemsDisplayed..". " ..getPlayerName (Game, playerID));
+			end
 		end
 	end
 end
@@ -51,7 +85,7 @@ end
 function getPlayerName(game, playerid)
 	if (playerid == nil) then return "Player DNE (nil)";
 	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
-	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
+	-- elseif (tonumber(playerid)<50) then return ("AI "..playerid);
 	else
 		for _,playerinfo in pairs(game.Game.Players) do
 			if(tonumber(playerid) == tonumber(playerinfo.ID))then
@@ -63,13 +97,14 @@ function getPlayerName(game, playerid)
 end
 
 --accept player object, return result true is player active in game; false is player is eliminated, booted, surrendered, etc
-function isPlayerActive (playerID, game)
+function isPlayerActive (game, playerID)
 	--if (playerid<=50) then
 
 	local player = game.Game.Players[playerID];
+	-- print ("STATE " ..player.State, WL.GamePlayerState.ToString(player.State));
 
 	--if VTE, player was removed by host or decline the game, then player is not Active
-	if player.State ~= WL.GamePlayerState.EndedByVote and player.State ~= WL.GamePlayerState.RemovedByHost and player.State ~= WL.GamePlayerState.Declined then
+	if player.State == WL.GamePlayerState.EndedByVote or player.State == WL.GamePlayerState.RemovedByHost or player.State == WL.GamePlayerState.Declined then
 		return (false);
 	--if eliminated or booted (and not AI), then player is not active
 	elseif ((player.State == WL.GamePlayerState.Eliminated) or (player.State == WL.GamePlayerState.Booted and not game.Settings.BootedPlayersTurnIntoAIs) or (player.State == WL.GamePlayerState.SurrenderAccepted and not game.Settings.SurrenderedPlayersTurnIntoAIs)) then

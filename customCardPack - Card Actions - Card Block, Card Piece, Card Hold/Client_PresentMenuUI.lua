@@ -293,15 +293,41 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 	local line = UI.CreateHorizontalLayoutGroup (UIdisplay);
 	UI.CreateLabel(line).SetText("[UNIT INSPECTOR]   ").SetColor(getColourCode("main heading"));
 	UI.CreateLabel(line).SetText("Showing data for all visible Special Units and territories they reside on").SetColor("#FFFFFF");
+	local vertSUsummaryByPlayer = UI.CreateVerticalLayoutGroup (UIdisplay).SetFlexibleWidth(1);
+	UI.CreateLabel(vertSUsummaryByPlayer).SetText("[Player Summaries]").SetColor(getColourCode("main heading"))
 
 	local strDisplayType = "plain";
 	local boolVerboseMode = false;
+	local unitSummary = {}; --summarize for each player the # and types of SUs they have
+	local strTerritoryCountIdentifier = "!!Terr/---"; --identifier for territory count in summary table
+	local strTerritoryWithArmiesCountIdentifier = "!!Terr+armies/---"; --identifier for territory count that have armies on them in summary table
+	local strTerritoryWithSUsCountIdentifier = "!!Terr+SUs/---"; --identifier for territory count that have SUs on them in summary table
+	local strArmiesCountIdentifier = "!!Armies/---"; --identifier for army count in summary table
+	local strSUcountIdentifier = "!!SUs/---"; --identifier for SU count in summary table
+
+	UI.CreateEmpty (UIdisplay);
+	UI.CreateEmpty (UIdisplay);
+	UI.CreateLabel(UIdisplay).SetText("\n[Territory Summaries]").SetColor(getColourCode("main heading"));
 
 	for _,terr in pairs (game.LatestStanding.Territories) do
 		--print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
 		local boolCurrentTerritoryHeaderDisplayed = false;
 		local numSpecialsOnTerritory = 0;
+		if (unitSummary [terr.OwnerPlayerID]) == nil then
+			unitSummary [terr.OwnerPlayerID] = {};
+			unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] = 0;
+			unitSummary [terr.OwnerPlayerID][strTerritoryWithArmiesCountIdentifier] = 0;
+			unitSummary [terr.OwnerPlayerID][strTerritoryWithSUsCountIdentifier] = 0;
+			unitSummary [terr.OwnerPlayerID][strArmiesCountIdentifier] = 0;
+			unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] = 0;
+		end
+		unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] + 1; --increment territory count for this player in summary table
+		unitSummary [terr.OwnerPlayerID][strArmiesCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] + terr.NumArmies.NumArmies; --increase army count for this player in summary table
+		unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] = unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] + #terr.NumArmies.SpecialUnits; --increase SU count for this player in summary table
+		if (terr.NumArmies.NumArmies > 0) then unitSummary [terr.OwnerPlayerID][strTerritoryWithArmiesCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryWithArmiesCountIdentifier] + 1; end --increment Territory with Armies counter for this player in summary table
+
 		if (#terr.NumArmies.SpecialUnits >= 1) then
+			unitSummary [terr.OwnerPlayerID][strTerritoryWithSUsCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryWithSUsCountIdentifier] + 1; --increment Territory with SUs counter for this player in summary table
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
 				if (boolCurrentTerritoryHeaderDisplayed == false) then
@@ -328,19 +354,49 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 
 				print (strSUdetailsLineFull);
 
+				local strSUtype = "Other"; --indicates mod type to use for indexing in unitSummary table
+				local strModSource = "---"; --for non-Custom SUs use "---" as the mod source so they can never match anything with the same name
+				local strSUname = "tbd"; --indicates user-friendly name of SU to display to players
+
 				if (specialUnit.proxyType == "Commander") then
 					--reference: displaySpecialUnitProperties (UIcontrol, strDisplayType, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, isVisibleToAllPlayers, modID, modData)
 					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Commander", 7, nil, 7, nil, 7, 0, nil, 10000, false, false, false, true, false, nil, nil);
+					strSUtype = "Commander";
+					strModSource = "---";
+					strSUname = "Commander";
 				elseif (specialUnit.proxyType == "Boss3") then
 					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, "Boss3", specialUnit.Power, nil, specialUnit.Power, nil, specialUnit.Power, 0, nil, 10000, false, false, false, true, false, nil, "Stage "..specialUnit.Stage.." of 3");
+					strSUtype = "Boss";
+					strModSource = "---";
+					strSUname = "Boss";
 				elseif (specialUnit.proxyType == "CustomSpecialUnit") then
 					displaySpecialUnitProperties (UIdisplay, strDisplayType, boolVerboseMode, strSUownerName, specialUnit.Name, specialUnit.AttackPower, specialUnit.AttackPowerPercentage, specialUnit.DefensePower, specialUnit.DefensePowerPercentage, specialUnit.DamageToKill, specialUnit.DamageAbsorbedWhenAttacked, specialUnit.Health, specialUnit.CombatOrder, specialUnit.CanBeGiftedWithGiftCard, specialUnit.CanBeTransferredToTeammate, specialUnit.CanBeAirliftedToTeammate, specialUnit.CanBeAirliftedToSelf, specialUnit.IsVisibleToAllPlayers, specialUnit.ModID, getUnitDescription (specialUnit));
+					strSUtype = specialUnit.Name;
+					strModSource = tostring (specialUnit.ModID);
+					strSUname = specialUnit.Name;
+					if (string.sub(strSUtype, 1, 8) == "Behemoth") then strSUtype = "Behemoth"; end
 				else
 					CreateLabel(UIdisplay).SetText("Unit type '" ..specialUnit.proxyType.."' not implemented yet").SetColor(colors["Orange Red"]);
+					strSUtype = "Other";
+					strModSource = "---";
+					strSUname = "Other";
 				end
+				if (unitSummary [terr.OwnerPlayerID][strSUtype] == nil) then unitSummary [terr.OwnerPlayerID][strSUtype] = 0; end
+				unitSummary [terr.OwnerPlayerID][strSUtype] = unitSummary [terr.OwnerPlayerID][strSUtype] + 1; --increment SU type count for this player in summary table
 			end
 		end
 	end
+
+	--display summary of SUs by player
+	for k,v in pairs (unitSummary) do
+		UI.CreateLabel (vertSUsummaryByPlayer).SetText ("Player " ..k.. "/".. toPlayerName (k, game).. ", #Terrs "..unitSummary [k][strTerritoryCountIdentifier]..", #Terrs with Armies "..unitSummary [k][strTerritoryWithArmiesCountIdentifier]..", #Terrs with SUs "..unitSummary [k][strTerritoryWithSUsCountIdentifier].. ", #Armies ".. unitSummary [k][strArmiesCountIdentifier].. ", #SUs ".. unitSummary [k][strSUcountIdentifier]).SetColor(getColourCode("subheading"));
+		for k2, v2 in pairs (v) do
+			if (string.sub (k2, 1, 2) ~= "!!") then UI.CreateLabel (vertSUsummaryByPlayer).SetText ("   "..k2.. ": " ..v2  .." unit".. plural(v2)); end --ignore the items that start with "!!" (these are aggregate summaries already displayed on the line with the player name)
+		end
+		if (unitSummary [k][strSUcountIdentifier] == 0) then UI.CreateLabel (vertSUsummaryByPlayer).SetText ("   No SUs"); end
+	end
+	-- UI.CreateLabel (vertSUsummaryByPlayer).SetText ("   ");
+	UI.CreateEmpty (vertSUsummaryByPlayer);
 end
 
 --[[ function displaySpecialUnitProperties_plain (UIcontrol, owner, name, attackPower, attackPowerPercentage, defensePower, defensePowerPercentage, damageToKill, damageAbsorbedWhenAttacked, health, combatOrder, canBeGifted, canBeTransferredToTeammate, canBeAirliftedToTeammate, canBeAirliftedToSelf, isVisibleToAllPlayers, modData)

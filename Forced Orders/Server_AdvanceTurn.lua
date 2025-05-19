@@ -53,7 +53,7 @@ end
 
 function Server_AdvanceTurn_Order_cancelAllAI1orders (game, order, result, skip, addNewOrder)
 	--if (order.PlayerID == 1) then skip (WL.ModOrderControl.Skip); end --skip this order for AI1
-	if (order.PlayerID == 1) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip this order for AI1
+	if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip this order for AI1
 end
 
 function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)

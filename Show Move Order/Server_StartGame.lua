@@ -1,11 +1,12 @@
 function Server_StartGame (game, standing)
-		for _,playerinfo in pairs(game.Game.Players) do
-			print (playerinfo.ID, playerinfo.DisplayName(nil, false));
-		end
+	-- 	for _,playerinfo in pairs(game.Game.Players) do
+	-- 		print ("[SSG PL] "..playerinfo.ID .."/".. playerinfo.DisplayName(nil, false));
+	-- 	end
 
 	-- local moveOrder = game.ServerGame.CyclicMoveOrder; --Game.GetTurn (1);
 	-- for k,v in pairs (moveOrder) do
-	-- 	print (v, getPlayerName (game, v));
+	-- 	-- print (v, getPlayerName (game, v));
+	-- 	print ("[SSG MO] "..v .."/".. game.Game.Players[v].DisplayName(nil, false));
 	-- end
 end
 
