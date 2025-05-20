@@ -1,0 +1,1 @@
+This mod sets a limit on the amount of territories that can be owned by each player. Whenever the player exceeds the territory limit, territories will turn neutral in th order of least amount of armies.
