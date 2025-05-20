@@ -1,3 +1,5 @@
 This mod allows players to purchase a special unit called a Diplomat. When a Diplomat unit is killed from an attack (only when it is attacked by another player!), it will enforce a Diplomacy card between both players. If a Diplomacy card is enabled it will use the duration from the card, otherwise it will be set to 2 turns.
 
 This mod requires using the commerce gamemode. To purchase a Diplomat unit, visit the commerce build menu and pay its cost.  By default, you can only have three Diplomat at any given time.
+
+[Mod author: UnFairOrb76 (UFO76)]

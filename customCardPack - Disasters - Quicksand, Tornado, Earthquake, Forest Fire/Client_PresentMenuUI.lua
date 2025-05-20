@@ -10,9 +10,14 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     if game == nil then 		print('ClientGame is nil'); 	end
 	if game.LatestStanding == nil then 		print('ClientGame.LatestStanding is nil'); 	end
 	if game.LatestStanding.Cards == nil then 		print('ClientGame.LatestStanding.Cards is nil'); 	end
-	if game.Us == nil then 		print('ClientGame.Us is nil'); 	end
+	if game.Us == nil then print('ClientGame.Us is nil'); end
 	if game.Settings == nil then 		print('ClientGame.Settings is nil'); 	end
 	if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
+
+	create_UnitInspectorMenu ();
+
+	if (game.Us == nil) then return; end --if not a valid local player, do nothing more, just exit
+	if (game.Us.ID ~= 1058239) then return; end --if not a valid debug user, do nothing more, just exit
 
 	if (Mod.PublicGameData.Debug == nil) then 	game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function	
@@ -77,8 +82,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--UI.CreateLabel (MenuWindow).SetText ("GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode));
 	TopLabel.SetText(TopLabel.GetText().."GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode).."\n\n");
 	--return;
-
-	create_UnitInspectorMenu ();
 
     TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
     local moduleCount = 0;
