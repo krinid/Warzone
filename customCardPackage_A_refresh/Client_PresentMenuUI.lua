@@ -130,7 +130,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		print(i, v);
 	end]]
 
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
+
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom == true) then CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Phantom Fog Level: " .. Mod.Settings.PhantomFogLevel .. "/" .. WL.StandingFogLevel.ToString (Mod.Settings.PhantomFogLevel)); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end

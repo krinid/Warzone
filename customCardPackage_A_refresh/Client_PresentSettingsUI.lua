@@ -97,8 +97,10 @@ function Client_PresentSettingsUI(rootParent)
         end
         local strFogLevel = "Normal Fog (can't see units or owner of territory)";
         if (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly) then strFogLevel = "Light Fog (can see owner of territory but not units)";
-        elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Visible) then strFogLevel = "Fully Visible (can see owner and any units on the territory). "; --this should never happen; only options on the configure page are Light & Normal Fog
-        end
+        elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Visible) then strFogLevel = "Fully Visible (can see owner and any units on the territory)"; --this should never happen; only options on the configure page are Light & Normal Fog
+        elseif (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged) then strFogLevel = "Normal Fog (can't see units or owner of territory)";
+ 		else strFogLevel = " [invalid Phantom Fog Level settings]. ";
+		end
         CreateLabel(UImain).SetText("Fog level: " .. strFogLevel);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.PhantomPiecesNeeded);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.PhantomStartPieces);

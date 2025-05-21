@@ -19,13 +19,18 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		local goldSpent = tonumber(orderComponents[4]);
 
 		if (strOperation == "Purchase") then
-			createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent);
+			if (goldSpent > 0) then
+				createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent);
+			else
+				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
+				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}));
+			end
 		else
 			print ("[BEHEMOTH] unsupported operation: " .. strOperation);
 			return;
 		end
 	elseif (order.proxyType=='GameOrderAttackTransfer' and game.ServerGame.LatestTurnStanding.Territories [order.To].IsNeutral == true) then
-		--order is an attack on a neutral territory (technically it's an Attack or a Transfer, but since the target is neutral, it can only be an attack)
+		--order is an attack on a neutral territory (technically it's an Attack or a Transfer, but since the target is neutral, it can only be an attack; though I suppose it's possible that some mod could do 'neutral moves' of some sort?)
 		--for any Behemoths in the order, do:
 			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage
 			--(B) ensure damage against the neutral is calculated correctly as per Mod.Settings.BehemothStrengthAgainstNeutrals
