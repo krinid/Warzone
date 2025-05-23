@@ -1,0 +1,11 @@
+This mod shows move order in the mod menu (Game/Mod: Show Move Order) when 'Cyclic' move order has been selected for a template. Only use it when you want players to be able to see the move order.
+
+It also permits you to filter the move order list to show only active players.
+
+The use case for this mod is an alternative to No-Luck-Cycle (NLC) move order, which shows move order but also forces a timer on the picking round (for Manual Distribution game) or Turn 1 move input (for Auto-Distribution games).
+
+Using this mod, you can select 'Cyclic' move order and still show the move order while players are inputting their moves.
+
+When using NLC, move order is already displayed in the Game menu, so using this mod with NLC is superfluous, but may still have value if the game has a lot of players so you can filter for active players only and get a short list of move order, without having to sift through a long list looking for only a few key player names.
+
+When using Random move order, this mod has no effect. It won't show you the move order, and you have to wait until the turn advances to see what the order will be.

@@ -45,10 +45,15 @@ function populateMoveOrderControl (moveOrderData)
 	--this is governed by Game.Game.NumberOfLogicalTurns, which treats picking phase in Manual Dist games as a turn thus reversing the move order cycle for T1 if Manual Dist is in play and leaving it as-is for Auto Dist
 	if (Game.Game.NumberOfLogicalTurns % 2 ~= 0) then boolReverseTurnOrder = true; end
 
-	print ("[CPMUI] NumberOfLogicalTurns ".. tostring (Game.Game.NumberOfLogicalTurns).. ", NumberOfTurns ".. tostring (Game.Game.NumberOfTurns).. ", NOLT % 2==".. tostring (Game.Game.NumberOfLogicalTurns % 2).. ", reverseOrder ".. tostring (boolReverseTurnOrder));
-	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order for Turn #" ..tostring (Game.Game.TurnNumber)..":");
+	-- print ("[CPMUI] NumberOfLogicalTurns ".. tostring (Game.Game.NumberOfLogicalTurns).. ", NumberOfTurns ".. tostring (Game.Game.NumberOfTurns).. ", NOLT % 2==".. tostring (Game.Game.NumberOfLogicalTurns % 2).. ", reverseOrder ".. tostring (boolReverseTurnOrder));
+	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order type: " ..tostring (WL.MoveOrderEnum.ToString (Game.Settings.MoveOrder)));
+
+	if (Game.Settings.MoveOrder == WL.MoveOrderEnum.Random) then UI.CreateLabel (vertMoveOrderDetails).SetText ("\n• Move order is Random - move order cannot be displayed\n• The turn must advance before turn order will be determined"); return; end
+
+	UI.CreateLabel (vertMoveOrderDetails).SetText ("\nMove order for Turn #" ..tostring (Game.Game.TurnNumber)..":");
+
 	if (moveOrderData == nil) then
-		UI.CreateLabel (vertMoveOrderDetails).SetText ("Turn order not exposed yet; need to advance turn to view\n\nThis happens in Auto-Dist games on T1; move order will show properly starting from T2");
+		UI.CreateLabel (vertMoveOrderDetails).SetText ("• Turn order not exposed yet; need to advance turn to view\n• This happens in Auto-Dist games on T1; move order will show properly starting from T2");
 	else
 		local startIndex = 1;
 		local endIndex = #moveOrderData;
@@ -64,7 +69,7 @@ function populateMoveOrderControl (moveOrderData)
 		for k=startIndex, endIndex, increment do
 		-- for k,playerID in pairs (moveOrderData) do
 			playerID = moveOrderData [k];
-			print ("[CPMUI MO] ".. tostring(k),tostring(playerID),getPlayerName (Game, playerID),tostring(isPlayerActive (Game, playerID)).. ", cbox ".. tostring(cboxShowActivePlayersOnly.GetIsChecked()));
+			-- print ("[CPMUI MO] ".. tostring(k),tostring(playerID),getPlayerName (Game, playerID),tostring(isPlayerActive (Game, playerID)).. ", cbox ".. tostring(cboxShowActivePlayersOnly.GetIsChecked()));
 			if (cboxShowActivePlayersOnly.GetIsChecked() == false or isPlayerActive (Game, playerID) == true) then
 				--game.ServerGame.Game.PlayingPlayers
 				numItemsDisplayed = numItemsDisplayed + 1;
