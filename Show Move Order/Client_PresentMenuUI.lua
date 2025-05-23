@@ -48,7 +48,7 @@ function populateMoveOrderControl (moveOrderData)
 	print ("[CPMUI] NumberOfLogicalTurns ".. tostring (Game.Game.NumberOfLogicalTurns).. ", NumberOfTurns ".. tostring (Game.Game.NumberOfTurns).. ", NOLT % 2==".. tostring (Game.Game.NumberOfLogicalTurns % 2).. ", reverseOrder ".. tostring (boolReverseTurnOrder));
 	UI.CreateLabel (vertMoveOrderDetails).SetText ("Move order for Turn #" ..tostring (Game.Game.TurnNumber)..":");
 	if (moveOrderData == nil) then
-		UI.CreateLabel (vertMoveOrderDetails).SetText ("Turn order not exposed yet; need to advance turn to view");
+		UI.CreateLabel (vertMoveOrderDetails).SetText ("Turn order not exposed yet; need to advance turn to view\n\nThis happens in Auto-Dist on T1; move order will show properly starting from T2");
 	else
 		local startIndex = 1;
 		local endIndex = #moveOrderData;
