@@ -1,4 +1,4 @@
-require ('utilities');
+require ('utilities'); --CardPack
 
 --This code is used to process a manual attack when the built-in WZ attack mechanics can't be leveraged for the desired result
 --3 use cases at this point are:

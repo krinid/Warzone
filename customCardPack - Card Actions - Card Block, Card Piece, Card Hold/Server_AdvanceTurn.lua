@@ -26,9 +26,9 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
 	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
-	if (game.Game.ID == 40767112) then  --Go Public Intro game
-		removeGlitchedSUs (game, addOrder); --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the game ID listed above
-	end
+	-- if (game.Game.ID == 40767112) then  --Go Public Intro game
+	-- 	removeGlitchedSUs (game, addOrder); --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the game ID listed above
+	-- end
 
 	--Limited Multimove game - stale Shields/Monoliths force expiry
 
@@ -50,6 +50,19 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- local boolHaltCodeExecutionAtEndofTurn = true;
 	local intHaltOnTurnNumber = 1;
 	if (boolHaltCodeExecutionAtEndofTurn==true and game.Game.TurnNumber >= intHaltOnTurnNumber) then endEverythingHereToHelpWithTesting(); ForNow(); end
+
+
+	--super DELME! --> Debugging for 40 Africas game
+	--cause stack overflow due to too many orders; keep adding a new order whenever it hits the _End so there's always more, then see what last order# was == the limit before crashing
+	-- while (intOrderCount < 10) do
+	-- for i=intOrderCount+1, 10 do
+	-- 	addOrder (WL.GameOrderEvent.Create(0, "SATE dummy order "..tostring (i)));
+	-- 	-- print ("[S_AT_E] dummy order "..tostring (i).. "; past limit: "..tostring (intSkippedOrderCount));
+	-- end
+
+	--super DELME! --> Debugging for 40 Africas game
+	addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]"));
+	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
 
 --Server_AdvanceTurn_Order
@@ -58,8 +71,10 @@ end
 ---@param orderResult GameOrderResult
 ---@param skipThisOrder fun(modOrderControl: EnumModOrderControl) # Allows you to skip the current order
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
-function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
+function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
+
+	debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNewOrder);
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -94,6 +109,8 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	local publicGameData = Mod.PublicGameData;
 	local privateGameData = Mod.PrivateGameData;
 	turnNumber = game.Game.TurnNumber;
+	intOrderCount = 0; --reset order count to 0, increase it in Server_AdvanceTurn_Order for each order processed
+	intSkippedOrderCount = 0; --reset skipped order count to 0, increase it in Server_AdvanceTurn_Order for each skipped order; NOTE: this is not for typical skipped orders, just the ones used in debugging issues
 
 	printDebug ("------------SERVER TURN ".. game.Game.TurnNumber.." ADVANCE------------");
 
@@ -125,6 +142,40 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		end
 	end]]
 	print ("[Server_AdvanceTurn_Start] END; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
+end
+
+function debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNewOrder)
+	intOrderCount = intOrderCount + 1;
+	if (game.Game.ID == 41159172) then --40 Africas game
+		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
+		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
+
+		if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
+			-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
+			addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
+			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+			return;
+		elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
+			--let the order proceed
+			printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
+		--if exceeded max orders, skip all remaining orders
+		elseif (intOrderCount > 4999) then
+			intSkippedOrderCount = intSkippedOrderCount + 1;
+			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+			return;
+		else
+			printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
+			if (order.proxyType == "GameOrderAttackTransfer") then
+				printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+			elseif (order.proxyType == "GameOrderPlayCardCustom") then
+				printDebug ("       cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+			elseif (order.proxyType == "GameOrderCustom") then
+				printDebug ("       Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
+			elseif (order.proxyType == "GameOrderEvent") then
+				printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+			end
+		end
+	end
 end
 
 --add FogMods to all territories where Phantoms currently reside and any territories that is being attacked from a territory where a Phantom resides, even if the Phantom itself isn't participating in the attack

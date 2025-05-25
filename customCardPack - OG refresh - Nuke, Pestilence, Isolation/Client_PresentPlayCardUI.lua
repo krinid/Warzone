@@ -902,8 +902,8 @@ function updateAirstrikePanelDetails ()
 
 	CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
     CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("- Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• armies that die in addition to regular battle damage taken\n- Special Units are not impacted");
+    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
     CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
 
 	local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
