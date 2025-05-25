@@ -1,4 +1,4 @@
-require ('utilities');
+require ('utilities'); --LMM
 
 --This code is used to process a manual attack when the built-in WZ attack mechanics can't be leveraged for the desired result
 --3 use cases at this point are:
@@ -78,10 +78,10 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	-- print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
 	printDebug ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
-	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, game, addNewOrder, boolWZattackTransferOrder);
+	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, game, addNewOrder, boolWZattackTransferOrder, nil);
 	-- print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
 	printDebug ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
-	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, game, addNewOrder, boolWZattackTransferOrder);
+	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, game, addNewOrder, boolWZattackTransferOrder, {["Flag"]=384, ["Captured Flag"]=384}); --Flag/Captured Flag SUs from Mod#384 (Capture the Flag mod) are invulnerable SUs
 	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
 	-- print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
 	printDebug ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned, "..tablelength (defenderResult.DamageToSpecialUnits).." damaged]");
@@ -89,11 +89,13 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	printDebug ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned, "..tablelength (attackerResult.DamageToSpecialUnits).." damaged]");
 	local damageToAllSpecialUnits = concatenateArrays (attackerResult.DamageToSpecialUnits, defenderResult.DamageToSpecialUnits); --combine elements from each array for attacker/defender to get a single array
 	printDebug ("[!DAMAGE SUs both DEFENDER & ATTACKER] #SUs "..tablelength (damageToAllSpecialUnits));
-	for k,v in pairs (defenderResult.DamageToSpecialUnits) do print ("[SUA damage] SU "..k..", damage "..v); end
-	for k,v in pairs (attackerResult.DamageToSpecialUnits) do print ("[SUD damage] SU "..k..", damage "..v); end
-	for k,v in pairs (damageToAllSpecialUnits) do print ("[SUB damage] SU "..k..", damage "..v); end
+	for k,v in pairs (defenderResult.DamageToSpecialUnits) do print ("[SU Def damage] SU "..k..", damage "..v); end
+	for k,v in pairs (attackerResult.DamageToSpecialUnits) do print ("[SU Att damage] SU "..k..", damage "..v); end
+	for k,v in pairs (damageToAllSpecialUnits) do print ("[SU Both damage] SU "..k..", damage "..v); end
 
-	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0) then
+	--if all of defender's armies & SUs are killed & attacker still has at least 1 army or SU surviving, attack is successful, transfer the armies
+	--note that both sides reduced to 0 means attack is unsuccessful, territory not captured
+	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0 and (attackerResult.RemainingArmies >0 or #attackerResult.SurvivingSpecials >0)) then
 		--defender is eliminated, attacker wins
 		boolAttackSuccessful = true;
 		printDebug ("[ATTACK SUCCESSFUL] attacker wins, defender is wiped out from target territory");
@@ -106,12 +108,15 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--if it is not an actual WZ attack/transfer order, then just pass the results back and let the calling function handle the details in a manner appropriately for whatever the use case is
 	--result.IsSuccessful cannot be directly updated, but by updating the actual.AttackingArmies, actual.DefendingArmies, result.AttackingArmiesKilled & result.DefendingArmiesKilled, the result will be processed correctly by the WZ engine
 	if (boolWZattackTransferOrder == true) then
-		result.AttackingArmiesKilled = WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects);
-		result.DefendingArmiesKilled = WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects);
-		result.DamageToSpecialUnits = damageToAllSpecialUnits; --assign damage done to SUs for both attacker & defender
+		local newResult = result;
+		newResult.AttackingArmiesKilled = WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects);
+		newResult.DefendingArmiesKilled = WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects);
+		newResult.DamageToSpecialUnits = damageToAllSpecialUnits; --assign damage done to SUs for both attacker & defender
+		result = newResult;
 	end
 	-- ^^ this doesn't work; the 'result' object isn't updating properly, so must leave it to the calling function to update itself
 	-- the 'result' object received here is likely a Lua copy of the original object, so changes don't propagate back to the original object when _Order function ends
+	-- ^^^ but it should work now b/c instead of modifying result.X properties directly, it copies it to newResult, modifies those properties and saves it back to result=newResult -- this should work now
 
 	return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful, DamageToSpecialUnits=damageToAllSpecialUnits, Result=result, AttackingArmiesKilled=WL.Armies.Create (attackerResult.KilledArmies, attackerResult.KilledSpecialsObjects), DefendingArmiesKilled=WL.Armies.Create (defenderResult.KilledArmies, defenderResult.KilledSpecialsObjects)});
 end
@@ -133,7 +138,9 @@ end
 --the combo of (sortedSpecialUnits+armyCount) is either the Attacker and totalDamage is damage from defender units, or the combo is the Defender and totalDamage is damage from attacker units
 --this function will be called once for each case, once for the Attacker and once for the Defender
 --boolWZattackTransferOrder of true - ...document me...
-function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, game, addNewOrder, boolWZattackTransferOrder)
+--arrInvulnerableSpecials -- string non-sequential array with keys of SUs and value of the ModID the SU comes from, indicating SUs which  should be treated as invulnerable and not take damage (but not prevent other units from taking damage, they just can't take damage 
+--		or die themselves; essentially ignored as part of the attack); currently this is used only in the case of the Flag and Captured Flag SUs from the Capture the Flag mod (mod #384); currently just comparing the SU names, not comparing the SU IDs or originating Mod ID
+function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, totalDamage, game, addNewOrder, boolWZattackTransferOrder, arrInvulnerableSpecials)
 	local remainingDamage = totalDamage;
 	local boolArmiesProcessed = false;
 	local remainingArmies = armyCount;
@@ -147,7 +154,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 	table.insert (sortedSpecialUnits, {CombatOrder=1, proxyType=strDummyPlaceHolder}); --add a dummy element to the end of the table to ensure armies are processed if they haven't been processed so far (if all specials have CombatOrder<0)
 
 	--process Specials with combat orders below armies first, then process the armies, then process the remaining Specials
-	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits);
+	printDebug ("_____________________APPLY DAMAGE "..totalDamage..", #armies "..armyCount..", #specials "..#sortedSpecialUnits.. ", attackTransferOrder " ..tostring (boolWZattackTransferOrder));
 	for k,v in ipairs (sortedSpecialUnits) do
 		local newSpecialUnit_clone = nil;
         local boolCurrentSUdamaged = false;
@@ -196,14 +203,6 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						printDebug ("COMMANDER dies");
 						remainingDamage = math.max (0, remainingDamage - 7);
 						boolCurrentSpecialSurvives = false; --remove commander (don't stop processing; it might not be this player's commander, game needs to continue to cover all cases)
-						--&&& add code here to:
-						--    (A) check if Resurrection cards are in play and if owner of Commander has a whole card in hand
-						--    (B) if Res cards aren't in play, manually eliminate the player
-						--    (C) if Res cards are in play but Commander owner doesn't have a Res card, eliminate the player
-						--    (D) if Res cards are in play and Commander owner has a Res card, remove the Commander, submit CustomGameOrder directed @ Resurrection mod indicating that Commander has died and should be Resurrected
-						--reference: 	addNewOrder(WL.GameOrderEvent.Create(winnerId, 'Decided random winner', {}, eliminate(votes.players, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer)));
-						-- addOrder (addAirLiftCardEvent, false); --add the event to the game order list, ensure 'false' so this order isn't skipped when we skip the Airstrike order
-						-- addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
 						local publicGameData = Mod.PublicGameData;
 						local commanderOwner = v.OwnerID;
 						if (publicGameData.CardData == nil) then publicGameData.CardData = {}; end
@@ -228,7 +227,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							--local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 							--ELIM player!
 							local modifiedTerritories = eliminatePlayer (commanderOwner, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
-							addNewOrder(WL.GameOrderEvent.Create(commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
+							addNewOrder(WL.GameOrderEvent.Create (commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
 							--reference: WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
 
 							--reference: function eliminatePlayer (playerIds, territories, removeSpecialUnits, isSinglePlayer)
@@ -241,51 +240,63 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						boolCurrentSpecialSurvives = true; --add commander to survivingSpecials table
 					end
 				elseif (v.proxyType=="CustomSpecialUnit") then
-					--absorb damage only applies to SUs that don't use Health; if they use Health, DamageAbsorbedWhenAttacked is ignored during regular WZ attacks; mimic that functionality here (even if both DamageAbsorbedWhenAttacked & Health are specified on an SU)
-					--SUs use either (A) Health or (B) DamageToKill + DamageAbsorbedWhenAttacked; if Health is specified, the other 2 properties are ignored
-					if (v.DamageAbsorbedWhenAttacked ~= nil and v.Health == nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); printDebug ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
-					if (v.Health ~= nil) then --SU uses Health (not DamageToKill + DamageAbsorbedWhenAttacked)
-						if (v.Health == 0) then
-							printDebug ("SPECIAL already dead w/0 health, kill it/remove it");
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table & add to killedSpecialsGUIDs table
-						elseif (remainingDamage >= v.Health) then
-							remainingDamage = remainingDamage - v.Health;
-							printDebug ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table & add to killedSpecialsGUIDs table
-						else
-                            --apply damage to special of amount remainingDamage
-                            --2 cases need to be handled here, as follows; provide information to handle both, and let the calling function handle the resulting actions appropriately
-                            --     (case 1) [Limited Multimove] using standard WZ attack order - track damage to SUs and return in a table to be applied via the attack order
-                            --     (case 2) [Airstrike] using totally manual attack order - must clone damaged SUs with the new remaining health and store the SUs in a table
-							printDebug ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
 
-							--(applies to both case 1 & case 2)
-							boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
-							--(case 1) track damage done to SU
-                            local intNewSUhealthAfterDamage = v.Health-remainingDamage;
-                            damageToSpecialUnits [v.ID] = remainingDamage; --assign damage done to damageToSpecialUnits table so it can be applied to the SU via the WZ engine as part of the attackTransfer order
-							remainingDamage = 0; --no more damage left to process
-                            --reference: ---@field DamageToSpecialUnits table<GUID, integer> # The damage done to special units, only when they are not killed
+					--check if this SU is invulnerable and if so, skip it and process the next SU in the list; currently this is only use for the Flag & Captured Flag SUs in the Capture the Flag mod (Mod #384)
+					if (arrInvulnerableSpecials ~= nil and arrInvulnerableSpecials [v.Name] ~= nil) then
+						--this is invulnerable unit -- don't process it, ensure it's marked as surviving (so it's not removed) & taking no damage (so it's not cloned with new health)
+						boolCurrentSpecialSurvives = true; --this is default, don't need to set it, but doing it here for clarity
+						boolCurrentSUdamaged = false; --this is default, don't need to set it, but doing it here for clarity
+						printDebug ("SPECIAL unit is INVULNERBALE - skip processing this; units survives + takes no damage");
+					else
+						--not an invulnerable SU, so process it according to v.DamageAbsorbedWhenAttacked / v.Health / v.DamageToKill
 
-							--(case 2) clone/recreate the SU with new health level; only do this if not using WZ attackTransfer order to handle this attack
-							if (boolWZattackTransferOrder == false) then
-								local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
-								newSpecialUnitBuilder.Health = intNewSUhealthAfterDamage;
-								newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name .."(C)";
-								newSpecialUnit_clone = newSpecialUnitBuilder.Build();
+						--absorb damage only applies to SUs that don't use Health; if they use Health, DamageAbsorbedWhenAttacked is ignored during regular WZ attacks; mimic that functionality here (even if both DamageAbsorbedWhenAttacked & Health are specified on an SU)
+						--SUs use either (A) Health or (B) DamageToKill + DamageAbsorbedWhenAttacked; if Health is specified, the other 2 properties are ignored
+						if (v.DamageAbsorbedWhenAttacked ~= nil and v.Health == nil) then remainingDamage = math.max (0, remainingDamage - v.DamageAbsorbedWhenAttacked); printDebug ("absorb damage "..v.DamageAbsorbedWhenAttacked..", remaining dmg "..remainingDamage); end
+						if (v.Health ~= nil) then --SU uses Health (not DamageToKill + DamageAbsorbedWhenAttacked)
+							if (v.Health == 0) then
+								printDebug ("SPECIAL already dead w/0 health, kill it/remove it");
+								boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table & add to killedSpecialsGUIDs table
+							elseif (remainingDamage >= v.Health) then
+								remainingDamage = remainingDamage - v.Health;
+								printDebug ("SPECIAL dies, health "..v.Health.. ", remaining damage "..remainingDamage);
+								boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table & add to killedSpecialsGUIDs table
+							else
+								--apply damage to special of amount remainingDamage
+								--2 cases need to be handled here, as follows; provide information to handle both, and let the calling function handle the resulting actions appropriately
+								--     (case 1) [Limited Multimove] using standard WZ attack order - track damage to SUs and return in a table to be applied via the attack order
+								--     (case 2) [Airstrike] using totally manual attack order - must clone damaged SUs with the new remaining health and store the SUs in a table
+								printDebug ("SPECIAL survives but health reduced by "..remainingDamage.." to "..v.Health-remainingDamage .. "[clone/remove old/add new]");
+
+								--(applies to both case 1 & case 2)
+								boolCurrentSpecialSurvives = true; --add cloned special to survivingSpecials table
+								boolCurrentSUdamaged = true; --indicates that this SU has been damaged, so it needs to be cloned and added to the survivingSpecials table
+								--(case 1) track damage done to SU
+								local intNewSUhealthAfterDamage = v.Health-remainingDamage;
+								damageToSpecialUnits [v.ID] = remainingDamage; --assign damage done to damageToSpecialUnits table so it can be applied to the SU via the WZ engine as part of the attackTransfer order
+								remainingDamage = 0; --no more damage left to process
+								--reference: ---@field DamageToSpecialUnits table<GUID, integer> # The damage done to special units, only when they are not killed
+
+								--(case 2) clone/recreate the SU with new health level; only do this if not using WZ attackTransfer order which would apply damage to the SU w/o need for cloning with new health level
+								if (boolWZattackTransferOrder == false) then
+									local newSpecialUnitBuilder = WL.CustomSpecialUnitBuilder.CreateCopy(v);
+									newSpecialUnitBuilder.Health = intNewSUhealthAfterDamage;
+									--newSpecialUnitBuilder.Name = newSpecialUnitBuilder.Name.."(C)"; --FOR TESITNG PURPOSES: append (C) to name so it's visible in-game that it's a cloned unit
+									newSpecialUnit_clone = newSpecialUnitBuilder.Build();
+								end
 							end
-						end
-					else   --SU uses DamageToKill + DamageAbsorbedWhenAttacked (not Health)
-						if (remainingDamage > v.DamageToKill) then
-							remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
-							printDebug ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
-							boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
-							--printDebug ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
-						else
-							--apply damage to special of amount remainingDamage
-							printDebug ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
-							boolCurrentSpecialSurvives = true; --add special to survivingSpecials table
-							remainingDamage = 0;
+						else   --SU uses DamageToKill + DamageAbsorbedWhenAttacked (not Health)
+							if (remainingDamage > v.DamageToKill) then
+								remainingDamage = math.max (0, remainingDamage - v.DamageToKill);
+								printDebug ("SPECIAL dies, damage to kill "..v.DamageToKill..", remaining damage "..remainingDamage);
+								boolCurrentSpecialSurvives = false; --remove special from survivingSpecials table
+								--printDebug ("boolCurrentSpecialSurvives "..tostring(boolCurrentSpecialSurvives));
+							else
+								--apply damage to special of amount remainingDamage
+								printDebug ("SPECIAL survives b/c remaining damage "..remainingDamage.." < DamageToKill "..v.DamageToKill.."; remaining damage 0");
+								boolCurrentSpecialSurvives = true; --add special to survivingSpecials table
+								remainingDamage = 0;
+							end
 						end
 					end
 				end
@@ -325,9 +336,7 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 						-- CASE: non-attackorder + survive + damage = add clone to clonedSpecials + survivingSpecials + damageToSpecialUnits + add orig to killedSpecialsGUIDs & killedSpecialsObjects
 						table.insert (survivingSpecials, newSpecialUnit_clone); --add the new cloned Special to the survivingSpecials table; SUs in this table will be added to the target territory if attack is successful
 						table.insert (killedSpecialsGUIDs, v.ID); --add the GUID of the original Special to the killedSpecialsGUIDs table
-print ("KSO+1 "..#killedSpecialsObjects);
 						table.insert (killedSpecialsObjects, v);  --add the original Special object to the killedSpecialsGUIDs table
-print ("KSO+1 "..#killedSpecialsObjects);
 						table.insert (clonedSpecials, newSpecialUnit_clone); --add the new cloned Special to the clonedSpecials table; if attack is unsuccessful, attacking SUs in this table need to be added to the source territory & defending SUs in this table need to be added to the target territory
 						--newSpecialUnit_clone = nil; --reset the clone to nil for next iteration through the loop --> actually don't need to b/c moved the declaration inside the loop
 				end
