@@ -146,6 +146,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 end
 
 function debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNewOrder)
+	if (intOrderCount == nil) then intOrderCount = 0; end
 	intOrderCount = intOrderCount + 1;
 	if (game.Game.ID == 41159172) then --40 Africas game
 		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
