@@ -61,6 +61,20 @@ end
 function Server_AdvanceTurn_Order(game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
+	intOrderCount = intOrderCount + 1;
+	if (true or game.Game.ID == 41159172) then --40 Africas game
+		printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
+		if (order.proxyType == "GameOrderAttackTransfer") then
+			printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+		elseif (order.proxyType == "GameOrderPlayCardCustom") then
+			printDebug ("       cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+		elseif (order.proxyType == "GameOrderCustom") then
+			printDebug ("       Message ".. tostring (order.Message).. "; Paylod ".. tostring (order.Payload));
+		elseif (order.proxyType == "GameOrderEvent") then
+			printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+		end
+	end
+
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
@@ -94,6 +108,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	local publicGameData = Mod.PublicGameData;
 	local privateGameData = Mod.PrivateGameData;
 	turnNumber = game.Game.TurnNumber;
+	intOrderCount = 0; --reset order count to 0, increase it in Server_AdvanceTurn_Order for each order processed
 
 	printDebug ("------------SERVER TURN ".. game.Game.TurnNumber.." ADVANCE------------");
 
