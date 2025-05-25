@@ -19,12 +19,12 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		local goldSpent = tonumber(orderComponents[4]);
 
 		if (strOperation == "Purchase") then
-			if (goldSpent > 0) then
+			-- if (goldSpent > 0) then
 				createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent);
-			else
-				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
-				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}));
-			end
+			-- else
+			-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
+			-- 	addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
+			-- end
 		else
 			print ("[BEHEMOTH] unsupported operation: " .. strOperation);
 			return;
