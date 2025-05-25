@@ -42,8 +42,6 @@ function Server_AdvanceTurn_Start(game,addOrder)
 end
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
-	print ("[yoho] proxyType=="..order.proxyType);
-	--OLD_Server_AdvanceTurn_Order_OLD (game, order, result, skipThisOrder, addNewOrder);
 	if (order.proxyType == "GameOrderCustom" and startsWith(order.Payload, 'Buy Cards|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
 		--if order is GameOrderCustom & Payload indicates "Buy Cards", then process the buy card order, else do nothing (it's some other custom order by some other mod)
 		print ("payload=="..order.Payload..", message=="..order.Message.."::");
@@ -77,15 +75,16 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 				print (strClientTampering);
 				addOrder(WL.GameOrderEvent.Create(order.PlayerID, strClientTampering, {}, {},{}));
 				--skipThisOrder(WL.ModOrderControl.Skip);
-			end 
+			end
 
 			local numCardPieces = game.Settings.Cards[cardID].NumPieces;
 			local event = WL.GameOrderEvent.Create (order.PlayerID, order.Message, {});
 			event.AddCardPiecesOpt = {[order.PlayerID] = {[cardID] = numCardPieces}};
+			event.AddResourceOpt = {[order.PlayerID] = {-pricePaid}}; --Table<PlayerID,Table<ResourceType (enum),integer>>
 			addOrder(event);
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --already added a custom order that adds card pieces, so don't need this order that is just a text notification (it would just dupe)
-		end 
-	end 
+		end
+	end
 end
 
 function getCardName_fromObject(cardConfig)
