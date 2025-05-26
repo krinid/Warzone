@@ -60,7 +60,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- 	-- print ("[S_AT_E] dummy order "..tostring (i).. "; past limit: "..tostring (intSkippedOrderCount));
 	-- end
 
-	--super DELME! --> Debugging for 40 Africas game
+	--super DELME! --> Debugging for CP Go Public Intro game
 		if (game.Game.ID == 40767112) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
 	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
@@ -74,7 +74,7 @@ end
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
-	--40 Africas game
+	--CP Go Public Intro game
 	if (game.Game.ID == 40767112) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); end
 
 	--skip order if this order is a card play by a player impacted by Card Block
