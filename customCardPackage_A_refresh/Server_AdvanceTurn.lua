@@ -152,6 +152,10 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
 		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
+	intSkippedOrderCount = intSkippedOrderCount + 1;
+	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	return;
+
 	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
 		-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
 		addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
