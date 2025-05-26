@@ -161,7 +161,7 @@ function debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNe
 			--let the order proceed
 			printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
 		--if exceeded max orders, skip all remaining orders
-		elseif (intOrderCount > 1000) then
+		elseif (intOrderCount > 500) then
 			intSkippedOrderCount = intSkippedOrderCount + 1;
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 			return;
