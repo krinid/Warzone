@@ -161,10 +161,10 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		--let the order proceed
 		printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
 	--if exceeded max orders, skip all remaining orders
-	elseif (intOrderCount >= 0) then -- 500) then
-		intSkippedOrderCount = intSkippedOrderCount + 1;
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		return;
+	-- elseif (intOrderCount >= 0) then -- 500) then
+	-- 	intSkippedOrderCount = intSkippedOrderCount + 1;
+	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- 	return;
 	else
 		printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
 		if (order.proxyType == "GameOrderAttackTransfer") then
@@ -176,6 +176,8 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		elseif (order.proxyType == "GameOrderEvent") then
 			printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
 		end
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		return;
 	end
 	-- end
 end
