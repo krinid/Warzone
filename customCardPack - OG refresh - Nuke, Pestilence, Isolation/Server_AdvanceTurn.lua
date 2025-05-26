@@ -148,7 +148,7 @@ end
 function debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNewOrder)
 	if (intOrderCount == nil) then intOrderCount = 0; end
 	intOrderCount = intOrderCount + 1;
-	if (game.Game.ID == 41159172) then --40 Africas game
+	if (game.Game.ID == 40767112) then --CardPack - Go Public Intro game
 		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
 		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
@@ -161,7 +161,7 @@ function debugging_for_40Africas (game, order, orderResult, skipThisOrder, addNe
 			--let the order proceed
 			printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
 		--if exceeded max orders, skip all remaining orders
-		elseif (intOrderCount > 2100) then
+		elseif (intOrderCount > 1000) then
 			intSkippedOrderCount = intSkippedOrderCount + 1;
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 			return;
