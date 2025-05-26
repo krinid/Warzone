@@ -20,6 +20,9 @@ Hook=Server_AdvanceTurn_Order Stack=
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_End(game, addOrder)
+end
+
+function real_End ()
 	print ("[S_AT_E]::func start");
 
 	--&&& Shield/Monolith Fix
@@ -72,6 +75,11 @@ end
 ---@param skipThisOrder fun(modOrderControl: EnumModOrderControl) # Allows you to skip the current order
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
+	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- return;
+end
+
+function real_Order ()
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
 	--CP Go Public Intro game
@@ -97,6 +105,9 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
+end
+
+function real_Start ()
 
 	--testing only, DELME DELME
 	-- getTeamPlayers (game, 1058239);
