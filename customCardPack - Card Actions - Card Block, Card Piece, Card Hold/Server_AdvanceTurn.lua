@@ -75,7 +75,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
 	--CP Go Public Intro game
-	if (game.Game.ID == 40767112) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); end
+	if (game.Game.ID == 40767112) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); return; end
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -152,9 +152,19 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
 		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
-	intSkippedOrderCount = intSkippedOrderCount + 1;
-	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-	return;
+	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
+		addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		return;
+	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
+		--let the order proceed
+		printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
+	else
+		intSkippedOrderCount = intSkippedOrderCount + 1;
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		return;
+	end
+
 
 	-- if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
 	-- 	-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
