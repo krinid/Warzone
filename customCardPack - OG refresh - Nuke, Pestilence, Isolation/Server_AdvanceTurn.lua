@@ -156,34 +156,34 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 	return;
 
-	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
-		-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
-		addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		return;
-	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
-		--let the order proceed
-		printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
-	--if exceeded max orders, skip all remaining orders
-	elseif (intOrderCount >= 0) then -- 500) then
-		intSkippedOrderCount = intSkippedOrderCount + 1;
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		return;
-	else
-		printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
-		if (order.proxyType == "GameOrderAttackTransfer") then
-			printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
-		elseif (order.proxyType == "GameOrderPlayCardCustom") then
-			printDebug ("       cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
-		elseif (order.proxyType == "GameOrderCustom") then
-			printDebug ("       Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
-		elseif (order.proxyType == "GameOrderEvent") then
-			printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
-		end
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		return;
-	end
+	-- if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
+	-- 	-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
+	-- 	addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
+	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- 	return;
+	-- elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
+	-- 	--let the order proceed
+	-- 	printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
+	-- --if exceeded max orders, skip all remaining orders
+	-- elseif (intOrderCount >= 0) then -- 500) then
+	-- 	intSkippedOrderCount = intSkippedOrderCount + 1;
+	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- 	return;
+	-- else
+	-- 	printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
+	-- 	if (order.proxyType == "GameOrderAttackTransfer") then
+	-- 		printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+	-- 	elseif (order.proxyType == "GameOrderPlayCardCustom") then
+	-- 		printDebug ("       cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+	-- 	elseif (order.proxyType == "GameOrderCustom") then
+	-- 		printDebug ("       Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
+	-- 	elseif (order.proxyType == "GameOrderEvent") then
+	-- 		printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+	-- 	end
+	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- 	return;
 	-- end
+	-- -- end
 end
 
 --add FogMods to all territories where Phantoms currently reside and any territories that is being attacked from a territory where a Phantom resides, even if the Phantom itself isn't participating in the attack
