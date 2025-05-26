@@ -161,7 +161,7 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		--let the order proceed
 		printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
 	--if exceeded max orders, skip all remaining orders
-	elseif (intOrderCount > 500) then
+	elseif (intOrderCount >= 0) then -- 500) then
 		intSkippedOrderCount = intSkippedOrderCount + 1;
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		return;
