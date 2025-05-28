@@ -136,7 +136,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 		return; --shouldn't ever happen, unless another mod interferes
 	end
 
-	local behemothPower = getBehemothPower(goldSpent);
+	local behemothPower = math.floor (getBehemothPower(goldSpent) + 0.5);
 	local behemothPowerFactor = 1.0; --keep it simple
 	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 

@@ -550,7 +550,6 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 end
 
 --airstrike TODOs:
---support for Dragon Breath?
 --not really Airstrike ... but add support for 'TextOverHeadOpt', 'IncludeABeforeName' & 'ModID' in UnitInspector -- in verbose mode only? ModID should be everywhere actually - add list the mods by name? Put them in a list somewhere?
 --add options for ability to target Commander, Specials, fogged territories, neutrals
 --add option to enable ability to send Commander/Specials or exclude them (similar ability to target them) -- and structures? option to enable/disable targeting territories with them? like Forts ... it gets tricky (impossible) to accurately handle them
@@ -668,6 +667,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	if (boolIsAttack == true) then --Airstrike order is an attack
 		processDragonBreathAttacks (game, addOrder, attackingArmies, targetTerritoryID); --process Dragon Breath attacks if a Dragon with the ability is present in attackingArmies
 		airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder, false);
+		checkForSpecialConditions (airstrikeResult, game, sourceOwner, addOrder); --check if defending Capitalists or Diplomats were killed; if so, apply the appropriate effects
 
 		--airstrikeResult = process_manual_attack (game, game.ServerGame.LatestTurnStanding.Territories[sourceTerritoryID].NumArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result);
 		--airstrikeResult.AttackerResult is armies object for attacker
@@ -691,8 +691,8 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		-- reference: MANUAL ATTACK -- return ({AttackerResult=attackerResult, DefenderResult=defenderResult, IsSuccessful=boolAttackSuccessful});
 	end
 
-	local sourceTerritory = WL.TerritoryModification.Create(sourceTerritoryID);
-	local targetTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+	local sourceTerritory = WL.TerritoryModification.Create (sourceTerritoryID);
+	local targetTerritory = WL.TerritoryModification.Create (targetTerritoryID);
 	local strAirStrikeResultText = "";
 	-- local attackingArmiesToAirlift = nil; --if attack in unsuccessful, leave as nil, this indicates to send 0 armies and no specials, just draw the "0" airlift line
 	local attackingArmiesToAirlift = WL.Armies.Create (0, {}); --if attack in unsuccessful, leave this as 0 armies, 0 SUs, just draw the "0" airlift line
@@ -778,6 +778,35 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		manual_move_units (addOrder, gameOrder.PlayerID, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, attackingArmiesToAirlift);
 	end
 	boolAirliftCardGiftedAlready = false; --reset value to false for next iteration
+end
+
+--check for killed Capitalists & Diplomats among the killed defender SUs; if so, apply the special results according to each SU type
+--requires attackerID to know who the attacker is but don't need defenderID (owner of target territory) as it's not relevant for Capitalist, and it's the owner of the killed defending SU that matters for Diplomat not the owner of the target territory (which can differ)
+function checkForSpecialConditions (airstrikeResult, game, attackerID, addOrder)
+print ("\n\n\n\nKILLED DEFENDING SUs");
+	for _, killedSU in pairs (airstrikeResult.DefenderResult.KilledSpecialsObjects) do
+print (killedSU.proxyType, killedSU.Name);
+		local defenderID = killedSU.OwnerID; --execute the diplo with the owner of the SU, not the owner of the target territory (which could be Neutral or another player)
+		if (killedSU.proxyType == "CustomSpecialUnit") then
+print (killedSU.Name);
+			if (killedSU.Name == "Capitalist") then
+				local currentIncome = game.Game.PlayingPlayers[attackerID].Income (0, game.ServerGame.LatestTurnStanding, false, false);
+				local IncomeAmount = currentIncome.Total;
+				IncomeAmount = IncomeAmount * (0.33); --&&& update so this currently hardcoded value comes from a mod setting; make mod store this in ModData, and get this from killedSU.ModData
+				addOrder (WL.GameOrderEvent.Create (attackerID, getPlayerName (game, attackerID).. " killed a Capitalist; income reduced by 33%", {}, {}, {}, {WL.IncomeMod.Create (attackerID, -IncomeAmount, "You have killed a Capitalist and have been sanctioned")}));
+				printDebug ("[AIRSTRIKE] Capitalist killed, reducing income by 33%"); --&&& see note above RE: hardcoded value
+			elseif (killedSU.Name == "Diplomat") then
+				--if attacker==defender, skip the Diplo operation
+				--also if no Diplo card is enabled in game, can't do anything so just skip it -- but this shouldn't ever happen as Diplo card is enabled in Server_Created
+				if (game.Settings.Cards ~= nil and game.Settings.Cards [WL.CardID.Diplomacy] ~= nil and attackerID ~= defenderID) then
+					local instance = WL.NoParameterCardInstance.Create (WL.CardID.Diplomacy);
+					addOrder (WL.GameOrderReceiveCard.Create (attackerID, {instance}));
+					addOrder (WL.GameOrderPlayCardDiplomacy.Create (instance.ID, attackerID, attackerID, defenderID));
+				end
+				printDebug ("[AIRSTRIKE] Diplomat killed, apply diplomacy between attacker " ..tostring (attackerID.."/"..getPlayerName (game, attackerID)).. " and defender " ..tostring (defenderID.."/"..getPlayerName (game, defenderID)));
+			end
+		end
+	end
 end
 
 function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)

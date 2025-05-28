@@ -47,7 +47,8 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 		function ()
 			BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
 			--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
-			local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+			-- local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+			local behemothPower = getBehemothPower(BehemothGoldSpent);
 			local behemothPowerFactor = 1.0; --keep it simple
 			-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 			Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower.."\nAttack power  " ..behemothPower.. ", Defense power ".. math.floor (behemothPower / 4 + 0.5)..
