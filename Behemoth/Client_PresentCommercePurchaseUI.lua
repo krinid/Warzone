@@ -37,7 +37,7 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
 
 	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately."..
-	"\n\n• < ".. tostring (intGoldLevel1).. " - inefficient [better to buy armies]"..
+	"\n\n• < ".. tostring (intGoldLevel1).. " --> inefficient [better to buy armies]"..
 	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> efficient [may make sense to buy a Behemoth]"..
 	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> highly efficient [valuable to buy a Behemoth]"..
 	"\n• ≥ ".. tostring (intGoldLevel3).. " --> immensely efficient [incredibly beneficial to buy a Behemoth]");

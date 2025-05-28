@@ -3,10 +3,10 @@ require ("behemoth");
 function Client_PresentConfigureUI(rootParent)
 	UI.CreateLabel (rootParent).SetText ("Behemoth cost is not fixed. When purchasing, the player decides how much gold to spend, and strength increases with gold spent. "..
 	"Gold levels define when it becomes efficient compared to buying armies with the same sum of gold."..
-	"\n\n• gold spent < G1 - inefficient [better to buy armies]"..
-	"\n• gold spent ≥ G1, < G2 - efficient [stronger than armies]"..
-	"\n• gold spent ≥ G2, < G3 - highly efficient [significantly stronger than armies]"..
-	"\n• gold spent ≥ G3 - immensely efficient [incredibly beneficial to buy a Behemoth]"..
+	"\n\n• gold spent < G1 --> inefficient [better to buy armies]"..
+	"\n• gold spent ≥ G1, < G2 --> efficient [stronger than armies]"..
+	"\n• gold spent ≥ G2, < G3 --> highly efficient [significantly stronger than armies]"..
+	"\n• gold spent ≥ G3 --> immensely efficient [incredibly beneficial to buy a Behemoth]"..
 	-- "\n\nSet the gold levels relative to the income settings for the template you are creating, and relative to the role you wish Behemoths to play. If you wish Behemoths to be strong in the early game, set a low G1 value. "..
 	-- "If you wish Behemoths to be weak in the early game but strong in the late game, set a high G1 value to an amount that won't be achievable until mid game or late mid game, and set G2 and G3 to high values that players won't achieved until late in the game."..
 	-- "\n\nDefault values for Behemoths make them weak in the early game (of an average template), and strong in the late game, doing high damage, buffing attack rates and well suited to rip through blockaded territories");
