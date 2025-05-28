@@ -47,12 +47,16 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 		function ()
 			BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
 			--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
-			local behemothPower = getBehemothPower(BehemothGoldSpent);
-			local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-			Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
-				"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
-				"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
+			local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+			local behemothPowerFactor = 1.0; --keep it simple
+			-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+			Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower.."\nAttack power  " ..behemothPower.. ", Defense power ".. math.floor (behemothPower / 4 + 0.5)..
+				"\nTakes damage before Armies"..
 				"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+			-- Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
+			-- 	"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
+			-- 	"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
+			-- 	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
 		end);
 	Behemoth_details_Label = UI.CreateLabel (rootParent);
 end
@@ -113,8 +117,9 @@ function PurchaseClicked()
 	end
 
 	-- limit # of Behemoths to 5 including units already on the map and bought in orders this turn
-	if (numBehemothsAlreadyHave >= 5) then
-		UI.Alert("Cannot create another Behemoth as you are already at the max of 5 units");
+	local intBehemothMaxSimultaneousPerPlayer = Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5; --default to 5 if not set
+	if (numBehemothsAlreadyHave >= intBehemothMaxSimultaneousPerPlayer) then
+		UI.Alert("Cannot create another Behemoth as you are already at the max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units");
 		return;
 	end
 
@@ -137,17 +142,19 @@ function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, clo
 
 	buttonBuyBehemoth = UI.CreateButton(vert).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked);
 
-	--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
-
-	local behemothPower = getBehemothPower(BehemothGoldSpent);
-	local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
-		"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 0.9+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
-		"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
-	SelectTerritoryBtn.SetInteractable(false);
+	local behemothCost = BehemothCost_NumberInputField.GetValue();
+	local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+	local behemothPowerFactor = 1.0; --always use factor of 1.0, it's too complicated with separate factors, etc
+	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost " ..tostring (BehemothGoldSpent).. ", Health ".. behemothPower.. "\nAttack power ".. behemothPower * (1+behemothPowerFactor)..", Defense power ".. (behemothPower * behemothPowerFactor)/4);
+	UI.CreateLabel(vert).SetText("Takes damage before Armies");
+	-- UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
+	-- 	"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 0.9+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
+	-- 	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
+	SelectTerritoryBtn.SetInteractable (false);
 	print ("name==Behemoth (power ".. tostring (math.floor (behemothPower*10)/10) ..')');
 
-	SelectTerritoryClicked(); --just start us immediately in selection mode, no reason to require them to click the button
+	SelectTerritoryClicked(); --start immediately in selection mode, no reason to require player to click the button
 end
 
 function SelectTerritoryClicked()
