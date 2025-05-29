@@ -55,7 +55,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--super DELME! --> Debugging for 40 Africas game
 	--cause stack overflow due to too many orders; keep adding a new order whenever it hits the _End so there's always more, then see what last order# was == the limit before crashing
 	-- while (intOrderCount < 10) do
-	-- for i=intOrderCount+1, 10 do
+	-- for i=intOrderCount+1, 1500 do
 	-- 	addOrder (WL.GameOrderEvent.Create(0, "SATE dummy order "..tostring (i)));
 	-- 	-- print ("[S_AT_E] dummy order "..tostring (i).. "; past limit: "..tostring (intSkippedOrderCount));
 	-- end
@@ -153,47 +153,41 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
 	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
-		addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
+		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]")); end --only do this from 1 mod (OG) so it doesn't repeat 4x
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		return;
 	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
 		--let the order proceed
-		printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
-	else
+		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then printDebug ("[TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]"); end --only do this from 1 mod (OG) so it doesn't repeat 4x
+	elseif (intOrderCount > 900) then
 		intSkippedOrderCount = intSkippedOrderCount + 1;
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		return;
+
+		local strDebugOutput;
+
+		--only output data for 1st 100 records; mod must finish in 30 secs so doing all records will cause it to timeout
+		if (intSkippedOrderCount <=100) then
+			--display debug info -- keep it brief, only output playerID, terrID, etc -- not full player/terr names, etc; due to 1MB max mod storage size
+			-- printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
+			strDebugOutput = "[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType) .."; ";
+			-- printDebug ("[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType));
+			if (order.proxyType == "GameOrderAttackTransfer") then
+				-- printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+				-- printDebug (" FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+				strDebugOutput = strDebugOutput .. "FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful);
+			elseif (order.proxyType == "GameOrderPlayCardCustom") then
+				-- printDebug (" cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+				strDebugOutput = strDebugOutput .. "cardID ".. order.CustomCardID.. ", desc: ".. order.Description;
+			elseif (order.proxyType == "GameOrderCustom") then
+				-- printDebug (" Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
+				strDebugOutput = strDebugOutput .. "Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload);
+			elseif (order.proxyType == "GameOrderEvent") then
+				-- printDebug (" ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+				strDebugOutput = strDebugOutput .. "ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message);
+			end
+			printDebug (strDebugOutput);
+		end
 	end
-
-
-	-- if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
-	-- 	-- printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
-	-- 	addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount)));
-	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-	-- 	return;
-	-- elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
-	-- 	--let the order proceed
-	-- 	printDebug ("[FINAL SKIPPED ORDER COUNT PAST LIMIT] ".. tostring (intSkippedOrderCount));
-	-- --if exceeded max orders, skip all remaining orders
-	-- elseif (intOrderCount >= 0) then -- 500) then
-	-- 	intSkippedOrderCount = intSkippedOrderCount + 1;
-	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-	-- 	return;
-	-- else
-	-- 	printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
-	-- 	if (order.proxyType == "GameOrderAttackTransfer") then
-	-- 		printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
-	-- 	elseif (order.proxyType == "GameOrderPlayCardCustom") then
-	-- 		printDebug ("       cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
-	-- 	elseif (order.proxyType == "GameOrderCustom") then
-	-- 		printDebug ("       Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
-	-- 	elseif (order.proxyType == "GameOrderEvent") then
-	-- 		printDebug ("       ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
-	-- 	end
-	-- 	skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-	-- 	return;
-	-- end
-	-- -- end
 end
 
 --add FogMods to all territories where Phantoms currently reside and any territories that is being attacked from a territory where a Phantom resides, even if the Phantom itself isn't participating in the attack
@@ -783,12 +777,9 @@ end
 --check for killed Capitalists & Diplomats among the killed defender SUs; if so, apply the special results according to each SU type
 --requires attackerID to know who the attacker is but don't need defenderID (owner of target territory) as it's not relevant for Capitalist, and it's the owner of the killed defending SU that matters for Diplomat not the owner of the target territory (which can differ)
 function checkForSpecialConditions (airstrikeResult, game, attackerID, addOrder)
-print ("\n\n\n\nKILLED DEFENDING SUs");
 	for _, killedSU in pairs (airstrikeResult.DefenderResult.KilledSpecialsObjects) do
-print (killedSU.proxyType, killedSU.Name);
 		local defenderID = killedSU.OwnerID; --execute the diplo with the owner of the SU, not the owner of the target territory (which could be Neutral or another player)
 		if (killedSU.proxyType == "CustomSpecialUnit") then
-print (killedSU.Name);
 			if (killedSU.Name == "Capitalist") then
 				local currentIncome = game.Game.PlayingPlayers[attackerID].Income (0, game.ServerGame.LatestTurnStanding, false, false);
 				local IncomeAmount = currentIncome.Total;

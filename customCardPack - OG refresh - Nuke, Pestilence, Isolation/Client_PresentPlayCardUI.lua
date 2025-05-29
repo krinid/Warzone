@@ -841,13 +841,14 @@ function updateAirstrikePanelDetails ()
     --airstrikeObject.FROMplayerTeam = (nil or airstrikeObject.FROMplayerID~=nil and airstrikeObject.FROMplayerID>0 and Game.Game.Players[airstrikeObject.FROMplayerID].Team);
     --airstrikeObject.TOplayerTeam = (nil or airstrikeObject.TOplayerID~=nil and airstrikeObject.TOplayerID>0 and Game.Game.Players[airstrikeObject.TOplayerID].Team);
 	generateStringOfSelectedSUs (); --generate table of selected SUs from the checkbox panel & store result in airstrikeObject.FROMselectedSUs
-	print ("#selected SUs "..#airstrikeObject.FROMselectedSUs);
-    airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower or nil;
-    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or nil;
-    airstrikeObject.FROMarmies = SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0;
+	-- print ("#selected SUs "..#airstrikeObject.FROMselectedSUs);
+    airstrikeObject.FROMattackPower = SourceTerritoryID ~= nil and math.max (0, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.AttackPower) or nil;
+    airstrikeObject.TOdefensePower = TargetTerritoryID ~= nil and (math.max (0, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.DefensePower) + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or nil;
+    airstrikeObject.FROMarmies = math.max (0, SourceTerritoryID ~= nil and Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies or 0); --apply max (0, calc) to ensure no negative values which occur when territory is fogged (shows a large negative army count)
 	airstrikeObject.FROMselectedArmies = math.max (0, airstrikeObject.NIFarmies.GetValue ()); --the # of armies select to be sent in Airstrike (not necessarily the full amount present on FROM territory)
 
     airstrikeObject.TOarmies = TargetTerritoryID ~= nil and (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, TargetTerritoryID)) or 0;
+	if (airstrikeObject.TOarmies < 0) then airstrikeObject.TOarmies = 0; end --if <0 then territory is likely fogged and returning an invalid army count, so just set it to 0
     airstrikeObject.FROMnumSpecials = SourceTerritoryID ~= nil and #Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.TOnumSpecials = TargetTerritoryID ~= nil and #Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0;
     airstrikeObject.DeploymentYield = 0.75; --default to 75%
@@ -868,12 +869,15 @@ function updateAirstrikePanelDetails ()
 	-- if (SourceTerritoryID~=nil) then airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.SpecialUnits); airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower; end
 	if (SourceTerritoryID~=nil) then
         airstrikeObject.attackingArmies = WL.Armies.Create (airstrikeObject.FROMselectedArmies, airstrikeObject.FROMselectedSUs);
-        airstrikeObject.FROMactualAttackPower = airstrikeObject.attackingArmies.AttackPower;
-        airstrikeObject.FROMattackPower_SelectedUnits = airstrikeObject.attackingArmies.AttackPower;
-        intFROMattackPower_kills = math.floor (airstrikeObject.FROMattackPower_SelectedUnits * Game.Settings.OffenseKillRate + 0.5)
+        airstrikeObject.FROMactualAttackPower = math.max (0, airstrikeObject.attackingArmies.AttackPower);
+        airstrikeObject.FROMattackPower_SelectedUnits = math.max (0, airstrikeObject.attackingArmies.AttackPower);
+        intFROMattackPower_kills = math.floor (airstrikeObject.FROMattackPower_SelectedUnits * Game.Settings.OffenseKillRate + 0.5);
     end
 	if (TargetTerritoryID~=nil) then
-        airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits);
+		-- UI.Alert (Game.LatestStanding.Territories[TargetTerritoryID].FogLevel .."/".. WL.StandingFogLevel.ToString (Game.LatestStanding.Territories[TargetTerritoryID].FogLevel));
+		-- UI.Alert (tostring (airstrikeObject.TOarmies)..", ".. tostring (Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0));
+		-- FogLevel enum: 4=Fogged, 3=OwnerOnly, 2=Visible, 1=Self (what you own)
+        airstrikeObject.defendingArmies = WL.Armies.Create (airstrikeObject.TOarmies, Game.LatestStanding.Territories[TargetTerritoryID].NumArmies.SpecialUnits or 0);
         intTOdefensePower_kills = math.floor (airstrikeObject.TOdefensePower * Game.Settings.DefenseKillRate + 0.5);
     end
 
@@ -938,7 +942,7 @@ function SourceTerritoryClicked_Airstrike(terrDetails)
         SourceTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
-		local intNumArmiesPresent = getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get armies present on source territory including current deployments during this turn
+		local intNumArmiesPresent = math.max (0, getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies); --get armies present on source territory including current deployments during this turn; apply max (0, calc) to avoid negative #'s which occurs with fogged territories'
 		airstrikeObject.NIFarmies.SetSliderMaxValue (intNumArmiesPresent);  --set max slider value for input field to # of armies on territory for ease of use (sum of current state + current deployments to source territory)
 		--if (SourceTerritoryID == nil) then airstrikeObject.NIFarmies.SetValue (intNumArmiesPresent); end --set current value for input field to # of armies on territory for ease of use; only do if SourceTerritoryID==nil so we don't overwrite the #armies entry a player has made already
 

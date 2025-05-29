@@ -40,7 +40,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
 			--if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
 			if (specialUnit.proxyType == 'CustomSpecialUnit' and (specialUnit.Name == strSUtype or string.sub(specialUnit.Name, 1, string.len(strSUtype)) == strSUtype)) then
-				print ("\n\n\n result.DefendingArmiesKilled.NumArmies == ".. tostring (result.DefendingArmiesKilled.NumArmies));
+				-- print ("\n\n\n result.DefendingArmiesKilled.NumArmies == ".. tostring (result.DefendingArmiesKilled.NumArmies));
 
 				--unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
 				if Mod.Settings.BehemothInvulnerableToNeutrals == true then
@@ -55,16 +55,22 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 					end
 					result.AttackingArmiesKilled = WL.Armies.Create (result.AttackingArmiesKilled.NumArmies, newAttackingArmiesKilled_SpecialUnits);
 
-					local newDamageToSpecialUnits = result.DamageToSpecialUnits;
+					local newDamageToSpecialUnits = {}; --start with empty table, add the items to keep back into the table then reassign to result.DamageToSpecialUnits (this is the only way it works)
 					--result.DamageToSpecialUnits is a table with key of the ID of a special unit; write code to check each element of the table to see if the ID matches specialUnit.ID and if so remove it from the table
 					--check if the Behemoth is slated to take damage, and if so remove it from the table result.DamageToSpecialUnits[guid]
 					for key, intDamage in pairs(result.DamageToSpecialUnits) do
+-- print ("PRE ID match? "..key, specialUnit.ID, tostring (result.DamageToSpecialUnits[key]), tostring (newDamageToSpecialUnits[key]));
 						if (key == specialUnit.ID) then
-							result.DamageToSpecialUnits[key] = nil;
+							-- result.DamageToSpecialUnits[key] = 0;--nil;
+							-- newDamageToSpecialUnits[key] = nil;
 							print ("[BEHEMOTH] Damaged while attacking neutral -> nullify the damage; Damage ".. tostring (intDamage).. ", Name: ".. specialUnit.Name);
+						else
+							newDamageToSpecialUnits[key] = result.DamageToSpecialUnits[key];
 						end
+-- print ("POST ID match? "..key, specialUnit.ID, tostring (result.DamageToSpecialUnits[key]), tostring (newDamageToSpecialUnits[key]));
 					end
 					result.DamageToSpecialUnits = newDamageToSpecialUnits;
+-- print ("POST #result.DamageToSpecialUnits ".. tostring (#result.DamageToSpecialUnits)..", #newDamageToSpecialUnits ".. tostring (#newDamageToSpecialUnits));
 				end
 
 				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor Mod.Settings.BehemothStrengthAgainstNeutrals
@@ -141,7 +147,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
 
 	local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
-	builder.Name = 'Behemoth (power '.. tostring (math.floor (behemothPower*10)/10) ..')';
+	builder.Name = 'Behemoth (power '.. tostring (math.floor (behemothPower + 0.5)) ..')';
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = 'Behemoth_clearback.png'; --max size of 60x100 pixels
 	--builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels

@@ -616,6 +616,7 @@ end
 function getPlayerName(game, playerid)
 	if (playerid == nil) then return "Player DNE (nil)";
 	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber(playerid)<0) then return ("fogged");
 	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
 	else
 		for _,playerinfo in pairs(game.Game.Players) do
