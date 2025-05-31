@@ -196,7 +196,7 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	local privateGameData = Mod.PrivateGameData;
 
-	local FogModsToApply = {}; --table of all FogMods to add at start of turn; FogMods to be added for territories where Phantoms reside & all territories attacked from another territory where a Phantom resides, even if the Phantom isn't participating in the attack
+	local TotalFogModsToApply = {}; --table of all FogMods to add at start of turn; FogMods to be added for territories where Phantoms reside & all territories attacked from another territory where a Phantom resides, even if the Phantom isn't participating in the attack
 	local intFogLevel = WL.StandingFogLevel.Fogged;
 	if (Mod.Settings.PhantomFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantomFogLevel; end
 
@@ -212,17 +212,14 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 					print("[SU DETECTED] type ".. specialUnit.proxyType ..", Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
 
 					--add FogMod to all territories that Phantoms currently reside on
-					-- Phantom_FogModsAddedThisTurn[terr#] = {some data};
-					-- Phantom_FogModsAddedThisTurn = 5
-					-- FogModsToApply = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
 
 					if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
 						print("[PHANTOM DETECTED] Territory ID: " .. order.From .. "/" .. getTerritoryName(order.From, game));
-						-- local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
 						local arrPlayerIDsToMakeVisible = getTeamPlayers (game, specialUnit.OwnerID); --get all players on the same team as the Phantom owner
 						local fogModsToApply = {}; --table to hold all the FogMods to apply in the GameOrderEvent order
-						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
-						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, arrPlayerIDsToMakeVisible);
+						local intFogModPriority = tonumber (Mod.Settings.PhantomFogModPriority or 8000); --get FogMod priority mod setting; if nil default to 8000
+						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, intFogModPriority, {order.To}, nil); --use mod setting for FogMod priority to cast fog to all players including Spectators
+						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, intFogModPriority+1, {order.To}, arrPlayerIDsToMakeVisible); --use mod setting +1 for FogMod priority to override the above FogMod so Phantom owner has visibility
 						table.insert (fogModsToApply, fogMod_TO_fogOthers); --add the TO territory FogMod to the list of FogMods to apply
 						table.insert (fogModsToApply, fogMod_TO_visibleSelf); --add the TO territory FogMod to the list of FogMods to apply
 						-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {specialUnit.OwnerID});
@@ -233,66 +230,57 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 						if (privateGameData.PhantomData [specialUnit.ID] == nil) then
 							local turnNumber_PhantomExpires = -1;
 							if (Mod.Settings.PhantomDuration >= 0) then turnNumber_PhantomExpires = game.Game.TurnNumber + Mod.Settings.PhantomDuration; end
-							local fogMod_FROM_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil); --put fog on FROM territory for other players
-							local fogMod_FROM_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, arrPlayerIDsToMakeVisible); --make FROM territory visible for Phantom owner
-								local PhantomDataRecord = {
+							local fogMod_FROM_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, intFogModPriority, {order.To}, nil); --put fog on FROM territory for other players
+							local fogMod_FROM_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, intFogModPriority+1, {order.To}, arrPlayerIDsToMakeVisible); --make FROM territory visible for Phantom owner
+							local PhantomDataRecord = {
 								territory = order.From,
 								castingPlayer = specialUnit.OwnerID,
 								territoryOwner = order.From,
 								turnNumberPhantomCreated = game.Game.TurnNumber, --treat as if it were created on this turn
 								turnNumberPhantomEnds = turnNumber_PhantomExpires,
 								specialUnitID = specialUnit.ID,
-								FogMods = {fogMod_FROM_fogOthers.ID, fogMod_FROM_visibleSelf.ID}
+								FogMods = {fogMod_FROM_fogOthers.ID, fogMod_FROM_visibleSelf.ID},
+								foggedTerritories = {[order.From]=true};
 							};
+
+							--store FogMods in the PhantomData table for this specific Phantom SU
 							privateGameData.PhantomData [specialUnit.ID] = PhantomDataRecord; --add new record to the PhantomData table for this Phantom
 							table.insert (fogModsToApply, fogMod_FROM_fogOthers); --add fogMod_FROM_fogOthers to the list of FogMods to apply
 							table.insert (fogModsToApply, fogMod_FROM_visibleSelf); --add the FROM territory FogMod to the list of FogMods to apply
+
+							--store FogMods is a table to apply as part of the GameOrderEvent order
+							table.insert (TotalFogModsToApply, fogMod_FROM_fogOthers); --add fogMod_FROM_fogOthers to the list of FogMods to apply
+							table.insert (TotalFogModsToApply, fogMod_FROM_visibleSelf); --add the FROM territory FogMod to the list of FogMods to apply
+
+							--add FROM territory to the list of fogged territories for this Phantom SU (so they can be Annotated later)
+							if (privateGameData.PhantomData [specialUnit.ID].foggedTerritories == nil) then privateGameData.PhantomData [specialUnit.ID].foggedTerritories = {}; end
+							privateGameData.PhantomData [specialUnit.ID].foggedTerritories [order.From]=true;
 						end
 
-						local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
-						-- event.FogModsOpt = {fogMod_FROM, fogMod_TO};
-						-- event.FogModsOpt = {fogMod_TO_fogOthers, fogMod_TO_visibleSelf};
-						event.FogModsOpt = fogModsToApply; --add all FogMods to the event order
-						addNewOrder (event);
-						print("[FOGMODS applied to FROM & TO]");
-
 						local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;
-						-- table.insert (fogModList, fogMod_FROM.ID);
+						--store FogMods in the PhantomData table for this specific Phantom SU
 						table.insert (fogModList, fogMod_TO_fogOthers.ID);
 						table.insert (fogModList, fogMod_TO_visibleSelf.ID);
+						--store FogMods is a table to apply as part of the GameOrderEvent order
+						table.insert (TotalFogModsToApply, fogMod_TO_fogOthers);
+						table.insert (TotalFogModsToApply, fogMod_TO_visibleSelf);
+
 						privateGameData.PhantomData [specialUnit.ID].FogMods = fogModList;
+						print("[FOGMODS applied to FROM & TO]");
+
+						--add TO territory to the list of fogged territories for this Phantom SU (so they can be Annotated later)
+						if (privateGameData.PhantomData [specialUnit.ID].foggedTerritories == nil) then privateGameData.PhantomData [specialUnit.ID].foggedTerritories = {}; end
+						privateGameData.PhantomData [specialUnit.ID].foggedTerritories [order.To]=true;
 					end
 				end
 			end
 		end
 	end
+
+	local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
+	event.FogModsOpt = TotalFogModsToApply; --add all FogMods to the event order
+	addNewOrder (event);
 	Mod.PrivateGameData = privateGameData;
-
-	--[[ 	--FogMod testing:
-	local allFogs = {};
-	local allFogs2 = {};
-	local fogMod = nil;
-	local event = nil;
-
-	for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-		if (territory.OwnerPlayerID == 0) then
-			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
-			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-			table.insert (allFogs, terrID);
-		elseif (territory.OwnerPlayerID < 50) then
-			table.insert (allFogs2, terrID);
-		end
-
-	end
-	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8000, allFogs, {-1, 0, 1, 1058239}); --apply fog to specific players; try -1 and 0 to aim for 'spectator' (didn't work - but didn't crash either)
-	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
-	event.FogModsOpt = {fogMod};
-	-- addNewOrder(event);
-
-	fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", WL.StandingFogLevel.Fogged, 8000, allFogs2, nil);
-	event = WL.GameOrderEvent.Create(0, 'A disturbance clouds visibility', {});
-	event.FogModsOpt = {fogMod};
-	-- addNewOrder(event);]]
 end
 
 --return true if this order is a card play by a player impacted by Card Block
@@ -1070,58 +1058,6 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			end
 		end
 
-		--[[--if a Phantom that was created this turn is attacking or transferring, fog the target territory b/c it wouldn't have been fogged in the _Start function call b/c it didn't exist yet
-		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true) then
-			local privateGameData = Mod.PrivateGameData;
-			for _, specialUnit in pairs(game.ServerGame.LatestTurnStanding.Territories [gameOrder.From].NumArmies.SpecialUnits) do
-				--printObjectDetails (game.ServerGame.LatestTurnStanding.Territories [order.From], "FROM territory", "FROM");
-				-- print("[SU DETECTED] type ".. specialUnit.proxyType ..", Territory ID: " .. gameOrder.From .. "/" .. getTerritoryName(gameOrder.From, game));
-
-				--add FogMod to all territories that Phantoms currently reside on
-				-- Phantom_FogModsAddedThisTurn[terr#] = {some data};
-				-- Phantom_FogModsAddedThisTurn = 5
-				-- FogModsToApply = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
-
-				if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
-					local intPhantomCreatedTurnNumber = privateGameData.PhantomData [specialUnit.ID].turnNumberPhantomCreated; --get the turn number that the Phantom was created on
-					print("[PHANTOM DETECTED] Territory ID: " .. gameOrder.From .. "/" .. getTerritoryName(gameOrder.From, game) ..", Phantom create on T"..tostring (intPhantomCreatedTurnNumber));
-					-- reference:
-					-- 	privateGameData.PhantomData [specialUnit_Phantom.ID] = PhantomDataRecord;
-					-- 	local PhantomDataRecord = {
-					-- 		territory = targetTerritoryID,
-					-- 		castingPlayer = castingPlayerID,
-					-- 		territoryOwner = impactedTerritoryOwnerID,
-					-- 		turnNumberPhantomCreated = game.Game.TurnNumber,
-					-- 		turnNumberPhantomEnds = turnNumber_PhantomExpires,
-					-- 		specialUnitID = specialUnit_Phantom.ID,
-					-- 		FogMods = fogModIDs
-					-- 	};
-
-					--if Phantom was created this turn, fog the target territory it's attacking or transferring to
-					if (intPhantomCreatedTurnNumber == game.Game.TurnNumber) then
-						local intFogLevel = WL.StandingFogLevel.Fogged;
-						if (Mod.Settings.PhantomFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantomFogLevel; end
-						-- local fogMod_FROM = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {order.From}, nil);
-						local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance is clouding your visibility", intFogLevel, 8000, {gameOrder.To}, nil);
-						local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {gameOrder.To}, {specialUnit.OwnerID});
-						-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
-						-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-						local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
-						-- event.FogModsOpt = {fogMod_FROM, fogMod_TO};
-						event.FogModsOpt = {fogMod_TO_fogOthers, fogMod_TO_visibleSelf};
-						addOrder (event);
-						print("[FOGMODS applied to FROM & TO]");
-						local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;
-						-- table.insert (fogModList, fogMod_FROM.ID);
-						table.insert (fogModList, fogMod_TO_fogOthers.ID);
-						table.insert (fogModList, fogMod_TO_visibleSelf.ID);
-						privateGameData.PhantomData [specialUnit.ID].FogMods = fogModList;
-					end
-				end
-			end
-			Mod.PrivateGameData.PhantomData = privateGameData; --save the updated PhantomData back to the mod data
-		end]]
-
 		--if there's no QuicksandData, do nothing (b/c there's nothing to check)
 		if (Mod.PublicGameData.QuicksandData == nil or (Mod.PublicGameData.QuicksandData[gameOrder.To] == nil and Mod.PublicGameData.QuicksandData[gameOrder.From] == nil)) then
 			--do nothing, permit these orders
@@ -1447,10 +1383,10 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	print("[PROCESS PHANTOM START] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::description="..gameOrder.Description.."::");
 
 	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
-	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+	local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);
 	local castingPlayerID = gameOrder.PlayerID;
 
-	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);
+	local builder = WL.CustomSpecialUnitBuilder.Create (impactedTerritoryOwnerID);
 	builder.Name = 'Phantom';
 	builder.IncludeABeforeName = false;
 	builder.ImageFilename = 'phantom_clearback.png';
@@ -1484,17 +1420,18 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	local intFogLevel = WL.StandingFogLevel.Fogged;
 	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
 	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
-	-- local fogMod = WL.FogMod.Create ("A disturbance is clouding your vision", intFogLevel, 8000, {targetTerritoryID}, nil);
-	local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner
-	local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {targetTerritoryID}, nil);
-	local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, arrPlayerIDsToMakeVisible); --&&& Phantom teammates
-	-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {targetTerritoryID}, {castingPlayerID}); --&&& Phantom teammates
+	local intFogModPriority = tonumber (Mod.Settings.PhantomFogModPriority or 8000); --get FogMod priority mod setting; if nil default to 8000
+	local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner to make the fog visible to teammates as well
+	local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, intFogModPriority, {targetTerritoryID}, nil); --use mod setting for FogMod priority to cast fog to all players including Spectators
+	local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, intFogModPriority+1, {targetTerritoryID}, arrPlayerIDsToMakeVisible); --use mod setting +1 for FogMod priority to override the above FogMod so Phantom owner has visibility
 	local fogModIDs = {};
 	local fogMods = {};
+	local foggedTerritories = {};
 	table.insert (fogModIDs, fogMod_TO_fogOthers.ID);
 	table.insert (fogModIDs, fogMod_TO_visibleSelf.ID);
 	table.insert (fogMods, fogMod_TO_fogOthers);
 	table.insert (fogMods, fogMod_TO_visibleSelf);
+	foggedTerritories [targetTerritoryID] = true; --add territory to add Annotations
 
 	----------------------------start
 	--add fog to all territories that are attacked or transferred to from the target territory where the Phantom was just created; this happens @ start of turn but would have been missed b/c this Phantom didn't exist yet
@@ -1507,25 +1444,13 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 				print ("________[ORDER AttackTransfer on territory w/new Phantom] FROM "..order.From .. "/" .. getTerritoryName(order.From, game).. ", TO ".. order.To .. "/" .. getTerritoryName(order.To, game));
 
 				local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner
-				local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, 8000, {order.To}, nil);
-				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, arrPlayerIDsToMakeVisible);
-				-- local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, 8001, {order.To}, {castingPlayerID});
-				-- --fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
-				-- --reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-				-- local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
-				-- -- event.FogModsOpt = {fogMod_FROM, fogMod_TO};
-				-- event.FogModsOpt = {fogMod_TO_fogOthers, fogMod_TO_visibleSelf};
-				-- addNewOrder (event);
-				-- print("[FOGMODS applied to territories ATTACK/TRANSFERS are entered for]");
-				-- local fogModList = privateGameData.PhantomData [specialUnit.ID].FogMods;
-				-- table.insert (fogModList, fogMod_FROM.ID);
-				-- table.insert (fogModList, fogMod_TO_fogOthers.ID);
-				-- table.insert (fogModList, fogMod_TO_visibleSelf.ID);
+				local fogMod_TO_fogOthers = WL.FogMod.Create ("A disturbance clouds visibility", intFogLevel, intFogModPriority, {order.To}, nil); --use mod setting for FogMod priority to cast fog to all players including Spectators
+				local fogMod_TO_visibleSelf = WL.FogMod.Create ("Phantom grants visibility", WL.StandingFogLevel.Visible, intFogModPriority+1, {order.To}, arrPlayerIDsToMakeVisible); --use mod setting +1 for FogMod priority to override the above FogMod so Phantom owner has visibility
 				table.insert (fogModIDs, fogMod_TO_fogOthers.ID);
 				table.insert (fogModIDs, fogMod_TO_visibleSelf.ID);
 				table.insert (fogMods, fogMod_TO_fogOthers);
 				table.insert (fogMods, fogMod_TO_visibleSelf);
-				-- privateGameData.PhantomData [specialUnit.ID].FogMods = fogModList;
+				foggedTerritories [order.To] = true; --add territory to add Annotations
 			end
 		end
 	end
@@ -1556,9 +1481,9 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 		turnNumberPhantomCreated = game.Game.TurnNumber,
 		turnNumberPhantomEnds = turnNumber_PhantomExpires,
 		specialUnitID = specialUnit_Phantom.ID,
-		FogMods = fogModIDs
+		FogMods = fogModIDs,
+		foggedTerritories = foggedTerritories
 	};
-	--table.insert(privateGameData.PhantomData, PhantomDataRecord);
 	privateGameData.PhantomData [specialUnit_Phantom.ID] = PhantomDataRecord;
 	Mod.PrivateGameData = privateGameData;
 end
@@ -2683,7 +2608,9 @@ function Shield_processEndOfTurn(game, addOrder)
     Mod.PrivateGameData = privateGameData;
 end
 
---remove expired Phantom Special Units from map & pop off the Phantom records from PhantomData
+--2 actions:
+--1) remove expired Phantom Special Units from map & pop off the Phantom records from PhantomData
+--2) write Annotations on territories where Phantom fog exists for other players so the Phantom owner can see where fog is applied for other players
 function Phantom_processEndOfTurn(game, addOrder)
     local privateGameData = Mod.PrivateGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
@@ -2692,64 +2619,9 @@ function Phantom_processEndOfTurn(game, addOrder)
 	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
-    print("[PHANTOM EOT] processEndOfTurn START");
+	--check for expired Phantoms and remove them + any fog they created
+    print("[PHANTOM EOT] START");
     print("[PHANTOM EOT] apply FOGMODs (if any)");
-	-- for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-	-- 	local event = WL.GameOrderEvent.Create(0, 'clarity is achieved', {});
-	-- 	--event.FogModsOpt = {};
-	-- 	for _, specialUnit in pairs(territory.NumArmies.SpecialUnits) do
-	-- 		if (specialUnit.proxyType == "CustomSpecialUnit" and specialUnit.Name == "Phantom") then
-	-- 			print("[PHANTOM DETECTED] Territory ID: " .. terrID .. "/" .. getTerritoryName(terrID, game));
-	-- 			local fogMod = WL.FogMod.Create ("A disturbance in the force is clouding your vision", WL.StandingFogLevel.OwnerOnly, 8000, {terrID}, nil);
-	-- 			--fog levels: WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible
-	-- 			--reference: WL.FogMod.Create(message string, fogLevel StandingFogLevel (enum), priority integer, terrs HashSet<TerritoryID>, playersAffectedOpt HashSet<PlayerID>) (static) returns FogMod
-	-- 			event = WL.GameOrderEvent.Create(specialUnit.OwnerID, 'A disturbance clouds visibility', {});
-	-- 			event.FogModsOpt = {fogMod};
-	-- 			local privateGameData = Mod.PrivateGameData;
-	-- 			if (privateGameData.PhantomData [specialUnit.ID] ~= nil) then
-
-	-- 			else
-	-- 				--error, data for this Phantom is missing; just delete the Phantom? it'll never get removed otherwise; maybe check if Phantoms are permanent or not first, don't remove a permanent one
-	-- 			end
-	-- 			if (privateGameData.PhantomData.FogModData[fogMod.ID] == nil) then privateGameData.PhantomData.FogModData[fogMod.ID] = {}; end
-	-- 			table.insert (privateGameData.PhantomData.FogModData[fogMod.ID], );
-
-	-- 		end
-	-- 	end
-	-- 	addOrder(event);
-	-- end
-
-	-- local t = {};
-	-- local annotation = WL.TerritoryAnnotation.Create("kringe", 10, 0);
-	-- for terrID,_ in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-	-- 	-- print (terrID);
-	-- 	t[terrID] = annotation;
-	-- end
-	-- local event = WL.GameOrderEvent.Create (1, "kringe order"); --, {}, {});
-	-- event.TerritoryAnnotationsOpt = t;
-	-- addOrder(event);
-	-- print ("\n\n\nkringe owari");
-
-	--[[ local allTerrs = {};
-	local terrCount = 0;
-	local terrAnnots = {};
-	local event = WL.GameOrderEvent.Create(0, 'kringey annotations', {});;
-	for terrID, territory in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-		--printObjectDetails_delme (territory, "terr", "terr head");
-		terrCount = terrCount + 1;
-		allTerrs[terrCount] = tonumber (terrID);
-		terrAnnots[terrCount] = {[terrID] = WL.TerritoryAnnotation.Create ("kringe", 10, 0)};
-		event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
-		--event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0), [terrID+1] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
-	end
-	-- local event = WL.GameOrderEvent.Create(0, 'kringey annotations', {});
-	--event.TerritoryAnnotationsOpt = {allTerrs = WL.TerritoryAnnotation.Create ("kringe!", 10, 0)};
-	--event.TerritoryAnnotationsOpt = {[allTerrs] = WL.TerritoryAnnotation.Create ("#kringe", 10, 0)};
-	--event.TerritoryAnnotationsOpt = {[terrAnnots] = WL.TerritoryAnnotation.Create ("jambalaya", 10, 0)};
-	-- event.TerritoryAnnotationsOpt = terrAnnots;
-	--event.FogModsOpt = {fogMod};
-	addOrder(event);
-	print ("jairj"); ]]
 
 	--Phantom TODOs:
 	-- adjust so when Phantom is spawned and attacks are made on the same turn, fog is still applied (it's not currently b/c the initial analysis is done in _Start not _Order); maybe keep a table showing territories where fog was applied by this player this turn and if current terr isn't among it, add it)
@@ -2775,9 +2647,9 @@ function Phantom_processEndOfTurn(game, addOrder)
 
 			--remove the Phantom SU with the matching GUID from the territory it is found on; ideally this should be on phantomDataRecord.territory but it's possible another mod could move it (Portals? etc)
 			local terrID = findSpecialUnit(phantomDataRecord.specialUnitID, game);
-            if (terrID ~= phantomDataRecord.territory) then
-				print ("[PHANTOM EXPIRE] Phantom Special Unit found on different territory than it was created on; created=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
-			end
+            -- if (terrID ~= phantomDataRecord.territory) then
+			-- 	print ("[PHANTOM EXPIRE] Phantom Special Unit found on different territory than it was created on; created=="..tostring (phantomDataRecord.territory) .."/".. tostring (getTerritoryName (phantomDataRecord.territory, game))..", found on=="..tostring (terrID) .."/".. tostring (getTerritoryName (terrID, game)));
+			-- end
 			if (terrID ~= nil) then
                 print("[PHANTOM EXPIRE] found special on "..terrID.."/"..game.Map.Territories[terrID].Name);
                 local impactedTerritory = WL.TerritoryModification.Create(terrID);
@@ -2800,14 +2672,27 @@ function Phantom_processEndOfTurn(game, addOrder)
 			-- addOrder(event);
 			if (jumpToActionSpotObject ~= nil) then event.JumpToActionSpotOpt = jumpToActionSpotObject; end
 			addOrder(event);
-			privateGameData.PhantomData[guid] = nil;
+			privateGameData.PhantomData [guid] = nil;
 			--Mod.PrivateGameData = privateGameData;
 			print("[PHANTOM EXPIRE] POST 1 removal - tablelength=="..tablelength(Mod.PrivateGameData.PhantomData))
 		end
     end
 
     print("[PHANTOM EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.PhantomData))
-    print("[PHANTOM EXPIRE] processEndOfTurn END");
+
+	--display Annotations where Phantom fog exists for other players (not the owner)
+	for _,phantomDataRecord in pairs (privateGameData.PhantomData) do
+		local annotations = {};
+		for terr,_ in pairs (phantomDataRecord.foggedTerritories) do
+			annotations [terr] = WL.TerritoryAnnotation.Create (".", 3, getColourInteger (55, 55, 55)); --write "." annotations for Phantom fog
+		end
+		annotations [phantomDataRecord.territory] = WL.TerritoryAnnotation.Create ("Phantom Fog", 5, getColourInteger (55, 55, 55)); --write "Phantom Fog" in Dark Grey annotation for source territory of the Phantom (1 territory gets "Phantom Fog", the rest get ".")
+		local event = WL.GameOrderEvent.Create (phantomDataRecord.castingPlayer, "Phantom fog reminder", {phantomDataRecord.castingPlayer}, {}); -- create Event object to send back to addOrder function parameter
+		event.TerritoryAnnotationsOpt = annotations;
+		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+	end
+
+	print("[PHANTOM EOT] END");
     Mod.PrivateGameData = privateGameData;
 end
 

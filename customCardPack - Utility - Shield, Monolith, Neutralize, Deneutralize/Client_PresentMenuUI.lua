@@ -130,8 +130,21 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		print(i, v);
 	end]]
 
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom == true) then
+		local intFogModPriority = tonumber (Mod.Settings.PhantomFogModPriority or 8000);
+		CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Phantom Fog Level: " .. Mod.Settings.PhantomFogLevel .. "/" .. WL.StandingFogLevel.ToString (Mod.Settings.PhantomFogLevel));
+		CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Phantom FogMod Priority: " .. tostring (intFogModPriority));
+		if (intFogModPriority >= 9000) then --this causes territory owner to become unable to see own units on the territory
+			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (territory owners cannot see own units; if game is not Commerce, impacted playes will be unable to submit turn and will boot)");
+		elseif (intFogModPriority >= 6000) then			
+			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will override visibility provided by Special Units, or by Spy, Reconnaissance or Surveillance cards)");
+		elseif (intFogModPriority >= 3000) then
+			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will override visibility provided by Spy, Reconnaissance or Surveillance cards, but not visibility provided by Special Units)");
+		else
+			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will not override visibility provided by Spy, Reconnaissance or Surveillance cards, nor that provided by Special Units)");
+		end
+	end
 
-	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom == true) then CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Phantom Fog Level: " .. Mod.Settings.PhantomFogLevel .. "/" .. WL.StandingFogLevel.ToString (Mod.Settings.PhantomFogLevel)); end
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end

@@ -80,7 +80,6 @@ TODOs:
 	- tornados - multiple tornados on same territory create multiple 'power' structures, but (A) don't do multiple damage hits, (B) only 1 structure is removed @ end; this is b/c it's put into a table by element of that territory, so each overwrites each other to make just 1 entry, hmmmm
 	- add Card Hold - restrict # of cards that can be held for X turns
 	- add Conceal - cast fog (light?) on a territory (bonus?) to everyone but self
-	- add Phantom - unit spawns for X turns that clouds vision to others of anything on the same territory it resides on
 	- add Portal/Nydus Canal - create a structure (which building?) for X turns  (or permanent? or make it so territory owner can demolish it [takes 1 turn to do so]) that enables units to travel from 1 portal to another
 	- create table/routines to auto-remove special units after X turns; not specific to any card, any card can use it
 		- also ensures that if the special is removed @ end of turn, it is replaced
@@ -90,7 +89,7 @@ TODOs:
 	- ask Fizz to allow negative #'s for specials' power?
 	- separate cards into a few different mods; already have the max 5 special unit images per mod for Isolation, Neutralize, Shield, Monolith, Quicksand, so no room to make special unit images for Tornado, Earthquake, Forest Fire
 		- mod 1: Nuke, Pestilence, Isolation
-		- mod 2: Shield, Monolith, Neutralize, Deneutralize, ?Phantom
+		- mod 2: Shield, Monolith, Neutralize, Deneutralize, Phantom
 		- mod 3: Card Block, Card Piece, Card Hold (future)
 		- mod 4: Quicksand, Tornado, Earthquake, Forest Fire, Airstrike
 		- mod 5: Resurrection
@@ -550,6 +549,12 @@ function phantomCheckboxClicked()
 		PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
 		PhantomFog_Light = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly);
         CreateLabel(UIcontainer).SetText("• Normal Fog - can't see units or owner of Phantom fogged territories\n• Light Fog - can see owner but not units");
+
+		horzPhantomFogModPriority = CreateHorz(UIcontainer);
+        CreateLabel(horzPhantomFogModPriority).SetText("Fog priority: ");
+        PhantomFogModPriority = CreateNumberInputField(horzPhantomFogModPriority).SetSliderMinValue(1).SetSliderMaxValue(8999).SetValue(Mod.Settings.PhantomFogModPriority).SetWholeNumbers(true).SetInteractable(true);
+        -- CreateLabel(UIcontainer).SetText("• 8000 is default recommended setting\n• >= 9000 - breaks typical games, do not use this setting unless you've tested it in a test game and are using Commerce mode\n• >= 6000 - will override visibilty provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
+        CreateLabel(UIcontainer).SetText("• 8000 is default recommended setting\n• max value 8999\n• >= 6000 - will override visibility provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
 
 		horzPhantomPiecesNeeded = CreateHorz(UIcontainer);
         CreateLabel(horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");
@@ -1180,6 +1185,7 @@ function setDefaultValues()
 	if (Mod.Settings.PhantomStartPieces == nil) then Mod.Settings.PhantomStartPieces = 1; end
 	if (Mod.Settings.PhantomPiecesPerTurn == nil) then Mod.Settings.PhantomPiecesPerTurn = 1; end
 	if (Mod.Settings.PhantomCardWeight == nil) then Mod.Settings.PhantomCardWeight = 1.0; end
+	if (Mod.Settings.PhantomFogModPriority == nil) then Mod.Settings.PhantomFogModPriority = 8000; end
 
 	if (Mod.Settings.MonolithEnabled == nil) then
 		Mod.Settings.MonolithEnabled = false;
@@ -1335,9 +1341,14 @@ function updateModSettingsFromUI()
 		if (PhantomFog_Normal.GetIsChecked () == true) then Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.Fogged; print ("Fogged");
 		else Mod.Settings.PhantomFogLevel = WL.StandingFogLevel.OwnerOnly; print ("OwnerOnly");
 		end
-		print ("\n\n\nFOG "..tostring (PhantomFog_Normal.GetIsChecked ()), tostring (PhantomFog_Light.GetIsChecked ()),Mod.Settings.PhantomFogLevel,WL.StandingFogLevel.Fogged,WL.StandingFogLevel.OwnerOnly);
+		-- print ("\n\n\nFOG "..tostring (PhantomFog_Normal.GetIsChecked ()), tostring (PhantomFog_Light.GetIsChecked ()),Mod.Settings.PhantomFogLevel,WL.StandingFogLevel.Fogged,WL.StandingFogLevel.OwnerOnly);
 
-        Mod.Settings.PhantomPiecesNeeded = PhantomPiecesNeeded.GetValue();
+		Mod.Settings.PhantomFogModPriority = PhantomFogModPriority.GetValue();
+		if (Mod.Settings.PhantomFogModPriority < 0) then Mod.Settings.PhantomFogModPriority = 0; --make sure priority is not negative
+		elseif (Mod.Settings.PhantomFogModPriority > 8999) then Mod.Settings.PhantomFogModPriority = 8999; --set max to 8999 b/c >=9000 means territory owners cannot see their own units on that territory and can't commit in non-Commerce games and will boot
+		end
+
+		Mod.Settings.PhantomPiecesNeeded = PhantomPiecesNeeded.GetValue();
         Mod.Settings.PhantomStartPieces = PhantomStartPieces.GetValue();
         Mod.Settings.PhantomPiecesPerTurn = PhantomPiecesPerTurn.GetValue();
         Mod.Settings.PhantomCardWeight = PhantomCardWeight.GetValue();
