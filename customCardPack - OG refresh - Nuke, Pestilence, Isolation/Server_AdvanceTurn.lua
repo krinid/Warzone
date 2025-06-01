@@ -152,6 +152,11 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
 		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
+	--changes to make:
+	--display all GameOrderEvent & GameOrderCustom orders, ensure they are sent to debug log
+	--test this game in SP, see if gold gets skipped?
+	--also fix Card Block to NOT CONSUME the whole card when blocked (!), it's blocking the PLAY of the card, not the USE of the card
+
 	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]")); end --only do this from 1 mod (OG) so it doesn't repeat 4x
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
@@ -159,7 +164,7 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
 		--let the order proceed
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then printDebug ("[TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]"); end --only do this from 1 mod (OG) so it doesn't repeat 4x
-	elseif (intOrderCount > 900) then
+	elseif (intOrderCount > 1500) then
 		intSkippedOrderCount = intSkippedOrderCount + 1;
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 
