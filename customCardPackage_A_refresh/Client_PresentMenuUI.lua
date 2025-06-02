@@ -16,11 +16,18 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	create_UnitInspectorMenu ();
 
-	UI.Alert (tostring (game.Game.ID), tostring (game.Us.ID));
+	local boolDebugMode_Override = false; --set to true if some criteria meets (eg: for a specific game ID, etc); particularly required when debug user isn't a player in the game he's trying to debug
+
+
+	UI.Alert (tostring (game.Game.ID));
 	if (game.Game.ID == 41405064) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
 		UI.Alert ("debug");
-	elseif (game.Us == nil) then close (); return; end --if not a valid local player, do nothing more, just exit
+		boolDebugMode_Override = true;
+	elseif (game.Us == nil) then close (); return; 	--if not a valid local player, do nothing more, just exit
+	end
+
+	--cancel out of here if not a debug user; but this doesn't allow for a debug user who isn't a player in the game
 	-- if (game.Us.ID ~= 1058239) then close (); return; end --if not a valid debug user, close debug window, do nothing more, just exit
 
 	if (Mod.PublicGameData.Debug == nil) then game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
@@ -71,7 +78,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--debug info for debug authorized user only
 	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
 
-	if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
+	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
 		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
 		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
