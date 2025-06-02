@@ -19,7 +19,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local boolDebugMode_Override = false; --set to true if some criteria meets (eg: for a specific game ID, etc); particularly required when debug user isn't a player in the game he's trying to debug
 
 
-	UI.Alert (tostring (game.Game.ID));
+	--UI.Alert (tostring (game.Game.ID));
 	if (game.Game.ID == 41405064) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
 		UI.Alert ("debug");
@@ -78,10 +78,10 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--debug info for debug authorized user only
 	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
 
-	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
+	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
 		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
-		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
+		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () create_DebugWindow (); displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
 		debugButtonTrimContent = UI.CreateButton (debugPanel).SetText ("Trim debug content [last trim @ " ..tostring(Mod.PublicGameData.Debug.OutputDataLastRead).. "]").SetOnClick (function () game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=Mod.PublicGameData.Debug.OutputDataCounter}, function () end); end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	end
 
@@ -291,6 +291,16 @@ function showDefinedCards (game)
     strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = strText .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
     TopLabel.SetText (strText.."\n");
+end
+
+function create_DebugWindow ()
+	Game.CreateDialog (showDebugWindow); --show Debug Window to output debug data to
+end
+
+function showDebugWindow (rootParent, setMaxSize, setScrollable, game, close)
+    setMaxSize(600, 600);
+    --setScrollable(true);
+	UIdebugWindow = rootParent;
 end
 
 function create_UnitInspectorMenu ()

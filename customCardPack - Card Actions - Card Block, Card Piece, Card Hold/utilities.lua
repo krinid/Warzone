@@ -767,13 +767,19 @@ function displayDebugInfoFromServer (game)
 	if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
 
 	--check if there are any undisplayed debug messages; if LastRead > Counter then there is an error, that should never happen; when LastRead == Counter, all messages have been displayed already
-	if (publicGameData.Debug.OutputDataLastRead >= publicGameData.Debug.OutputDataCounter) then print ("[No new server debug output]"); end
+	if (publicGameData.Debug.OutputDataLastRead >= publicGameData.Debug.OutputDataCounter) then debugOutputPrint ("[No new server debug output]"); end
 	for k=publicGameData.Debug.OutputDataLastRead+1, publicGameData.Debug.OutputDataCounter do
-		print (publicGameData.Debug.OutputData [k]); --output stored debug statement to local client Mod Log console
+		debugOutputPrint (publicGameData.Debug.OutputData [k]); --output stored debug statement to local client Mod Log console
 	end
 	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
 	-- game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
+end
+
+--output to standalone app client Mod Log (print), and also the in-game debug window (UIdebugWindow)
+function debugOutputPrint (strOutputData)
+	print (strOutputData);
+	if (UIdebugWindow ~= nil) then UI.CreateLabel (UIdebugWindow).SetText (strOutputData); end
 end
 
 --concatenate elements of 2 arrays, return resulting array; elements do not need to be consecutive or numeric; if both arrays use the same keys, array2 will overwrite the values of array1 where the keys overlap
