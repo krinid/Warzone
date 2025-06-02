@@ -16,13 +16,14 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	create_UnitInspectorMenu ();
 
+	UI.Alert (tostring (game.Game.ID));
 	if (game.Game.ID == 40767112) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
 		UI.Alert ("debug");
 	elseif (game.Us == nil) then close (); return; end --if not a valid local player, do nothing more, just exit
 	-- if (game.Us.ID ~= 1058239) then close (); return; end --if not a valid debug user, close debug window, do nothing more, just exit
 
-	if (Mod.PublicGameData.Debug == nil) then 	game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
+	if (Mod.PublicGameData.Debug == nil) then game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function	
 
 	--displayDebugInfoFromServer (game); --display (in Mod Log output window) debug info stored by server hooks
