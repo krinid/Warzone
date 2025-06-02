@@ -16,8 +16,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	create_UnitInspectorMenu ();
 
-	UI.Alert (tostring (game.Game.ID));
-	if (game.Game.ID == 40767112) then  --ModTourney stef vs Coug game
+	UI.Alert (tostring (game.Game.ID), tostring (game.Us.ID));
+	if (game.Game.ID == 41405064) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
 		UI.Alert ("debug");
 	elseif (game.Us == nil) then close (); return; end --if not a valid local player, do nothing more, just exit
