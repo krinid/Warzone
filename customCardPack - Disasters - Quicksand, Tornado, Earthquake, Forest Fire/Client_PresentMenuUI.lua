@@ -22,7 +22,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--UI.Alert (tostring (game.Game.ID));
 	if (game.Game.ID == 41405064) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
-		UI.Alert ("debug");
 		boolDebugMode_Override = true;
 	elseif (game.Us == nil) then close (); return; 	--if not a valid local player, do nothing more, just exit
 	end
