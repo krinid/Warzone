@@ -61,7 +61,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- end
 
 	--super DELME! --> Debugging for CP Go Public Intro game
-	if ((game.Game.ID == 40767112 or game.Game.ID == 41405064) and Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
+	if (boolDebuggingOnForThisTurn == true and Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
 	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
 
