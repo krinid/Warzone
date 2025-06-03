@@ -61,7 +61,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- end
 
 	--super DELME! --> Debugging for CP Go Public Intro game
-	if (game.Game.ID == 40767112) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
+	if ((game.Game.ID == 40767112 or game.Game.ID == 41405064) and Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
 	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
 
@@ -74,8 +74,8 @@ end
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
-	--CP Go Public Intro game
-	if (game.Game.ID == 40767112) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); return; end
+	--only call debugging routine for specifically targeted games, known to have issues that need debugging
+	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); return; end
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -110,8 +110,35 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	local publicGameData = Mod.PublicGameData;
 	local privateGameData = Mod.PrivateGameData;
 	turnNumber = game.Game.TurnNumber;
-	intOrderCount = 0; --reset order count to 0, increase it in Server_AdvanceTurn_Order for each order processed
-	intSkippedOrderCount = 0; --reset skipped order count to 0, increase it in Server_AdvanceTurn_Order for each skipped order; NOTE: this is not for typical skipped orders, just the ones used in debugging issues
+
+	--DEBUGGING ITEMS
+	--reset counters for start of turn, increase them in Server_AdvanceTurn_Order
+	boolDebuggingOnForThisTurn = false; --default to false, set to true if the criteria matches (match by Game ID)
+	intOrderCount = 0; --count total # of orders entered by players or added by mods
+	intSkippedOrderCount = 0; --count total # of manually skipped orders by this mod; NOTE: this is not for typical skipped orders, just the ones used in debugging issues
+	intConsecutiveSkippedOrderCount = 0; --count # of consecutively skipped orders; reset this when an order is permitted; this is to detect problematic orders w/o skipping non-problematic orders
+	intConsecutiveSameOrderCriteria = 0; --count # of consecutive orders of same proxyType that have occurred; too many in a way likely indicates a loop glitch that will trigger mod order depth error
+	strLastOrderProxyType = nil; --keep track of last order proxyType to help check for repeating orders
+	intLastOrderPlayerID = nil; --keep track of last order playerID to help check for repeating orders
+	-- if (game.Game.ID == 40767112 or game.Game.ID == 41405064) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
+	-- if (game.Game.ID == 40767112 or game.Game.ID == 41405064) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
+	--40767112 CardPack - Go Public Intro game, 41405064 ModTourney Stefano vs Coug
+
+
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
 
 	printDebug ("------------SERVER TURN ".. game.Game.TurnNumber.." ADVANCE------------");
 
@@ -157,21 +184,34 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 	--test this game in SP, see if gold gets skipped?
 	--also fix Card Block to NOT CONSUME the whole card when blocked (!), it's blocking the PLAY of the card, not the USE of the card
 
+	--keep track of # of same proxyType orders in a row; too many consecutive orders can indicate a loop glitch that will trigger the mod order depth error
+	local boolDupeCriteriaMet = false;
+	if (strLastOrderProxyType == order.proxyType and intLastOrderPlayerID == order.PlayerID) then boolDupeCriteriaMet = true; intConsecutiveSameOrderCriteria = intConsecutiveSameOrderCriteria + 1;
+	else intConsecutiveSameOrderCriteria = 0; boolDupeCriteriaMet = false;
+	end
+
 	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]")); end --only do this from 1 mod (OG) so it doesn't repeat 4x
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		intConsecutiveSkippedOrderCount = 0;
 		return;
 	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
 		--let the order proceed
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then printDebug ("[TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]"); end --only do this from 1 mod (OG) so it doesn't repeat 4x
-	elseif (intOrderCount > 1500) then
+		intConsecutiveSkippedOrderCount = 0;
+
+	--customized conditions for the ModTourney game
+	elseif ((intConsecutiveSameOrderCriteria >= 25 and boolDupeCriteriaMet == true) or intOrderCount >= 900) then
+	-- elseif (intConsecutiveSkippedOrderCount > 25 or intOrderCount > 100) then
 		intSkippedOrderCount = intSkippedOrderCount + 1;
+		intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1;
+
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 
 		local strDebugOutput;
 
-		--only output data for 1st 100 records; mod must finish in 30 secs so doing all records will cause it to timeout
-		if (intSkippedOrderCount <=100) then
+		--only output data for 1st 25 consecutively skipped records; mod must finish in 30 secs so doing all records will cause it to timeout
+		if (intConsecutiveSkippedOrderCount <=25) then
 			--display debug info -- keep it brief, only output playerID, terrID, etc -- not full player/terr names, etc; due to 1MB max mod storage size
 			-- printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
 			strDebugOutput = "[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType) .."; ";
@@ -192,7 +232,13 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 			end
 			printDebug (strDebugOutput);
 		end
+	else
+		--this is a regular, non-skipped order, so reset the consecutive skipped order count
+		intConsecutiveSkippedOrderCount = 0;
 	end
+
+	strLastOrderProxyType = order.proxyType; --keep track of last order proxyType to help check for repeating orders
+	intLastOrderPlayerID = order.PlayerID; --keep track of last order playerID to help check for repeating orders
 end
 
 --add FogMods to all territories where Phantoms currently reside and any territories that is being attacked from a territory where a Phantom resides, even if the Phantom itself isn't participating in the attack
