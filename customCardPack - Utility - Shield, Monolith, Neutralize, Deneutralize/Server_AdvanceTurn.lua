@@ -1745,95 +1745,99 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 
 	print ("[execute DENEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..currentTargetOwnerID.."::newOwner=="..impactedTerritoryOwnerID.."::canTargetNaturalNeutrals=="..tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals) .."::DeneutralizeCanUseOnNeutralizedTerritories=="..tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories).."::");
 
-	--check if the target territory is neutral, if so, assign it to specified player, otherwise do nothing
+	-- --check if the target territory is neutral, if so, assign it to specified player, otherwise do nothing
+	-- if (currentTargetOwnerID ~= WL.PlayerID.Neutral) then
+	-- --if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then
+	-- 	print ("territory is not neutral -- do nothing"); --this could happen if another mod or WZ makes the territory neutral after the order as input on client side but before this order processes
+	-- else
+
+	--future: check settings for if can be cast on natural neutrals and/or Neutralized territories
+	local privateGameData = Mod.PrivateGameData; 
+	local neutralizeData = privateGameData.NeutralizeData;
+	local neutralizeDataRecord = nil;
+	local boolIsNeutralizedTerritory = false; --if ==true -> Neutralized territory; if ==false -> natural neutral
+	local boolSettingsRuleViolation = false;  --abort if Mod settings for application on Natural Neutrals or Neutralized territories don't align to action taken
+	local strSettingsRuleViolationMessage = "";
+	local specialUnitID = nil;
+
+	print ("[DENEUTRALIZE] Neutralization data:");
+	for k,v in pairs (Mod.PrivateGameData.NeutralizeData) do
+		print ("[DENEUTRALIZE] ###--------------------------------------");
+		printObjectDetails (v, "record", "NeutralizeData");
+		print ("[DENEUTRALIZE] $$$--------------------------------------");
+		print (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires) .. ", ".. tostring(v.specialUnitID));
+	end
+	--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+
 	if (currentTargetOwnerID ~= WL.PlayerID.Neutral) then
-	--if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then
-		print ("territory is not neutral -- do nothing"); --this could happen if another mod or WZ makes the territory neutral after the order as input on client side but before this order processes
-	else
-		--future: check settings for if can be cast on natural neutrals and/or Neutralized territories
-		local privateGameData = Mod.PrivateGameData; 
-		local neutralizeData = privateGameData.NeutralizeData;
-		local neutralizeDataRecord = nil;
-		local boolIsNeutralizedTerritory = false; --if ==true -> Neutralized territory; if ==false -> natural neutral
-		local boolSettingsRuleViolation = false;  --abort if Mod settings for application on Natural Neutrals or Neutralized territories don't align to action taken
-		local strSettingsRuleViolationMessage = "";
-		local specialUnitID = nil;
-
-		print ("[DENEUTRALIZE] Neutralization data:");
-		for k,v in pairs (Mod.PrivateGameData.NeutralizeData) do
-			print ("[DENEUTRALIZE] ###--------------------------------------");
-			printObjectDetails (v, "record", "NeutralizeData");
-			print ("[DENEUTRALIZE] $$$--------------------------------------");
-			print (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires) .. ", ".. tostring(v.specialUnitID));
-		end
+		boolSettingsRuleViolation = true;
+		print ("[DENEUTRALIZE] Territory is not neutral")
+		strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", which is not Neutral";
+	elseif (neutralizeData [targetTerritoryID] ~= nil) then
+		print ("[DENEUTRALIZE] Neutralized territory target")
+		--Neutralized territory; abort if Mod settings don't permit this
+		neutralizeDataRecord = neutralizeData [targetTerritoryID];
+		specialUnitID = neutralizeDataRecord.specialUnitID; --grab ID# of 'Neutralize' special unit so it can be removed from the territory (but not here, we're just checking if it's a Neutralized territory, not changing anything yet)
 		--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+		boolIsNeutralizedTerritory = true;
+		if (Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) then
+			boolSettingsRuleViolation = true;
+			print ("[DENEUTRALIZE] Neutralized territory targets not permitted");
+			strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card";
+		end
+	else
+		print ("[DENEUTRALIZE] Natural neutral territory target")
+		--Natural neutral; abort if Mod settings don't permit this
+		if Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false then
+			boolSettingsRuleViolation = true;
+			print ("[DENEUTRALIZE] Natural neutral territory targets not permitted");
+			strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card";
+		end
+	end
 
-		if (neutralizeData [targetTerritoryID] ~= nil) then
-			print ("[DENEUTRALIZE] Neutralized territory target")
-			--Neutralized territory; abort if Mod settings don't permit this
-			neutralizeDataRecord = neutralizeData [targetTerritoryID];
-			specialUnitID = neutralizeDataRecord.specialUnitID; --grab ID# of 'Neutralize' special unit so it can be removed from the territory (but not here, we're just checking if it's a Neutralized territory, not changing anything yet)
-			--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
-			boolIsNeutralizedTerritory = true;
-			if (Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) then
-				boolSettingsRuleViolation = true;
-				print ("[DENEUTRALIZE] Neutralized territory targets not permitted");
-				strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card";
-			end
-		else
-			print ("[DENEUTRALIZE] Natural neutral territory target")
-			--Natural neutral; abort if Mod settings don't permit this
-			if Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false then
-				boolSettingsRuleViolation = true;
-				print ("[DENEUTRALIZE] Natural neutral territory targets not permitted");
-				strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card";
-			end
+	--if no violations, then process Deneutralization action
+	if (boolSettingsRuleViolation == false) then
+		--if target territory is a neutralized territory, then remove the data record from NeutralizeData & remove the 'Neutralized' special unit from the territory
+		if (boolIsNeutralizedTerritory == true) then
+			--this eliminates this element from the table
+			neutralizeData[targetTerritoryID] = nil;
+			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the 'Neutralized' special unit from the territory
+
+			print ("[DENEUTRALIZE] remove special "..specialUnitID.."::");
+			--print ("[DENEUTRALIZE] #specials on target territory: "..#impactedTerritory.NumArmies.SpecialUnits.."::]");
+			--for k,sp in pairs (currentTargetTerritory.NumAries.SpecialUnits) do
+			--	print ("[DENEUTRALIZE] "..k..", special Name: "..sp.Name..", proxyType "..sp.proxyType..", ID "..sp.ID.."::");
+			--end
+
+			--resave privateGameData
+			privateGameData.NeutralizeData = neutralizeData;
+			Mod.PrivateGameData = privateGameData;
 		end
 
-		--if no violations, then process Deneutralization action
-		if (boolSettingsRuleViolation == false) then
-			--if target territory is a neutralized territory, then remove the data record from NeutralizeData & remove the 'Neutralized' special unit from the territory
-			if (boolIsNeutralizedTerritory == true) then
-				--this eliminates this element from the table
-				neutralizeData[targetTerritoryID] = nil;
-				impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the 'Neutralized' special unit from the territory
+		--assign the target territory neutral to new owner
+		print ("territory is neutral -- assign to new owner");
+		impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
+		impactedTerritoryOwnerName = toPlayerName (impactedTerritoryOwnerID, game);
 
-				print ("[DENEUTRALIZE] remove special "..specialUnitID.."::");
-				--print ("[DENEUTRALIZE] #specials on target territory: "..#impactedTerritory.NumArmies.SpecialUnits.."::]");
-				--for k,sp in pairs (currentTargetTerritory.NumAries.SpecialUnits) do
-				--	print ("[DENEUTRALIZE] "..k..", special Name: "..sp.Name..", proxyType "..sp.proxyType..", ID "..sp.ID.."::");
-				--end
+		table.insert (modifiedTerritories, impactedTerritory);
 
-				--resave privateGameData
-				privateGameData.NeutralizeData = neutralizeData;
-				Mod.PrivateGameData = privateGameData;
-			end
-
-			--assign the target territory neutral to new owner
-			print ("territory is neutral -- assign to new owner");
-			impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
-			impactedTerritoryOwnerName = toPlayerName (impactedTerritoryOwnerID, game);
-
-			table.insert (modifiedTerritories, impactedTerritory);
-
-			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Deneutralize action
-			local strDeneutralizeOrderMessage = toPlayerName(castingPlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
-			--print ("message=="..strDeneutralizeOrderMessage);
-			local event = WL.GameOrderEvent.Create (castingPlayerID, strDeneutralizeOrderMessage, {castingPlayerID}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-			-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
-			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-		else
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
-			-- addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
-			local addAirLiftCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
-			local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
-			printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
-			-- addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-			addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-			addOrder (addAirLiftCardEvent, false);
-			end
+		local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Deneutralize action
+		local strDeneutralizeOrderMessage = toPlayerName(castingPlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
+		--print ("message=="..strDeneutralizeOrderMessage);
+		local event = WL.GameOrderEvent.Create (castingPlayerID, strDeneutralizeOrderMessage, {castingPlayerID}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
+		-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
+		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
+	else
+		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		-- addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
+		local addAirLiftCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
+		local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
+		printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
+		-- addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+		addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+		addOrder (addAirLiftCardEvent, false);
 	end
 end
 
