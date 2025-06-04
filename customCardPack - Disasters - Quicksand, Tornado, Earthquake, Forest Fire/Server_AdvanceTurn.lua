@@ -73,11 +73,15 @@ end
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
+	intOrderCount = intOrderCount + 1;
 
 	if (boolDebuggingOnForThisTurn == true and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
+	if (game.Game.ID == 41405062 and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
 
 	--only call debugging routine for specifically targeted games, known to have issues that need debugging
-	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); end
+	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
+	elseif (game.Game.ID == 41405062) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
+	end
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -164,7 +168,6 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 end
 
 function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder)
-	intOrderCount = intOrderCount + 1;
 
 	if (intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
 
