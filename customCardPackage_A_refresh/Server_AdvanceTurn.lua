@@ -1778,7 +1778,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			if (Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) then
 				boolSettingsRuleViolation = true;
 				print ("[DENEUTRALIZE] Neutralized territory targets not permitted");
-				strSettingsRuleViolationMessage = "Deneutralize attempt on Target "..targetTerritoryName..", a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card";
+				strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card";
 			end
 		else
 			print ("[DENEUTRALIZE] Natural neutral territory target")
@@ -1786,7 +1786,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			if Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false then
 				boolSettingsRuleViolation = true;
 				print ("[DENEUTRALIZE] Natural neutral territory targets not permitted");
-				strSettingsRuleViolationMessage = "Deneutralize attempt on Target "..targetTerritoryName..", a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card";
+				strSettingsRuleViolationMessage = "Deneutralize attempt on "..targetTerritoryName..", a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card";
 			end
 		end
 
