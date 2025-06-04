@@ -75,13 +75,13 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 	intOrderCount = intOrderCount + 1;
 
-	if (boolDebuggingOnForThisTurn == true and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
-	if (game.Game.ID == 41405062 and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
+	-- if (boolDebuggingOnForThisTurn == true and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
+	-- if (game.Game.ID == 41405062 and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
 
-	--only call debugging routine for specifically targeted games, known to have issues that need debugging
-	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
-	elseif (game.Game.ID == 41405062) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
-	end
+	-- --only call debugging routine for specifically targeted games, known to have issues that need debugging
+	-- if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
+	-- elseif (game.Game.ID == 41405062) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder);
+	-- end
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -1753,16 +1753,6 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		--future: check settings for if can be cast on natural neutrals and/or Neutralized territories
 		local privateGameData = Mod.PrivateGameData; 
 		local neutralizeData = privateGameData.NeutralizeData;
-		--[[print ("[DENEUTRALIZE] --------------------------------------");
-		print ("[DENEUTRALIZE] neutralizeData [targetTerritoryID] == nil) --> ".. tostring (Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil)..", type "..type (targetTerritoryID).."::");
-		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil));
-		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [targetTerritoryID]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [tonumber(targetTerritoryID)]==nil));
-		print ("[NEUTRALIZE] ************ tostring(Mod.PrivateGameData.NeutralizeData [93]==nil) --> ".. tostring(Mod.PrivateGameData.NeutralizeData [93]==nil));]]
-
-		--[[local frak = Mod.PrivateGameData.NeutralizeData [targetTerritoryID];
-		for k,v in pairs (frak) do
-			print ("     "..k,v);
-		end]]
 		local neutralizeDataRecord = nil;
 		local boolIsNeutralizedTerritory = false; --if ==true -> Neutralized territory; if ==false -> natural neutral
 		local boolSettingsRuleViolation = false;  --abort if Mod settings for application on Natural Neutrals or Neutralized territories don't align to action taken
@@ -1788,7 +1778,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			if (Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == false) then
 				boolSettingsRuleViolation = true;
 				print ("[DENEUTRALIZE] Neutralized territory targets not permitted");
-				strSettingsRuleViolationMessage = "Target "..targetTerritoryName.." is a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card.";
+				strSettingsRuleViolationMessage = "Deneutralize attempt on Target "..targetTerritoryName..", a Neutralized territory, which is not permitted as per the mod settings for the Deneutralize card";
 			end
 		else
 			print ("[DENEUTRALIZE] Natural neutral territory target")
@@ -1796,7 +1786,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			if Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false then
 				boolSettingsRuleViolation = true;
 				print ("[DENEUTRALIZE] Natural neutral territory targets not permitted");
-				strSettingsRuleViolationMessage = "Target "..targetTerritoryName.." is a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card.";
+				strSettingsRuleViolationMessage = "Deneutralize attempt on Target "..targetTerritoryName..", a natural neutral territory, which is not permitted as per the mod settings for the Deneutralize card";
 			end
 		end
 
@@ -1835,14 +1825,14 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
 			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 		else
-			skip (WL.ModOrderControl.Skip);
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 			-- addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
 			local addAirLiftCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
 			local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
 			printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
 			-- addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
 			addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-			addOrder (gameOrder, false); --resubmit the Airstrike order as-is, so it can be processed once the Airlift card is added
+			addOrder (addAirLiftCardEvent, false);
 			end
 	end
 end
