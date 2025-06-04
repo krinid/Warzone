@@ -27,10 +27,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
 	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
 	-- if (game.Game.ID == 40767112) then  --Go Public Intro game
-	-- 	removeGlitchedSUs (game, addOrder); --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the game ID listed above
-	-- end
 
-	--Limited Multimove game - stale Shields/Monoliths force expiry
+	if (game.Game.ID == 41405062 or game.Game.ID == 41432086) then removeGlitchedSUs (game, addOrder); end --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the specified game IDs
 
 	Pestilence_processEndOfTurn (game, addOrder); --check for pending Pestilence orders, execute them if they start this turn or are already ongoing
 	Tornado_processEndOfTurn (game, addOrder);
@@ -2396,7 +2394,8 @@ function Tornado_processEndOfTurn(game, addOrder)
 			if (structures[WL.StructureType.Power] == nil) then
 				structures[WL.StructureType.Power] = 0;
 			else
-				structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
+				-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
+				structures[WL.StructureType.Power] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators (idle power structures)
 			end
 
 			impactedTerritory.SetStructuresOpt = structures;
@@ -2539,29 +2538,42 @@ end
 function removeGlitchedSUs (game, addOrder)
 	local ShieldsToExpire = {};
 	local MonolithsToExpire = {};
+	local StructuresToExpire = {};
 
-	--Nate LOTR/ME Dragons game
 	if (false) then
 	elseif (game.Game.ID == 41405062) then  --ModTourney#6: Round 1, Petro v krin
 		-- 38/Siam] Attack Power 0 [kills 0], Defense Power 0 [kills 0], #Armies 0, #Special Units 1<1> Shield [CustomSpecialUnit], owner 820839/Petro Dubai RealEstate, ID=3B52204BEF634E359EBB618D04266842
 		-- 10/Venezuela - Idle power (tornado)
+		StructuresToExpire[1] = {structureType = WL.StructureType.Power, territory = 10, description = "Tornado effect ends on"}; --need to use an array of tables b/c neither terr# or structureType is unique to be a key, could be dupes
+		ShieldsToExpire = {
+			["3B52204BEF634E359EBB618D04266842"] = 38
+		};
 
+	elseif (game.Game.ID == 41432086) then  --test game - ModTourney#6: Round 1, prenk v krin
+		-- 10/Venezuela - Idle power (tornado)
+		StructuresToExpire[1] = {structureType = WL.StructureType.Power, territory = 10, description = "Tornado effect ends on"}; --need to use an array of tables b/c neither terr# or structureType is unique to be a key, could be dupes
 
-	elseif (game.Game.ID == 40767112) then  --CardPack - Go Public Intro game
+	elseif (game.Game.ID == 2062) then  --SP test game
+		-- 308/East Central China - Idle power (tornado)
+		StructuresToExpire[1] = {structureType = WL.StructureType.Power, territory = 308, description = "Tornado effect ends on"}; --need to use an array of tables b/c neither terr# or structureType is unique to be a key, could be dupes
+
+	-- elseif (game.Game.ID == 40767112) then  --CardPack - Go Public Intro game
 -- 1233|Semnan, 1543918|-|D7770A14757D47678EA54ADB423AFB39|Shield|1543918
 -- 781|Belize, 1571670|Zhukov|4E4338C4B9144E29859CDFF1E6CE46E8|Monolith|1571670
 -- 2241|Morouo, 90319|EvilDrMilo|4B0BA03DF977443AAF080764F1B29B30|Monolith|90319
 -- 3500|Bouvet Island (Norway), 994979|B€NJ¥|D0A5524222B645DA8491F4633A30386C|Monolith|994979
 
-		MonolithsToExpire = {
+--[[ 		MonolithsToExpire = {
 			["4E4338C4B9144E29859CDFF1E6CE46E8"] = 781,
 			["4B0BA03DF977443AAF080764F1B29B30"] = 2241,
 			["D0A5524222B645DA8491F4633A30386C"] = 3500
 		};
 		ShieldsToExpire = {
 			["D7770A14757D47678EA54ADB423AFB39"] = 1233
-		};
-	-- elseif (game.Game.ID == 40721800) then  --Limited Multimove game
+		}; ]]
+
+
+		-- elseif (game.Game.ID == 40721800) then  --Limited Multimove game
 	-- 	MonolithsToExpire = {
 	-- 		["4B4EDD4B41BD4714AB43590026D35581"] = 18,
 	-- 		["C6D1DFD25C08446589447999E89969B0"] = 46,
@@ -2622,6 +2634,7 @@ function removeGlitchedSUs (game, addOrder)
 
 	removeSUs (game, addOrder, ShieldsToExpire, "Shield");
 	removeSUs (game, addOrder, MonolithsToExpire, "Monolith");
+	removeStructure (game, addOrder, StructuresToExpire)
 end
 
 function removeSUs (game, addOrder, SUsToExpire, strSUname)
@@ -2630,21 +2643,33 @@ function removeSUs (game, addOrder, SUsToExpire, strSUname)
 		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
 		local strSUExpiresMsg = strSUname.. " expired on ".. tostring (getTerritoryName (terrID, game));
 		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
-		printDebug ("[FORCED SU EXPIRY] "..strSUExpiresMsg.."; remove special=="..terrID..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
+		printDebug ("[FORCED SU EXPIRY] "..strSUExpiresMsg.."; remove special=="..strSUname.."/"..tostring (SUkey)..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
 		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strSUExpiresMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = jumpToActionSpotObject;
 		addOrder (event, false);
 	end
 end
 
-function removeStructure (game, addOrder, StructuresToExpire, strSUname)
-	for SUkey, terrID in pairs (StructuresToExpire) do
-		local impactedTerritory = WL.TerritoryModification.Create (terrID); --&&tornado
-		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
-		local strSUExpiresMsg = strSUname.. " expired on ".. tostring (getTerritoryName (terrID, game));
+function removeStructure (game, addOrder, StructuresToExpire)
+	for _, structureData in pairs (StructuresToExpire) do
+		local terrID = structureData.territory;
+		local intStructureType = structureData.structureType;
+		local strStructureRemovalDescription = structureData.description;
+		local impactedTerritory = WL.TerritoryModification.Create (terrID);
+		local strStructureExpiresMsg = strStructureRemovalDescription.. " ".. tostring (getTerritoryName (terrID, game));
 		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
-		printDebug ("[FORCED SU EXPIRY] "..strSUExpiresMsg.."; remove special=="..terrID..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
-		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strSUExpiresMsg, {}, {impactedTerritory});
+
+		local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
+		if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+		if (structures[intStructureType] == nil) then
+			structures[intStructureType] = 0;
+		else
+			structures[intStructureType] = structures[intStructureType] - 1;
+		end
+		impactedTerritory.SetStructuresOpt = structures;
+
+		printDebug ("[FORCED STRUCTURE EXPIRY] "..strStructureExpiresMsg.."; remove structure=="..strStructureRemovalDescription..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strStructureExpiresMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = jumpToActionSpotObject;
 		addOrder (event, false);
 	end
