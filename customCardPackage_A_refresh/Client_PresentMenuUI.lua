@@ -216,7 +216,7 @@ function showTornadoData ()
     CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.TornadoData));
     for k,v in pairs (Mod.PublicGameData.TornadoData) do
         printObjectDetails (v,"record", "TornadoData");
-        CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetTerritoryID)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumber_TornadoExpires));
+        CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberTornadoEnds));
     end
 
 	--for reference: publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
