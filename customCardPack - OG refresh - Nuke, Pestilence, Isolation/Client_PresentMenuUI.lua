@@ -158,6 +158,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
+    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado == true) then showTornadoData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
@@ -208,6 +209,16 @@ function showNeutralizeData ()
         CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires).. ", ".. tostring(v.specialUnitID));
     end
 	--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+end
+
+function showTornadoData ()
+    CreateLabel (MenuWindow).SetText ("\nTornado data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.TornadoData));
+    for k,v in pairs (Mod.PublicGameData.TornadoData) do
+        printObjectDetails (v,"record", "TornadoData");
+        CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetTerritoryID)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumber_TornadoExpires));
+    end
+    --for reference: publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
 end
 
 function showEarthquakeData ()
