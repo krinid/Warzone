@@ -218,7 +218,8 @@ function showTornadoData ()
         printObjectDetails (v,"record", "TornadoData");
         CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetTerritoryID)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumber_TornadoExpires));
     end
-    --for reference: publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
+
+	--for reference: publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
 end
 
 function showEarthquakeData ()

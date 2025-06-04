@@ -2542,6 +2542,11 @@ function removeGlitchedSUs (game, addOrder)
 
 	--Nate LOTR/ME Dragons game
 	if (false) then
+	elseif (game.Game.ID == 41405062) then  --ModTourney#6: Round 1, Petro v krin
+		-- 38/Siam] Attack Power 0 [kills 0], Defense Power 0 [kills 0], #Armies 0, #Special Units 1<1> Shield [CustomSpecialUnit], owner 820839/Petro Dubai RealEstate, ID=3B52204BEF634E359EBB618D04266842
+		-- 10/Venezuela - Idle power (tornado)
+
+
 	elseif (game.Game.ID == 40767112) then  --CardPack - Go Public Intro game
 -- 1233|Semnan, 1543918|-|D7770A14757D47678EA54ADB423AFB39|Shield|1543918
 -- 781|Belize, 1571670|Zhukov|4E4338C4B9144E29859CDFF1E6CE46E8|Monolith|1571670
@@ -2622,6 +2627,19 @@ end
 function removeSUs (game, addOrder, SUsToExpire, strSUname)
 	for SUkey, terrID in pairs (SUsToExpire) do
 		local impactedTerritory = WL.TerritoryModification.Create (terrID);
+		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
+		local strSUExpiresMsg = strSUname.. " expired on ".. tostring (getTerritoryName (terrID, game));
+		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
+		printDebug ("[FORCED SU EXPIRY] "..strSUExpiresMsg.."; remove special=="..terrID..", from "..terrID.."/".. tostring (getTerritoryName (terrID, game)).."::");
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strSUExpiresMsg, {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = jumpToActionSpotObject;
+		addOrder (event, false);
+	end
+end
+
+function removeStructure (game, addOrder, StructuresToExpire, strSUname)
+	for SUkey, terrID in pairs (StructuresToExpire) do
+		local impactedTerritory = WL.TerritoryModification.Create (terrID); --&&tornado
 		impactedTerritory.RemoveSpecialUnitsOpt = {SUkey};
 		local strSUExpiresMsg = strSUname.. " expired on ".. tostring (getTerritoryName (terrID, game));
 		local jumpToActionSpotObject = createJumpToLocationObject (game, terrID);
