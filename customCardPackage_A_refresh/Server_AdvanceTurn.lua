@@ -71,6 +71,7 @@ end
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
+	if (intOrderCount == nil) then intOrderCount = 0; end
 	intOrderCount = intOrderCount + 1;
 
 	-- if (boolDebuggingOnForThisTurn == true and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
