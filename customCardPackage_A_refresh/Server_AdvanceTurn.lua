@@ -61,7 +61,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- end
 
 	--super DELME! --> Debugging for CP Go Public Intro game
-	if (boolDebuggingOnForThisTurn == true and Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
+	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
 	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
 
@@ -75,7 +75,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
 	--only call debugging routine for specifically targeted games, known to have issues that need debugging
-	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); return; end
+	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); end
 
 	--skip order if this order is a card play by a player impacted by Card Block
 	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
@@ -122,8 +122,12 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	intLastOrderPlayerID = nil; --keep track of last order playerID to help check for repeating orders
 	-- if (game.Game.ID == 40767112 or game.Game.ID == 41405064) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
 	-- if (game.Game.ID == 40767112 or game.Game.ID == 41405064) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
-	--40767112 CardPack - Go Public Intro game, 41405064 ModTourney Stefano vs Coug
+	-- if (game.Game.ID == 40767112 or game.Game.ID == 41405064) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
 
+	if (game.Game.ID == 41405062) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
+	--41405062 CardPack - Go Public Intro game, 41405064 ModTourney Stefano vs Coug, 41405062 ModTourney krin vs Petro
+
+	if (game.Settings.SinglePlayer == true) then boolDebuggingOnForThisTurn = true; end --do this for troubleshooting purposes
 
 	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
 	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
@@ -175,14 +179,11 @@ end
 function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder)
 	if (intOrderCount == nil) then intOrderCount = 0; end
 	intOrderCount = intOrderCount + 1;
-	-- if (game.Game.ID == 40767112) then --CardPack - Go Public Intro game
-		-- print ("[S_AT_O] #orders skipped past limit: " ..tostring (intSkippedOrderCount)..", 1last "..tostring (boolDisplayOneLastDebugOrder));
-		-- if (order.proxyType == "GameOrderEvent") then printDebug ("       !Message ".. tostring (order.Message)); end
 
 	--changes to make:
 	--display all GameOrderEvent & GameOrderCustom orders, ensure they are sent to debug log
 	--test this game in SP, see if gold gets skipped?
-	--also fix Card Block to NOT CONSUME the whole card when blocked (!), it's blocking the PLAY of the card, not the USE of the card
+	--also fix Card Block to NOT CONSUME the whole card when blocked (!), it's blocking the actual execution of the card (custom game order -- so effect never occurs), but not the core WZ USE of the card (order that shows card play and consumes 1 whole card)
 
 	--keep track of # of same proxyType orders in a row; too many consecutive orders can indicate a loop glitch that will trigger the mod order depth error
 	local boolDupeCriteriaMet = false;
@@ -190,14 +191,35 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 	else intConsecutiveSameOrderCriteria = 0; boolDupeCriteriaMet = false;
 	end
 
-	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
+	print ("[GLITCH DEBUG] [ORDER] proxyType ".. order.proxyType.. ", playerID " ..order.PlayerID.. ", last order proxyType: " ..tostring (strLastOrderProxyType).. ", last order playerID: " ..tostring (intLastOrderPlayerID));
+	print ("  #orders " ..tostring (intOrderCount).. ", #skipped " ..tostring (intSkippedOrderCount).. ", #consecSkipped " ..tostring (intConsecutiveSkippedOrderCount).. ", #sameConsecProxyType " ..tostring (intConsecutiveSameOrderCriteria).. ", dupe: " ..tostring (boolDupeCriteriaMet)); --", modID " ..tostring (order.ModID).. ", Message/Desc/Payload: " ..tostring (order.Message).. "||" ..tostring (order.Description).. "||" ..tostring (order.Payload));
+	local strDebugPrintOutput = "";
+	if (order.proxyType == "GameOrderAttackTransfer") then
+		-- printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+		-- printDebug (" FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+		strDebugPrintOutput = strDebugPrintOutput .. "FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful);
+	elseif (order.proxyType == "GameOrderPlayCardCustom") then
+		-- printDebug (" cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+		strDebugPrintOutput = strDebugPrintOutput .. "cardID ".. order.CustomCardID.. ", desc: ".. order.Description.. "; ModData ".. tostring (order.ModData);
+	elseif (order.proxyType == "GameOrderCustom") then
+		-- printDebug (" Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
+		strDebugPrintOutput = strDebugPrintOutput .. "Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload);
+	elseif (order.proxyType == "GameOrderEvent") then
+		-- printDebug (" ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+		strDebugPrintOutput = strDebugPrintOutput .. "ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message);
+	end
+	printDebug ("  DATA: "..strDebugPrintOutput);
+
+	if (order.proxyType == "GameOrderEvent" and order.ModID == nil and order.Message == "Received Gold") then --never skip Gold Received, else players get 0 gold assigned for the next turn in Commerce games (they carry over only what they haven't spent yet)
+		print ("\n\n&&&&&&&&&&&&& GOLD RECEIVED "..tostring (order.ModID)..", " ..tostring (order.Message));
+	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_E]")==true) then
 		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then addNewOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_O] [TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]")); end --only do this from 1 mod (OG) so it doesn't repeat 4x
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		intConsecutiveSkippedOrderCount = 0;
 		return;
 	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "@@LAST[S_AT_O]")==true) then
 		--let the order proceed
-		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then printDebug ("[TOTAL # ORDERS: " ..tostring (intOrderCount).."] [TOTAL # SKIPPED ORDERS: ".. tostring (intSkippedOrderCount).."]"); end --only do this from 1 mod (OG) so it doesn't repeat 4x
+		if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then printDebug (tostring (order.Message)); end --only do this from 1 mod (OG) so it doesn't repeat 4x
 		intConsecutiveSkippedOrderCount = 0;
 
 	--customized conditions for the ModTourney game
@@ -237,6 +259,8 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		intConsecutiveSkippedOrderCount = 0;
 	end
 
+	-- if (order.proxyType == "GameOrderEvent") then print ("\n\n&&&&&&&&&&&&& EVENT "..tostring (order.Message)); end
+
 	strLastOrderProxyType = order.proxyType; --keep track of last order proxyType to help check for repeating orders
 	intLastOrderPlayerID = order.PlayerID; --keep track of last order playerID to help check for repeating orders
 end
@@ -251,6 +275,8 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 	local intFogLevel = WL.StandingFogLevel.Fogged;
 	if (Mod.Settings.PhantomFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantomFogLevel; end
 
+	--always perform this scan; don't only do this if # of records in Mod.PrivateGameData.PhantomData > 0 as if there is a mod that clones (etc) a Phantom, it'll have a new GUID; the orig GUID Phantom will expire but the new one will be eternally on the map
+	--instead, identify those Phantoms, add them to Mod.PrivateGameData.PhantomData, give them a new lifespan and expire them at end of it
 	print ("[PHANTOM FOGMOD PREP - ORDERS]________________");
 	for playerID,arrayPlayerOrders in pairs (game.ServerGame.ActiveTurnOrders) do
 		print ("__[PLAYER] "..playerID);
@@ -328,10 +354,13 @@ function Phantom_processStartOfTurn (game, addNewOrder)
 		end
 	end
 
-	local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
-	event.FogModsOpt = TotalFogModsToApply; --add all FogMods to the event order
-	addNewOrder (event);
-	Mod.PrivateGameData = privateGameData;
+	--if any new fog needs to be applied, apply the orders with the FogMods & resave PrivateGameData; if nothing needs to be done, skip this section
+	if (tablelength (TotalFogModsToApply) >0) then
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'A disturbance clouds visibility', {}); --write order as Neutral so as not to reveal who deployed a Phantom
+		event.FogModsOpt = TotalFogModsToApply; --add all FogMods to the event order
+		addNewOrder (event);
+		Mod.PrivateGameData = privateGameData;
+	end
 end
 
 --return true if this order is a card play by a player impacted by Card Block
