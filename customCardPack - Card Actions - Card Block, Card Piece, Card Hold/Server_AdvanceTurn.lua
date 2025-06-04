@@ -127,22 +127,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	if (game.Game.ID == 41405062) then boolDebuggingOnForThisTurn = true; end --if Game ID is targeted for debugging, set the variable so don't need to keep repeating these Game ID's in various areas of the code
 	--41405062 CardPack - Go Public Intro game, 41405064 ModTourney Stefano vs Coug, 41405062 ModTourney krin vs Petro
 
-	if (game.Settings.SinglePlayer == true) then boolDebuggingOnForThisTurn = true; end --do this for troubleshooting purposes
-
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
-	--TAKE OUT THE SKIP stuff b/c GOLD is getting skipped!! (wth??)
+	-- if (game.Settings.SinglePlayer == true) then boolDebuggingOnForThisTurn = true; end --do this for troubleshooting purposes
 
 	printDebug ("------------SERVER TURN ".. game.Game.TurnNumber.." ADVANCE------------");
 
@@ -177,8 +162,9 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 end
 
 function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder)
-	if (intOrderCount == nil) then intOrderCount = 0; end
 	intOrderCount = intOrderCount + 1;
+
+	if (intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
 
 	--changes to make:
 	--display all GameOrderEvent & GameOrderCustom orders, ensure they are sent to debug log
