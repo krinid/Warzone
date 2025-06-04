@@ -74,6 +74,8 @@ end
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
 	--print ("[S_AdvanceTurn_Order - func start] ::ORDER.proxyType="..order.proxyType.."::");  -- <---- only for debugging; it results in too much output, clutters the debug window
 
+	if (boolDebuggingOnForThisTurn == true and intOrderCount >= 200) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); intSkippedOrderCount = intSkippedOrderCount + 1; intConsecutiveSkippedOrderCount = intConsecutiveSkippedOrderCount + 1; return; end;
+
 	--only call debugging routine for specifically targeted games, known to have issues that need debugging
 	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder); end
 
