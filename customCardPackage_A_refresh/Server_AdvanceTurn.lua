@@ -236,7 +236,7 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 		if (intConsecutiveSkippedOrderCount <=25) then
 			--display debug info -- keep it brief, only output playerID, terrID, etc -- not full player/terr names, etc; due to 1MB max mod storage size
 			-- printDebug ("[" ..tostring (intOrderCount).. "] player " ..order.PlayerID.. "/".. getPlayerName (game, order.PlayerID).. ", proxyType " ..tostring (order.proxyType));
-			strDebugOutput = "[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType) .."; ";
+			strDebugOutput = "[SK*] [" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType) .."; ";
 			-- printDebug ("[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType));
 			if (order.proxyType == "GameOrderAttackTransfer") then
 				-- printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
@@ -257,6 +257,23 @@ function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, 
 	else
 		--this is a regular, non-skipped order, so reset the consecutive skipped order count
 		intConsecutiveSkippedOrderCount = 0;
+		strDebugOutput = "[NS_] [" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType) .."; ";
+		-- printDebug ("[" ..tostring (intOrderCount).. "/" ..tostring (intSkippedOrderCount).. "] player " ..order.PlayerID.. ", proxyType " ..tostring (order.proxyType));
+		if (order.proxyType == "GameOrderAttackTransfer") then
+			-- printDebug ("       FROM " ..order.From .."/".. getTerritoryName (order.From, game).. ", TO " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+			-- printDebug (" FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful));
+			strDebugOutput = strDebugOutput .. "FROM " ..order.From.. ", TO " ..order.To.. ", #armies ".. tostring (order.NumArmies.NumArmies)..", #SUs ".. tostring (#order.NumArmies.SpecialUnits)..", IsAttack ".. tostring (orderResult.IsAttack)..", IsSuccessful " ..tostring (orderResult.IsSuccessful);
+		elseif (order.proxyType == "GameOrderPlayCardCustom") then
+			-- printDebug (" cardID ".. order.CustomCardID.. ", desc: ".. order.Description)
+			strDebugOutput = strDebugOutput .. "cardID ".. order.CustomCardID.. ", desc: ".. order.Description;
+		elseif (order.proxyType == "GameOrderCustom") then
+			-- printDebug (" Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload));
+			strDebugOutput = strDebugOutput .. "Message ".. tostring (order.Message).. "; Payload ".. tostring (order.Payload);
+		elseif (order.proxyType == "GameOrderEvent") then
+			-- printDebug (" ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message));
+			strDebugOutput = strDebugOutput .. "ModID ".. tostring (order.ModID).. ", Message ".. tostring (order.Message);
+		end
+		printDebug (strDebugOutput);
 	end
 
 	-- if (order.proxyType == "GameOrderEvent") then print ("\n\n&&&&&&&&&&&&& EVENT "..tostring (order.Message)); end
