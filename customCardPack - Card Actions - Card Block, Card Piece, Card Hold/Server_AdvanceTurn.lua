@@ -28,7 +28,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
 	-- if (game.Game.ID == 40767112) then  --Go Public Intro game
 
-	if (game.Game.ID == 41405062 or game.Game.ID == 41432086) then removeGlitchedSUs (game, addOrder); end --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the specified game IDs
+	--41405062 Mod Tourney Petro v krinid, 41432086 Mod Tourney test game prenk v krinid
+	-- if (game.Game.ID == 41405062 or game.Game.ID == 41432086) then removeGlitchedSUs (game, addOrder); end --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the specified game IDs
 
 	Pestilence_processEndOfTurn (game, addOrder); --check for pending Pestilence orders, execute them if they start this turn or are already ongoing
 	Tornado_processEndOfTurn (game, addOrder);
