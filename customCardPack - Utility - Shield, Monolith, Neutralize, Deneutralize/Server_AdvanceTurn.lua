@@ -1656,7 +1656,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Isolation action)
 	builder.Name = 'Isolated territory';
 	builder.IncludeABeforeName = false;
-	builder.ImageFilename = 'isolatedTerritory.png'; --max size of 60x100 pixels
+	builder.ImageFilename = 'IsolatedTerritory.png'; --max size of 60x100 pixels
 	builder.AttackPower = 0;
 	builder.DefensePower = 0;
 	builder.DamageToKill = 0;
