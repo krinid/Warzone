@@ -75,10 +75,25 @@ function process_pending_Resurrections (game, addOrder)
 	--so just pick a territory and place the Commander there
 	if (Mod.PublicGameData.ResurrectionData ~= nil) then
 		for playerID,v in pairs (Mod.PublicGameData.ResurrectionData) do
-			print ("[PPR2] user didn't play Resurrection card but has pending Resurrection order;  player "..playerID.."/"..tostring (v));
+			print ("[PPR2] user didn't play Resurrection card but has pending Resurrection order;  player " ..playerID.. "/" ..tostring (v));
 			local territoryID = getTerritoryBelongToPlayer (game, playerID);
-			print ("[PPR2] Resurrect Commander for player "..playerID.." to territory "..tostring(territoryID).."/"..game.Map.Territories[territoryID].Name);
-			replace_Commander_on_map (game, playerID, territoryID, addOrder, true); --last param indictes to consume a Resurrection card, b/c the user didn't play one during turn input, and this is being played automatically for the player
+			if (territoryID ~= nil) then
+				--player has a territory remaining
+				print ("[PPR2] Resurrect Commander for player " ..playerID.. " to territory " ..tostring(territoryID).. "/" ..game.Map.Territories[territoryID].Name);
+				replace_Commander_on_map (game, playerID, territoryID, addOrder, true); --last param indicates to consume a Resurrection card, b/c the user didn't play one during turn input, and this is being played automatically for the player
+			else
+				--player has no territory remaining (ie: player was eliminated; not only was their Commander killed, all their territories were taken but the game hasn't finished b/c there are at least 2 active players remaining
+				--there's no coming back from this situation, the player can't be revived/Commander can't be Resurrected, they are irrevocably already eliminated from the game, so skip the Resurrection operation & add an explanatory order)
+				print ("[PPR2] Attempt to Resurrect Commander for player "..playerID.." but player has no territories");
+				local strEliminatedPlayerResurrectionMsg = getPlayerName (game, playerID).. "'s Commander's spirit endlessly roams these lands, having no territories available to Resurrect to";
+				local event = WL.GameOrderEvent.Create (playerID, strEliminatedPlayerResurrectionMsg); --, {}, {});
+				addOrder (event, false);
+
+				--remove the record from ResurrectionData & resave it
+				local publicGameData = Mod.PublicGameData;
+				publicGameData.ResurrectionData [playerID] = nil;
+				Mod.PublicGameData = publicGameData;
+			end
 		end
 	end
 end
