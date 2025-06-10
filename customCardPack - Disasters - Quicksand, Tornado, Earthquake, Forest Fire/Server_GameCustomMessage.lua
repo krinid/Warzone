@@ -24,7 +24,7 @@ function Server_GameCustomMessage(game,playerID,payload,setReturn)
 			local strMonolithData = "";
 			for k,v in pairs (Mod.PrivateGameData.MonolithData) do
 				if (strMonolithData ~= "") then strMonolithData = strMonolithData .. "\n"; end
-				strMonolithData = strMonolithData .. "Expires T".. tostring (v.turnNumberShieldEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
+				strMonolithData = strMonolithData .. "Expires T".. tostring (v.turnNumberMonolithEnds) .. ", ".. tostring (v.territory) .."/".. tostring (getTerritoryName (v.territory, game))..", " .. tostring (v.territoryOwner) .. "/".. tostring (getPlayerName (game, v.territoryOwner));
 			end
 			setReturn ({strMonolithData});
 		elseif (payload.action =="SUdata") then
