@@ -66,7 +66,11 @@ function CardPiece_CardSelection_clicked (strText, cards, playCard, close)
 	for k,v in pairs(cards) do
 		print ("newObj item=="..k,v.."::");
         if (k ~= CardPieceCardID) then --don't add Card Piece card to the selection dialog to avoid increasing/infinite/loop card redemption
-            table.insert (CardOptions_PromptFromList, {text=v, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
+			local targetCardConfigNumPieces = Game.Settings.Cards[k].NumPieces;
+			local strButtonText = tostring (v).. "\n[" ..tostring (targetCardConfigNumPieces).. " piece" ..plural (targetCardConfigNumPieces).. " in a full card]";
+			-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
+
+            table.insert (CardOptions_PromptFromList, {text=strButtonText, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
         end
 	end
 
@@ -79,6 +83,7 @@ function CardPiece_cardType_selected (cardRecord, playCard, close)
 	printObjectDetails (cardRecord, "selected card record", "card piece card selection");
 
     --don't allow using Card Piece card to receive Card Piece cards/pieces (to avoid looping/increasing amounts/infinite cards)
+	--this should never occur b/c it's removed from the list, but if by some means it does show up, prevent it from being selected
     if (cardRecord.cardID == CardPieceCardID) then
         UI.Alert ("Card Pieces card cannot be used to redeem Card Pieces cards or pieces. Choose a different card type.");
     end
@@ -221,28 +226,21 @@ function play_cardPiece_card (game, cardInstance, playCard)
     local publicGameData = Mod.PublicGameData;
     local cards = nil;
     CardPieceCardID = cardInstance.CardID; --ensure player doesn't redeem Card Piece cards/pieces; esp if redeem amount is >1 whole card, this results in receiving infinite turn-over-turn card/piece quantities
-
-    print ("[PLAY CARD - CARD PIECE] "..CardPieceCardID.."::"); --/".. cards[CardPieceCardID] .. "//");
-
     cards = getDefinedCardList (game);
 
-    print ("(cards==nil) --> "..tostring (cards==nil));
-    print ("tablelength (cards) --> ".. tablelength (cards));
+    print ("[PLAY CARD - CARD PIECE] " ..tostring (CardPieceCardID).. "/" ..tostring (cards[CardPieceCardID]).. "//" ..tostring (game.Settings.Cards[CardPieceCardID].NumPieces));
 
-    --[[for k,v in pairs(cards) do
-        print (k,v);
-    end]]
-
-    print ("[PLAY CARD - CARD PIECE] "..CardPieceCardID.."/".. cards[CardPieceCardID] .. "//".. game.Settings.Cards[CardPieceCardID].NumPieces);
-
-
-    local strPrompt = "Select a card type to receive cards/pieces of:"
+    local strPrompt = "Select a card type to receive cards/pieces of:";
 
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
         local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[CARD PIECES]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
+        CreateLabel(vert).SetText("[CARD PIECES]").SetColor(getColourCode("card play heading"));
+		local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
+		local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
+        CreateLabel(vert).SetText("\nGrants " ..tostring (targetCardNumWholeCardsToGrant).. " whole cards, " ..tostring (targetCardNumPiecesToGrant).. " card pieces").SetColor (getColourCode ("subheading"));
+        CreateLabel(vert).SetText("\n"..strPrompt);
         TargetCardButton = CreateButton (vert).SetText("Select card...").SetOnClick(function() CardPiece_CardSelection_clicked (strPrompt, cards, playCard, close) end);
     end);
 end
