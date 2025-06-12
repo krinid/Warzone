@@ -74,7 +74,9 @@ function CardPiece_CardSelection_clicked (strText, cards, playCard, close)
         end
 	end
 
-	UI.PromptFromList (strText, CardOptions_PromptFromList);
+	local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
+	local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
+	UI.PromptFromList (strText.. "\n[grants " ..tostring (targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces]", CardOptions_PromptFromList);
 end
 
 function CardPiece_cardType_selected (cardRecord, playCard, close)
@@ -230,7 +232,7 @@ function play_cardPiece_card (game, cardInstance, playCard)
 
     print ("[PLAY CARD - CARD PIECE] " ..tostring (CardPieceCardID).. "/" ..tostring (cards[CardPieceCardID]).. "//" ..tostring (game.Settings.Cards[CardPieceCardID].NumPieces));
 
-    local strPrompt = "Select a card type to receive cards/pieces of:";
+    local strPrompt = "Select a card type to receive:"; -- cards/pieces of:";
 
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
