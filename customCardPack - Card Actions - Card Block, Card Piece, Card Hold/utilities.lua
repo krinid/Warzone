@@ -480,6 +480,45 @@ function getColourCode (itemName)
     elseif (itemName=="error")  then return "#FF0000"; --red
 	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
 	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
+	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --green
+	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
+	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Airlift") then return "#777777"; --
+	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
+	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
+	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Bomb") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
+	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
+	elseif (itemName=="Card|Isolation") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Monolith") then return getColours()["Orange"]; --
+	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
+	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
+	elseif (itemName=="Card|Neutralize") then return "#CCCCCC";
+	elseif (itemName=="Card|Deneutralize") then return getColours()["Green"]; --
+	elseif (itemName=="Card|Earthquake") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Tornado") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
+	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
     else return "#AAAAAA"; --return light grey for everything else
     end
 end

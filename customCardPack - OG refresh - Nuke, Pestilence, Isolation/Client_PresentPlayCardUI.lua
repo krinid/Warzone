@@ -71,6 +71,7 @@ function CardPiece_CardSelection_clicked (strText, cards, playCard, close)
 			-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
 
             table.insert (CardOptions_PromptFromList, {text=strButtonText, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
+			--getColourCode ("Card|Reinforcement")  --get the Green colour for Reinforcement card
         end
 	end
 
@@ -236,14 +237,35 @@ function play_cardPiece_card (game, cardInstance, playCard)
 
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400,300);
+        setMaxSize(600,500);
         local vert = CreateVert(rootParent).SetFlexibleWidth(1);
         CreateLabel(vert).SetText("[CARD PIECES]").SetColor(getColourCode("card play heading"));
 		local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
 		local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
         CreateLabel(vert).SetText("\nGrants " ..tostring (targetCardNumWholeCardsToGrant).. " whole cards, " ..tostring (targetCardNumPiecesToGrant).. " card pieces").SetColor (getColourCode ("subheading"));
         CreateLabel(vert).SetText("\n"..strPrompt);
-        TargetCardButton = CreateButton (vert).SetText("Select card...").SetOnClick(function() CardPiece_CardSelection_clicked (strPrompt, cards, playCard, close) end);
+        -- TargetCardButton = CreateButton (vert).SetText("Select card...").SetOnClick(function() CardPiece_CardSelection_clicked (strPrompt, cards, playCard, close) end);
+
+		CardOptions_PromptFromList = {}
+		for k,v in pairs(cards) do
+			print ("newObj item=="..k,v.."::");
+			if (k ~= CardPieceCardID) then --don't add Card Piece card to the selection dialog to avoid increasing/infinite/loop card redemption
+				local targetCardConfigNumPieces = Game.Settings.Cards[k].NumPieces;
+				local strButtonText = tostring (v).. " [" ..tostring (targetCardConfigNumPieces).. " piece" ..plural (targetCardConfigNumPieces).. " in a full card]";
+				-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
+
+				-- table.insert (CardOptions_PromptFromList, {text=strButtonText, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
+				CreateButton (vert).SetText(strButtonText).SetOnClick(function() CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close) end).SetColor (getColourCode ("Card|"..tostring (v)));
+
+				--getColourCode ("Card|Reinforcement")  --get the Green colour for Reinforcement card
+			end
+		end
+
+		-- local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
+		-- local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
+		-- UI.PromptFromList (strText.. "\n[grants " ..tostring (targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces]", CardOptions_PromptFromList);
+
+		
     end);
 end
 
