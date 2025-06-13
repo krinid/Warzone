@@ -493,21 +493,21 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
-	elseif (itemName=="Card|Bomb") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
 	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
 	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
 	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
 	elseif (itemName=="Card|Isolation") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
-	elseif (itemName=="Card|Monolith") then return getColours()["Orange"]; --
+	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
 	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
 	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
 	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
-	elseif (itemName=="Card|Neutralize") then return "#CCCCCC";
+	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Deneutralize") then return getColours()["Green"]; --
 	elseif (itemName=="Card|Earthquake") then return getColours()["Brown"]; --
-	elseif (itemName=="Card|Tornado") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Tornado") then return getColours()["Charcoal"]; --
 	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
 	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
