@@ -1,15 +1,31 @@
 function Server_AdvanceTurn_Start (game,addNewOrder)
 	SkippedAirlifts = {};
 	executed = false;
+	boolPermitNextAirlift = false; --used to coordinate with other mods like Airstrike that use Airlifts that should not be deferred to end of turn
 end
+
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)	
-	if(executed == false)then
-		if(order.proxyType == 'GameOrderPlayCardAirlift')then
-			SkippedAirlifts[tablelength(SkippedAirlifts)] = order;
-			skipThisOrder(WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		end
+	--Server_AdvanceTurn_Order is called:
+		-- (1) for each regular order submitted by players, (2) for each order added by mods during execution of , (3) by various WZ core engine items, but also importantly:
+		-- (4) by orders added via 'addNewOrder' during execution of Server_AdvanceTurn_End; so while executing _End (after all normaly orders are processed), execution is sent back to _Order when new orders are added during _End for consistent order processing
+
+	--if current order is an Airlift, add to the SkippedAirlifts structure to be processed at end of turn iff:
+		-- (A) 'executed' is false (this means all regular orders haven't finished processing, this is not an additional order added during _End), and
+		-- (B) boolPermitNextAirlift==false; this is set to true when an order from another mod like Airstrike is submitted that permits an Airlift mid-turn w/o deferring to the end
+	if (order.proxyType == 'GameOrderPlayCardAirlift' and boolPermitNextAirlift == true) then
+		--permit this airlift, don't defer it until end of turn; this is an airlift used by another mod like Airstrike, not a regular airlift
+		--all that's required to permit it is to not enter the next condition in this IF structure (which will skip the order and defer it to end of turn)
+		boolPermitNextAirlift = false; --reset this flag; only permit 1 airlift, and still defer the rest until end of turn as per usual with Late Airlifts
+	elseif (order.proxyType == 'GameOrderPlayCardAirlift' and executed == false and boolPermitNextAirlift == false) then
+		SkippedAirlifts[tablelength(SkippedAirlifts)] = order;
+		skipThisOrder(WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "Late Airlifts|Permit mid-turn Airlift")) then
+		--order is a custom order from another mod to permit airlifts mid-turn
+		--eg: "Late Airlifts|Permit mid-turn Airlift" from the Airstrike mod; the first part "Late Airlifts|Permit" is the same, and the last part "|Airstrike" indicates the mod invoking the mid-turn airlift
+		boolPermitNextAirlift = true; --permit the next airlift to occur mid-turn
 	end
 end
+
 function Server_AdvanceTurn_End(game,addNewOrder)
 	if(executed == false) then
 		executed = true;
@@ -63,8 +79,13 @@ function Server_AdvanceTurn_End(game,addNewOrder)
 		end
 	end
 end
+
 function tablelength(T)
 	local count = 0;
 	for _ in pairs(T) do count = count + 1 end;
 	return count;
+end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
 end

@@ -94,6 +94,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--process game orders, separated into Immovable Special Units (don't let Isolation/Quicksand/Shield/Monolith special units move), playing Regular Cards, playing Custom Cards, AttackTransfers; in future, may need an Other section afterward for anything else?
 	boolSkipOrder = false;
 	process_game_orders_ImmovableSpecialUnits (game, order, orderResult, skipThisOrder, addNewOrder);
+	process_game_orders_SpecialOrders (game, order, orderResult, skipThisOrder, addNewOrder);
 	if (boolSkipOrder == true) then return; end
 	process_game_orders_RegularCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_CustomCards (game, order, orderResult, skipThisOrder, addNewOrder);
@@ -473,10 +474,19 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 	end
 end
 
+--process special orders; any other order types that aren't covered in process_game_orders_ImmovableSpecialUnits, process_game_orders_RegularCards, process_game_orders_CustomCards, process_game_orders_AttackTransfers
+function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOrder, addNewOrder)
+	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "Late Airlifts|Permit mid-turn Airlift")) then
+		--this is submitted by Airstrike, as "Late Airlifts|Permit mid-turn Airlift|Airstrike", in order to permit mid-turn Airlifts and not be deferred to end of turn
+		--but it should be skipped so it never appears for actual players
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
+		boolSkipOrder = true; --don't process any further on this order, just end execution in Server_AdvanceTurn_Order
+	end
+end
+
+--process regular card plays that have special defined behaviour in this mod
 function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 	local FROMterritoryID, TOterritoryID, intNumArmies, intNumSUs, playerID, strCardType;
-
-	--process regular card plays that have special defined behaviour in this mod
 
 	--if a territory with an active Shield is being Bombed, nullify the damage
 	--also only process if Shield module is active (or if current game predates ActiveModule)
@@ -708,7 +718,9 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	local boolUseManualMoveMode = not Mod.Settings.AirstrikeMoveUnitsWithAirliftCard;
 	if (boolUseManualMoveMode == nil) then boolUseManualMoveMode = false; end --if not set, default to false (ie: use Airlift card if available)
 
-	--initialize airliftCardID & airliftCardInstanceID to nil; set to real values if use of Airlift card to transport unit is enabled
+	--don't do any of this next part -- it searches for an existing airlift card --> this can cause problems for example if that specific airlift card instance was played by a player while Late Airlifts is in play; that airlift operation would be deferred to end of turn, and
+	--then fail b/c the card instance was used for Airstrike
+--[[ 	--initialize airliftCardID & airliftCardInstanceID to nil; set to real values if use of Airlift card to transport unit is enabled
 	local airliftCardID = nil;
 	local airliftCardInstanceID = nil;
 	--if using manual move mode, set airliftCardID & airliftCardInstanceID to nil so it doesn't try to use the Airlift card
@@ -717,7 +729,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		airliftCardInstanceID = getCardInstanceID_fromName (gameOrder.PlayerID, "Airlift", game); --get specific card instance ID from specific player for card of type 'Airlift'
 	end
 	--if airliftCardID == nil, then Airlift Card is not enabled, so can't draw the airlift line, so must do the moves manually (original method)
-	--if airliftCardID ~= nil then let Airlift do the move for successful attacks & draw a "0 unit airlift" arrow for unsuccessful attacks
+	--if airliftCardID ~= nil then let Airlift do the move for successful attacks & draw a "0 unit airlift" arrow for unsuccessful attacks 
 	printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID=="..tostring (airliftCardID).."::airliftCardInstanceID=="..tostring (airliftCardInstanceID));
 
 	--if Airlift card is in play but player has no whole Airlift cards, then add a whole Airlift card to the player + add the order, skip this Airstrike order & resubmit it to be able to use the Airlift card
@@ -731,7 +743,14 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		boolAirliftCardGiftedAlready = true;
 		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		return;
-	end
+	end]]
+
+	--from: https://www.warzone.com/wiki/Mod_API_Reference:CardInstance
+	--the proper way to create an Airlift card to use within a mod is this:
+		-- local cardinstance = {} -- step 1
+		-- table.insert (cardinstance  ,  WL.NoParameterCardInstance.Create(WL.CardID.Airlift)) -- step 2
+		-- addNewOrder(WL.GameOrderReceiveCard.Create(PlayerID, cardinstance)) -- step 3
+		-- addNewOrder(WL.GameOrderPlayCardAirlift.Create(cardinstance[1].ID, Player.ID, TerritoryID  TerritoryID' , TerritoryID  TerritoryID' , Armies Armies)) -- step 4
 
 	local airstrikeResult = nil;
 
@@ -805,13 +824,14 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	airstrikeEvent.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
 	-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
 
+	--DON'T NEED to do this anymore -- b/c proactively adding an order to supply an airlift card before the Airstrike is executed
 	--if Airlift is in game, add granting of airlift whole card here; how to handle Late Airlifts & Transport Only Airlifts? or Card Block? <-- actually this would have stopped the Airstrike itself so not a concern
 	--add Airlift card to player hand if it is in the game; this is done here so that the player can use it to move armies from the source territory to the target territory
-	if (airliftCardID ~= nil and boolAirliftCardGiftedAlready == false) then airstrikeEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; end --add enough pieces to equal 1 whole card
+	-- if (airliftCardID ~= nil and boolAirliftCardGiftedAlready == false) then airstrikeEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; end --add enough pieces to equal 1 whole card
 
 	airstrikeEvent.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 	addOrder (airstrikeEvent, true);
-	--this order needs to happen before the Airlift (if it is to occur) to the Airlift whole card can be guaranteed to be avaiable for game order player
+	--NO LONGER APPPLIES: this order needs to happen before the Airlift (if it is to occur) to the Airlift whole card can be guaranteed to be avaiable for game order player
 
 	--FOR SUCCESS ATTACKS, need to move surviving units among those included in the Airstrike to target territory:
 	--     if Airlift is in play, submit Airlift order, let the Airlift arrow/transfer occur normally
@@ -836,13 +856,14 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 	-- printDebug ("[AIRSTRIKE/AIRLIFT] manual move mode=="..tostring (boolUseManualMoveMode)..", airliftCardID~=nil "..tostring (airliftCardID~=nil).."::airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil));
 	-- printDebug ("[AIRSTRIKE/AIRLIFT] if structure "..tostring (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false));
 	--if airlift card is in play, execute the Airlift operation for both successful (units will Airlift) & unsuccessful attacks (just draw the "0" line); but if boolForceManualMoveMode is true, then override and do the move manually (for successful attacks only)
-	if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false) then
+	-- if (airliftCardID ~= nil and airliftCardInstanceID ~= nil and boolUseManualMoveMode == false) then
+	if (boolUseManualMoveMode == false) then
 		-- if (attackingArmiesToAirlift == nil) then
 		-- 	printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", AIRLIFT UNSUCCESSFUL thus #armies 0, #SUs 0");
 		-- else
 			printDebug ("[AIRSTRIKE/AIRLIFT] use Airlift transfer; airliftCardID~=nil "..tostring (airliftCardID~=nil).. ", airliftCardInstanceID~=nil "..tostring (airliftCardInstanceID~=nil).. ", #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
 		-- end
-		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift, airliftCardInstanceID); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
+		airstrike_doAirliftOperation (game, addOrder, gameOrder.PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmiesToAirlift); --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
 	--if Airlift is not in play, must do the move of surviving units manually; only do the move if the attack is successful, b/c if unsuccessful, then all units have been appropriately reduced already and are in the correct positions as they stand, so no need to move them
 	elseif (airstrikeResult.IsSuccessful == true) then
 		printDebug ("[AIRSTRIKE/AIRLIFT] use Manual_Move transfer; #armies " ..tostring (attackingArmiesToAirlift.NumArmies).. ", #SUs " ..tostring (#attackingArmiesToAirlift.SpecialUnits));
@@ -1043,37 +1064,18 @@ function createSpecialUnitsForTesting (game, addOrder, sourceTerritoryID, target
 	build_specialUnit (game, addOrder, targetTerritoryID, "6b post 10 health", "monolith special unit_clearback.png", 0, 0, 1.0, 1.0, 5, 0, 10, 15000, true, true, true, true, true, nil);
 end
 
---add Airlift whole card to a player, to be consumed to make the airlift operation to show the airlift arrow
-function airstrike_doAirliftOperation_EDIT_JUST_TO_ADD_THE_WHOLE_CARD (game, order, PlayerID)
-	--add Airlift 1 whole card to the player, to be consumed to make the airlift operation to show the airlift arrow
-	local airliftCardID = getCardID ("Airlift", game); --get ID for card type 'Airlift'
-	local targetCardConfigNumPieces = game.Settings.Cards[airliftCardID].NumPieces; --add enough pieces to equal 1 whole card
-	local event = WL.GameOrderEvent.Create (PlayerID, "airlift arrow +piece +use it", {});
-	local actualNumArmies = WL.Armies.Create (0, {}); --create empty armies object
-	if (numArmies ~= nil) then actualNumArmies = numArmies; end --use parameter if it was specified
-	event.AddCardPiecesOpt = {[PlayerID] = {[airliftCardID] = targetCardConfigNumPieces}};
-	addOrder(event, true); --add the card pieces to the player; need to save this to update that player's card counts so can be sure there is an Airlift card available to use
-
-	--consume 1 whole card Airlift card; we know this player has at least 1 Airlift card b/c we just added it above
-	local airliftCardInstanceID = getCardInstanceID_fromName (PlayerID, "Airlift", game); --get specific card instance ID from specific player for card of type 'Airlift'
-	print ("[AIRLIFT] airliftCardInstance="..tostring(airliftCardInstanceID));
-	addOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualNumArmies), true); --draw arrow from source to target territory
-end
-
 --draw arrow from source to target territory; if armies are specified, move those armies; if nil, just move 0 armies + {} Specials
-function airstrike_doAirliftOperation (game, addOrder, PlayerID, sourceTerritoryID, targetTerritoryID, numArmies, airliftCardInstanceID)
-	--[[--add Airlift 1 whole card to the player, to be consumed to make the airlift operation to show the airlift arrow
-	local airliftCardID = getCardID ("Airlift", game); --get ID for card type 'Airlift'
-	local targetCardConfigNumPieces = game.Settings.Cards[airliftCardID].NumPieces; --add enough pieces to equal 1 whole card
-	local event = WL.GameOrderEvent.Create (PlayerID, "airlift arrow +piece +use it", {});
-	event.AddCardPiecesOpt = {[PlayerID] = {[airliftCardID] = targetCardConfigNumPieces}};
-	addOrder(event, true);]] --add the card pieces to the player; need to save this to update that player's card counts so can be sure there is an Airlift card available to use
+function airstrike_doAirliftOperation (game, addOrder, PlayerID, sourceTerritoryID, targetTerritoryID, attackingArmies)
+	local actualAttackingArmies = WL.Armies.Create (0, {}); --create empty armies object to send 0 SUs, 0 armies if no full numArmies parameter was specified, just to draw the "0" arrow
+	if (attackingArmies ~= nil) then actualAttackingArmies = attackingArmies; end --use parameter if it was specified
 
-	--consume 1 whole card Airlift card; we know this player has at least 1 Airlift card b/c we just added it above
-	print ("[AIRLIFT] airliftCardInstance="..tostring(airliftCardInstanceID));
-	local actualNumArmies = WL.Armies.Create (0, {}); --create empty armies object
-	if (numArmies ~= nil) then actualNumArmies = numArmies; end --use parameter if it was specified
-	addOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualNumArmies), true); --draw arrow from source to target territory
+	--create new Airlift card to use for the Airstrike operation
+	local newAirliftCardInstance = WL.NoParameterCardInstance.Create (WL.CardID.Airlift);
+	local airliftCardInstanceID = newAirliftCardInstance.ID;
+	addOrder (WL.GameOrderReceiveCard.Create (PlayerID, {newAirliftCardInstance}), true);
+	addOrder (WL.GameOrderEvent.Create (PlayerID, "Late Airlifts|Permit mid-turn Airlift|Airstrike"), true); --submit order to permit this Airlift mid-turn, to be compatible with "Late Airlifts" (v2)
+	addOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualAttackingArmies), true); --actual airlift operation, to draw the airlift arrow from source to target territory
+	print ("\n\n\n\n*****AIRLIFT airliftCardInstanceID "..tostring (airliftCardInstanceID));
 end
 
 --create a new special unit

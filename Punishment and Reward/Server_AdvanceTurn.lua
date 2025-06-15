@@ -24,8 +24,93 @@ TODO:
 - give buff to city growth on territories where bordering territories have <= (not >) city quantity; specifically how? tbd
 ]]
 
+function Server_AdvanceTurn_Start(game,addOrder)
+	--move these to PublicGameData
+	print ("[S_AT_S] START");
+	disallowReverseSanctionsOnOthers = true;
+	disallowNormalSanctionsOnSelf = true;
+
+	--structure used for this turn order, initialize them to {} for each iteration
+	Attacks = {};
+	Captures = {};
+	TerritoryIncrease = {};
+	-- local privateGameData = Mod.PrivateGameData;
+	-- privateGameData.CardData = game.ServerGame.LatestTurnStanding.Cards;
+	-- print ("###"..tostring (#privateGameData.CardData));
+	-- Mod.PrivateGameData = privateGameData;
+	-- print ("###"..tostring (#Mod.PrivateGameData.CardData));
+	-- Cards = game.ServerGame.LatestTurnStanding.Cards; --capture Cards state at start of turn (for testing only -- too soon for anything else b/c cards can be used through the _Order processing)
+	Cards = {};
+
+	-- Cards = game.ServerGame.LatestTurnStanding.Cards;
+	-- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+	-- 	print ("&&"..k,tostring (v),tostring(v.Pieces));
+	-- 	for k2,vp in pairs (v.Pieces) do
+	-- 		print ("[**PIECES] "..k,k2,vp)
+	-- 	end
+	-- end
+
+	-- Cards = safeDeepCopy (game.ServerGame.LatestTurnStanding.Cards);
+
+
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+		Cards[k] = {};
+		Cards[k].Pieces = {};
+		Cards[k].WholeCards = {};
+		for k2,vp in pairs (v.Pieces) do
+			-- print ("[PIECES] "..k,k2,vp);
+			Cards[k].Pieces [k2]= vp;
+		end
+		-- print ("[CARDS] TOTAL "..k,#v.WholeCards)
+		for k3,vwc in pairs (v.WholeCards) do
+			-- print ("[CARDS] "..k,k3,vwc.CardID);
+			if (Cards[k].WholeCards [vwc.CardID] == nil) then Cards[k].WholeCards [vwc.CardID] = 0; end
+			Cards[k].WholeCards [vwc.CardID] = Cards[k].WholeCards [vwc.CardID] + 1;
+			-- Cards[k].WholeCards [vwc.CardID] = true;
+		end
+	end
+	for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+		-- print ("&&"..k,tostring (v),tostring(v.Pieces));
+		for k2,vp in pairs (v.Pieces) do
+			print ("[**PIECES] "..k,k2,vp);
+		end
+		for k3,vc in pairs (v.WholeCards) do
+			print ("[**CARDS] "..k,k3,vc);
+		end
+	end
+	print ("[S_AT_S] END");
+end
+
 function Server_AdvanceTurn_End(game, addOrder)
-	print ("[S_AT_E]::func start");
+	print ("[S_AT_E] START");
+	-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+	-- -- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+	-- 	for k2,vp in pairs (v.Pieces) do
+	-- 		print ("[PIECES] "..k,k2,vp)
+	-- 	end
+	-- 	print ("[CARDS] TOTAL "..k,#v.WholeCards)
+	-- 	-- for k3,vwc in pairs (v.WholeCards) do
+	-- 	-- 	print ("[CARDS] "..k,k3,vwc)
+	-- 	-- end
+	-- end
+	-- game.ServerGame.LatestTurnStanding.Cards[1058239] = Cards[1058239];
+	-- game.ServerGame.LatestTurnStanding.Cards[1058239].Pieces = {};--Cards[1058239];
+	-- game.ServerGame.LatestTurnStanding.Cards[1058239].WholeCards = {};--Cards[1058239];
+	-- Game = game;
+	-- Game.ServerGame.LatestTurnStanding.Cards[1058239] = {};--Cards[1058239];
+	-- Game.ServerGame.LatestTurnStanding.Cards[1058239].Pieces = {};--Cards[1058239];
+	-- Game.ServerGame.LatestTurnStanding.Cards[1058239].WholeCards = {};--Cards[1058239];
+	-- game = Game;
+	-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+	-- -- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+	-- 	for k2,vp in pairs (v.Pieces) do
+	-- 		print ("[PIECES] "..k,k2,vp)
+	-- 	end
+	-- 	print ("[CARDS] TOTAL "..k,#v.WholeCards)
+	-- 	-- for k3,vwc in pairs (v.WholeCards) do
+	-- 	-- 	print ("[CARDS] "..k,k3,vwc)
+	-- 	-- end
+	-- end
 
 	--move these initializations to Server_Create or somewhere else
 	--these are used to track the past 10 (make configurable) turns to apply cumulative averages, not just immediate data from the current turn
@@ -122,6 +207,100 @@ function Server_AdvanceTurn_End(game, addOrder)
 	Mod.PublicGameData = publicGameData;
 
 	--crashNow ();
+
+	-- local playerCards = WL.PlayerCards.Create(1058239);
+	-- addOrder (WL.GameOrderEvent.Create (1058239, "Card retract!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
+
+	for playerID,playerCards in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+		local wholeCardsToRemove = {};
+		local cardPiecesToRemove = {};
+		for cardPieceCardID,cardPieceCount in pairs (playerCards.Pieces) do
+			if (Cards[playerID].Pieces[cardPieceCardID] == nil) then Cards[playerID].Pieces[cardPieceCardID] = 0; end;
+			print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
+			if (Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount ~= 0) then
+				if (cardPiecesToRemove [playerID] == nil) then cardPiecesToRemove [playerID] = {}; end
+				if (cardPiecesToRemove [playerID][cardPieceCardID] == nil) then cardPiecesToRemove [playerID][cardPieceCardID] = {}; end
+				cardPiecesToRemove [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
+			end
+			print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
+		end
+		local numWholeCards = {};
+		for wholeCardInstanceID,vc in pairs (playerCards.WholeCards) do
+			if (numWholeCards[vc.CardID] == nil) then numWholeCards[vc.CardID] = 0; end
+			numWholeCards [vc.CardID] = numWholeCards[vc.CardID] + 1;
+			if (Cards[playerID].WholeCards[vc.CardID] == nil) then Cards[playerID].WholeCards[vc.CardID] = 0; end
+			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then wholeCardsToRemove [playerID] = vc.ID; end
+			if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end -- Initialize list for player
+			table.insert(wholeCardsToRemove[playerID], vc.ID);
+			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
+			-- 	if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end  -- create list for this player
+			-- 	table.insert(wholeCardsToRemove[playerID], vc.ID); --add the card ID
+			-- end
+			print ("[^^CARDS] TOTAL "..playerID,vc.CardID,vc.ID,numWholeCards[vc.CardID],tostring (numWholeCards[vc.CardID]>Cards[playerID].WholeCards[vc.CardID]), tablelength (wholeCardsToRemove));
+		end
+
+		-- Flatten structure to match RemoveWholeCardsOpt format
+		local flatCardList = {}
+		for _, cardList in pairs(wholeCardsToRemove) do
+			for _, cardID in ipairs(cardList) do
+				table.insert(flatCardList, cardID)
+			end
+		end
+
+		for k,v in pairs (flatCardList) do
+			print ("[REM WHOLE PREP FLAT] "..k,v);
+		end
+
+		for k,v in pairs (wholeCardsToRemove) do
+			print ("[REM WHOLE PREP] "..k,v);
+		end
+
+		print ("[REMOVE PIECES/CARDS] "..playerID, tablelength (wholeCardsToRemove), tablelength (cardPiecesToRemove));
+		if (tablelength (wholeCardsToRemove) > 0 or tablelength (cardPiecesToRemove) > 0) then
+			local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Card retract!", {});
+			cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
+			cardRetractionOrder.RemoveWholeCardsOpt = flatCardList; --wholeCardsToRemove;
+			addOrder (cardRetractionOrder, false);
+		end
+	end
+	print ("[S_AT_E] END");
+end
+
+function safeDeepCopy(orig, copies)
+    copies = copies or {}
+    if type(orig) ~= 'table' then
+        return orig
+    elseif copies[orig] then
+        return copies[orig] -- handle circular references
+    end
+
+    local copy = {}
+    copies[orig] = copy
+    for k, v in pairs(orig) do
+        -- Only deep copy if value is a basic table; skip metatables, userdata, etc.
+        local newKey = type(k) == 'table' and safeDeepCopy(k, copies) or k
+        local newVal
+        if type(v) == 'table' and not getmetatable(v) then
+            newVal = safeDeepCopy(v, copies)
+        else
+            newVal = v
+        end
+        copy[newKey] = newVal
+    end
+    return copy
+end
+
+function deepCopy (orig)
+    local copy
+    if type(orig) == 'table' then
+        copy = {}
+        for k, v in pairs(orig) do
+            copy[deepCopy(k)] = deepCopy(v)
+        end
+    else
+        copy = orig
+    end
+    return copy
 end
 
 --remove nil elements, set them to 0
@@ -152,24 +331,17 @@ function getTerritoryName (intTerrID, game)
 	return (game.Map.Territories[intTerrID].Name);
 end
 
-function Server_AdvanceTurn_Start(game,addOrder)
-	--move these to PublicGameData
-	disallowReverseSanctionsOnOthers = true;
-	disallowNormalSanctionsOnSelf = true;
-
-	--structure used for this turn order, initialize them to {} for each iteration
-	Attacks = {};
-	Captures = {};
-	TerritoryIncrease = {};
-end
-
 function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 	local playerID = order.PlayerID;
-	if (order.proxyType~='GameOrderAttackTransfer') then
-		if (order.proxyType ~= 'GameOrderEvent' or order.Message ~= "Mod skipped attack/transfer order") then
-			print ("proxyType=="..order.proxyType.. ", player ".. order.PlayerID);
-		end
-	end
+	-- if (order.proxyType~='GameOrderAttackTransfer') then
+	-- 	if (order.proxyType ~= 'GameOrderEvent' or order.Message ~= "Mod skipped attack/transfer order") then
+	-- 		print ("[ORDER]proxyType=="..order.proxyType.. ", player ".. order.PlayerID); --.. "; ".. tostring (order.Message));
+	-- 	-- elseif (order.proxyType ~= 'GameOrderEvent') then
+	-- 	-- 	print ("[E]proxyType=="..order.proxyType.. ", player ".. order.PlayerID.. "; ".. tostring (order.Message));
+	-- 	end
+	-- end
+
+	-- if (order.proxyType=='GameOrderEvent') then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
 
 	if (order.proxyType=='GameOrderAttackTransfer') then
 		--AttackTeammates boolean:, AttackTransfer AttackTransferEnum (enum):, ByPercent boolean:, From TerritoryID:, NumArmies Armies:, Result GameOrderAttackTransferResult:, To TerritoryID:
@@ -180,8 +352,8 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		-- temp only; skip AI orders
 		if (order.PlayerID<50) then skip(WL.ModOrderControl.Skip); return; end
 
-		print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+		-- print ("[ATTACK/TRANSFER] PRE  from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
+		-- ", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 
 		--track when a player has made an attack or capture
@@ -190,11 +362,12 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 
 		--&&& TODO: track damage done, in terms of # armies killed & amount of damage done to SUs (reduced health amount + damage-required-to-kill for killed SUs w/o health)
 
-		print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
-		", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
+		-- print ("[ATTACK/TRANSFER] POST from "..order.From.."/"..getTerritoryName(order.From, game).." to "..order.To.."/"..getTerritoryName(order.To,game)..", numArmies "..order.NumArmies.NumArmies ..", actualArmies "..result.ActualArmies.NumArmies.. ", isAttack "..tostring(result.IsAttack)..
+		-- ", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 	elseif (order.proxyType == 'GameOrderEvent') then
-		if (order.Message ~= "Mod skipped attack/transfer order") then print ("[EVENT] " ..order.Message); end
+		print ("[EVENT] " ..order.Message);
+		-- if (order.Message ~= "Mod skipped attack/transfer order") then print ("[EVENT] " ..order.Message); end
 		if (order.AddCardPiecesOpt ~= nil) then print ("[-----card pieces]"); end
 		-- if (order.Result.CardInstancesCreated ~= nil) then print ("[-----CardInstancesCreated card pieces]"); end
 	elseif (order.proxyType == 'GameOrderPlayCardSanctions') then
@@ -215,6 +388,8 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		else
 			print ("[Sanction card] permitted sanction type");
 		end
+	else
+
 	end
 end
 
