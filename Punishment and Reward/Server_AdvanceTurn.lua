@@ -24,7 +24,7 @@ TODO:
 - give buff to city growth on territories where bordering territories have <= (not >) city quantity; specifically how? tbd
 ]]
 
-function Server_AdvanceTurn_Start(game,addOrder)
+function Server_AdvanceTurn_Start (game, addOrder)
 	--move these to PublicGameData
 	print ("[S_AT_S] START");
 	disallowReverseSanctionsOnOthers = true;
@@ -40,7 +40,11 @@ function Server_AdvanceTurn_Start(game,addOrder)
 	-- Mod.PrivateGameData = privateGameData;
 	-- print ("###"..tostring (#Mod.PrivateGameData.CardData));
 	-- Cards = game.ServerGame.LatestTurnStanding.Cards; --capture Cards state at start of turn (for testing only -- too soon for anything else b/c cards can be used through the _Order processing)
+
+	-- initialize Cards table to {}, set boolCardsCaptured flag to false; after populating the Cards table, set flag to true so it's only processed/populated once and not multiple times
 	Cards = {};
+	boolCardsCaptured = false;
+
 
 	-- Cards = game.ServerGame.LatestTurnStanding.Cards;
 	-- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
@@ -50,10 +54,9 @@ function Server_AdvanceTurn_Start(game,addOrder)
 	-- 	end
 	-- end
 
-	-- Cards = safeDeepCopy (game.ServerGame.LatestTurnStanding.Cards);
+	-- captureCardCounts (game);
 
-
-	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+	--[[for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
 		Cards[k] = {};
 		Cards[k].Pieces = {};
 		Cards[k].WholeCards = {};
@@ -77,40 +80,64 @@ function Server_AdvanceTurn_Start(game,addOrder)
 		for k3,vc in pairs (v.WholeCards) do
 			print ("[**CARDS] "..k,k3,vc);
 		end
-	end
+	end ]]
+
+	-- addOrder (WL.GameOrderCustom.Create (1, "Capture card state 1", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 1b", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 2", "PunishReward|Capture card state", {}, WL.TurnPhase.SanctionCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 3", "PunishReward|Capture card state"));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 4", "PunishReward|Capture card state", nil, WL.TurnPhase.BlockadeCards));
+
+	-- captureCardStateOrder.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
+	-- addOrder (captureCardStateOrder);
+		-- ['SanctionCards'] = WL.TurnPhase.SanctionCards,
+		-- ['ReceiveCards'] = WL.TurnPhase.ReceiveCards,
+		-- ['ReceiveGold'] = WL.TurnPhase.ReceiveGold
+
 	print ("[S_AT_S] END");
+end
+
+function captureCardCounts (game)
+	boolCardsCaptured = true;
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+		Cards[k] = {};
+		Cards[k].Pieces = {};
+		Cards[k].WholeCards = {};
+		for k2,vp in pairs (v.Pieces) do
+			-- print ("[PIECES] "..k,k2,vp);
+			Cards[k].Pieces [k2]= vp;
+		end
+		-- print ("[CARDS] TOTAL "..k,#v.WholeCards)
+		for k3,vwc in pairs (v.WholeCards) do
+			-- print ("[CARDS] "..k,k3,vwc.CardID);
+			if (Cards[k].WholeCards [vwc.CardID] == nil) then Cards[k].WholeCards [vwc.CardID] = 0; end
+			Cards[k].WholeCards [vwc.CardID] = Cards[k].WholeCards [vwc.CardID] + 1;
+			-- Cards[k].WholeCards [vwc.CardID] = true;
+		end
+	end
+	for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+		-- print ("&&"..k,tostring (v),tostring(v.Pieces));
+		for k2,vp in pairs (v.Pieces) do
+			-- print ("[**PIECES] "..k,k2,vp);
+		end
+		for k3,vc in pairs (v.WholeCards) do
+			-- print ("[**CARDS] "..k,k3,vc);
+		end
+	end
 end
 
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E] START");
-	-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
-	-- -- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
-	-- 	for k2,vp in pairs (v.Pieces) do
-	-- 		print ("[PIECES] "..k,k2,vp)
-	-- 	end
-	-- 	print ("[CARDS] TOTAL "..k,#v.WholeCards)
-	-- 	-- for k3,vwc in pairs (v.WholeCards) do
-	-- 	-- 	print ("[CARDS] "..k,k3,vwc)
-	-- 	-- end
-	-- end
-	-- game.ServerGame.LatestTurnStanding.Cards[1058239] = Cards[1058239];
-	-- game.ServerGame.LatestTurnStanding.Cards[1058239].Pieces = {};--Cards[1058239];
-	-- game.ServerGame.LatestTurnStanding.Cards[1058239].WholeCards = {};--Cards[1058239];
-	-- Game = game;
-	-- Game.ServerGame.LatestTurnStanding.Cards[1058239] = {};--Cards[1058239];
-	-- Game.ServerGame.LatestTurnStanding.Cards[1058239].Pieces = {};--Cards[1058239];
-	-- Game.ServerGame.LatestTurnStanding.Cards[1058239].WholeCards = {};--Cards[1058239];
-	-- game = Game;
-	-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
-	-- -- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
-	-- 	for k2,vp in pairs (v.Pieces) do
-	-- 		print ("[PIECES] "..k,k2,vp)
-	-- 	end
-	-- 	print ("[CARDS] TOTAL "..k,#v.WholeCards)
-	-- 	-- for k3,vwc in pairs (v.WholeCards) do
-	-- 	-- 	print ("[CARDS] "..k,k3,vwc)
-	-- 	-- end
-	-- end
+--[[ 	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+	-- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+		for k2,vp in pairs (v.Pieces) do
+			print ("[PIECES] "..k,k2,vp)
+		end
+		print ("[CARDS] TOTAL "..k,#v.WholeCards)
+		for k3,vwc in pairs (v.WholeCards) do
+			print ("[CARDS] "..k,vwc.CardID, k3,vwc)
+		end
+	end]]
 
 	--move these initializations to Server_Create or somewhere else
 	--these are used to track the past 10 (make configurable) turns to apply cumulative averages, not just immediate data from the current turn
@@ -150,6 +177,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 		local intRewardTotalUnits = 0;
 		local intPunishmentIncome = 0;
 		local intRewardIncome = 0;
+		local intPunishmentRewardAdjustedIncome = 0; --net new income inclusive of Punishment & Reward adjustments
 
 		--assign value to intTerritoryCount_lastTurn; if turn ==1 then ignore b/c there is no previous value; if turn >1 then get territory count of previous turn; else leave as default value (0)
 		if (turnNumber >1 and publicGameData.PRdataByID ~= nil and publicGameData.PRdataByID[ID] ~= nil and publicGameData.PRdataByID[ID].TerritoryCount ~= nil and publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1] ~= nil) then intTerritoryCount_lastTurn = publicGameData.PRdataByID[ID].TerritoryCount[turnNumber-1]; end
@@ -193,114 +221,116 @@ function Server_AdvanceTurn_End(game, addOrder)
 		--calculate Punishments and Rewards
 		local incomeAdjustments = assessLongTermPunishment (publicGameData.PRdataByID [ID], game.Game.TurnNumber); --use actual current turn # b/c it just finished and should be included in the calculations
 		intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
-		intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPenalty + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
+		intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
 		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
-		print ("LONG-TERM [ID " ..ID.. "] income penalty " ..incomeAdjustments.LongTermPenalty.. "PU, army reduction " ..incomeAdjustments.ArmyReduction.. "x, terr reduction " ..incomeAdjustments.TerritoryReduction.. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+		local intNetRU_PU_Change = (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement) + (incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement;
+		intPunishmentRewardAdjustedIncome = math.floor (intNetRU_PU_Change * intIncome + 0.5); --round up/down appropriately
+		print ("LONG-TERM [ID " ..ID.. "] income punishment " ..incomeAdjustments.LongTermPunishmentUnits.. "PU, army reduction " ..incomeAdjustments.ArmyReduction.. "x, terr reduction " ..incomeAdjustments.TerritoryReduction.. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
 		print ("CURR TURN [ID " ..ID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+		print ("COMBINED PUN/REW [ID " ..ID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
 
-		addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
-		addOrder (WL.GameOrderEvent.Create (ID, "Reward!",     {}, {}, {}, {WL.IncomeMod.Create(ID, intRewardIncome,     "Reward ("     .. intRewardIncome..")")})); --ceiling = round up for reward
+		--&&& combine these 2 and just make it display Punishment or Reward based on whether it's a net buff or nerf
+		local strPunishmentOrReward = "Flat income (punishment = reward)";
+		-- print ("[PUNREW] ".. ID, intPunishmentIncome, intRewardIncome, tostring (intPunishmentIncome < intRewardIncome),tostring (intNetRU_PU_Change));
+		if (intNetRU_PU_Change > 0) then strPunishmentOrReward = "Reward";
+		elseif (intNetRU_PU_Change < 0) then strPunishmentOrReward = "Punishment";
+		else strPunishmentOrReward = "Flat income (punishment = reward)";
+		end
+
+		local strOrderMsg = strPunishmentOrReward.. " (" ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%)"
+
+		addOrder (WL.GameOrderEvent.Create (ID, strOrderMsg, {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..tostring (intPunishmentIncome + intRewardIncome).. ")")})); --floor = round down for punishment
+		-- addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
+		-- addOrder (WL.GameOrderEvent.Create (ID, "Reward!",     {}, {}, {}, {WL.IncomeMod.Create(ID, intRewardIncome,     "Reward ("     .. intRewardIncome..")")})); --ceiling = round up for reward
+
+		--if flag to block receiving card pieces @ end of turn is set, retract the card pieces that were given (revert card pieces & wholecards to the snapshot state)
+		if (incomeAdjustments.BlockCardPieceReceiving == true) then processCardRetractions (game, addOrder, ID); end
 	end
 
 	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
-	print ("htc count "..#historicalTerritoryCount);
+	-- print ("htc count "..#historicalTerritoryCount);
 	Mod.PublicGameData = publicGameData;
 
 	--crashNow ();
+	print ("[S_AT_E] END");
+end
 
+--retract cards given at end of turn to player represented by playerID
+function processCardRetractions (game, addOrder, playerID)
 	-- local playerCards = WL.PlayerCards.Create(1058239);
 	-- addOrder (WL.GameOrderEvent.Create (1058239, "Card retract!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
 
-	for playerID,playerCards in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
-		local wholeCardsToRemove = {};
+	if (tablelength (Cards) == 0) then print ("\n\n\n\n[CARDS == {}]"); return; end
+
+	--retract the cards received at end of this turn for playerID; this is done by reverting to the state for # of whole cards and # of card pieces for each card type for this player
+	--NOTE: card pieces are given at end of turn, b/c card pieces convert into whole cards when the appropriate # of pieces are collected, it's possible for the # of card pieces for a given card reduces after card pieces are granted (if it makes a new whole card)
+	--thus may actually need to add card pieces in order to revert to the previous count; conversely, whole cards can only ever go up by receiving card pieces so it is always a matter of removing them
+	--HOWEVER:
+		--(1) CARD PIECES - card pieces are removed by AddCardPiecesOpt property of a GameOrderEvent with parameter of a table in a tablet that permits multple player submissions and multiple associations per player to many card types and piece counts,
+			--and thus all card pieces for all card types can be removed in a single GameOrderEvent order
+		--(2) WHOLE CARDS - whole cards are removed by the RemoveWholeCardsOpt property of a GameOrderEvent with parameter of a flat table that while still permitting multiple player submissions, only permits 1 card type association to each playerID,
+			--thus only 1 card type per playerID can be removed per GameOrderEvent, and multiple orders are required to remove multiple cards from a single player
+	--THUS the code below identifies how many card pieces need to be added/removed in order to revert to prior state and save that in a single table to be able to remove them all in a single order, but needs to submit a new order for each whole card to be removed;
+	--the 1st removal order removes all the card pieces and the 1st whole card, and if there are any additional whole cards to be removed, continues removing those with additional orders but no further card piece removals
+	-- for playerID,playerCards in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
+print (tostring (playerID));
+	local playerCards = game.ServerGame.LatestTurnStanding.Cards [playerID];
+
+		--identify all card pieces required to be removed/added in order to revert to prior counts
 		local cardPiecesToRemove = {};
 		for cardPieceCardID,cardPieceCount in pairs (playerCards.Pieces) do
 			if (Cards[playerID].Pieces[cardPieceCardID] == nil) then Cards[playerID].Pieces[cardPieceCardID] = 0; end;
-			print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
+			-- print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
 			if (Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount ~= 0) then
 				if (cardPiecesToRemove [playerID] == nil) then cardPiecesToRemove [playerID] = {}; end
 				if (cardPiecesToRemove [playerID][cardPieceCardID] == nil) then cardPiecesToRemove [playerID][cardPieceCardID] = {}; end
 				cardPiecesToRemove [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
 			end
-			print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
+			-- print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
 		end
+
+		--identify which whole cards to be removed in order to revert to prior counts
 		local numWholeCards = {};
-		for wholeCardInstanceID,vc in pairs (playerCards.WholeCards) do
+		-- local wholeCardsToRemove = {};
+		for _,vc in pairs (playerCards.WholeCards) do
 			if (numWholeCards[vc.CardID] == nil) then numWholeCards[vc.CardID] = 0; end
 			numWholeCards [vc.CardID] = numWholeCards[vc.CardID] + 1;
-			if (Cards[playerID].WholeCards[vc.CardID] == nil) then Cards[playerID].WholeCards[vc.CardID] = 0; end
+			if (Cards[playerID].WholeCards[vc.CardID] == nil) then Cards[playerID].WholeCards[vc.CardID] = 0; end --if there were no wholecards of this card type in the prior state, this element won't exist; create it and set it to 0 so we can do comparisons with it below
 			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then wholeCardsToRemove [playerID] = vc.ID; end
-			if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end -- Initialize list for player
-			table.insert(wholeCardsToRemove[playerID], vc.ID);
+			-- if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end -- Initialize list for player
+			-- table.insert(wholeCardsToRemove[playerID], vc.ID);
+			-- wholeCardsToRemove[playerID] = vc.ID;
 			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
 			-- 	if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end  -- create list for this player
 			-- 	table.insert(wholeCardsToRemove[playerID], vc.ID); --add the card ID
 			-- end
-			print ("[^^CARDS] TOTAL "..playerID,vc.CardID,vc.ID,numWholeCards[vc.CardID],tostring (numWholeCards[vc.CardID]>Cards[playerID].WholeCards[vc.CardID]), tablelength (wholeCardsToRemove));
-		end
 
-		-- Flatten structure to match RemoveWholeCardsOpt format
-		local flatCardList = {}
-		for _, cardList in pairs(wholeCardsToRemove) do
-			for _, cardID in ipairs(cardList) do
-				table.insert(flatCardList, cardID)
+			-- print ("[^^CARDS] "..playerID,vc.CardID,vc.ID,numWholeCards[vc.CardID],Cards[playerID].WholeCards[vc.CardID],tostring (numWholeCards[vc.CardID]>Cards[playerID].WholeCards[vc.CardID]));
+
+			--if the quantity of whole cards of current card type (vc.CardID) exceeds the count from prior state, remove it
+			if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
+				--submit the order remove card pieces (if any remain at this stage) & the current whole card identified
+				-- print ("[^^WHOLECARD TO RETRACT] ",playerID,vc.CardID);
+				local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Punishment - card pieces retracted", {});
+
+				--if card pieces need to be removed, configure the AddCardPiecesOpt property
+				if (tablelength (cardPiecesToRemove) > 0) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove; end
+
+				--configure the RemoveWholeCardsOpt parameter for the Event order, then add the order to remove card pieces (if any) & the current whole card
+				cardRetractionOrder.RemoveWholeCardsOpt = {[playerID] = vc.ID};
+				addOrder (cardRetractionOrder, false);
+				cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
 			end
 		end
 
-		for k,v in pairs (flatCardList) do
-			print ("[REM WHOLE PREP FLAT] "..k,v);
-		end
-
-		for k,v in pairs (wholeCardsToRemove) do
-			print ("[REM WHOLE PREP] "..k,v);
-		end
-
-		print ("[REMOVE PIECES/CARDS] "..playerID, tablelength (wholeCardsToRemove), tablelength (cardPiecesToRemove));
-		if (tablelength (wholeCardsToRemove) > 0 or tablelength (cardPiecesToRemove) > 0) then
+		--it's possible at this point that there are card pieces to remove still b/c there were no whole cards, and removal orders were submitted; if so, remove them here
+		if (tablelength (cardPiecesToRemove) > 0) then
 			local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Card retract!", {});
 			cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
-			cardRetractionOrder.RemoveWholeCardsOpt = flatCardList; --wholeCardsToRemove;
 			addOrder (cardRetractionOrder, false);
+			cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
 		end
-	end
-	print ("[S_AT_E] END");
-end
-
-function safeDeepCopy(orig, copies)
-    copies = copies or {}
-    if type(orig) ~= 'table' then
-        return orig
-    elseif copies[orig] then
-        return copies[orig] -- handle circular references
-    end
-
-    local copy = {}
-    copies[orig] = copy
-    for k, v in pairs(orig) do
-        -- Only deep copy if value is a basic table; skip metatables, userdata, etc.
-        local newKey = type(k) == 'table' and safeDeepCopy(k, copies) or k
-        local newVal
-        if type(v) == 'table' and not getmetatable(v) then
-            newVal = safeDeepCopy(v, copies)
-        else
-            newVal = v
-        end
-        copy[newKey] = newVal
-    end
-    return copy
-end
-
-function deepCopy (orig)
-    local copy
-    if type(orig) == 'table' then
-        copy = {}
-        for k, v in pairs(orig) do
-            copy[deepCopy(k)] = deepCopy(v)
-        end
-    else
-        copy = orig
-    end
-    return copy
+	-- end
 end
 
 --remove nil elements, set them to 0
@@ -320,7 +350,7 @@ function territoryCountAnalysis (game)
 		if (terr.OwnerPlayerID>0) then
 			if (territoryCount [terr.OwnerPlayerID] == nil) then territoryCount [terr.OwnerPlayerID] = 0; end
 			territoryCount [terr.OwnerPlayerID] = territoryCount [terr.OwnerPlayerID] + 1;
-			print ("playerID "..terr.OwnerPlayerID..", terr "..ID.."/"..getTerritoryName (ID, game)..", count "..territoryCount [terr.OwnerPlayerID]);
+			-- print ("playerID "..terr.OwnerPlayerID..", terr "..ID.."/"..getTerritoryName (ID, game)..", count "..territoryCount [terr.OwnerPlayerID]);
 		end
 	end
 	return territoryCount;
@@ -366,9 +396,9 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		-- ", AttackingArmiesKilled "..result.AttackingArmiesKilled.NumArmies.. ", DefendArmiesKilled "..result.DefendingArmiesKilled.NumArmies..", isSuccessful "..tostring(result.IsSuccessful).."::");
 
 	elseif (order.proxyType == 'GameOrderEvent') then
-		print ("[EVENT] " ..order.Message);
+		-- print ("[EVENT] " ..order.Message);
 		-- if (order.Message ~= "Mod skipped attack/transfer order") then print ("[EVENT] " ..order.Message); end
-		if (order.AddCardPiecesOpt ~= nil) then print ("[-----card pieces]"); end
+		-- if (order.AddCardPiecesOpt ~= nil) then print ("[-----Event order w/card pieces modification]"); end
 		-- if (order.Result.CardInstancesCreated ~= nil) then print ("[-----CardInstancesCreated card pieces]"); end
 	elseif (order.proxyType == 'GameOrderPlayCardSanctions') then
 		print ("[Sanction card] cast "..order.PlayerID..", target "..order.SanctionedPlayerID..", strength "..game.Settings.Cards[WL.CardID.Sanctions].Percentage);
@@ -379,18 +409,36 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 		--printObjectDetails (game.Settings.Cards[WL.CardID.Sanctions], "Sanction config", "Card settings");
 		if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage>=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
 			print ("[Sanction card] self-sanction for +ve sanction SKIP");
-			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self for positive sanctions is disallowed - Skipping order", {}, {},{}));
+			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self with positive sanctions is disallowed - Skipping order", {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		elseif (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
 			print ("[Sanction card] sanction on another for -ve sanction SKIP");
-			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning other for reverse sanctions is disallowed - Skipping order", {}, {},{}));
+			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning others with reverse sanctions is disallowed - Skipping order", {}, {},{}));
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		else
 			print ("[Sanction card] permitted sanction type");
 		end
+	elseif (order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, "PunishReward|Capture card state")) then
+		--this order gets submitted in Client_GameCommit by each client player; this is necessary b/c only client hooks can apply a Turn Phase to a GameOrderCustom order; when server hooks use addOrder, it's always the immediate next order processed
+		--thus must be done in Client hook in order to specify execution in Receive Cards phase to ensure all player orders (which can add/remove cards) are complete and the snapshot of the wholecards & card pieces for before/after comparison can be taken
+		--process the first of these orders that is received and skip/suppress the rest
+		if (boolCardsCaptured == false) then
+			--process the first order received
+			captureCardCounts (game); --capture card state at this time (before new cards are received for attacks made this turn)
+			--skip/suppress this order? so players don't see this
+			--leave it for now at least; to ensure the placement is optimal
+		else
+			--skip/suppress the order so players don't see this; this isn't the 1st order so the snapshot has already been taken, don't keep retaking it
+			-- skip (WL.ModOrderControl.Skip); --skip this order & suppress the order in order history
+			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
+		end
 	else
-
+		--any other proxyTypes to worry about?
 	end
+end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
 end
 
 function tablelength(T)

@@ -33,5 +33,17 @@ function Client_GameOrderCreated (game, order, skip)
         end
     end
 
+	-- addOrder (WL.GameOrderCustom.Create (1, "Capture card state 1", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 1b", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 2", "PunishReward|Capture card state", {}, WL.TurnPhase.SanctionCards));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 3", "PunishReward|Capture card state"));
+	-- addOrder (WL.GameOrderCustom.Create (1058239, "Capture card state 4", "PunishReward|Capture card state", nil, WL.TurnPhase.BlockadeCards));
+
+	-- local newOrder = WL.GameOrderCustom.Create (1058239, "Capture card state 5", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards);
+	-- --b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
+	-- local orders = game.Orders;
+	-- table.insert(orders, newOrder);
+	-- game.Orders = orders;
+
 	print ("[C_GOC] END");
 end

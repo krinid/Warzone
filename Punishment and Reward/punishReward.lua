@@ -23,7 +23,7 @@ cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the toler
 --currentTurnNumber is the highest populated element # of arrPlayerData
 function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 	local incomeAdjustments = {};
-	incomeAdjustments.LongTermPenalty = 0; --# of penalty units to apply
+	incomeAdjustments.LongTermPunishmentUnits = 0; --# of penalty units to apply
 	incomeAdjustments.ArmyReduction = 0; --army reduction factor (0.05 for 5% reduction), applies to deployed armies on territories
 	incomeAdjustments.TerritoryReduction = 0; --reduction factor (0.05 for 5% reduction), applies to owned territories to be turned neutral (with additional blockaded armies? to avoid simple reclamation)
 	incomeAdjustments.ZeroArmiesGoNeutral = false; --whether or not territories with 0 armies post reduction go neutral or not
@@ -76,6 +76,7 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 			incomeAdjustments.CurrTurn.TerritoryCountIncreased = currValue > prevValue and 1 or 0;
 			incomeAdjustments.CurrTurn.RewardUnits = incomeAdjustments.CurrTurn.Attacks + incomeAdjustments.CurrTurn.Captures + incomeAdjustments.CurrTurn.TerritoryCountIncreased;
 			incomeAdjustments.CurrTurn.PunishmentUnits = 3 - (incomeAdjustments.CurrTurn.Attacks + incomeAdjustments.CurrTurn.Captures + incomeAdjustments.CurrTurn.TerritoryCountIncreased);
+			-- incomeAdjustments.CurrTurn.NetIncomeAdjustment = incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement + incomeAdjustments.CurrTurn.PunishmentUnits * punishmentIncrement;
 		end
 	end
 
@@ -86,15 +87,15 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=3) then -- 1-3 turns - regular 1U penalty (not defined here), no additional long term penalty
 		--for now, no additional penalties, just suffer the regular 1U penalty (not defined here)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=6) then -- 4-6 turns - regular 1U penalty (not defined here), +1U long term penalty, no card pieces
-		incomeAdjustments.LongTermPenalty = 1 * punishmentIncrement;
+		incomeAdjustments.LongTermPunishmentUnits = 1; --1 PU of punishment -- * punishmentIncrement;
 		incomeAdjustments.BlockCardPieceReceiving = true;
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=9) then -- 7-9 turns - regular 1U penalty (not defined here), +2U long term penalty, -5% armies on all territories & territories with 0 units go neutral & blockade (with added units)
-		incomeAdjustments.LongTermPenalty = 2 * punishmentIncrement;
+		incomeAdjustments.LongTermPunishmentUnits = 2; --2 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
 	elseif (intNumConsecutiveTurnsWithNoIncrease >=10) then -- 10+ turns - regular 1U penalty (not defined here), +3U long term penalty, -10% armies on all territories, territories with 0 armies go neutral
-		incomeAdjustments.LongTermPenalty = 3 * punishmentIncrement;
+		incomeAdjustments.LongTermPunishmentUnits = 3; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 0.1;
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
