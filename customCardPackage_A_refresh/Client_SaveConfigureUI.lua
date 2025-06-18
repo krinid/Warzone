@@ -389,7 +389,9 @@ function createCards_originalCCP_cards (alert, addCard)
 		print("Mod.Settings.PestilenceStartPieces:", Mod.Settings.PestilenceStartPieces)
 		print("strPestilenceDesc:", strPestilenceDesc)]]
 		--Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct, Duration+1 b/c WZ counts from time of play which actually includes the Warning turn, so add 1 to get the full duration (so it shows up in Active Cards with accurate end turn data)
-		Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, 1.0, Mod.Settings.PestilenceDuration); --create actual WZ card construct
+		Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, 1.0, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
+		--NOTE: use PestilenceDuration+1 to submit to WZ card creation interface b/c this will make WZ engine keep the card in "Active Cards" for the full duration of the Pestilence effect starting from casting turn and including the warning turn and the effects as specified in 'PestilenceDuration'
+
 		Mod.Settings.PestilenceDescription = strPestilenceDesc;
 
 		if Mod.Settings.PestilenceCardID == nil then

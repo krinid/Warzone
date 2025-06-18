@@ -640,16 +640,38 @@ function play_Pestilence_card(game, cardInstance, playCard)
     PestilencePlayerSelectDialog = nil;
     PestilencePlayerSelectDialog = game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400, 400);
+        setMaxSize(800, 500);
 
         local vertPestiCard = CreateVert (rootParent);
-        CreateLabel(vertPestiCard).SetText('[PESTILENCE]').SetColor (getColourCode ("card play heading"));
-        CreateLabel(vertPestiCard).SetText('\nPestilence is not stackable, playing more than one instance has no additional effect.\n\n');
+        UI.CreateLabel(vertPestiCard).SetText('[PESTILENCE]').SetColor (getColourCode ("card play heading"));
+        UI.CreateLabel(vertPestiCard).SetText('\n• Pestilence is not stackable, playing more than one instance has no additional effect');
         local PestilenceTargetPlayerFuncs={};
         local strPlayersAlreadyTargetedByPestilence = "";
         local numUserButtonsCreated = 0;
-        local labelPlayersAlreadyTargetedByPestilence = CreateLabel (vertPestiCard);
-        CreateLabel (vertPestiCard).SetText ("Select player to invoke Pestilence on:");
+
+		--future proof for being able to custom with/without warning, make warning far in advance or just slightly before, put activation far in advance or right away, modify duration so it can be multiple turns or just 1 turn
+		local PestilenceCastingTurn = game.Game.TurnNumber; --for now, make PestilenceCastingTurn = current turn; perhaps make customizable in future (is this really required though?)
+		local PestilenceWarningTurn = game.Game.TurnNumber+1; --for now, make PestilenceWarningTurn = 1 turn from now (next turn); perhaps make customizable in future (is this really required though?)
+		local PestilenceStartTurn = game.Game.TurnNumber+2;   --for now, make PestilenceStartTurn = 2 turns from now; perhaps make customizable in future (is this really required though?)
+		local PestilenceEndTurn = game.Game.TurnNumber+2 + Mod.Settings.PestilenceDuration -1;   --sets end turn appropriately to align with specified duration for Pestilence
+
+		local strPlural_units = "";
+		local strPlural_duration = "";
+		if (Mod.Settings.PestilenceDuration > 1) then strPlural_duration = "s"; end
+		if (Mod.Settings.PestilenceStrength > 1) then strPlural_units = "s"; end
+
+		local strPestilenceMessageMechanics = "• At the end of a turn, all the territories of the targeted player will sustain ".. Mod.Settings.PestilenceStrength.." unit"..strPlural_units.." of damage for " .. Mod.Settings.PestilenceDuration .. " turn"..strPlural_duration..
+		"\n• If a territory is reduced to 0 armies, it will turn neutral\n\nSpecial units are not affected by Pestilence, and will prevent a territory from turning to neutral";
+		local strPestilenceMessageDetails = "\n[Pestilence details]\n• Duration: "..Mod.Settings.PestilenceDuration.."        • Strength: " ..Mod.Settings.PestilenceStrength.."\n• Casting turn: "..PestilenceCastingTurn.."   • Warning turn: "..PestilenceWarningTurn.."\n• Start turn: "..PestilenceStartTurn.."      • End turn: "..PestilenceEndTurn;
+
+        UI.CreateLabel (vertPestiCard).SetText (strPestilenceMessageMechanics);
+        UI.CreateLabel (vertPestiCard).SetText (strPestilenceMessageDetails).SetColor (getColourCode ("subheading"));
+        -- CreateLabel (vertPestiCard).SetText ("\nCASTING TURN: Turn x".. game.Game.TurnNumber);
+        -- CreateLabel (vertPestiCard).SetText ("\nWARNING TURN: Turn x".. game.Game.TurnNumber+1);
+        -- CreateLabel (vertPestiCard).SetText ("\nEFFECT START TURN: Turn x".. game.Game.TurnNumber+2);
+		
+        local labelPlayersAlreadyTargetedByPestilence = UI.CreateLabel (vertPestiCard);
+        UI.CreateLabel (vertPestiCard).SetText ("\nSelect player to invoke Pestilence on:");
 
         printObjectDetails (Mod.PublicGameData.PestilenceData, "Pestilence data", "full PublicGameDdata.Pestilence");
         for z,x in pairs (Mod.PublicGameData.PestilenceData) do
@@ -659,11 +681,12 @@ function play_Pestilence_card(game, cardInstance, playCard)
         print ("tablelength(Mod.PublicGameData.PestilenceData)=="..tablelength(Mod.PublicGameData.PestilenceData));
 
         --generate list of players for popup to select from; exclude self & eliminated (non-active) players; include AIs - game.Game.PlayingPlayers provides this list (compared to game.Game.Players which includes all players ever associated to the game, even those that declined the invite, were removed by host, etc)
-        for playerID in pairs(game.Game.PlayingPlayers) do
+        for playerID,player in pairs(game.Game.PlayingPlayers) do
             if (playerID~=game.Us.ID) then --don't show self in popup dialog
                 if (Mod.PublicGameData.PestilenceData[playerID]==nil) then --create a button for this player if there is no Pestilence data for this playerID (ie: not currently targeted by Pestilence)
                     PestilenceTargetPlayerFuncs[playerID]=function() Pestilence(playerID,game,playCard,rootParent,close); end;
-                    local pestPlayerButton = UI.CreateButton(vertPestiCard).SetText(toPlayerName(playerID,game)).SetOnClick(PestilenceTargetPlayerFuncs[playerID]);
+                    local pestPlayerButton = UI.CreateButton(vertPestiCard).SetText(toPlayerName(playerID,game)).SetOnClick(PestilenceTargetPlayerFuncs[playerID]).SetColor (player.Color.HtmlColor);
+					--print (player.Color.HtmlColor, tostring (player.Color.IsBaseColor), tostring (player.Color.IsReservedColor), player.Color.Name, player.Color.A, player.Color.B, player.Color.G, player.Color.Index, player.Color.IntColor, player.Color.R);
                     numUserButtonsCreated = numUserButtonsCreated + 1;
                 else
                         --player already targeted for Pestilence
@@ -673,9 +696,9 @@ function play_Pestilence_card(game, cardInstance, playCard)
             end
         end
         if (strPlayersAlreadyTargetedByPestilence == "") then
-            labelPlayersAlreadyTargetedByPestilence.SetText ("No players are currently being targeted by Pestilence.\n\n");
+            labelPlayersAlreadyTargetedByPestilence.SetText ("\nNo players are currently being targeted by Pestilence.\n\n");
         else
-            labelPlayersAlreadyTargetedByPestilence.SetText ("Players already targeted by Pestilence:" .. strPlayersAlreadyTargetedByPestilence .. "\n\n");
+            labelPlayersAlreadyTargetedByPestilence.SetText ("\nPlayers already targeted by Pestilence:" .. strPlayersAlreadyTargetedByPestilence .. "\n\n");
         end
         if (numUserButtonsCreated == 0) then
             CreateLabel (vertPestiCard).SetText ("All players are already targeted by Pestilence. You cannot invoke Pestilence this turn.").SetColor (getColourCode("error"));
@@ -687,11 +710,6 @@ function Pestilence(playerID,game,playCard,rootParent,close)
     strTargetPlayerName=toPlayerName(playerID,game);
     print ("game.us.player="..game.Us.ID.."::Play a pestilence card on " .. strTargetPlayerName.. '::Pestilence|'..tostring(playerID).."::");
     orders=game.Orders;
-
-    --future proof for being able to custom with/without warning, make warning far in advance or just slightly before, put activation far in advance or right away, modify duration so it can be multiple turns or just 1 turn
-    local PestilenceWarningTurn = game.Game.TurnNumber+1; --for now, make PestilenceWarningTurn = 1 turn from now (next turn); perhaps make customizable in future (is this really required though?)
-    local PestilenceStartTurn = game.Game.TurnNumber+2;   --for now, make PestilenceStartTurn = 2 turns from now; perhaps make customizable in future (is this really required though?)
-    local PestilenceEndTurn = game.Game.TurnNumber + Mod.Settings.PestilenceDuration -1;   --sets end turn appropriately to align with specified duration for Pestilence
 
     local strModData; --text data fields separated by | to pass into the order
     --fields are Pestilence|playerID target|player ID caster|turn# Pestilence warning|turn# Pestilence begins|turn# Pestilence ends

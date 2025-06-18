@@ -2964,21 +2964,20 @@ function Pestilence_processEndOfTurn (game, addOrder)
 			--            publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.playerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
 			local pestilenceDataRecord = publicGameData.PestilenceData[targetPlayerID];
 			local castingPlayerID = pestilenceDataRecord.castingPlayer;
-			local PestilenceWarningTurn = pestilenceDataRecord.PestilenceWarningTurn; --for now, make PestilenceWarningTurn = current turn +1 turn from now (next turn)
-			local PestilenceStartTurn = pestilenceDataRecord.PestilenceStartTurn;   --for now, make PestilenceStartTurn = current turn +2 turns from now 
-			local PestilenceEndTurn = pestilenceDataRecord.PestilenceEndTurn;     --for now, make PestilenceEndTurn = current turn +2 turns from now (starts and ends on same turn, only impacts a player once)
+			local PestilenceWarningTurn = pestilenceDataRecord.PestilenceWarningTurn;
+			local PestilenceStartTurn = pestilenceDataRecord.PestilenceStartTurn;
+			local PestilenceEndTurn = pestilenceDataRecord.PestilenceEndTurn;
 			local turnNumber = tonumber (game.Game.TurnNumber);
-
-			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
-			--PestilenceEndTurn = turnNumber + 2; --this will make Pestilence last 3 turns!
-			-- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only -- DELETE ME -- testing only 
 
 			--print ("[PESTILENCE PENDING] on player "..tostring(targetPlayerID)..", by "..tostring(castingPlayerID)..", damage=="..Mod.Settings.PestilenceStrength .."::warningTurn=="..PestilenceWarningTurn..", startTurn==".. PestilenceStartTurn..", endTurn=="..PestilenceEndTurn.."::");
 			print ("[PESTILENCE PENDING] on player "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game)..", by "..castingPlayerID.."/"..toPlayerName(castingPlayerID, game)..", damage=="..Mod.Settings.PestilenceStrength ..", currTurn=="..turnNumber..", warningTurn=="..PestilenceWarningTurn..", startTurn=="..PestilenceStartTurn..", endTurn=="..PestilenceEndTurn.."::");
 
 			--if current turn is the Pestilence start turn, make it happen
 			print ("currTurn=="..turnNumber..", startTurn=="..PestilenceStartTurn..", (PestilenceStartTurn >= turnNumber)", tostring (PestilenceStartTurn >= turnNumber));
-			if (turnNumber >= PestilenceStartTurn) then
+			if (turnNumber >= PestilenceWarningTurn and turnNumber < PestilenceStartTurn) then
+				--add order to warn targeted player/notify all players including the casting player that Pestilence will start next turn; this makes the mechanics clearer to all players
+				addOrder (WL.GameOrderEvent.Create (targetPlayerID, "Pestilence warning for "..toPlayerName(targetPlayerID, game), nil, nil));
+			elseif (turnNumber >= PestilenceStartTurn) then
 				print ("[PESTILENCE EXECUTE START] on player "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game)..", by "..castingPlayerID.."/"..toPlayerName(castingPlayerID, game)..", damage=="..Mod.Settings.PestilenceStrength ..", currTurn=="..turnNumber..", "..PestilenceWarningTurn..", startTurn=="..PestilenceStartTurn..", endTurn=="..PestilenceEndTurn.."::");
 
 				--fields are Pestilence|playerID target|player ID caster|turn# Pestilence warning|turn# Pestilence begins|turn# Pestilence ends
