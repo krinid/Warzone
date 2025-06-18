@@ -8,6 +8,11 @@ cityAverageToleranceLevel = 0.25; --quantity of cities of a territory must be wi
 cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default 10% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
 --^^ this ok for both (A) and (B) or do they need separate ratios?
 
+strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
+strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces";
+strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -5% armies on all territories & territories with 0 units go neutral & blockade (with added units)]";
+strLongTermPunishmentL4 = "• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -10% armies on all territories, territories with 0 units go neutral & blockade (with added units)]";
+
 --^^make some of these configurable in mod
 
 --long term punishments - # turns with no territory increase:
@@ -20,8 +25,8 @@ cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the toler
 
 --given the parameter arrPlayerData of a user's stats over a period of turns, calculate the long term reward/punishment for that player
 --intNumTurns indicates how many most recent turns to observe
---currentTurnNumber is the highest populated element # of arrPlayerData
-function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
+--turnNumber is the highest populated element # of arrPlayerData
+function assessLongTermPunishment (arrPlayerData, turnNumber)
 	local incomeAdjustments = {};
 	incomeAdjustments.LongTermPunishmentUnits = 0; --# of penalty units to apply
 	incomeAdjustments.ArmyReduction = 0; --army reduction factor (0.05 for 5% reduction), applies to deployed armies on territories
@@ -37,17 +42,17 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 	incomeAdjustments.CurrTurn.RewardUnits = 0;
 	incomeAdjustments.CurrTurn.PunishmentUnits = 0;
 
-	local lowestIndex = math.max (1, currentTurnNumber - intNumTurnsToEvaluate - 1);
+	local lowestIndex = math.max (1, turnNumber - intNumTurnsToEvaluate + 1);
 	local intNumConsecutiveTurnsWithNoIncrease = 0;
 	local intTotalTurnsWithNoIncrease = 0;
 	local intHighestTerritoryCount = 0;
 	local numAverageTerritoryCount = 0;
 	local intRunningTerritoryCountForAverage = 0;
-	local intActualNumTurnsEvaluated = currentTurnNumber>=intNumTurnsToEvaluate and intNumTurnsToEvaluate or currentTurnNumber; --if more turns have passed than we're tracking, eval full value of intNumTurnsToEvaluate, else just go up to currentTurnNumber
+	local intActualNumTurnsEvaluated = turnNumber>=intNumTurnsToEvaluate and intNumTurnsToEvaluate or turnNumber; --if more turns have passed than we're tracking, eval full value of intNumTurnsToEvaluate, else just go up to turnNumber
 
 	local boolConsecutiveNoIncreaseStreakContinues = true;
 
-	for k = currentTurnNumber, lowestIndex, -1 do
+	for k = turnNumber, lowestIndex, -1 do
 		local prevValue = 0;
 		local currValue = 0;
 
@@ -68,7 +73,7 @@ function assessLongTermPunishment (arrPlayerData, currentTurnNumber)
 		end
 
 		--if current element being processed is most recent turn number then process current turn stats
-		if (k == currentTurnNumber) then
+		if (k == turnNumber) then
 			incomeAdjustments.CurrTurn = {};
 			incomeAdjustments.CurrTurn.Attacks = arrPlayerData.Attacks[k]~=nil and 1 or 0;
 			incomeAdjustments.CurrTurn.Captures = arrPlayerData.Captures[k]~=nil and 1 or 0;

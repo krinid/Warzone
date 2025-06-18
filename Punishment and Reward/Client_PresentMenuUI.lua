@@ -15,162 +15,26 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	-- if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
 
 	local clientPlayerID = game.Us.ID;
-	local playerData = {};
 	MenuWindow = rootParent;
-	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --use below to show Punishment/Reward values after some calculations are done, but define it here so it shows at the top of the form
-	-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
-	-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
 
-	local labelConsecutivePunishmentDetails;
-	local incomeAdjustments;
-
-	local strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
-	local strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces";
-	local strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -5% armies on all territories & territories with 0 units go neutral & blockade (with added units)]";
-	local strLongTermPunishmentL4 = "• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -10% armies on all territories, territories with 0 units go neutral & blockade (with added units)]";
+	local horzButtonLine = UI.CreateHorizontalLayoutGroup (MenuWindow).SetFlexibleWidth(1);
+	UI.CreateLabel (horzButtonLine).SetText ("").SetFlexibleWidth(1);
+	if (game.Us.ID == 1058239) then UI.CreateButton (horzButtonLine).SetText ("Debug data").SetOnClick (function () game.CreateDialog (showDebugDataForAllPlayers); end).SetColor (getColours()["Dark Gray"]); end
+	UI.CreateButton (horzButtonLine).SetText ("All players").SetOnClick (function () game.CreateDialog (showAllPlayerDataButtonClick); end).SetColor ("#0000FF");
+	UI.CreateButton (horzButtonLine).SetText ("[?] Mechanics").SetOnClick (function () game.CreateDialog (showMechanics); end).SetColor ("#FFFF00");
+	-- UI.CreateButton (horzButtonLine).SetText ("[?] Mechanics").SetOnClick (function () showMechanics (game, clientPlayerID); end).SetColor ("#FFFF00");
 
 	if (Mod.PublicGameData.PRdataByID ~= nil and Mod.PublicGameData.PRdataByID [clientPlayerID] ~= nil) then
-
-		incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [clientPlayerID], game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
-
-		print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
-		print ("Curr-turn Penalty " ..incomeAdjustments.CurrTurn.PunishmentUnits.. ", Reward " ..incomeAdjustments.CurrTurn.RewardUnits.. ", attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", captures " ..incomeAdjustments.CurrTurn.Captures.. ", #territories " ..incomeAdjustments.CurrTurn.TerritoryCount.. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
-		local strRewardText = "[none]";
-		local strPunishmentText = "[none]";
-		local strPunishmentText_Details = "";
-		local strRewardText_Details = "";
-
-		local intNetRU_PU_Change = (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement) + (incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement;
-		local strPunishmentOrReward = "Punishment";
-		if (intNetRU_PU_Change > 0) then strPunishmentOrReward = "Reward";
-		elseif (intNetRU_PU_Change < 0) then strPunishmentOrReward = "Punishment";
-		else strPunishmentOrReward = "No income adjustment (punishment = reward)";
-		end
-
-		local strCurrentState = strPunishmentOrReward.. " (" ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%)"
-		local horzCurrentState = UI.CreateHorizontalLayoutGroup (MenuWindow).SetFlexibleWidth(1);
-		UI.CreateLabel (horzCurrentState).SetText ("CURRENT STATE:    ").SetColor (getColourCode ("main heading")).SetAlignment (WL.TextAlignmentOptions.Left);
-		UI.CreateLabel (horzCurrentState).SetText (strCurrentState).SetColor ("#FFFFFF").SetAlignment (WL.TextAlignmentOptions.Left);
-
-		if (incomeAdjustments.CurrTurn.PunishmentUnits > 0) then
-			strPunishmentText = tostring (incomeAdjustments.CurrTurn.PunishmentUnits * 100 * punishmentIncrement).. "% income   [";
-			if (incomeAdjustments.CurrTurn.Attacks == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no attack"); end
-			if (incomeAdjustments.CurrTurn.Captures == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no capture"); end
-			if (incomeAdjustments.CurrTurn.TerritoryCountIncreased == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "territory count didn't increase"); end
-			strPunishmentText = strPunishmentText .. strPunishmentText_Details .. "]";
-		end
-		if (incomeAdjustments.CurrTurn.RewardUnits > 0) then
-			strRewardText = tostring (incomeAdjustments.CurrTurn.RewardUnits * 100 * rewardIncrement).. "% income   [";
-			if (incomeAdjustments.CurrTurn.Attacks > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ attack"); end
-			if (incomeAdjustments.CurrTurn.Captures > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ capture"); end
-			if (incomeAdjustments.CurrTurn.TerritoryCountIncreased > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "territory count increased"); end
-			strRewardText = strRewardText .. strRewardText_Details .. "]";
-		end
-		UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("\nCOMPONENT 1 - MOST RECENT TURN: (Turn " ..tostring (game.Game.TurnNumber-1).. ")").SetColor (getColourCode ("main heading"));
-		UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Punishments: " ..strPunishmentText.. "\nRewards: " ..strRewardText);
-		-- TopLabel.SetText ("\nMOST RECENT TURN:\nPunishments: " ..strPunishmentText.. "\nRewards: " ..strRewardText);
-
-		UI.CreateLabel (MenuWindow).SetText ("\nCOMPONENT 2 - CONSECUTIVE TURN PERIOD Punishments:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
-		UI.CreateLabel (MenuWindow).SetText ("• CRITERIA: Consecutive turns with no territory increase: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
-
-		--populate the label above with the details of the Consecutive punishments (for not increasing territory count)
-		labelConsecutivePunishmentDetails = UI.CreateLabel (MenuWindow).SetText ("  • ").SetFlexibleWidth (1.0);
-		if (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 3) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL1).SetColor ("#00FF00"); --green
-		elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 6) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL2).SetColor ("#FFFF00"); --yellow
-		elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 9) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL3).SetColor ("#FFA500"); --orange
-		else labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL4).SetColor ("#FF0000"); --red
-		end
-
-		--incomeAdjustments.NumConsecutiveTurnsWithNoIncrease
-		UI.CreateLabel (MenuWindow).SetText ("• IMPACT:").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("    • Nullify receiving card pieces at end of turn: " ..tostring (incomeAdjustments.BlockCardPieceReceiving)).SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("    • Territories with 0 armies go neutral: " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral)).SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("    • Income reduction: " ..tostring (incomeAdjustments.LongTermPunishmentUnits * 100).. "%").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("    • Army reduction: " ..tostring (incomeAdjustments.ArmyReduction*100).. "%").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("    • Territory reduction: " ..tostring (incomeAdjustments.TerritoryReduction*100).. "%").SetFlexibleWidth (1.0);
-
-		UI.CreateLabel (MenuWindow).SetText ("\n• #Finished turns: " ..tostring (game.Game.TurnNumber-1).. "   • #Turns evaluated on: " ..tostring (incomeAdjustments.NumTurnsEvaluatedOn)).SetAlignment(WL.TextAlignmentOptions.Left).SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("\nTurns where territory count didn't increase:").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("• #Total: " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. "   • #Consecutive: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("\nTerritory counts:").SetFlexibleWidth (1.0);
-		UI.CreateLabel (MenuWindow).SetText ("• Average: " ..tostring (math.floor ((incomeAdjustments.AverageTerritoryCount) * 100 + 0.5)/100).. "   • Highest: " ..tostring (incomeAdjustments.HighestTerritoryCount)).SetFlexibleWidth (1.0);
-
-		--check for presence of Workers -- flag it somewhere in PublicGameData, then display this iff Workers are in play or Can build cities (else it's irrelevant)
-		-- if (game.Settings.CommerceGame == false) then alert ("Commerce must be enabled to function properly.\n\nIf you wish to use this mod, enable Commerce. Otherwise, disable this mod to proceed."); end
-		if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.LatestStanding.Territories, "Worker")) then
-			local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[game.Us.ID] = game.Game.Players [game.Us.ID]});
-			UI.CreateLabel (MenuWindow).SetText ("\n[FUTURE] CITY REWARDS:\n• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
-			-- UI.CreateLabel (MenuWindow).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
-			UI.CreateLabel (MenuWindow).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
-			-- UI.CreateLabel (MenuWindow).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+"..tostring (cityRewards[game.Us.ID].numCities * cityRewardIncrement * cityRewards[game.Us.ID].numCitiesWithinTolerance).. "]").SetFlexibleWidth (1.0);
-			UI.CreateLabel (MenuWindow).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForCityStacksWithinTolerance).. "]").SetFlexibleWidth (1.0);
-			-- UI.CreateLabel (MenuWindow).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities * cityRewards[game.Us.ID].numCitiesWithinTolerance * cityRewardIncrement).. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
-			UI.CreateLabel (MenuWindow).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].rewardTotal)).SetFlexibleWidth (1.0);--.. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
-		end
-
-		-- attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
-		-- print ("Long-term penalty " ..incomeAdjustments.LongTermPunishmentUnits.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
-		local intIncome = game.Us.Income (0, game.LatestStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
-		local intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
-		local intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
-		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
-
-		print ("LONG-TERM [ID " ..clientPlayerID.. "] income penalty " ..tostring (incomeAdjustments.LongTermPunishmentUnits).. "PU, army reduction " ..tostring (incomeAdjustments.ArmyReduction).. "x, terr reduction " ..tostring (incomeAdjustments.TerritoryReduction).. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
-		print ("CURR TURN [ID " ..clientPlayerID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
-
+		showIncomeAssessment (game, MenuWindow, clientPlayerID, game.Game.TurnNumber-1);
+	else
+		UI.CreateLabel (MenuWindow).SetText ("No Punishment/Reward data available for you yet").SetColor (getColourCode ("error")).SetAlignment(WL.TextAlignmentOptions.Left);
 	end
-
-	UI.CreateLabel (MenuWindow).SetText ("\n- - - - - - - - -\nMechanics:\nEach turn you will get a Punishment of " ..tostring (1*punishmentIncrement*100).. "% to income or a Reward of +" ..tostring (1*rewardIncrement*100).. "% on each category of:\n(A) Attacks [at least 1 attack made]\n(B) Captures [at least 1 capture made]\n(C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
-	UI.CreateLabel (MenuWindow).SetText ("\nIn addition to the single turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
-	UI.CreateLabel (MenuWindow).SetText (strLongTermPunishmentL1).SetFlexibleWidth (1.0);
-	UI.CreateLabel (MenuWindow).SetText (strLongTermPunishmentL2).SetFlexibleWidth (1.0);
-	UI.CreateLabel (MenuWindow).SetText (strLongTermPunishmentL3).SetFlexibleWidth (1.0);
-	UI.CreateLabel (MenuWindow).SetText (strLongTermPunishmentL4).SetFlexibleWidth (1.0);
 
 	--only display if Cities can be built or if Workers are in use (but how to check for workers? see if any are on the map already? that's the only way to know for sure b/c can't check the mods in play)
 	-- CreateLabel (MenuWindow).SetText ("\nCITIES: Rewards of 1% of total city income value will be granted for each territory you possess where the # of cities is within 10% of the average cities per territories (#territories/#cities). There are no Punishments for city distribution");
 	-- CreateLabel (MenuWindow).SetText ("\n# territories: tbd, # cities: tbd, av cities/territory (ACT): tbd");
 	-- CreateLabel (MenuWindow).SetText ("\n# territories with city count within 10% ACT: tbd, Reward: xx% (yy gpt)");
 
-	if (game.Us.ID == 1058239) then
-	-- if (Mod.PublicGameData.Debug ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
-		debugPrint ("\n- - - - - - - - -\n[DEBUG DATA]\n", MenuWindow);
-
-		if (Mod.PublicGameData.PRdataByID == nil) then debugPrint ("No PR data yet", MenuWindow);
-		else
-			for k,v in pairs (Mod.PublicGameData.PRdataByID) do
-				debugPrint ("PLAYER "..k.. " [" ..getPlayerName (game, k).. "]", MenuWindow);
-				if (v.Attacks == nil or tablelength (v.Attacks) ==0) then debugPrint ("ATTACKS ID "..k.. ", no attacks (all turns)", MenuWindow);
-				else for k2,v2 in pairs (v.Attacks) do debugPrint ("ATTACKS ID "..k.. ", turn "..k2.. "== "..v2, MenuWindow); end
-				end
-
-				if (v.Captures == nil or tablelength (v.Captures) ==0) then debugPrint ("CAPTURES ID "..k.. ", no captures (all turns)", MenuWindow);
-				else for k2,v2 in pairs (v.Captures) do debugPrint ("CAPTURES ID "..k.. ", turn "..k2.. "== "..v2, MenuWindow); end
-				end
-
-				--this always happens each turn
-				for k2,v2 in pairs (v.TerritoryCount) do debugPrint ("TCOUNT ID "..k.. ", turn "..k2.. "== "..v2, MenuWindow); end
-
-				local incomeAdjustments = assessLongTermPunishment (v, game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
-				debugPrint ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount), MenuWindow);
-				debugPrint ("Long-term penalty " ..incomeAdjustments.LongTermPunishmentUnits.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving), MenuWindow);
-
-			end
-
-			-- for k,v in pairs (Mod.PublicGameData.PRdataByTurn) do
-			-- 	if (v.Attacks == nil or tablelength (v.Attacks) ==0) then debugPrint ("ATTACKS TURN "..k.. ", no attacks (all players)", MenuWindow);
-			-- 	else for k2,v2 in pairs (v.Attacks) do debugPrint ("ATTACKS turn "..k.. ", ID "..k2.. "== "..v2, MenuWindow); end
-			-- 	end
-
-			-- 	if (v.Captures == nil or tablelength (v.Captures) ==0) then debugPrint ("CAPTURES TURN "..k.. ", no captures (all players)", MenuWindow);
-			-- 	else for k2,v2 in pairs (v.Captures) do debugPrint ("CAPTURES turn "..k.. ", ID "..k2.. "== "..v2, MenuWindow); end
-			-- 	end
-
-			-- 	--this always happens each turn
-			-- 	for k2,v2 in pairs (v.TerritoryCount) do debugPrint ("TCOUNT turn "..k.. ", ID "..k2.. "== "..v2, MenuWindow); end
-			-- end
-		end
-	end
 
 	--[[    Server_GameCustomMessage (Server_GameCustomMessage.lua)
 Called whenever your mod calls ClientGame.SendGameCustomMessage. This gives mods a way to communicate between the client and server outside of a turn advancing. Note that if a mod changes Mod.PublicGameData or Mod.PlayerGameData, the clients that can see those changes and have the game open will automatically receive a refresh event with the updated data, so this message can also be used to push data from the server to clients.
@@ -185,7 +49,151 @@ setReturn: Optionally, a function that sets what data will be returned back to t
 	--[[for i, v in pairs(_G) do
 		print(i, v);
 	end]]
+end
 
+function showMechanics (rootParent, setMaxSize, setScrollable, game, close)
+	local MechanicsUI = rootParent;
+	setMaxSize (600, 500);
+
+	UI.CreateLabel (MechanicsUI).SetText ("Mechanics:\nThis mod promotes active, aggressive play, while penalizing passive play and card farming.").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("\nFor each of the following actions you do not complete each turn, you will receive a Punishment of " ..tostring (1*punishmentIncrement*100).. "% or a Reward of +" ..tostring (1*rewardIncrement*100).. "% when you do complete them:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("  (A) Attacks [at least 1 attack made]\n  (B) Captures [at least 1 capture made]\n  (C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("\nIn addition to the most recent turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL1).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL2).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL3).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL4).SetFlexibleWidth (1.0);
+end
+
+function showAllPlayerDataButtonClick (rootParent, setMaxSize, setScrollable, game, close)
+	setMaxSize (800, 600);
+
+	for k,v in pairs (Mod.PublicGameData.PRdataByID) do
+		-- if (k ~= clientPlayerID) then 
+		showIncomeAssessment (game, rootParent, k, game.Game.TurnNumber-1);
+		UI.CreateLabel (rootParent).SetText ("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n\n").SetFlexibleWidth (1.0);
+	end
+end
+
+function showIncomeAssessment (game, windowUI, playerID, turnNumber)
+	local labelConsecutivePunishmentDetails;
+	local incomeAdjustments;
+
+	incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [playerID], turnNumber); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
+
+	print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
+	print ("Curr-turn Penalty " ..incomeAdjustments.CurrTurn.PunishmentUnits.. ", Reward " ..incomeAdjustments.CurrTurn.RewardUnits.. ", attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", captures " ..incomeAdjustments.CurrTurn.Captures.. ", #territories " ..incomeAdjustments.CurrTurn.TerritoryCount.. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+	local strRewardText = "[none]";
+	local strPunishmentText = "[none]";
+	local strPunishmentText_Details = "";
+	local strRewardText_Details = "";
+
+	local intNetRU_PU_Change = (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement) + (incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement;
+	local strPunishmentOrReward = "Punishment";
+	if (intNetRU_PU_Change > 0) then strPunishmentOrReward = "Reward";
+	elseif (intNetRU_PU_Change < 0) then strPunishmentOrReward = "Punishment";
+	else strPunishmentOrReward = "No income adjustment (punishment = reward)";
+	end
+
+	local strCurrentState = strPunishmentOrReward.. " (" ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%)"
+	local horzCurrentState = UI.CreateHorizontalLayoutGroup (windowUI).SetFlexibleWidth(1);
+	UI.CreateLabel (horzCurrentState).SetText ("PLAYER: ").SetColor (getColourCode ("main heading")).SetAlignment (WL.TextAlignmentOptions.Left);
+	UI.CreateLabel (horzCurrentState).SetText (getPlayerName (game, playerID)).SetColor ("#FFFFFF").SetAlignment (WL.TextAlignmentOptions.Left);
+	UI.CreateLabel (horzCurrentState).SetText ("    CURRENT STATE:    ").SetColor (getColourCode ("main heading")).SetAlignment (WL.TextAlignmentOptions.Left);
+	UI.CreateLabel (horzCurrentState).SetText (strCurrentState).SetColor ("#FFFFFF").SetAlignment (WL.TextAlignmentOptions.Left);
+
+	if (incomeAdjustments.CurrTurn.PunishmentUnits > 0) then
+		strPunishmentText = tostring (incomeAdjustments.CurrTurn.PunishmentUnits * 100 * punishmentIncrement).. "% income   [";
+		if (incomeAdjustments.CurrTurn.Attacks == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no attack"); end
+		if (incomeAdjustments.CurrTurn.Captures == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "no capture"); end
+		if (incomeAdjustments.CurrTurn.TerritoryCountIncreased == 0) then strPunishmentText_Details = appendCommaSeparatedComponent (strPunishmentText_Details, "territory count didn't increase"); end
+		strPunishmentText = strPunishmentText .. strPunishmentText_Details .. "]";
+	end
+	if (incomeAdjustments.CurrTurn.RewardUnits > 0) then
+		strRewardText = tostring (incomeAdjustments.CurrTurn.RewardUnits * 100 * rewardIncrement).. "% income   [";
+		if (incomeAdjustments.CurrTurn.Attacks > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ attack"); end
+		if (incomeAdjustments.CurrTurn.Captures > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "1+ capture"); end
+		if (incomeAdjustments.CurrTurn.TerritoryCountIncreased > 0) then strRewardText_Details = appendCommaSeparatedComponent (strRewardText_Details, "territory count increased"); end
+		strRewardText = strRewardText .. strRewardText_Details .. "]";
+	end
+	UI.CreateLabel (windowUI).SetFlexibleWidth(1).SetText ("\nCOMPONENT 1 - MOST RECENT TURN: (Turn " ..tostring (game.Game.TurnNumber-1).. ")").SetColor (getColourCode ("main heading"));
+	UI.CreateLabel (windowUI).SetFlexibleWidth(1).SetText ("Punishments: " ..strPunishmentText.. "\nRewards: " ..strRewardText);
+
+	UI.CreateLabel (windowUI).SetText ("\nCOMPONENT 2 - CONSECUTIVE TURN PERIOD Punishments:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
+	UI.CreateLabel (windowUI).SetText ("• CRITERIA: Consecutive turns with no territory increase: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
+
+	--populate the label above with the details of the Consecutive punishments (for not increasing territory count)
+	labelConsecutivePunishmentDetails = UI.CreateLabel (windowUI).SetText ("  • ").SetFlexibleWidth (1.0);
+	if (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 3) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL1).SetColor ("#00FF00"); --green
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 6) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL2).SetColor ("#FFFF00"); --yellow
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 9) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL3).SetColor ("#FFA500"); --orange
+	else labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL4).SetColor ("#FF0000"); --red
+	end
+
+	--incomeAdjustments.NumConsecutiveTurnsWithNoIncrease
+	UI.CreateLabel (windowUI).SetText ("• IMPACT:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Nullify receiving card pieces at end of turn: " ..tostring (incomeAdjustments.BlockCardPieceReceiving)).SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Territories with 0 armies go neutral: " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral)).SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Income reduction: " ..tostring (incomeAdjustments.LongTermPunishmentUnits * 100).. "%").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Army reduction: " ..tostring (incomeAdjustments.ArmyReduction*100).. "%").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Territory reduction: " ..tostring (incomeAdjustments.TerritoryReduction*100).. "%").SetFlexibleWidth (1.0);
+
+	UI.CreateLabel (windowUI).SetText ("\n• #Finished turns: " ..tostring (game.Game.TurnNumber-1).. "   • #Turns evaluated on: " ..tostring (incomeAdjustments.NumTurnsEvaluatedOn)).SetAlignment(WL.TextAlignmentOptions.Left).SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("\nTurns where territory count didn't increase:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("• #Total: " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. "   • #Consecutive: " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease)).SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("\nTerritory counts:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("• Average: " ..tostring (math.floor ((incomeAdjustments.AverageTerritoryCount) * 100 + 0.5)/100).. "   • Highest: " ..tostring (incomeAdjustments.HighestTerritoryCount)).SetFlexibleWidth (1.0);
+
+	--check for presence of Workers -- flag it somewhere in PublicGameData, then display this iff Workers are in play or Can build cities (else it's irrelevant)
+	-- if (game.Settings.CommerceGame == false) then alert ("Commerce must be enabled to function properly.\n\nIf you wish to use this mod, enable Commerce. Otherwise, disable this mod to proceed."); end
+	if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.LatestStanding.Territories, "Worker")) then
+		local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[game.Us.ID] = game.Game.Players [game.Us.ID]});
+		UI.CreateLabel (windowUI).SetText ("\n[FUTURE] CITY REWARDS:\n• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
+		-- UI.CreateLabel (windowUI).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
+		-- UI.CreateLabel (windowUI).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+"..tostring (cityRewards[game.Us.ID].numCities * cityRewardIncrement * cityRewards[game.Us.ID].numCitiesWithinTolerance).. "]").SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForCityStacksWithinTolerance).. "]").SetFlexibleWidth (1.0);
+		-- UI.CreateLabel (windowUI).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities * cityRewards[game.Us.ID].numCitiesWithinTolerance * cityRewardIncrement).. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].rewardTotal)).SetFlexibleWidth (1.0);--.. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
+	end
+
+	-- attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+	-- print ("Long-term penalty " ..incomeAdjustments.LongTermPunishmentUnits.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+	local intIncome = game.Us.Income (0, game.LatestStanding, false, false).Total; --get player's income w/o respect to reinf cards, and wrt current turn & any applicable army cap + sanctions
+	local intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
+	local intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
+	local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
+
+	print ("LONG-TERM [ID " ..playerID.. "] income penalty " ..tostring (incomeAdjustments.LongTermPunishmentUnits).. "PU, army reduction " ..tostring (incomeAdjustments.ArmyReduction).. "x, terr reduction " ..tostring (incomeAdjustments.TerritoryReduction).. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
+	print ("CURR TURN [ID " ..playerID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+end
+
+function showDebugDataForAllPlayers (rootParent, setMaxSize, setScrollable, game, close)
+	setMaxSize (800, 600);
+	local DataWindow = rootParent;
+
+	debugPrint ("\n- - - - - - - - -\n[DEBUG DATA]\n", DataWindow);
+
+	if (Mod.PublicGameData.PRdataByID == nil) then debugPrint ("No PR data yet", DataWindow);
+	else
+		for k,v in pairs (Mod.PublicGameData.PRdataByID) do
+			debugPrint ("PLAYER "..k.. " [" ..getPlayerName (game, k).. "]", DataWindow);
+			if (v.Attacks == nil or tablelength (v.Attacks) ==0) then debugPrint ("ATTACKS ID "..k.. ", no attacks (all turns)", DataWindow);
+			else for k2,v2 in pairs (v.Attacks) do debugPrint ("ATTACKS ID "..k.. ", turn "..k2.. "== "..v2, DataWindow); end
+			end
+
+			if (v.Captures == nil or tablelength (v.Captures) ==0) then debugPrint ("CAPTURES ID "..k.. ", no captures (all turns)", DataWindow);
+			else for k2,v2 in pairs (v.Captures) do debugPrint ("CAPTURES ID "..k.. ", turn "..k2.. "== "..v2, DataWindow); end
+			end
+
+			--this always happens each turn
+			for k2,v2 in pairs (v.TerritoryCount) do debugPrint ("TCOUNT ID "..k.. ", turn "..k2.. "== "..v2, DataWindow); end
+
+			local incomeAdjustments = assessLongTermPunishment (v, game.Game.TurnNumber-1); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
+			debugPrint ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount), DataWindow);
+			debugPrint ("Long-term penalty " ..incomeAdjustments.LongTermPunishmentUnits.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving), DataWindow);
+		end
+	end
 end
 
 function debugPrint (strText, UIlabel)
@@ -213,6 +221,12 @@ function getPlayerName(game, playerid)
 		end
 	end
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
+end
+
+function getColours()
+    local colors = {};					-- Stores all the built-in colors (player colors only)
+    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+    return colors;
 end
 
 function getColourCode (itemName)
