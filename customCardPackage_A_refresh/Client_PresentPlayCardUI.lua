@@ -59,27 +59,6 @@ function play_ForestFire_card (game, cardInstance, playCard)
     UI.Alert ("Forest Fire card . . .\n\ncoming soon to a Warzone near you\n\n\njust imagine be able to start a fire so wild that it keeps spreading each turn, farther and farther - be careful you don't burn your own lands down!");
 end
 
-function CardPiece_CardSelection_clicked (strText, cards, playCard, close)
-	print ("CardPiece_CardSelection button clicked");
-
-	CardOptions_PromptFromList = {}
-	for k,v in pairs(cards) do
-		print ("newObj item=="..k,v.."::");
-        if (k ~= CardPieceCardID) then --don't add Card Piece card to the selection dialog to avoid increasing/infinite/loop card redemption
-			local targetCardConfigNumPieces = Game.Settings.Cards[k].NumPieces;
-			local strButtonText = tostring (v).. "\n[" ..tostring (targetCardConfigNumPieces).. " piece" ..plural (targetCardConfigNumPieces).. " in a full card]";
-			-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
-
-            table.insert (CardOptions_PromptFromList, {text=strButtonText, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
-			--getColourCode ("Card|Reinforcement")  --get the Green colour for Reinforcement card
-        end
-	end
-
-	local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
-	local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
-	UI.PromptFromList (strText.. "\n[grants " ..tostring (targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces]", CardOptions_PromptFromList);
-end
-
 function CardPiece_cardType_selected (cardRecord, playCard, close)
 	print ("CardPiece_cardType selected=="..tostring(cardRecord));
 	print ("CardPiece_cardType selected:: name=="..cardRecord.cardID.."::value=="..cardRecord.cardName.."::");
@@ -244,9 +223,7 @@ function play_cardPiece_card (game, cardInstance, playCard)
 		local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
         CreateLabel(vert).SetText("\nGrants " ..tostring (targetCardNumWholeCardsToGrant).. " whole cards, " ..tostring (targetCardNumPiecesToGrant).. " card pieces").SetColor (getColourCode ("subheading"));
         CreateLabel(vert).SetText("\n"..strPrompt);
-        -- TargetCardButton = CreateButton (vert).SetText("Select card...").SetOnClick(function() CardPiece_CardSelection_clicked (strPrompt, cards, playCard, close) end);
 
-		CardOptions_PromptFromList = {}
 		for k,v in pairs(cards) do
 			print ("newObj item=="..k,v.."::");
 			if (k ~= CardPieceCardID) then --don't add Card Piece card to the selection dialog to avoid increasing/infinite/loop card redemption
@@ -254,18 +231,9 @@ function play_cardPiece_card (game, cardInstance, playCard)
 				local strButtonText = tostring (v).. " [" ..tostring (targetCardConfigNumPieces).. " piece" ..plural (targetCardConfigNumPieces).. " in a full card]";
 				-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
 
-				-- table.insert (CardOptions_PromptFromList, {text=strButtonText, selected=function () CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close); end});
 				CreateButton (vert).SetText(strButtonText).SetOnClick(function() CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close) end).SetColor (getColourCode ("Card|"..tostring (v)));
-
-				--getColourCode ("Card|Reinforcement")  --get the Green colour for Reinforcement card
 			end
 		end
-
-		-- local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
-		-- local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
-		-- UI.PromptFromList (strText.. "\n[grants " ..tostring (targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces]", CardOptions_PromptFromList);
-
-		
     end);
 end
 
