@@ -1,0 +1,7 @@
+Prevents:
+(1) Sanction Cards with positive sanction value from being played on oneself
+(2) Reverse Sanction Cards (those with negative sanction value) from being played on other players
+
+#1 prevents players from accidentally reducing their own income.
+
+#2 prevents players from boosting another player's income. This can be desirable in a game where the host uses Reverse Sanctions and wants players to boost their own income, but not another player. Notably this prevents "Sanction Parties", where several players pool their Sanction cards together to boost the income of 1 player beyond what each could do separately, then share the resultant gold among the parties, thus allowing them to have a large income advantage over players that don't participate in it.
