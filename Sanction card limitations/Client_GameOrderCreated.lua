@@ -14,7 +14,7 @@ function Client_GameOrderCreated (game, order, skip)
             -- addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self for positive sanctions is disallowed - Skipping order", {}, {},{}));
 			UI.Alert ("Sanctioning yourself is disallowed - Skipping order");
             skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
-		elseif (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
+		elseif (order.PlayerID ~= order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
 			print ("[Sanction card] sanction on another for -ve sanction SKIP");
 			UI.Alert ("Sanctioning other players for Reverse Sanctions is disallowed - Skipping order");
 			-- addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning other for reverse sanctions is disallowed - Skipping order", {}, {},{}));
