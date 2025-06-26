@@ -4,23 +4,18 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	setMaxSize (800, 600);
 	Game = game; --global variable to use in other functions in this code 
 
-	if game == nil then print('ClientGame is nil'); return; end
-	if game.LatestStanding == nil then print('ClientGame.LatestStanding is nil'); end
-	if game.LatestStanding.Cards == nil then print('ClientGame.LatestStanding.Cards is nil'); end
-	if game.Us == nil then print('ClientGame.Us is nil'); return; end
-	-- if game.Settings == nil then 		print('ClientGame.Settings is nil'); 	end
-	-- if game.Settings.Cards == nil then 		print('ClientGame.Settings.Cards is nil'); 	end
+	--don't need to check for game == nil or game.Us == nil, etc -- just let Spectators see the menu as well
 
-	local clientPlayerID = game.Us.ID;
-	local playerData = {};
 	MenuWindow = rootParent;
 	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText (""); --required?
-	-- UI.CreateLabel (MenuWindow).SetText ("Punishments: [none]");
-	-- UI.CreateLabel (MenuWindow).SetText ("Rewards: [none]");
-	cboxShowActivePlayersOnly = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(MenuWindow)).SetIsChecked (true).SetInteractable(true).SetText("Show active players only").SetOnValueChanged (showMoveOrderDetails);
 
-	vertMoveOrder = UI.CreateVerticalLayoutGroup (MenuWindow); --show move order details in this control
-	showMoveOrderDetails ();
+	if (game.Game.State == WL.GameState.Playing or game.Game.State == WL.GameState.Finished) then
+		cboxShowActivePlayersOnly = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(MenuWindow)).SetIsChecked (game.Game.State == WL.GameState.Playing).SetInteractable(true).SetText("Show active players only").SetOnValueChanged (showMoveOrderDetails);
+		vertMoveOrder = UI.CreateVerticalLayoutGroup (MenuWindow); --show move order details in this control
+		showMoveOrderDetails ();
+	else
+		UI.CreateLabel (MenuWindow).SetText ("Game state is '" ..tostring (WL.GameState.ToString (game.Game.State)).. "' - move order hasn't been set yet");
+	end
 end
 
 function showMoveOrderDetails ()
