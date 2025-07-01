@@ -82,7 +82,7 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [playerID], turnNumber); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
 
 	print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
-	print ("Curr-turn Penalty " ..incomeAdjustments.CurrTurn.PunishmentUnits.. ", Reward " ..incomeAdjustments.CurrTurn.RewardUnits.. ", attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", captures " ..incomeAdjustments.CurrTurn.Captures.. ", #territories " ..incomeAdjustments.CurrTurn.TerritoryCount.. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+	print ("Curr-turn Penalty " ..tostring (incomeAdjustments.CurrTurn.PunishmentUnits).. ", Reward " ..tostring (incomeAdjustments.CurrTurn.RewardUnits).. ", attacks " ..tostring (incomeAdjustments.CurrTurn.Attacks).. ", captures " ..tostring (incomeAdjustments.CurrTurn.Captures).. ", #territories " ..tostring (incomeAdjustments.CurrTurn.TerritoryCount).. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
 	local strRewardText = "[none]";
 	local strPunishmentText = "[none]";
 	local strPunishmentText_Details = "";
