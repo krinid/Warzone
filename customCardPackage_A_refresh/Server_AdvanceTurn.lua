@@ -25,16 +25,16 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true) then
 
 	--process end of turn actions for modules that are active in this mod
-	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true) then Pestilence_processEndOfTurn (game, addOrder); end
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Tornado == true) then Tornado_processEndOfTurn (game, addOrder); end
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Earthquake == true) then Earthquake_processEndOfTurn (game, addOrder); end
-	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true) then Phantom_processEndOfTurn (game, addOrder); end
-	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true) then Shield_processEndOfTurn(game, addOrder); end
-	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true) then Monolith_processEndOfTurn (game, addOrder); end
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardBlock == true) then CardBlock_processEndOfTurn (game, addOrder); end
     if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Quicksand == true) then Quicksand_processEndOfTurn(game, addOrder); end
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true) then process_Neutralize_expirations (game, addOrder); end
 	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Isolation == true) then process_Isolation_expirations (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true) then Pestilence_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true) then Phantom_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true) then Monolith_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true) then Shield_processEndOfTurn(game, addOrder); end
 
 	print ("[S_AT_E]::func END");
 
