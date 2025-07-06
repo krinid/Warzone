@@ -1,0 +1,3 @@
+Adds independent limits on the # of attacks and the # of transfer orders each player can make each turn.
+
+If you are looking to add a single limit that applies to the sum total of both attacks and transfers, use the "Limited Attacks" mods.
