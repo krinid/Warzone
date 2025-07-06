@@ -328,7 +328,6 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Airlift") then return "#777777"; --
 	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
 	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
-	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
 	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
 	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
@@ -341,7 +340,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
 	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
 	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
-	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Pieces" or itemName=="Card|Card Piece") then return getColours()["Sea Green"]; --
 	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
 	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
@@ -351,6 +350,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
 	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
