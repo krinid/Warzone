@@ -1,14 +1,19 @@
 numAttacksTable = {};
 numTransfersTable = {};
+limitSurpassedAttacks = {}; --array element = playerID; value indicates whether that user has been informed that they surpassed the attack limit; if so, don't inform them again
+limitSurpassedTransfers = {}; --array element = playerID; value indicates whether that user has been informed that they surpassed the transfer limit; if so, don't inform them again
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
 	if (order.proxyType == 'GameOrderAttackTransfer') then
-		if (order.IsAttack == true) then
+		if (result.IsAttack == true) then
 			--this is an attack order
 			local numAttacks = numAttacksTable[order.PlayerID];
 			if numAttacks == nil then numAttacks = 0; end
 			if (numAttacks >= Mod.Settings.AttackLimit) then
-				addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, "Order skipped; surpassed Attack limit"));
+				if (limitSurpassedAttacks [order.PlayerID] == nil) then
+						addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, "Remaining Attack orders skipped; surpassed Attack limit"));
+						limitSurpassedAttacks [order.PlayerID] = true; --don't notify player again this turn for each remaining order that they have surpassed the attack limit
+				end
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 			else
 				numAttacksTable[order.PlayerID] = numAttacks + 1;
@@ -18,7 +23,10 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			local numTransfers = numTransfersTable[order.PlayerID];
 			if numTransfers == nil then numTransfers = 0; end
 			if (numTransfers >= Mod.Settings.TransferLimit) then
-				addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, "Order skipped; surpassed Transfer limit"));
+				if (limitSurpassedTransfers [order.PlayerID] == nil) then
+					addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, "Remaining Transfer orders skipped; surpassed Transfer limit"));
+					limitSurpassedTransfers [order.PlayerID] = true; --don't notify player again this turn for each remaining order that they have surpassed the transfer limit
+				end
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 			else
 				numTransfersTable[order.PlayerID] = numTransfers + 1;
