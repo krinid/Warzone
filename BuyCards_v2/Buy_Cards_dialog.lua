@@ -4,6 +4,7 @@ function displayMenu (game, windowUI, close)
 	local publicGameData = Mod.PublicGameData;
 	local localPlayerIsHost = game.Us.ID == game.Settings.StartedBy;
 	if (game.Game.ID == 41159857 and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Encirclement + Forts v2b" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
+	if (game.Game.ID == 41661316 and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Biohazard" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
 	-- if (game.Game.ID == 40767112 and game.Us.ID == 1058239) then localPlayerIsHost = true; publicGameData.CardData.CardPricesFinalized = false; publicGameData.CardData.HostHasAdjustedPricing = false; end --for this game, re-assign card prices
 	-- if (game.Game.ID == 40767112 and game.Us.ID == 1058239) then publicGameData.CardData.CardPricesFinalized = true; publicGameData.CardData.HostHasAdjustedPricing = true; end --for this game, re-assign card prices
 
