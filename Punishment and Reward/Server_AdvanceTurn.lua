@@ -7,7 +7,7 @@ TODO:
 - implement tracking territory count for X turns (default 10) apply rolling increasing pun/rew for increases/decreases in the past 10 turns; decrease = nerf, increase = buff, no change = small nerf
 - implement Sanction/Reverse Sanction casting limitations; on self YES/NO, on teammate YES/NO
 - anti-card farming --> if own territory @ start of turn, doesn't count as a cap; check if was that player's territory in any of the last 10 turns? maybe this is too punishing? and too compute intensive to check for all captures?
-- punishments = 1PU punishment unit = -5% or -10%?
+- punishments = 1PU punishment unit = -10%?
 - rewards = 1RU reward unit = +10%
 - punishments - each turn w/o attacks = 1 PU, each turn w/o a capture = 1 PU, each turn w/o going up in territories = 1 PU (too punishing?)
 - for each additional in the last 10 turns it's another 0.3 PU
@@ -237,7 +237,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 		else strPunishmentOrReward = "Flat income (punishment = reward)";
 		end
 
-		local strOrderMsg = strPunishmentOrReward.. " (" ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%)"
+		local strOrderMsg = strPunishmentOrReward.. ": " ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "% income";
 
 		addOrder (WL.GameOrderEvent.Create (ID, strOrderMsg, {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..tostring (intPunishmentIncome + intRewardIncome).. ")")})); --floor = round down for punishment
 		-- addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
@@ -245,6 +245,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 		--if flag to block receiving card pieces @ end of turn is set, retract the card pieces that were given (revert card pieces & wholecards to the snapshot state)
 		if (incomeAdjustments.BlockCardPieceReceiving == true) then processCardRetractions (game, addOrder, ID); end
+		if (incomeAdjustments.ArmyReduction ~= 0) then reduceArmyCounts (game, addOrder, ID, incomeAdjustments.ArmyReduction); end
 	end
 
 	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
@@ -253,6 +254,48 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	--crashNow ();
 	print ("[S_AT_E] END");
+end
+
+--reduce army counts on territories owned by targetPlayerID by % specified by numArmyReductionPercent
+function reduceArmyCounts (game, addOrder, targetPlayerID, numArmyReductionPercent)
+	local modifiedTerritories = {}; --table of all territories being modified
+	local numTerritoriesImpacted = 0;
+	local annotations = {}; --initialize annotations array to store annotations for each territory impacted by earthquake
+	local terrID_somewhereInThePunishment = nil; --to be set to one of the territories in the Punishment to write the "Punishment" annotation (as opposed to the "." ones for the other impacted areas)
+
+	--loop through territories to see if owned by current player & if so, apply Punishment damage of % numArmyReductionPercent
+	for terrID,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		if (terr.OwnerPlayerID == targetPlayerID) then
+			local numArmies = terr.NumArmies.NumArmies;
+			local impactedTerritory = WL.TerritoryModification.Create (terr.ID);
+
+			--ignore Shield; this is a punishment for overly passive play, just reduce the armies as specified
+			impactedTerritory.AddArmies = math.floor (numArmies * numArmyReductionPercent); --current territory being modified; rounds down to nearest integer; eg: 1 army*0.1 this will round down to the nearest integer, and since this is negative, it will round down (more negative) to the next integer
+			numTerritoriesImpacted = numTerritoriesImpacted + 1; --don't actually need this, just use it for debugging/checking
+
+			--DON'T turn territories to Neutral; this can actually help not harm the player; by going neutral, it gives them an opportunity to immediately reclaim the territory and increase their territory count and thus halt the long-term Punishment streak
+			--but leaving this code here for now
+			--Special Units are unaffected - if territory has Special Units (commander or otherwise), do not turn to neutral
+			--if no Special Units are present, check if territory now has 0 armies, and if so turn it neutral
+ 			--[[if (#terr.NumArmies.SpecialUnits <= 0 and numArmies <= Mod.Settings.PestilenceStrength) then
+				impactedTerritory.SetOwnerOpt = WL.PlayerID.Neutral;
+			end ]]
+
+			table.insert (modifiedTerritories, impactedTerritory); --add territory object to the table to be passed back to WZ to modify/add the order for all impacted territories
+			annotations [terrID] = WL.TerritoryAnnotation.Create (".", 3, getColourInteger (255, 0, 0)); --add small sized Annotation in Red for Punishment
+			terrID_somewhereInThePunishment = terrID;
+		end
+	end
+
+	local strPunishmentMsg = "Punishment: " ..tostring (numArmyReductionPercent*100).. "% army count reduction";
+	local event = WL.GameOrderEvent.Create(targetPlayerID, strPunishmentMsg, nil, modifiedTerritories);
+
+	--add annotations; if terrID_somewhereInThePunishment==nil, then the above loop through that person's territories didn't execute b/c they have no territories, which likely means that that player is already eliminated and thus no damage or annotations to apply
+	if (terrID_somewhereInThePunishment ~= nil) then
+		annotations [terrID_somewhereInThePunishment] = WL.TerritoryAnnotation.Create ("Punishment", 8, getColourInteger (200, 0, 0)); --overwrite the annotation done above (".") for one of the impacted territories to show "Punishment"
+		event.TerritoryAnnotationsOpt = annotations;
+	end
+	addOrder (event);
 end
 
 --retract cards given at end of turn to player represented by playerID
@@ -273,64 +316,63 @@ function processCardRetractions (game, addOrder, playerID)
 	--THUS the code below identifies how many card pieces need to be added/removed in order to revert to prior state and save that in a single table to be able to remove them all in a single order, but needs to submit a new order for each whole card to be removed;
 	--the 1st removal order removes all the card pieces and the 1st whole card, and if there are any additional whole cards to be removed, continues removing those with additional orders but no further card piece removals
 	-- for playerID,playerCards in pairs (game.ServerGame.LatestTurnStanding.Cards) do --for each element table of player,PlayerCards
-print (tostring (playerID));
+
 	local playerCards = game.ServerGame.LatestTurnStanding.Cards [playerID];
 
-		--identify all card pieces required to be removed/added in order to revert to prior counts
-		local cardPiecesToRemove = {};
-		for cardPieceCardID,cardPieceCount in pairs (playerCards.Pieces) do
-			if (Cards[playerID].Pieces[cardPieceCardID] == nil) then Cards[playerID].Pieces[cardPieceCardID] = 0; end;
-			-- print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
-			if (Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount ~= 0) then
-				if (cardPiecesToRemove [playerID] == nil) then cardPiecesToRemove [playerID] = {}; end
-				if (cardPiecesToRemove [playerID][cardPieceCardID] == nil) then cardPiecesToRemove [playerID][cardPieceCardID] = {}; end
-				cardPiecesToRemove [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
-			end
-			-- print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
+	--identify all card pieces required to be removed/added in order to revert to prior counts
+	local cardPiecesToRemove = {};
+	for cardPieceCardID,cardPieceCount in pairs (playerCards.Pieces) do
+		if (Cards[playerID].Pieces[cardPieceCardID] == nil) then Cards[playerID].Pieces[cardPieceCardID] = 0; end;
+		-- print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
+		if (Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount ~= 0) then
+			if (cardPiecesToRemove [playerID] == nil) then cardPiecesToRemove [playerID] = {}; end
+			if (cardPiecesToRemove [playerID][cardPieceCardID] == nil) then cardPiecesToRemove [playerID][cardPieceCardID] = {}; end
+			cardPiecesToRemove [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
 		end
+		-- print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
+	end
 
-		--identify which whole cards to be removed in order to revert to prior counts
-		local numWholeCards = {};
-		-- local wholeCardsToRemove = {};
-		for _,vc in pairs (playerCards.WholeCards) do
-			if (numWholeCards[vc.CardID] == nil) then numWholeCards[vc.CardID] = 0; end
-			numWholeCards [vc.CardID] = numWholeCards[vc.CardID] + 1;
-			if (Cards[playerID].WholeCards[vc.CardID] == nil) then Cards[playerID].WholeCards[vc.CardID] = 0; end --if there were no wholecards of this card type in the prior state, this element won't exist; create it and set it to 0 so we can do comparisons with it below
-			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then wholeCardsToRemove [playerID] = vc.ID; end
-			-- if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end -- Initialize list for player
-			-- table.insert(wholeCardsToRemove[playerID], vc.ID);
-			-- wholeCardsToRemove[playerID] = vc.ID;
-			-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
-			-- 	if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end  -- create list for this player
-			-- 	table.insert(wholeCardsToRemove[playerID], vc.ID); --add the card ID
-			-- end
+	--identify which whole cards to be removed in order to revert to prior counts
+	local numWholeCards = {};
+	-- local wholeCardsToRemove = {};
+	for _,vc in pairs (playerCards.WholeCards) do
+		if (numWholeCards[vc.CardID] == nil) then numWholeCards[vc.CardID] = 0; end
+		numWholeCards [vc.CardID] = numWholeCards[vc.CardID] + 1;
+		if (Cards[playerID].WholeCards[vc.CardID] == nil) then Cards[playerID].WholeCards[vc.CardID] = 0; end --if there were no wholecards of this card type in the prior state, this element won't exist; create it and set it to 0 so we can do comparisons with it below
+		-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then wholeCardsToRemove [playerID] = vc.ID; end
+		-- if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end -- Initialize list for player
+		-- table.insert(wholeCardsToRemove[playerID], vc.ID);
+		-- wholeCardsToRemove[playerID] = vc.ID;
+		-- if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
+		-- 	if wholeCardsToRemove[playerID] == nil then wholeCardsToRemove[playerID] = {}; end  -- create list for this player
+		-- 	table.insert(wholeCardsToRemove[playerID], vc.ID); --add the card ID
+		-- end
 
-			-- print ("[^^CARDS] "..playerID,vc.CardID,vc.ID,numWholeCards[vc.CardID],Cards[playerID].WholeCards[vc.CardID],tostring (numWholeCards[vc.CardID]>Cards[playerID].WholeCards[vc.CardID]));
+		-- print ("[^^CARDS] "..playerID,vc.CardID,vc.ID,numWholeCards[vc.CardID],Cards[playerID].WholeCards[vc.CardID],tostring (numWholeCards[vc.CardID]>Cards[playerID].WholeCards[vc.CardID]));
 
-			--if the quantity of whole cards of current card type (vc.CardID) exceeds the count from prior state, remove it
-			if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
-				--submit the order remove card pieces (if any remain at this stage) & the current whole card identified
-				-- print ("[^^WHOLECARD TO RETRACT] ",playerID,vc.CardID);
-				local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Punishment - card pieces retracted", {});
+		--if the quantity of whole cards of current card type (vc.CardID) exceeds the count from prior state, remove it
+		if (numWholeCards[vc.CardID] > Cards[playerID].WholeCards[vc.CardID]) then
+			--submit the order remove card pieces (if any remain at this stage) & the current whole card identified
+			-- print ("[^^WHOLECARD TO RETRACT] ",playerID,vc.CardID);
+			local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Punishment: card pieces retracted", {});
 
-				--if card pieces need to be removed, configure the AddCardPiecesOpt property
-				if (tablelength (cardPiecesToRemove) > 0) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove; end
+			--if card pieces need to be removed, configure the AddCardPiecesOpt property
+			if (tablelength (cardPiecesToRemove) > 0) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove; end
 
-				--configure the RemoveWholeCardsOpt parameter for the Event order, then add the order to remove card pieces (if any) & the current whole card
-				cardRetractionOrder.RemoveWholeCardsOpt = {[playerID] = vc.ID};
-				addOrder (cardRetractionOrder, false);
-				cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
-			end
-		end
-
-		--it's possible at this point that there are card pieces to remove still b/c there were no whole cards, and removal orders were submitted; if so, remove them here
-		if (tablelength (cardPiecesToRemove) > 0) then
-			local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Card retract!", {});
-			cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
+			--configure the RemoveWholeCardsOpt parameter for the Event order, then add the order to remove card pieces (if any) & the current whole card
+			cardRetractionOrder.RemoveWholeCardsOpt = {[playerID] = vc.ID};
 			addOrder (cardRetractionOrder, false);
 			cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
 		end
-	-- end
+	end
+
+	--it's possible at this point that there are card pieces to remove still b/c there were no whole cards, and removal orders were submitted; if so, remove them here
+	if (tablelength (cardPiecesToRemove) > 0) then
+		local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Card retract!", {});
+		cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
+		addOrder (cardRetractionOrder, false);
+		cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
+	end
 end
 
 --remove nil elements, set them to 0
@@ -524,4 +566,9 @@ function printObjectDetails(object, strObjectName, strLocationHeader)
 		-- Handle non-table objects
 		print("[not table] value==" .. tostring(object))
 	end
+end
+
+--given 0-255 RGB integers, return a single 24-bit integer
+function getColourInteger (red, green, blue)
+	return red*256^2 + green*256 + blue;
 end
