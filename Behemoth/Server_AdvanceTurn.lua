@@ -11,6 +11,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 end
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
+	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
     if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Behemoth|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
 		local orderComponents = split(order.Payload, '|');
 		--reference: 	local payload = 'Behemoth|Purchase|' .. SelectedTerritory.ID.."|"..BehemothGoldSpent;
@@ -33,7 +34,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		--order is an attack on a neutral territory (technically it's an Attack or a Transfer, but since the target is neutral, it can only be an attack; though I suppose it's possible that some mod could do 'neutral moves' of some sort?)
 		--for any Behemoths in the order, do:
 			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage
-			--(B) ensure damage against the neutral is calculated correctly as per Mod.Settings.BehemothStrengthAgainstNeutrals
+			--(B) ensure damage against the neutral is calculated correctly as per intStrengthAgainstNeutrals
 
 
 		local strSUtype = "Behemoth";
@@ -73,26 +74,26 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 -- print ("POST #result.DamageToSpecialUnits ".. tostring (#result.DamageToSpecialUnits)..", #newDamageToSpecialUnits ".. tostring (#newDamageToSpecialUnits));
 				end
 
-				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor Mod.Settings.BehemothStrengthAgainstNeutrals
+				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor intStrengthAgainstNeutrals
 
 				-- print ("\n\n\n result.DefendingArmiesKilled.NumArmies == ".. tostring (result.DefendingArmiesKilled.NumArmies));
-				--calc gap between damage inclusive of Mod.Settings.BehemothStrengthAgainstNeutrals and the damage already included in the result w/o respect to Mod.Settings.BehemothStrengthAgainstNeutrals, then add it to result.DefendingArmiesKilled
+				--calc gap between damage inclusive of intStrengthAgainstNeutrals and the damage already included in the result w/o respect to intStrengthAgainstNeutrals, then add it to result.DefendingArmiesKilled
 				--if ==1.0 -> no change in damage done to the neutrals; >1.0 -> increases damage done; <1.0 -> decreases damage done
 				-- local intFullAttackPower = result.ActualArmies.AttackPower;
 				local intFullSUdamage = math.floor (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate + 0.5); --full SU damage pre-modifier (which can increase or decrease the damage done to neutrals)
-				local intNewSUdamage = math.floor (intFullSUdamage * Mod.Settings.BehemothStrengthAgainstNeutrals + 0.5); --new damage done inclusive of the modifier
+				local intNewSUdamage = math.floor (intFullSUdamage * intStrengthAgainstNeutrals + 0.5); --new damage done inclusive of the modifier
 				local intOldTotalDamage = result.DefendingArmiesKilled.NumArmies; --the original damage done, which can be < damage done by SU if #defending armies < damage done by SU
 				local intDamageGap = intNewSUdamage - intFullSUdamage; --the gap between current result.DefendingArmiesKilled.NumArmies and the new damage done by the SU with the modifier applied
 				local intFullAttackDamage = math.floor (order.NumArmies.AttackPower * game.Settings.OffenseKillRate + 0.5); --this is the total damage done by all attacking armies, including the SU; this is used to identify if the SU is the only attacker or if there are other SUs/armies involved (calc 2 below requires this knowledge)
 
-				-- assign new damage; if Mod.Settings.BehemothStrengthAgainstNeutrals == 1.0, the value stays the same (no change); if >1.0, it increases (this is easy)
+				-- assign new damage; if intStrengthAgainstNeutrals_default == 1.0, the value stays the same (no change); if >1.0, it increases (this is easy)
 				-- but if <1.0 then it's tricky b/c result.DefendingArmiesKilled.NumArmies is received as min (damage done, actual # of defending armies) so can't just subtract full total damge of the SU and add the new damage, b/c it's possible for (full total damage) > (# defending armies) which makes subtracting full damage negative
 				-- so in this case, if #defending amies < new SU damage (post modifier), then new result damage = # armies; if #defending armies >= new SU damage (post modifier) then new result damage = new SU damage (post modifier)
-				local intNewTotalDamage = intOldTotalDamage; -- this covers case when Mod.Settings.BehemothStrengthAgainstNeutrals == 1.0
-				if (Mod.Settings.BehemothStrengthAgainstNeutrals > 1.0) then
+				local intNewTotalDamage = intOldTotalDamage; -- this covers case when intStrengthAgainstNeutrals_default == 1.0
+				if (intStrengthAgainstNeutrals_default > 1.0) then
 					--when >1.0, just add the additional damage to the total damage done -- no problems here, nothing to worry about
 					intNewTotalDamage = intOldTotalDamage + intDamageGap;
-				elseif (Mod.Settings.BehemothStrengthAgainstNeutrals < 1.0) then
+				elseif (intStrengthAgainstNeutrals_default < 1.0) then
 					--when <1.0, need to ensure we don't reduce the damage being done beyond what is the scope of the damage done by this particular SU
 					--this depends on whether the damage done is more or less than each of the SU damage post modifier & SU damage pre-modifier
 					if (intOldTotalDamage <= intNewSUdamage) then
@@ -120,11 +121,11 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 					end
 				end
 
-				--this works for Mod.Settings.BehemothStrengthAgainstNeutrals >=1.0 but not Mod.Settings.BehemothStrengthAgainstNeutrals <1.0 b/c can't figure out how much of the damage done by the Behemoth is already included in intOldTotalDamage
+				--this works for intStrengthAgainstNeutrals_default >=1.0 but not intStrengthAgainstNeutrals_default <1.0 b/c can't figure out how much of the damage done by the Behemoth is already included in intOldTotalDamage
 				--sometimes #territories is < total damage capable to do, thus intOldTotalDamage < total damage capable to do, thus can't just subtract total capable to do and add the gap between that and the real amount -- this may make damage go negative
 
 				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (intNewTotalDamage + 0.5), result.DefendingArmiesKilled.SpecialUnits);
-				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. Mod.Settings.BehemothStrengthAgainstNeutrals .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * Mod.Settings.BehemothStrengthAgainstNeutrals) ..", apply gap " .. intDamageGap.. ", old total damage "..intOldTotalDamage.. ", new total damage ".. intNewTotalDamage);
+				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. intStrengthAgainstNeutrals_default .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * intStrengthAgainstNeutrals_default) ..", apply gap " .. intDamageGap.. ", old total damage "..intOldTotalDamage.. ", new total damage ".. intNewTotalDamage);
 			end
 		end
 
