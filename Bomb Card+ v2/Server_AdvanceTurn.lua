@@ -87,7 +87,6 @@ function PlayBombCard (game, order, addNewOrder)
 	event.TerritoryAnnotationsOpt = {[order.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.TargetTerritoryID); --move the camera to the target territory
 	addNewOrder (event, false); --add new order that removes the played Bomb card + applies modified damage amount; use 'false' to not skip the order if orig order is skipped b/c this function will skip it every time
-	--skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to modify the damage it does)
 end
 
 function tablelength(T)
