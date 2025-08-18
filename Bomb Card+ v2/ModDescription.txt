@@ -1,4 +1,9 @@
-Adds more customization for bomb cards; the host can now choose to change the amount of armies killed as well as whether the card happens at the normal time or at the end of players' turn. If all armies are killed by the bomb card, targeted territory turns neutral. Make sure to check game settings to know the exact changes! A fake discard orders will happen in your order list.
+Adds customization for Bomb Cards whereby damage applied is a combination of:
+(A) % damage dealt (0% - 100%)
+(B) fixed damage (any integer)
 
-UPDATE:
-You can not decide whether presence of special units prevents territory from turning neutral.
+% damage is applied first, then fixed damage is applied
+
+Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb  hits
+
+Bombs can also be configured to impact at end of turn instead at start of turn

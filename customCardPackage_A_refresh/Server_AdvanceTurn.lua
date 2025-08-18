@@ -92,6 +92,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	process_game_orders_RegularCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_CustomCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_AttackTransfers (game, order, orderResult, skipThisOrder, addNewOrder);
+	process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder);
 end
 
 ---Server_AdvanceTurn_Start hook
@@ -160,6 +161,25 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		end
 	end]]
 	print ("[Server_AdvanceTurn_Start] END; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
+end
+
+--execute final adjustments after all other order adjustments have been conducted
+function process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder)
+	--check if order is an attack, and if so if the target territory contains only 0 health SUs, and if so remove all SUs from the target territory and let the territory be captured by attacker
+	--this is necessary b/c WZ engine treats 0 Health SUs as "something left to kill", so even if all armies & all other SUs have been killed, even if there are left over attackers, there needs to be an additional point of damage dealt to kill the 0 Health SU
+	if (order.proxyType == "GameOrderAttackTransfer") then
+		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[order.To];
+		if (targetTerritory ~= nil and targetTerritory.SpecialUnits ~= nil and #targetTerritory.SpecialUnits > 0) then
+			local boolRemoveSUs = true; --default to removing all SUs, set to false if any SU has health > 0 or if there are SUs that don't use health
+			for _,SU in pairs(targetTerritory.SpecialUnits) do
+				if (SU.Health ~= nil and SU.Health > 0) then boolRemoveSUs = false; end --if any SU has health, don't remove SUs
+			end
+			if (boolRemoveSUs == true) then
+				print ("[FINAL ADJUSTMENTS] removing all SUs from territory " ..getTerritoryName (order.To, game));
+				targetTerritory.SpecialUnits = {};
+			end
+		end
+	end
 end
 
 function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder)
@@ -1192,11 +1212,11 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 					--calc damage above and beyond what's required to kill armies on the target territory, and apply that to specials on the territory
 					--minimally, destroy the Quicksand special if all armies reach 0 so that won't be what stops the territory from being captured (but another special might)
 					local intAdditionalDamageToSpecials = newDefendingArmiesKilled - game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.NumArmies;
-					local newAttackingSpecialsKilled = result.AttackingArmiesKilled.SpecialUnits; --no adjustment here yet; it's a bit complicated, perhaps come back to this later; for now leave the Specials alone exept for the Quicksand Special
+					local newAttackingSpecialsKilled = result.AttackingArmiesKilled.SpecialUnits; --no adjustment here yet; it's a bit complicated, perhaps come back to this later; for now leave the Specials alone except for the Quicksand Special
 					local newDefendingSpecialsKilled = result.DefendingArmiesKilled.SpecialUnits;
 
 					print ("[QUICKSAND] MID AdditionalDamageToSpecials "..intAdditionalDamageToSpecials .."::");
-					if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
+					--[[ if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
 						for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.SpecialUnits) do
 							--if print ("....special ",k,v.Name,v.ID);
 							--table.insert (result.DamageToSpecialUnits, {k, intAdditionalDamageToSpecials});
@@ -1204,7 +1224,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 							print ("....#size=="..#result.DamageToSpecialUnits.."::");
 							if (v.proxyType == "CustomSpecialUnit" and v.Name == "Quicksand") then print ("----removed Quicksand special"); table.insert (newDefendingSpecialsKilled, v); end
 						end
-					end
+					end ]]
 
 					result.AttackingArmiesKilled = WL.Armies.Create(newAttackingArmiesKilled, newAttackingSpecialsKilled); --decrease # of attackers killed but leave Specials as-is (that gets trickier; and the game is kind of built around just impacting armies and ignoring specials for additional damage items like this)
 					result.DefendingArmiesKilled = WL.Armies.Create(newDefendingArmiesKilled, newDefendingSpecialsKilled); --increase # of defenders killed but leave Specials as-is (that gets trickier; and the game is kind of built around just impacting armies and ignoring specials for additional damage items like this)
