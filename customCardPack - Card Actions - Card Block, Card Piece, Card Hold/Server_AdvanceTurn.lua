@@ -1342,6 +1342,41 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
 
 	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
+	--print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	--print ("[TORNADO] PRE - game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
+	if (structures == nil) then structures = {}; end;
+	print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	if (structures[WL.StructureType.Power] == nil) then
+		structures[WL.StructureType.Power] = 1;
+	else
+		structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1;
+	end
+
+	impactedTerritory.SetStructuresOpt = structures;
+    if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
+    local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
+    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
+	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+    addOrder(event, true);
+    local publicGameData = Mod.PublicGameData;
+    if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end
+    local turnNumber_TornadoExpires = (Mod.Settings.TornadoDuration > 0) and (game.Game.TurnNumber + Mod.Settings.TornadoDuration) or -1;
+    publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
+    Mod.PublicGameData = publicGameData;
+	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
+end
+
+function execute_Tornado_operation_postMobileUpdate(game, gameOrder, addOrder, targetTerritoryID)
+    print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
+    local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+
+	--add an Idle "power up" structure to the territory to signify a Tornado; add 1 to the Idle "power" structure on the target territory
+	--local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+
+	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
 	print ("[TORNADO] structure Tornado=="..WL.StructureType.Custom("tornado").."::");
 	--&&&tornado
 
@@ -2432,7 +2467,52 @@ function Tornado_processEndOfTurn(game, addOrder)
     print("[TORNADO] processEndOfTurn END");
 end
 
-function Earthquake_processEndOfTurn(game, addOrder)
+function Tornado_processEndOfTurn(game, addOrder)
+    local publicGameData = Mod.PublicGameData;
+    local turnNumber = tonumber(game.Game.TurnNumber);
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
+	if (Mod.Settings.TornadoEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
+	if (Mod.Settings.TornadoDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+
+	print("[TORNADO] processEndOfTurn START");
+    if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
+    for terrID, record in pairs(publicGameData.TornadoData) do
+		local strTerritoryName = tostring(getTerritoryName(terrID, game));
+		print ("[TORNADO] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.TornadoStrength.." damage");
+		local impactedTerritory = WL.TerritoryModification.Create(terrID);
+		if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
+		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado ravages "..strTerritoryName, {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+		event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
+		addOrder(event, true);
+		--put a special unit here ... but can't at the moment b/c already have 5 special units in this mod! doh
+
+         if (record.turnNumberTornadoEnds > 0 and turnNumber >= record.turnNumberTornadoEnds) then
+            local impactedTerritory = WL.TerritoryModification.Create(terrID);
+            print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
+
+			--remove an Idle "power" structure from the territory
+			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Power] == nil) then
+				structures[WL.StructureType.Power] = 0;
+			else
+				-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
+				structures[WL.StructureType.Power] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators (idle power structures)
+			end
+
+			impactedTerritory.SetStructuresOpt = structures;
+            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
+            event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
+            addOrder(event, true);
+            publicGameData.TornadoData[terrID] = nil;
+         end
+    end
+    Mod.PublicGameData = publicGameData;
+    print("[TORNADO] processEndOfTurn END");
+end
+
+function Earthquake_processEndOfTurn_postMobileUpdate (game, addOrder)
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.EarthquakeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.EarthquakeDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
