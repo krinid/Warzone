@@ -2418,7 +2418,7 @@ function processEndOfTurn_Actions(game, addOrder)
 	end
 end
 
-function Tornado_processEndOfTurn(game, addOrder)
+function Tornado_processEndOfTurn_postMobileUpdate (game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
@@ -2512,7 +2512,7 @@ function Tornado_processEndOfTurn(game, addOrder)
     print("[TORNADO] processEndOfTurn END");
 end
 
-function Earthquake_processEndOfTurn_postMobileUpdate (game, addOrder)
+function Earthquake_processEndOfTurn (game, addOrder)
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.EarthquakeEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
 	if (Mod.Settings.EarthquakeDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
