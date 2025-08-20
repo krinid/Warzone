@@ -53,7 +53,7 @@ function createCards_newCards(alert, addCard);
 		print("ShieldWeight="..tostring(Mod.Settings.ShieldWeight))
 
 		local strShieldDesc = "A special immovable unit deployed to a territory that does no damage but can't be killed. It absorbs all incoming regular damage to the territory it resides on and nullifies any defense damage typically done to attackers. "..
-			"In addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Airstrikes, Nukes, Tornados, Earthquakes, Pestilence. A territory cannot be captured while a Shield unit resides on it. ";
+			"\n\nIn addition to normal attacks, Shields protect units from a variety of special attacks such as Bombs, Airstrikes, Nukes, Tornados, Earthquakes, Pestilence.\n\nA territory cannot be captured while a Shield unit resides on it. ";
 		if (Mod.Settings.ShieldDuration == -1) then
 			strShieldDesc = strShieldDesc .. "Shields never expire.";
 		else
@@ -379,7 +379,7 @@ function createCards_originalCCP_cards (alert, addCard)
 
 		if (Mod.Settings.PestilenceDuration > 1) then strPlural_duration = "s"; end
 		if (Mod.Settings.PestilenceStrength > 1) then strPlural_units = "s"; end
-		local strPestilenceDesc = "Invoke pestilence on another player, reducing each of their territories by "..Mod.Settings.PestilenceStrength.." unit"..strPlural_units.." for " .. Mod.Settings.PestilenceDuration .. " turn"..strPlural_duration..".\n\nIf a territory is reduced to 0 armies, it will turn neutral.\n\nSpecial units are not affected by Pestilence, and will prevent a territory from turning to neutral.";
+		local strPestilenceDesc = "Invoke pestilence on another player, reducing each of their territories by "..Mod.Settings.PestilenceStrength.." unit"..strPlural_units.." at the end of the turn for " .. Mod.Settings.PestilenceDuration .. " turn"..strPlural_duration..".\n\nIf a territory is reduced to 0 armies, it will turn neutral.\n\nSpecial units are not affected by Pestilence, and will prevent a territory from turning to neutral.";
 
 		--[[Mod.Settings.PestilencePiecesPerTurn = 1;
 		-- Print the values of each variable

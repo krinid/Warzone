@@ -482,7 +482,7 @@ function getColourCode (itemName)
 	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
 	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --green
 	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
-	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
 	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
 	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
 	elseif (itemName=="Card|Airlift") then return "#777777"; --

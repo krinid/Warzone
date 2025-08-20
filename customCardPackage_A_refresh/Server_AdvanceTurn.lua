@@ -92,7 +92,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	process_game_orders_RegularCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_CustomCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_AttackTransfers (game, order, orderResult, skipThisOrder, addNewOrder);
-	process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder);
+	-- process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder);
 end
 
 ---Server_AdvanceTurn_Start hook
@@ -1342,14 +1342,17 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
 
 	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
-	--print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	--print ("[TORNADO] PRE - game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
+	print ("[TORNADO] structure Tornado=="..WL.StructureType.Custom("tornado").."::");
+	--&&&tornado
+
 	if (structures == nil) then structures = {}; end;
-	print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	if (structures[WL.StructureType.Power] == nil) then
-		structures[WL.StructureType.Power] = 1;
+	print ("[TORNADO] PRE - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
+	if (structures[WL.StructureType.Custom("tornado")] == nil) then
+		structures[WL.StructureType.Custom("tornado")] = 1;
+		-- structures[WL.StructureType.Power] = 1; --delme
 	else
-		structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1;
+		structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] + 1;
+		-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1; --delme
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
@@ -1365,6 +1368,7 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
     Mod.PublicGameData = publicGameData;
 	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	print ("[TORNADO] POST - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
@@ -2406,11 +2410,15 @@ function Tornado_processEndOfTurn(game, addOrder)
 			--remove an Idle "power" structure from the territory
 			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
-			if (structures[WL.StructureType.Power] == nil) then
+			-- if (structures[WL.StructureType.Power] == nil) then
+			if (structures[WL.StructureType.Custom("tornado")] == nil) then
+				structures[WL.StructureType.Custom("tornado")] = 0;
 				structures[WL.StructureType.Power] = 0;
 			else
 				-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
-				structures[WL.StructureType.Power] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators (idle power structures)
+				-- structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] - 1; --remove 1 Tornado structure from the territory
+				structures[WL.StructureType.Custom("tornado")] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators
+				structures[WL.StructureType.Power] = 0;
 			end
 
 			impactedTerritory.SetStructuresOpt = structures;

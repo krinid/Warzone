@@ -5,17 +5,6 @@ require("Manual_Attack");
 local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
 local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
---[[ error report from Tlnu in Game https://www.warzone.com/MultiPlayer?GameID=40991649
-window.onerror in https://warzonecdn.com/js/Release/ujs.js?v=638808435066191059:11540:473  op=206939 Uncaught Warzone Server returned ModFailed x=ModFailed: Mod "CardPack-Utility-Shield,Monolith,De+Neutra,Phantom" Failed: [string "Server_AdvanceTurn.lua"]:1729: attempt to index global 'addAirLiftCardEvent' (a nil value)
-execute_Deneutralize_operation (Server_AdvanceTurn.lua:1729)
-process_game_orders_CustomCards (Server_AdvanceTurn.lua:450)
-(Unknown Function) (Server_AdvanceTurn.lua:65)
-
-GameID=40991649
-Hook=Server_AdvanceTurn_Order Stack=
- - 
- stack=undefined ]]
-
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
@@ -25,23 +14,27 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--&&& Shield/Monolith Fix
 	--game 40891958 Nate LOTR/ME Dragons game; game 40901887 prenk/krinid test game
 	--if (game.Game.ID == 40891958 or game.Game.ID == 40901887) then removeGlitchedShields (game, addOrder); end
-	--game 40721800 - Limited Multimove game; game 41169187 krind/prenk test game
-	-- if (game.Game.ID == 40767112) then  --Go Public Intro game
 
 	--41405062 Mod Tourney Petro v krinid, 41432086 Mod Tourney test game prenk v krinid
 	-- if (game.Game.ID == 41405062 or game.Game.ID == 41432086) then removeGlitchedSUs (game, addOrder); end --remove any glitched Shields/Monoliths that are in the game; this is a one-time fix for the specified game IDs
 	--^^replace gameID & uncomment this line out when the need arises again
 
-	Pestilence_processEndOfTurn (game, addOrder); --check for pending Pestilence orders, execute them if they start this turn or are already ongoing
-	Tornado_processEndOfTurn (game, addOrder);
-	Earthquake_processEndOfTurn (game, addOrder);
-	Phantom_processEndOfTurn (game, addOrder);
-	Shield_processEndOfTurn(game, addOrder);
-	Monolith_processEndOfTurn (game, addOrder);
-	CardBlock_processEndOfTurn (game, addOrder);
-    Quicksand_processEndOfTurn(game, addOrder);
-	process_Neutralize_expirations (game, addOrder); --if there are pending Neutralize orders, check if any expire this turn and if so execute those actions
-	process_Isolation_expirations (game, addOrder);  --if there are pending Isolation orders, check if any expire this turn and if so execute those actions (delete the special unit to identify the Isolated territory)
+	-- if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true) then
+	-- if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true) then
+	-- if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardPieces == true) then
+	-- if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true) then
+
+	--process end of turn actions for modules that are active in this mod
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Tornado == true) then Tornado_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Earthquake == true) then Earthquake_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardBlock == true) then CardBlock_processEndOfTurn (game, addOrder); end
+    if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Quicksand == true) then Quicksand_processEndOfTurn(game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true) then process_Neutralize_expirations (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Isolation == true) then process_Isolation_expirations (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true) then Pestilence_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true) then Phantom_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true) then Monolith_processEndOfTurn (game, addOrder); end
+	if (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true) then Shield_processEndOfTurn(game, addOrder); end
 
 	print ("[S_AT_E]::func END");
 
@@ -61,7 +54,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- end
 
 	--super DELME! --> Debugging for CP Go Public Intro game
-	if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
+	-- if (boolDebuggingOnForThisTurn == true and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then addOrder (WL.GameOrderEvent.Create(0, "@@LAST[S_AT_E]")); end
 	-- print ("[S_AT_E] #orders skipped past limit: " ..tostring (intSkippedOrderCount));
 end
 
@@ -85,7 +78,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	-- end
 
 	--skip order if this order is a card play by a player impacted by Card Block
-	if (execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true and execute_CardBlock_skip_affected_player_card_plays (game, order, skipThisOrder, addNewOrder) == true) then
 		print ("[ORDER] skipped due to CardBlock");
 		--skip order is actually done within the function above; the true/false return value is just a signal as to whether to proceed further execution in this function (if false) or not (if true)
 		return; --don't process the rest of the function, else it will still process card plays
@@ -99,6 +92,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	process_game_orders_RegularCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_CustomCards (game, order, orderResult, skipThisOrder, addNewOrder);
 	process_game_orders_AttackTransfers (game, order, orderResult, skipThisOrder, addNewOrder);
+	-- process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder);
 end
 
 ---Server_AdvanceTurn_Start hook
@@ -167,6 +161,25 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		end
 	end]]
 	print ("[Server_AdvanceTurn_Start] END; turn#=="..turnNumber.."::WZturn#=="..game.Game.TurnNumber);
+end
+
+--execute final adjustments after all other order adjustments have been conducted
+function process_game_orders_FinalAdjustments (game, order, orderResult, skipThisOrder, addNewOrder)
+	--check if order is an attack, and if so if the target territory contains only 0 health SUs, and if so remove all SUs from the target territory and let the territory be captured by attacker
+	--this is necessary b/c WZ engine treats 0 Health SUs as "something left to kill", so even if all armies & all other SUs have been killed, even if there are left over attackers, there needs to be an additional point of damage dealt to kill the 0 Health SU
+	if (order.proxyType == "GameOrderAttackTransfer") then
+		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[order.To];
+		if (targetTerritory ~= nil and targetTerritory.SpecialUnits ~= nil and #targetTerritory.SpecialUnits > 0) then
+			local boolRemoveSUs = true; --default to removing all SUs, set to false if any SU has health > 0 or if there are SUs that don't use health
+			for _,SU in pairs(targetTerritory.SpecialUnits) do
+				if (SU.Health ~= nil and SU.Health > 0) then boolRemoveSUs = false; end --if any SU has health, don't remove SUs
+			end
+			if (boolRemoveSUs == true) then
+				print ("[FINAL ADJUSTMENTS] removing all SUs from territory " ..getTerritoryName (order.To, game));
+				targetTerritory.SpecialUnits = {};
+			end
+		end
+	end
 end
 
 function debugging_for_glitched_games (game, order, orderResult, skipThisOrder, addNewOrder)
@@ -448,7 +461,7 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 					local strModData = tostring(unit.ModData);
 					--print ("[___________special] ModData=="..strModData..", Name=="..unit.Name..", numArmies=="..orderArmies.NumArmies.."::");
 					if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralized territory") or (unit.Name == "Quicksand impacted territory") or (unit.Name == "Isolated territory") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
-						--some of these cards don't currently have special units, but including them here so if they do, this code is already in place
+						--some of these cards don't currently have special units, but including them here so if they do going forward, this code is already in place
 						--print ("Immovable Special==true --> block movement of this unit! (but let everything else go forward)");
 						table.insert(specialUnitsToRemoveFromOrder, unit);
 					end
@@ -494,9 +507,6 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 		--there is no way to nullify the damage of the existing Bomb Card order, so must skip that order, create a new order that mimics it but does no damage
 		--New order moves the camera, shows the "Bomb" annotation, consumes the Bomb card, but the Shield protects the territory
 
-		-- printObjectDetails (order, "order", "order details");
-		-- printObjectDetails (order.ResultObj, "order.ResultObj1", "order.ResultObj2");
-		-- printObjectDetails (result, "result", "result object");
 		local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, getPlayerName (game, gameOrder.PlayerID).. " bombs ".. game.Map.Territories[gameOrder.TargetTerritoryID].Name .. " (protected by Shield)", {}, {});
 		event.RemoveWholeCardsOpt = {[gameOrder.PlayerID] = gameOrder.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
 		event.TerritoryAnnotationsOpt = {[gameOrder.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
@@ -1202,11 +1212,11 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 					--calc damage above and beyond what's required to kill armies on the target territory, and apply that to specials on the territory
 					--minimally, destroy the Quicksand special if all armies reach 0 so that won't be what stops the territory from being captured (but another special might)
 					local intAdditionalDamageToSpecials = newDefendingArmiesKilled - game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.NumArmies;
-					local newAttackingSpecialsKilled = result.AttackingArmiesKilled.SpecialUnits; --no adjustment here yet; it's a bit complicated, perhaps come back to this later; for now leave the Specials alone exept for the Quicksand Special
+					local newAttackingSpecialsKilled = result.AttackingArmiesKilled.SpecialUnits; --no adjustment here yet; it's a bit complicated, perhaps come back to this later; for now leave the Specials alone except for the Quicksand Special
 					local newDefendingSpecialsKilled = result.DefendingArmiesKilled.SpecialUnits;
 
 					print ("[QUICKSAND] MID AdditionalDamageToSpecials "..intAdditionalDamageToSpecials .."::");
-					if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
+					--[[ if (intAdditionalDamageToSpecials>=0) then -- >0 indicates that more damage was done than there are armies on the territory, so destroy the Quicksand special; perhaps other Specials will hold the territory, but ensure that the Quicksand Special doesn't stop it from being captured
 						for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories[gameOrder.To].NumArmies.SpecialUnits) do
 							--if print ("....special ",k,v.Name,v.ID);
 							--table.insert (result.DamageToSpecialUnits, {k, intAdditionalDamageToSpecials});
@@ -1214,7 +1224,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 							print ("....#size=="..#result.DamageToSpecialUnits.."::");
 							if (v.proxyType == "CustomSpecialUnit" and v.Name == "Quicksand") then print ("----removed Quicksand special"); table.insert (newDefendingSpecialsKilled, v); end
 						end
-					end
+					end ]]
 
 					result.AttackingArmiesKilled = WL.Armies.Create(newAttackingArmiesKilled, newAttackingSpecialsKilled); --decrease # of attackers killed but leave Specials as-is (that gets trickier; and the game is kind of built around just impacting armies and ignoring specials for additional damage items like this)
 					result.DefendingArmiesKilled = WL.Armies.Create(newDefendingArmiesKilled, newDefendingSpecialsKilled); --increase # of defenders killed but leave Specials as-is (that gets trickier; and the game is kind of built around just impacting armies and ignoring specials for additional damage items like this)
@@ -1332,14 +1342,17 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
 
 	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
-	--print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	--print ("[TORNADO] PRE - game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
+	print ("[TORNADO] structure Tornado=="..WL.StructureType.Custom("tornado").."::");
+	--&&&tornado
+
 	if (structures == nil) then structures = {}; end;
-	print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	if (structures[WL.StructureType.Power] == nil) then
-		structures[WL.StructureType.Power] = 1;
+	print ("[TORNADO] PRE - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
+	if (structures[WL.StructureType.Custom("tornado")] == nil) then
+		structures[WL.StructureType.Custom("tornado")] = 1;
+		-- structures[WL.StructureType.Power] = 1; --delme
 	else
-		structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1;
+		structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] + 1;
+		-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1; --delme
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
@@ -1355,6 +1368,7 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
     publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
     Mod.PublicGameData = publicGameData;
 	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
+	print ("[TORNADO] POST - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
@@ -2225,7 +2239,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 		if (cycleCount==1) then
 			damageFactor = 1; --for 1st iteration, use the Connected Territory damage stats as-is specified in the Mod.Settings; reduce the values for the further outward spreads
 		else
-			damageFactor = math.max(0, 1 - (Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta/100 * cycleCount)); --use max with 0 so it never goes below 0 and starts multiplying by negative values which would alternate healing/damaging with each cycle
+			damageFactor = math.max(0, 1 - (Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta/100 * (cycleCount-1))); --use max with 0 so it never goes below 0 and starts multiplying by negative values which would alternate healing/damaging with each cycle
 		end
 		print ("\n\n\nNUKE SPREAD cycleCount=="..cycleCount..":: damageFactor=="..damageFactor.."::, #nuke_territoriesInThisSpreadPhase=="..#nuke_territoriesInThisSpreadPhase.."----------------------2");
 
@@ -2396,11 +2410,15 @@ function Tornado_processEndOfTurn(game, addOrder)
 			--remove an Idle "power" structure from the territory
 			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
-			if (structures[WL.StructureType.Power] == nil) then
+			-- if (structures[WL.StructureType.Power] == nil) then
+			if (structures[WL.StructureType.Custom("tornado")] == nil) then
+				structures[WL.StructureType.Custom("tornado")] = 0;
 				structures[WL.StructureType.Power] = 0;
 			else
 				-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
-				structures[WL.StructureType.Power] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators (idle power structures)
+				-- structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] - 1; --remove 1 Tornado structure from the territory
+				structures[WL.StructureType.Custom("tornado")] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators
+				structures[WL.StructureType.Power] = 0;
 			end
 
 			impactedTerritory.SetStructuresOpt = structures;
@@ -2881,56 +2899,6 @@ function Monolith_processEndOfTurn(game, addOrder)
     print("[MONOLITH EXPIRE] POST (full) tablelength=="..tablelength(Mod.PrivateGameData.MonolithData))
     print("[MONOLITH EXPIRE] processEndOfTurn END");
     Mod.PrivateGameData = privateGameData;
-end
-
---remove expired Monolith Specials
-function Monolith_processEndOfTurn_OLD (game, addOrder)
-	local privateGameData = Mod.PrivateGameData;
-	local turnNumber = tonumber (game.Game.TurnNumber);
-
-	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Monolith ~= true) then return; end --if module is not active, skip everything, just return
-	if (Mod.Settings.MonolithEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
-	if (Mod.Settings.MonolithDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
-
-	print ("[MONOLITH] processEndOfTurn START");
-	if (privateGameData.MonolithData == nil) then print ("[MONOLIGHT] no Monolith data"); return; end
-
-	for key,monolithDataRecord in pairs (privateGameData.MonolithData) do
-		print ("[MONOLITH] 1 record");
-		printObjectDetails (monolithDataRecord, "Monolith data record", "Monolith processEOT");
-		print ("[MONOLITH] record, player=="..monolithDataRecord.castingPlayer.."/"..toPlayerName (monolithDataRecord.castingPlayer, game) ..", expiryTurn="..monolithDataRecord.turnNumberMonolithEnds..", specialUnitID=="..monolithDataRecord.specialUnitID.."::");
-		if (monolithDataRecord.turnNumberMonolithEnds > 0 and turnNumber >= monolithDataRecord.turnNumberMonolithEnds) then --check if this is the expiry turn for the monolith; ignore if duration=-1 which indicates permanence
-			print ("[MONOLITH] expire turn, time to kill");
-
-			local terrID = findSpecialUnit (monolithDataRecord.specialUnitID, game);
-
-			if (terrID ~= nil) then
-				--print ("found special on "..terrID);--.."/".. game.Map.Territories[terrID].Name);
-				print ("found special on "..terrID.."/".. game.Map.Territories[terrID].Name);
-				local impactedTerritory = WL.TerritoryModification.Create (terrID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
-				local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
-				--local impactedTerritoryLastStanding = game.ServerGame.LatestTurnStanding.Territories[terrID];
-				impactedTerritory.RemoveSpecialUnitsOpt = {monolithDataRecord.specialUnitID}; --remove the special unit from the territory
-				table.insert (modifiedTerritories, impactedTerritory);
-				local strMonolithExpires = "Monolith expired";
-				local event = WL.GameOrderEvent.Create(monolithDataRecord.castingPlayer, strMonolithExpires, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-				addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-				print ("[MONOLITH] "..strMonolithExpires.."; delete special=="..monolithDataRecord.specialUnitID ..", from "..terrID.."/".. game.Map.Territories[terrID].Name.."::");	
-				--pop off this item from the Monolith table!
-				privateGameData.MonolithData[key] = nil; --this eliminates this element from the table
-				Mod.PrivateGameData = privateGameData;   --save data back to WZ object
-				print ("[MONOLITH] POST tablelength=="..tablelength (Mod.PrivateGameData.MonolithData))
-				print ("[MONOLITH] processEndOfTurn END");
-				return;
-			end
-		end
-	end
-
-	print ("[MONOLITH] POST tablelength=="..tablelength (Mod.PrivateGameData.MonolithData))
-	print ("[MONOLITH] processEndOfTurn END");
-	Mod.PrivateGameData = privateGameData;
-
 end
 
 function Pestilence_processEndOfTurn (game, addOrder)

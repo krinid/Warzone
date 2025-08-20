@@ -18,7 +18,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 
 	local boolDebugMode_Override = false; --set to true if some criteria meets (eg: for a specific game ID, etc); particularly required when debug user isn't a player in the game he's trying to debug
 
-
 	--UI.Alert (tostring (game.Game.ID));
 	if (game.Game.ID == 41405064) then  --ModTourney stef vs Coug game
 		--let this proceed, don't quit
@@ -146,13 +145,15 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("Phantom FogMod Priority: " .. tostring (intFogModPriority));
 		if (intFogModPriority >= 9000) then --this causes territory owner to become unable to see own units on the territory
 			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (territory owners cannot see own units; if game is not Commerce, impacted playes will be unable to submit turn and will boot)");
-		elseif (intFogModPriority >= 6000) then			
+		elseif (intFogModPriority >= 6000) then
 			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will override visibility provided by Special Units, or by Spy, Reconnaissance or Surveillance cards)");
 		elseif (intFogModPriority >= 3000) then
 			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will override visibility provided by Spy, Reconnaissance or Surveillance cards, but not visibility provided by Special Units)");
 		else
 			CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("  (Phantom fog will not override visibility provided by Spy, Reconnaissance or Surveillance cards, nor that provided by Special Units)");
 		end
+
+		showFogModData ();
 	end
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
@@ -199,6 +200,28 @@ function PresentMenuUI_callBack (table)
         print ("[C_PMUI] "..k,v);
         CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
     end
+end
+
+function showFogModData ()
+    CreateLabel (MenuWindow).SetText ("\nFogMod data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Game.LatestStanding.FogModsOpt));
+	if (Game.LatestStanding.FogModsOpt == nil) then print ("FogModsOpt == nil");
+	else
+		local intFogModCount = 0;
+		for k,v in pairs (Game.LatestStanding.FogModsOpt) do
+			intFogModCount = intFogModCount + 1;
+			CreateLabel (MenuWindow).SetText ("(" ..tostring (intFogModCount).. ") " ..tostring (k).. "/" .. tostring (v.Message).. ", Fog level "..tostring (v.FogLevel)..", Priority " ..v.Priority);
+			for _,terr in pairs (v.Territories) do
+				CreateLabel (MenuWindow).SetText ("   terr " ..tostring (terr) .."/".. tostring (getTerritoryName (terr, Game)));
+			end
+			if (v.PlayersAffectedOpt == nil) then CreateLabel (MenuWindow).SetText ("   PlayersAffectedOpt == nil");
+			else
+				for k3,player in pairs (v.PlayersAffectedOpt) do
+					CreateLabel (MenuWindow).SetText ("   player " ..tostring (k3) .."/".. tostring (toPlayerName (player, Game)));
+				end
+			end
+		end
+	end
 end
 
 function showNeutralizeData ()
