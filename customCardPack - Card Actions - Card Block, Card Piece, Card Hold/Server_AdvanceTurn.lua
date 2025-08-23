@@ -1333,7 +1333,7 @@ function execute_Earthquake_operation(game, gameOrder, addOrder, targetBonusID)
     Mod.PublicGameData = publicGameData;
 end
 
-function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
+function execute_Tornado_operation_OLD(game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 
@@ -1368,7 +1368,7 @@ function execute_Tornado_operation(game, gameOrder, addOrder, targetTerritoryID)
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
-function execute_Tornado_operation_postMobileUpdate(game, gameOrder, addOrder, targetTerritoryID)
+function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 
@@ -2418,7 +2418,7 @@ function processEndOfTurn_Actions(game, addOrder)
 	end
 end
 
-function Tornado_processEndOfTurn_postMobileUpdate (game, addOrder)
+function Tornado_processEndOfTurn (game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
@@ -2467,7 +2467,7 @@ function Tornado_processEndOfTurn_postMobileUpdate (game, addOrder)
     print("[TORNADO] processEndOfTurn END");
 end
 
-function Tornado_processEndOfTurn(game, addOrder)
+function Tornado_processEndOfTurn_OLD (game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
