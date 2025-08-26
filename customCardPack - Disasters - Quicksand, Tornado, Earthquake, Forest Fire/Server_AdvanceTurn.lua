@@ -1378,7 +1378,6 @@ function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID
 
 	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
 	print ("[TORNADO] structure Tornado=="..WL.StructureType.Custom("tornado").."::");
-	--&&&tornado
 
 	if (structures == nil) then structures = {}; end;
 	print ("[TORNADO] PRE - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
@@ -1438,11 +1437,24 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     print("[PROCESS QUICKSAND] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
-	--print ("[QUICKSAND]     _ _ _ _ _ _ _ _ _ _ ");
-    local specialUnit_Quicksand = build_Quicksand_specialUnit (game, targetTerritoryID);
 
-	impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
-    local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
+	--create Quicksand SU to place on territory for visibility
+	-- local specialUnit_Quicksand = build_Quicksand_specialUnit (game, targetTerritoryID);
+	-- impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
+
+	--add Quicksand custom structure on territory for visibility; pic is quicksand.png
+	--&&&quicksand
+	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+	if (structures == nil) then structures = {}; end;
+	if (structures[WL.StructureType.Custom("quicksand")] == nil) then
+		structures[WL.StructureType.Custom("quicksand")] = 1;
+	else
+		structures[WL.StructureType.Custom("quicksand")] = structures[WL.StructureType.Custom("quicksand")] + 1;
+	end
+
+	impactedTerritory.SetStructuresOpt = structures;
+
+	local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	--[[WL.RectangleVM.Create(
          game.Map.Territories[targetTerritoryID].MiddlePointX,
@@ -1454,7 +1466,8 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.QuicksandData == nil) then publicGameData.QuicksandData = {}; end
     local turnNumber_QuicksandExpires = (Mod.Settings.QuicksandDuration > 0) and (game.Game.TurnNumber + Mod.Settings.QuicksandDuration) or -1;
-    publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+    -- publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+    publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=nil};
     Mod.PublicGameData = publicGameData;
 end
 
@@ -2442,7 +2455,7 @@ function Tornado_processEndOfTurn (game, addOrder)
             local impactedTerritory = WL.TerritoryModification.Create(terrID);
             print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
 
-			--remove an Idle "power" structure from the territory
+			--remove an Idle "power" structure and the custom Tornado structure from the territory (remove both to account for cases where the Idle Power exists on the map already, a carry over from the previous visual, pre-custom Structures)
 			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
 			-- if (structures[WL.StructureType.Power] == nil) then
@@ -2582,7 +2595,18 @@ function Quicksand_processEndOfTurn(game, addOrder)
         --check if quicksand ends this turn (or earlier but was somehow missed) and if so, pop up the record from QuicksandData & remove the visual Special Unit
 		if (record.turnNumberQuicksandEnds > 0 and turnNumber >= record.turnNumberQuicksandEnds) then
 			local impactedTerritory = WL.TerritoryModification.Create(terrID);
-			impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID};  -- adjust as needed to remove the Quicksand indicator
+			impactedTerritory.RemoveSpecialUnitsOpt = {record.specialUnitID}; --remove the Quicksand SU indicator
+
+			--remove the Quicksand custom structure from the territory (remove both the SU & custom structure to account for cases where the SU already exists on the map already, a carry over from the previous visual, pre-custom Structures)
+			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Custom("quicksand")] == nil) then
+				structures[WL.StructureType.Custom("quicksand")] = 0;
+			else
+				structures[WL.StructureType.Custom("quicksand")] = 0; --set it to 0 instead of subtracting 1 b/c new Quicksand invocations overwrite old ones, only 1 is truly active at any given time but it creates multiple Quicksand indicators
+			end
+			impactedTerritory.SetStructuresOpt = structures;
+
 			local event = WL.GameOrderEvent.Create(record.castingPlayer, "Quicksand effect ends on "..getTerritoryName  (terrID, game), {}, {impactedTerritory});
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create(
 				game.Map.Territories[terrID].MiddlePointX,
@@ -2600,37 +2624,38 @@ function Quicksand_processEndOfTurn(game, addOrder)
 		else
 			--Quicksand is active but not ending; check if the visual Special Unit is missing (killed); if so, recreate it
 			local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[terrID];
-			print ("[QUICKSAND_PEOT] check special unit; terr.ID=="..terrID..", #specials==".. (#targetTerritory.NumArmies.SpecialUnits)..", seeking "..record.specialUnitID.."::");
+			print ("[QUICKSAND_PEOT] check special unit; terr.ID=="..terrID..", #specials==".. (#targetTerritory.NumArmies.SpecialUnits)..", seeking "..tostring (record.specialUnitID).."::");
 			local boolQuicksandSpecialUnitFound = false;
 			if (#targetTerritory.NumArmies.SpecialUnits >= 1) then
 				for _,specialUnit in pairs (targetTerritory.NumArmies.SpecialUnits) do
-					if (specialUnit.ID==record.specialUnitID) then boolQuicksandSpecialUnitFound = true; end
-					print ("----special on "..terrID.. "/"..	game.Map.Territories[terrID].Name..", matches seek item=="..tostring(specialUnit.ID==record.specialUnitID).."/"..tostring (boolQuicksandSpecialUnitFound)..", ID "..specialUnit.ID.."::"); --, ", isAttack=="..", isSuccessful=="..);
+					if (specialUnit.ID ~= nil and specialUnit.ID==record.specialUnitID) then boolQuicksandSpecialUnitFound = true; end
+					print ("----special on "..terrID.. "/"..	game.Map.Territories[terrID].Name..", matches seek item=="..tostring(specialUnit.ID==tostring (record.specialUnitID)).."/"..tostring (boolQuicksandSpecialUnitFound)..", ID "..tostring (specialUnit.ID).."::"); --, ", isAttack=="..", isSuccessful=="..);
 					--printObjectDetails (specialUnit, "[QPEOT]", "specialUnit details");
 				end
 			end
 
+			--don't need this anymore b/c new method is to use a custom structure and not an SU to visualize Quicksand
 			--if the Quicksand special unit wasn't found, recreate it
-			if (boolQuicksandSpecialUnitFound == false) then
-				print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
-				--create new Quicksand special unit & apply to the territory
-				local impactedTerritory = WL.TerritoryModification.Create(terrID);
-				local specialUnit_Quicksand = build_Quicksand_specialUnit (game, terrID);
-				impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
-				local event = WL.GameOrderEvent.Create(record.territoryOwner, "[Quicksand visual recreated]", {}, {impactedTerritory});
-				addOrder(event);
-				--update QuicksandData record to reflect the new special unit ID#
-				publicGameData = Mod.PublicGameData; --don't redefine this as a local variable; it's already defined @ top of function, and saves Mod.PublicGameData again just before ending function; so if this is set to local, it'll override the function-wide variable, and get overwritten at end of function by the functin-wide variable that doesn't reflect the changes made inside of this IF structure
-				local oldQuicksandDataRecord = publicGameData.QuicksandData [terrID];
-				local newQuicksandDataRecord = {territory = oldQuicksandDataRecord.territory, castingPlayer = oldQuicksandDataRecord.castingPlayer, territoryOwner = oldQuicksandDataRecord.territoryOwner, turnNumberQuicksandEnds = oldQuicksandDataRecord.turnNumberQuicksandEnds, specialUnitID = specialUnit_Quicksand.ID}; --recreate QuicksandData record with ID# of the new special unit
-				--publicGameData.QuicksandData[terrID] = nil;
-				publicGameData.QuicksandData[terrID] = newQuicksandDataRecord;
-				--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
-				--Mod.PublicGameData = publicGameData; --resave public game data
-				print ("[QUICKSAND] special unit killed / OLD    = "..oldQuicksandDataRecord.specialUnitID);
-				print ("[QUICKSAND] special unit killed / NEW    = "..newQuicksandDataRecord.specialUnitID);
-				print ("[QUICKSAND] special unit killed / NEWpub = "..Mod.PublicGameData.QuicksandData[terrID].specialUnitID);
-			end
+			-- if (boolQuicksandSpecialUnitFound == false) then
+			-- 	print ("[QUICKSAND] special unit killed / recreate it - - - - TRIPPING TIME - - - - - - - - - - ");
+			-- 	--create new Quicksand special unit & apply to the territory
+			-- 	local impactedTerritory = WL.TerritoryModification.Create(terrID);
+			-- 	local specialUnit_Quicksand = build_Quicksand_specialUnit (game, terrID);
+			-- 	impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
+			-- 	local event = WL.GameOrderEvent.Create(record.territoryOwner, "[Quicksand visual recreated]", {}, {impactedTerritory});
+			-- 	addOrder(event);
+			-- 	--update QuicksandData record to reflect the new special unit ID#
+			-- 	publicGameData = Mod.PublicGameData; --don't redefine this as a local variable; it's already defined @ top of function, and saves Mod.PublicGameData again just before ending function; so if this is set to local, it'll override the function-wide variable, and get overwritten at end of function by the functin-wide variable that doesn't reflect the changes made inside of this IF structure
+			-- 	local oldQuicksandDataRecord = publicGameData.QuicksandData [terrID];
+			-- 	local newQuicksandDataRecord = {territory = oldQuicksandDataRecord.territory, castingPlayer = oldQuicksandDataRecord.castingPlayer, territoryOwner = oldQuicksandDataRecord.territoryOwner, turnNumberQuicksandEnds = oldQuicksandDataRecord.turnNumberQuicksandEnds, specialUnitID = specialUnit_Quicksand.ID}; --recreate QuicksandData record with ID# of the new special unit
+			-- 	--publicGameData.QuicksandData[terrID] = nil;
+			-- 	publicGameData.QuicksandData[terrID] = newQuicksandDataRecord;
+			-- 	--for reference: publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
+			-- 	--Mod.PublicGameData = publicGameData; --resave public game data
+			-- 	print ("[QUICKSAND] special unit killed / OLD    = "..oldQuicksandDataRecord.specialUnitID);
+			-- 	print ("[QUICKSAND] special unit killed / NEW    = "..newQuicksandDataRecord.specialUnitID);
+			-- 	print ("[QUICKSAND] special unit killed / NEWpub = "..Mod.PublicGameData.QuicksandData[terrID].specialUnitID);
+			-- end
 		end
     end
     Mod.PublicGameData = publicGameData;
