@@ -93,7 +93,7 @@ function play_Shield_card(game, cardInstance, playCard)
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to create a Shield on.");
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
@@ -153,7 +153,7 @@ function play_Phantom_card(game, cardInstance, playCard)
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to create a Phantom on.");
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
@@ -189,7 +189,7 @@ function play_CardBlock_card(game, cardInstance, playCard)
         CreateLabel(vert).SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
         TargetPlayerBtn = CreateButton (vert).SetText("Select player...").SetOnClick(function() TargetPlayerClicked_Fizz(strPrompt) end);
 
-        CreateButton(vert).SetText("Play Card").SetOnClick(
+        CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
         function()
             if (TargetPlayerID == nil) then
                 UI.Alert("You must select a player");
@@ -276,7 +276,7 @@ function play_Earthquake_card(game, cardInstance, playCard)
         buttonEarthquakeSelectBonus = CreateButton (EarthquakeUI).SetText("Select Bonus").SetInteractable(false).SetOnClick (function () buttonEarthquakeSelectBonus.SetInteractable(false); Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected); end);
         labelEarthquakeSelectBonus = CreateLabel (EarthquakeUI).SetText("Select the bonus for the earthquake.\n");--.SetColor(getColourCode("card play heading"));
         Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected);
-        Earthquake_PlayCardButton = UI.CreateButton(EarthquakeUI).SetText("Play Card").SetOnClick(function()
+        Earthquake_PlayCardButton = UI.CreateButton(EarthquakeUI).SetColor(WZcolours["Dark Green"]).SetText("Play Card").SetOnClick(function()
             if (Earthquake_SelectedBonus == nil) then
                 UI.Alert("You must select a bonus");
                 return;
@@ -350,7 +350,7 @@ function play_Tornado_card(game, cardInstance, playCard)
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to target with Tornado");
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("You must select a territory");
                 return;
@@ -378,7 +378,7 @@ function play_Quicksand_card(game, cardInstance, playCard)
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to apply Quicksand to");
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
@@ -409,7 +409,7 @@ function play_Monolith_card(game, cardInstance, playCard)
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to create a Monolith on."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
     
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function() 
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function() 
 
         --check for CANCELED request, ie: no territory selected
         if (TargetTerritoryID == nil) then
@@ -454,7 +454,7 @@ function play_Deneutralize_card (game, cardInstance, playCard)
             local assignToPlayerName = nil;
             --add config items for can/can't assign to self/others
 
-            UI.CreateButton(vert).SetText("Play Card").SetOnClick(
+            UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
                 function() 
                     --check for CANCELED request, ie: no territory selected
                     if (TargetTerritoryID == nil) then
@@ -512,7 +512,7 @@ function play_Neutralize_card (game, cardInstance, playCard)
             strNeutralize_TerritorySelectText = "Select the territory you wish to neutralize (turn to neutral).";
             TargetTerritoryClicked(strNeutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
-            UI.CreateButton(vert).SetText("Play Card").SetOnClick(
+            UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
                 function() 
                     --check for CANCELED request, ie: no territory selected
                     if (TargetTerritoryID == nil) then
@@ -574,7 +574,7 @@ function play_Isolation_card(game, cardInstance, playCard)
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory you wish to isolate."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function() 
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function() 
 
         --check for CANCELED request, ie: no territory selected
         if (TargetTerritoryID == nil) then
@@ -709,7 +709,7 @@ function play_Nuke_card(game, cardInstance, playCard)
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory you wish to nuke."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
         function() 
             --check for CANCELED request, ie: no territory selected
             if (TargetTerritoryID == nil) then

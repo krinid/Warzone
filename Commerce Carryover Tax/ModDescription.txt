@@ -1,0 +1,1 @@
+Unspent gold at the end of a turn to be carried over into the next turn will be taxed. Default is 10% tax rate.

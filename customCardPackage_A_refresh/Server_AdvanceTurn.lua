@@ -1719,32 +1719,69 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 
 	-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
-	local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Isolation action)
-	builder.Name = 'Isolated territory';
-	builder.IncludeABeforeName = false;
-	builder.ImageFilename = 'IsolatedTerritory.png'; --max size of 60x100 pixels
-	builder.AttackPower = 0;
-	builder.DefensePower = 0;
-	builder.DamageToKill = 0;
-	builder.DamageAbsorbedWhenAttacked = 0;
-	--builder.Health = 0;
-	builder.CombatOrder = 10001; --doesn't protect Commander
-	builder.CanBeGiftedWithGiftCard = false;
-	builder.CanBeTransferredToTeammate = false;
-	builder.CanBeAirliftedToSelf = false;
-	builder.CanBeAirliftedToTeammate = false;
-	builder.IsVisibleToAllPlayers = false;
-	builder.TextOverHeadOpt = "Isolated";
-	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-	local strUnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]";
-	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
-	local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
+	-- local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Isolation action)
+	-- builder.Name = 'Isolated territory';
+	-- builder.IncludeABeforeName = false;
+	-- builder.ImageFilename = 'IsolatedTerritory.png'; --max size of 60x100 pixels
+	-- builder.AttackPower = 0;
+	-- builder.DefensePower = 0;
+	-- builder.DamageToKill = 0;
+	-- builder.DamageAbsorbedWhenAttacked = 0;
+	-- --builder.Health = 0;
+	-- builder.CombatOrder = 10001; --doesn't protect Commander
+	-- builder.CanBeGiftedWithGiftCard = false;
+	-- builder.CanBeTransferredToTeammate = false;
+	-- builder.CanBeAirliftedToSelf = false;
+	-- builder.CanBeAirliftedToTeammate = false;
+	-- builder.IsVisibleToAllPlayers = false;
+	-- builder.TextOverHeadOpt = "Isolated";
+	-- --builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+	-- local strUnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]";
+	-- --builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+	-- builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+	-- local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
 
 	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
-	impactedTerritory.AddSpecialUnits = {specialUnit_Isolation}; --add special unit
+	-- impactedTerritory.AddSpecialUnits = {specialUnit_Isolation}; --add special unit
 	--table.insert (modifiedTerritories, impactedTerritory);
 	--printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit
+
+ 	--add Isolation custom structure on territory for visibility; pic is isolation.png
+	--&&&isolation
+	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+	if (structures == nil) then structures = {}; end;
+	if (structures[WL.StructureType.Custom("isolation")] == nil) then
+		structures[WL.StructureType.Custom("isolation")] = 1;
+	else
+		structures[WL.StructureType.Custom("isolation")] = structures[WL.StructureType.Custom("isolation")] + 1;
+	end
+
+	impactedTerritory.SetStructuresOpt = structures;
+
+--START OF REF CODE for Custom Structure add/removal
+--[[
+ 	--add Quicksand custom structure on territory for visibility; pic is quicksand.png
+	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+	if (structures == nil) then structures = {}; end;
+	if (structures[WL.StructureType.Custom("quicksand")] == nil) then
+		structures[WL.StructureType.Custom("quicksand")] = 1;
+	else
+		structures[WL.StructureType.Custom("quicksand")] = structures[WL.StructureType.Custom("quicksand")] + 1;
+	end
+
+	impactedTerritory.SetStructuresOpt = structures;
+
+			--remove the Quicksand custom structure from the territory (remove both the SU & custom structure to account for cases where the SU already exists on the map already, a carry over from the previous visual, pre-custom Structures)
+			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Custom("quicksand")] == nil) then
+				structures[WL.StructureType.Custom("quicksand")] = 0;
+			else
+				structures[WL.StructureType.Custom("quicksand")] = 0; --set it to 0 instead of subtracting 1 b/c new Quicksand invocations overwrite old ones, only 1 is truly active at any given time but it creates multiple Quicksand indicators
+			end
+			impactedTerritory.SetStructuresOpt = structures;
+]]
+--END OF REF CODE
 
 	local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Isolation action
 	--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
@@ -1769,7 +1806,8 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	end
 	print ("expire turn#="..turnNumber_IsolationExpires.."::duration=="..Mod.Settings.IsolationDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."::");
 	--even if Isolation duration==0, still make a note of the details of the Isolation action - probably not required though
-	local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};
+	-- local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};
+	local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=nil};
 	publicGameData.IsolationData [targetTerritoryID] = IsolationDataRecord; --do it as a non-contiguous array so can be referenced later as (publicGameData.IsolationData [targetTerritoryID] ~= nil) to identify if Isolation impacts a given territory
 	--table.insert (publicGameData.IsolationData, IsolationDataRecord);  --don't use this method, as it wastes the key by making it an auto-incrementing integer, rather than something meaningful like the territory ID
 	Mod.PublicGameData = publicGameData;
@@ -1908,7 +1946,7 @@ end
 
 function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, targetTerritoryID)
 	local currentTargetTerritory = nil;
-	print ("[execute NEUTRALIZE] terr=="..targetTerritoryID.."::");
+	-- print ("[execute NEUTRALIZE] terr=="..targetTerritoryID.."::");
 	currentTargetTerritory = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]; --current state of target territory, can check if it's already neutral, etc
 	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 	local targetTerritoryName = game.Map.Territories[targetTerritoryID].Name;
@@ -1916,12 +1954,12 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 	local impactedTerritoryOwnerID = nil;
 
 	impactedTerritoryOwnerID = currentTargetTerritory.OwnerPlayerID;
-	print ("[execute NEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..impactedTerritoryOwnerID);
+	-- print ("[execute NEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..impactedTerritoryOwnerID);
 
 	--check if the target territory is neutral already, and if so, do nothing
 	if (impactedTerritoryOwnerID == WL.PlayerID.Neutral) then
 	--if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then
-		print ("territory already neutral -- do nothing"); --this could happen if another mod or WZ makes the territory neutral after the order as input on client side but before this order processes
+		-- print ("territory already neutral -- do nothing"); --this could happen if another mod or WZ makes the territory neutral after the order as input on client side but before this order processes
 	else
 		-- if Neutralize applicability for Commanders or Specal Units is set to False, check for special units
 		local AbortDueToSettingsScope = false;
@@ -1934,15 +1972,15 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 
 		if (Mod.Settings.NeutralizeCanUseOnCommander == false or Mod.Settings.NeutralizeCanUseOnSpecials == false) then
 			--NeutralizeCanUseOnSpecials = CreateCheckBox(NeutralizeDetailsline2).SetIsChecked(Mod.Settings.NeutralizeCanUseOnSpecials).SetInteractable(true).SetText("Can use on Special Units");
-			print ("[Neutralization special unit inspection]--------------------- ");
+			-- print ("[Neutralization special unit inspection]--------------------- ");
 			--printObjectDetails (impactedTerritoryLastStanding, "[impactedTerritory]", "[Neutralization special unit inspection]");
 			--printObjectDetails (impactedTerritoryLastStanding.NumArmies.SpecialUnits, "[NumArmies.SpecialUnits]", "[Neutralization special unit inspection]");
 			
 			--check for specials
-			print ("[#impactedTerritoryLastStanding.NumArmies.SpecialUnits=="..#impactedTerritoryLastStanding.NumArmies.SpecialUnits.."::]");
+			-- print ("[#impactedTerritoryLastStanding.NumArmies.SpecialUnits=="..#impactedTerritoryLastStanding.NumArmies.SpecialUnits.."::]");
 			if (#impactedTerritoryLastStanding.NumArmies.SpecialUnits >= 1) then --territory has 1+ special units
 				for key, sp in pairs(impactedTerritoryLastStanding.NumArmies.SpecialUnits) do
-					print ("-----new special unit; ID=="..sp.ID..":: proxyType=="..sp.proxyType.."::"); --tostring(spModID));
+					-- print ("-----new special unit; ID=="..sp.ID..":: proxyType=="..sp.proxyType.."::"); --tostring(spModID));
 					if sp.proxyType == "Commander" then 
 						CommandersPresent = true;
 					else
@@ -1979,7 +2017,7 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 		end
 
 		if (AbortDueToSettingsScope == true) then
-			print ("SKIP THIS Neutralize -- specials/Commanders are in play & prohibited");
+			-- print ("SKIP THIS Neutralize -- specials/Commanders are in play & prohibited");
 			if (CommandersViolation == true and SpecialUnitsViolation == true) then
 				strNeutralizeSkipOrderMessage = "Commander and another Special Unit";
 			elseif (CommandersViolation == false and SpecialUnitsViolation == true) then
@@ -1993,62 +2031,53 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 
 			strNeutralizeSkipOrderMessage = "Neutralize action skipped due to presence of a " .. strNeutralizeSkipOrderMessage .. " on target territory "..targetTerritoryName;
 
-			print ("NEUTRALIZATION - skipOrder - playerID="..gameOrder.PlayerID.. "::territory="..targetTerritoryID .."/"..targetTerritoryName.."::"..strNeutralizeSkipOrderMessage.."::");
+			-- print ("NEUTRALIZATION - skipOrder - playerID="..gameOrder.PlayerID.. "::territory="..targetTerritoryID .."/"..targetTerritoryName.."::"..strNeutralizeSkipOrderMessage.."::");
 			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strNeutralizeSkipOrderMessage, {}, {},{}));
-			skip(WL.ModOrderControl.Skip);
+			skip(WL.ModOrderControl.SkipAndSupressSkippedMessage);
 
 		else
-			print ("PROCESS THIS Neutralize");
+			-- print ("PROCESS THIS Neutralize");
 
 			-- create special unit for Neutralize operations, place the special on the territory so it is visibly identifiable as being impacted by Neutralize; destroy the unit once captured or Deneutralized
-			local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Neutralize action)
-			builder.Name = 'Neutralized territory';
-			builder.IncludeABeforeName = false;
-			builder.ImageFilename = 'neutralizedTerritory.png'; --max size of 60x100 pixels
-			builder.AttackPower = 0;
-			builder.DefensePower = 0;
-			builder.DamageToKill = 0;
-			builder.DamageAbsorbedWhenAttacked = 0;
-			--builder.Health = 0;
-			builder.CombatOrder = 10001; --doesn't protect Commander
-			builder.CanBeGiftedWithGiftCard = false;
-			builder.CanBeTransferredToTeammate = false;
-			builder.CanBeAirliftedToSelf = false;
-			builder.CanBeAirliftedToTeammate = false;
-			builder.IsVisibleToAllPlayers = false;
-			builder.TextOverHeadOpt = "Neutralized";
-			--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-			local strUnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]";
-			--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-			builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
-			local specialUnit_Neutralize = builder.Build(); --save this in a table somewhere to destroy later
+			-- local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Neutralize action)
+			-- builder.Name = 'Neutralized territory';
+			-- builder.IncludeABeforeName = false;
+			-- builder.ImageFilename = 'neutralizedTerritory.png'; --max size of 60x100 pixels
+			-- builder.AttackPower = 0;
+			-- builder.DefensePower = 0;
+			-- builder.DamageToKill = 0;
+			-- builder.DamageAbsorbedWhenAttacked = 0;
+			-- --builder.Health = 0;
+			-- builder.CombatOrder = 10001; --doesn't protect Commander
+			-- builder.CanBeGiftedWithGiftCard = false;
+			-- builder.CanBeTransferredToTeammate = false;
+			-- builder.CanBeAirliftedToSelf = false;
+			-- builder.CanBeAirliftedToTeammate = false;
+			-- builder.IsVisibleToAllPlayers = false;
+			-- builder.TextOverHeadOpt = "Neutralized";
+			-- --builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
+			-- local strUnitDescription = tostring (Mod.Settings.NeutralizeDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."]";
+			-- --builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
+			-- builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+			-- local specialUnit_Neutralize = builder.Build(); --save this in a table somewhere to destroy later
 
-			--[[all SpecialUnit properties:
-			AttackPower integer:
-			AttackPowerPercentage number:
-			CanBeAirliftedToSelf boolean:
-			CanBeAirliftedToTeammate boolean:
-			CanBeGiftedWithGiftCard boolean:
-			CanBeTransferredToTeammate boolean:
-			CombatOrder integer:
-			DamageAbsorbedWhenAttacked integer:
-			DamageToKill integer:
-			DefensePower integer:
-			DefensePowerPercentage number:
-			Health Nullable<integer>: Added in v5.22.2
-			ImageFilename string:
-			IncludeABeforeName boolean:
-			IsVisibleToAllPlayers boolean:
-			ModData string:
-			Name string:
-			OwnerID PlayerID:
-			TextOverHeadOpt string:]]
+			--add Neutralize custom structure on territory for visibility; pic is neutralized territory.png
+			--&&&neutralize
+			local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+			if (structures == nil) then structures = {}; end;
+			if (structures[WL.StructureType.Custom("neutralized territory")] == nil) then
+				structures[WL.StructureType.Custom("neutralized territory")] = 1;
+			else
+				structures[WL.StructureType.Custom("neutralized territory")] = structures[WL.StructureType.Custom("neutralized territory")] + 1;
+			end
+
+			impactedTerritory.SetStructuresOpt = structures;
 
 			--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
 			impactedTerritory.SetOwnerOpt=WL.PlayerID.Neutral; --make the target territory neutral
-			impactedTerritory.AddSpecialUnits = {specialUnit_Neutralize}; --add special unit
+			-- impactedTerritory.AddSpecialUnits = {specialUnit_Neutralize}; --add special unit
 			table.insert (modifiedTerritories, impactedTerritory);
-			printObjectDetails (specialUnit_Neutralize, "Neutralize specialUnit", "Neutralize"); --show contents of the Neutralize special unit
+			-- printObjectDetails (specialUnit_Neutralize, "Neutralize specialUnit", "Neutralize"); --show contents of the Neutralize special unit
 
 			local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Neutralize action
 			local strNeutralizeOrderMessage = toPlayerName(gameOrder.PlayerID, game) ..' neutralized ' .. targetTerritoryName;
@@ -2073,7 +2102,8 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			print ("expire turn#="..turnNumber_NeutralizationExpires.."::duration=="..Mod.Settings.NeutralizeDuration.."::gameTurn#="..game.Game.TurnNumber.."::calcExpireTurn=="..game.Game.TurnNumber + Mod.Settings.NeutralizeDuration.."::");
 			--even if Neutralization duration==0, still make a note of the details of the Neutralization action, in case Deneutralization is used to revive the territory, it's key to know who it's assigned to
 			--consider making a special "Neutralization" special unit as a visual indifier that the territory was Neutralized and thus can be Deneutralized, or will auto-revive if that setting is in play
-			local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+			-- local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+			local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=nil};
 			--table.insert (privateGameData.NeutralizeData, neutralizeDataRecord);   --adds new record to table privateGameData.NeutralizeData, but table.insert auto-uses incremental integers for the keys, ie: wasted opportunity, instead assign it directly to the object @ element of the territory ID, then can access it via privateGameData.NeutralizeData[terrID] to get the record back instead of looping through the entire table to find it
 			privateGameData.NeutralizeData [targetTerritoryID] = neutralizeDataRecord;  --save record to privateGameData.NeutralizeData @ element of territory ID, so can reference it later via privateGameData.NeutralizeData[terrID] for easy use
 
@@ -2132,6 +2162,17 @@ function process_Isolation_expirations (game,addOrder)
 			local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
 
 			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the special unit from the territory
+
+			--remove the Isolation custom structure from the territory (remove both the SU & custom structure to account for cases where the SU already exists on the map already, a carry over from the previous visual, pre-custom Structures)
+			local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Custom("isolation")] == nil) then
+				structures[WL.StructureType.Custom("isolation")] = 0;
+			else
+				structures[WL.StructureType.Custom("isolation")] = 0; --set it to 0 instead of subtracting 1 b/c new Isolation invocations overwrite old ones, only 1 is truly active at any given time but it creates multiple Isolation indicators
+			end
+			impactedTerritory.SetStructuresOpt = structures;
+
 			local strRevertIsolationOrderMessage = "Isolation ends";
 
 			local event = WL.GameOrderEvent.Create(territoryOwnerID_current, strRevertIsolationOrderMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
@@ -2186,54 +2227,45 @@ function process_Neutralize_expirations (game,addOrder)
 
 			print ("[check REVERT NEUTRALIZE] terr=="..targetTerritoryID.."::terrName=="..targetTerritoryName.."::currentOwner=="..territoryOwnerID_current.."::formerOwner=="..territoryOwnerID_former);
 
+			local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
+			-- local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
+			--contents of neutralizeDataRecord are: {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
+			impactedTerritory.RemoveSpecialUnitsOpt = {neutralizeDataRecord.specialUnitID}; --remove the Neutralize special unit from the territory; no error occurs if object is already destroyed
+
+			--remove the Neutralized territory custom structure from the territory (remove both the SU & custom structure to account for cases where the SU already exists on the map already, a carry over from the previous visual, pre-custom Structures)
+			local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
+			if (structures[WL.StructureType.Custom("neutralized territory")] == nil) then
+				structures[WL.StructureType.Custom("neutralized territory")] = 0;
+			else
+				structures[WL.StructureType.Custom("neutralized territory")] = 0; --set it to 0 instead of subtracting 1 b/c there should only be 1; if multiple Neutralizes were played at once, there could be >1, but they'd all expire at the same time anyhow
+			end
+			impactedTerritory.SetStructuresOpt = structures;
+
+			local strRevertNeutralizeOrderMessage;
+
+			--only revert ownership to former territory owner if the territory is stil neutral; if another player or original player has captured it alread, don't change ownership
 			if (territoryOwnerID_current ~= WL.PlayerID.Neutral) then
 				--owned by another player, zannen munen
 				print ("owned by another player, zannen munen");
 				-- cancel the order, pop off the Neutralize record
-				neutralizeData[targetTerritoryID] = nil; --this eliminates this element from the table
+				strRevertNeutralizeOrderMessage = targetTerritoryName ..' was Neutralized but was already recaptured';
 			else
 				--territory is still neutral, so okay to revert it to original owner
 				print ("[EXECUTE Neutralize revert]");
-				local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
-				local modifiedTerritories = {}; --array of modified territories to pass into addOrder (in this case, just the 1 target territory)
-
-				--contents of neutralizeDataRecord are: {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
-				impactedTerritory.RemoveSpecialUnitsOpt = {neutralizeDataRecord.specialUnitID}; --remove the Neutralize special unit from the territory; no error occurs if object is already destroyed
-
-				--[[  --get Neutralize special ---
-				print ("#targetTerritory.NumArmies.SpecialUnits==".. #targetTerritory.NumArmies.SpecialUnits.."::");
-				if (#targetTerritory.NumArmies.SpecialUnits >= 1) then --territory has 1+ special units
-					for key, sp in pairs(targetTerritory.NumArmies.SpecialUnits) do
-				--if (#impactedTerritory.NumArmies.SpecialUnits >= 1) then --territory has 1+ special units
-					--for key, sp in (impactedTerritory.NumArmies.SpecialUnits) do
-						print ("-----new special unit; ID=="..sp.ID..":: proxyType=="..sp.proxyType.."::"); --tostring(spModID));
-						if sp.proxyType == "CustomSpecialUnit" then
-							print ("[CustomSpecialUnit] name=="..sp.Name.."::");
-						end
-						printObjectDetails (sp, "Neutralize special unit", "Neutralize Expire revive");
-						if (sp.Name == "Neutralized territory") then
-							impactedTerritory.RemoveSpecialUnitsOpt = {sp.ID};
-							print ("[kill special] ID="..sp.ID..":: name="..sp.Name.."::");
-						else
-							print ("[DON'T kill special] ID="..sp.ID..":: name="..sp.Name.."::");
-						end
-					end
-				end]]
 
 				impactedTerritory.SetOwnerOpt=territoryOwnerID_former;
-				table.insert (modifiedTerritories, impactedTerritory);
+				-- table.insert (modifiedTerritories, impactedTerritory);
 
 				local territoryOwnerName_former = toPlayerName (territoryOwnerID_former, game);
 				--local territoryOwnerName_former = game.Game.Players[territoryOwnerID_former].DisplayName(nil, false);
-				local strRevertNeutralizeOrderMessage = targetTerritoryName ..' reverted from neutral to owned by ' .. territoryOwnerName_former;
-				local event = WL.GameOrderEvent.Create(territoryOwnerID_former, strRevertNeutralizeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
-				event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
-				addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
-
-				--pop off this item from the Neutralize table!
-				neutralizeData[targetTerritoryID] = nil; --this eliminates this element from the table
-
+				strRevertNeutralizeOrderMessage = targetTerritoryName ..' reverted from neutral to owned by ' .. territoryOwnerName_former;
 			end
+
+			neutralizeData[targetTerritoryID] = nil; --this eliminates this element from the Neutralize table
+			local event = WL.GameOrderEvent.Create(territoryOwnerID_former, strRevertNeutralizeOrderMessage, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
+			event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
+			addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 		else
 			print ("expiry not yet");
 		end

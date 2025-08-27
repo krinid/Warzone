@@ -68,7 +68,7 @@ function populateMoveOrderControl (moveOrderData)
 			if (cboxShowActivePlayersOnly.GetIsChecked() == false or isPlayerActive (Game, playerID) == true) then
 				--game.ServerGame.Game.PlayingPlayers
 				numItemsDisplayed = numItemsDisplayed + 1;
-				UI.CreateLabel (vertMoveOrderDetails).SetText (numItemsDisplayed..". " ..getPlayerName (Game, playerID));
+				UI.CreateLabel (vertMoveOrderDetails).SetText (numItemsDisplayed..". " ..getPlayerName (Game, playerID)).SetColor (Game.Game.PlayingPlayers [playerID].Color.HtmlColor);
 			end
 		end
 	end
