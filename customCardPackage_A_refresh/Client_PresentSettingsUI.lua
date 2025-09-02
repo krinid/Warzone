@@ -177,7 +177,7 @@ function Client_PresentSettingsUI(rootParent)
 
     if (Mod.Settings.AirstrikeEnabled == true) then
         CreateLabel(UImain).SetText("\n[AIRSTRIKE]").SetColor(getColourCode("card play heading"));
-        CreateLabel(UImain).SetText("Conduct an aerial assault on any territory, bypassing normal borders.");
+        CreateLabel(UImain).SetText("Use an airlift to attack an enemy. Send armies from one of your territories to anywhere on the map");
 		CreateLabel(UImain).SetText("\nDeployment yield (%): "..Mod.Settings.AirstrikeDeploymentYield);
 		CreateLabel(UImain).SetText("• % of units that are killed during Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
 		CreateLabel(UImain).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");

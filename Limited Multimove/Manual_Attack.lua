@@ -226,8 +226,12 @@ function apply_damage_to_specials_and_armies (sortedSpecialUnits, armyCount, tot
 							print ("[RESURRECTION CHECK RESULT] Commander dies, player "..commanderOwner.."/"..getPlayerName (game, commanderOwner) .." does not have Resurrection card, eliminate player");
 							--local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory}); -- create Event object to send back to addOrder function parameter
 							--ELIM player!
-							local modifiedTerritories = eliminatePlayer (commanderOwner, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
-							addNewOrder(WL.GameOrderEvent.Create (commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
+
+							--elim player NEXT TURN to get updated LastTurnStanding
+							addNewOrder (WL.GameOrderEvent.Create (commanderOwner, "Limited Multimove|Commander killed"), true);
+
+							-- local modifiedTerritories = eliminatePlayer (commanderOwner, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
+							-- addNewOrder(WL.GameOrderEvent.Create (commanderOwner, getPlayerName (game, commanderOwner).."'s Commander was killed", {}, modifiedTerritories, {}, {}), true); --add event, use 'true' so this order is skipped if the order that kills the Commander is skipped
 							--reference: WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
 
 							--reference: function eliminatePlayer (playerIds, territories, removeSpecialUnits, isSinglePlayer)

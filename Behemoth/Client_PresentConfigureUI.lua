@@ -49,7 +49,7 @@ function Client_PresentConfigureUI(rootParent)
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	UI.CreateLabel (line).SetText ("        Per player per game: ");
-	maxBehemothsTotalPerPlayer = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsTotalPerPlayer).SetInteractable(false).SetPreferredWidth (40);
+	maxBehemothsTotalPerPlayer = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsTotalPerPlayer).SetInteractable(true).SetPreferredWidth (40);
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	UI.CreateLabel (line).SetText ("For all players simultaneously: ");

@@ -281,7 +281,7 @@ function createCards_newCards(alert, addCard);
 		print("AirstrikeStartPieces="..tostring(Mod.Settings.AirstrikeStartPieces))
 		print("AirstrikePiecesPerTurn="..tostring(Mod.Settings.AirstrikePiecesPerTurn))
 
-		local strAirstrikeDesc = "Launch an attack on a territory that you don't need to border";
+		local strAirstrikeDesc = "Use an airlift to attack an enemy. Send armies from one of your territories to anywhere on the map";
 		Mod.Settings.AirstrikeCardID = addCard("Airstrike", strAirstrikeDesc, "airstrike_130x180.png", Mod.Settings.AirstrikePiecesNeeded, Mod.Settings.AirstrikePiecesPerTurn, Mod.Settings.AirstrikeStartPieces, Mod.Settings.AirstrikeCardWeight);
 		Mod.Settings.AirstrikeDescription = strAirstrikeDesc;
 	end

@@ -36,11 +36,11 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
 	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
 
-	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately."..
-	"\n\n• < ".. tostring (intGoldLevel1).. " --> inefficient [better to buy armies]"..
-	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> efficient [may make sense to buy a Behemoth]"..
-	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> highly efficient [valuable to buy a Behemoth]"..
-	"\n• ≥ ".. tostring (intGoldLevel3).. " --> immensely efficient [incredibly beneficial to buy a Behemoth]");
+	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately. For same amount of gold spent:"..
+	"\n\n• < ".. tostring (intGoldLevel1).. " --> weaker than armies"..
+	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> stronger than armies [linearly]"..
+	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> much stronger than armies [multiplicatively]"..
+	"\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]");
 
 	BehemothCost_NumberInputField = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(intMaxAvailableGold).SetValue(intAvailableGold).SetPreferredWidth(100);--.SetOnChange(OnGoldAmountChanged);
 	BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetOnClick (
@@ -99,28 +99,35 @@ function countSUinstances (armies, strSUname, boolPatternMatch)
 end
 
 function PurchaseClicked()
-	--Check if they're already at max.  Add in how many they have on the map plus how many purchase orders they've already made
+	--Check if they're already at max simultaneous or max total per player per game limits.  Add in how many they have on the map plus how many purchase orders they've already made
 	--We check on the client for player convenience. Another check happens on the server, so even if someone hacks their client and removes this check they still won't be able to go over the max.
 
 	local playerID = Game.Us.ID;
+	local intBehemothMaxSimultaneousPerPlayer = Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5; --default to 5 if not set
+	local intBehemothMaxPerPlayerPerGame = Mod.Settings.BehemothMaxTotalPerPlayer or -1; --default to -1 (no limit) if not set by host
+	local numBehemothsAlreadyHaveTotalPerGame = Mod.PlayerGameData.TotalBehemothsCreatedThisGame or 0; --get # of Behemoths already created this game, if nil then default to 0
+	local numBehemothsAlreadyHaveSimultaneously = 0;
 
- 	local numBehemothsAlreadyHave = 0;
+	--count # of Behemoths currently on the map (note: if fogged to the owning player by a Smoke Bomb, etc, then they won't be counted and the player could exceed the max while the fog is active)
 	for _,ts in pairs(Game.LatestStanding.Territories) do
 		if (ts.OwnerPlayerID == playerID) then
-			numBehemothsAlreadyHave = numBehemothsAlreadyHave + countSUinstances (ts.NumArmies, "Behemoth", true);
+			numBehemothsAlreadyHaveSimultaneously = numBehemothsAlreadyHaveSimultaneously + countSUinstances (ts.NumArmies, "Behemoth", true);
 		end
 	end
 
 	for _,order in pairs(Game.Orders) do
 		if (order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, 'Behemoth|Purchase|')) then
-			numBehemothsAlreadyHave = numBehemothsAlreadyHave + 1;
+			numBehemothsAlreadyHaveSimultaneously = numBehemothsAlreadyHaveSimultaneously + 1;
+			numBehemothsAlreadyHaveTotalPerGame = numBehemothsAlreadyHaveTotalPerGame + 1;
 		end
 	end
 
-	-- limit # of Behemoths to 5 including units already on the map and bought in orders this turn
-	local intBehemothMaxSimultaneousPerPlayer = Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5; --default to 5 if not set
-	if (numBehemothsAlreadyHave >= intBehemothMaxSimultaneousPerPlayer) then
-		UI.Alert("Cannot create another Behemoth as you are already at the max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units");
+	-- limit # of Behemoths to value set by host (max 5) including units already on the map and bought in orders this turn
+	if (intBehemothMaxPerPlayerPerGame > 0 and numBehemothsAlreadyHaveTotalPerGame >= intBehemothMaxPerPlayerPerGame) then
+		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
+		return;
+	elseif (numBehemothsAlreadyHaveSimultaneously >= intBehemothMaxSimultaneousPerPlayer) then
+		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
 		return;
 	end
 

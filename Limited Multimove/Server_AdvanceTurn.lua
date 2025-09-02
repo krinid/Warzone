@@ -96,13 +96,10 @@ function toboolean (value)
 end
 
 function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
-	--print ("PROXY "..order.proxyType);
-	--if (order.proxyType == "GameOrderCustom") then checkForForcedOrder (game, order, result, skip, addNewOrder); end
-	--    if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'BuyTank_')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
-
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	-- this is code to skip AI moves (later ported into standalone Forced Orders mod)
 	-- if (order.PlayerID < 50) then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.PlayerID.."/".. order.proxyType); return; end
 	-- if (order.PlayerID < 50 and order.proxyType=="GameOrderAttackTransfer") then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); print ("******"..order.PlayerID.."/".. order.proxyType); return; end
 	--if (order.PlayerID < 50 and order.proxyType=="GameOrderAttackTransfer") then skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
@@ -113,24 +110,21 @@ function Server_AdvanceTurn_Order(game, order, result, skip, addNewOrder)
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
 
-
-	--game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID
--- 	if (order.proxyType ~= "GameOrderAttackTransfer") then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
--- 	dtsu = {};
--- 	dtsu [game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID] = 5;
--- 	result.DamageToSpecialUnits = dtsu;
--- 	--result.DamageToSpecialUnits = {game.ServerGame.LatestTurnStanding.Territories[order.From].NumArmies.SpecialUnits[1].ID, 5};
--- 	return;
--- end
-
--- function temp ()
-
-
-
-
-	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
-	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
-	-- DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME DELME 
+	--check if order is a custom order indicating a player's Commander was killed and they need to be eliminated
+	if (order.proxyType == "GameOrderEvent" and order.Message == "Limited Multimove|Commander killed") then
+		--check if player is still active; if so, eliminate them; if not, do nothing b/c they were already eliminated by the core WZ engine/process
+		--but always skip the current order so "Limited Multimove|Commander killed" is never displayed to players
+		if (isPlayerActive (order.PlayerID, game) == true) then
+			local modifiedTerritories = eliminatePlayer (order.PlayerID, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
+			addNewOrder(WL.GameOrderEvent.Create (order.PlayerID, getPlayerName (game, order.PlayerID).."'s Commander was killed", {}, modifiedTerritories, {}, {}), false);
+			--add event, use 'false' b/c this order was already added with 'true' so if this order exists, the original that caused this that eliminates the Commander wasn't skipped
+			--also we need to skip this custom order "Limited Multimove|Commander killed" so it doesn't show up in the order history list, it's meant to be a hidden game order only
+			--reference: WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
+			-- skip (WL.ModOrderControl.Skip);
+		end
+		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		return;
+	end
 
 	if (order.proxyType ~= "GameOrderAttackTransfer") then return; end --if order isn't an Attack or Transfer, nothing to do here, just skip to end of function
 	--order is an AttackTransfer

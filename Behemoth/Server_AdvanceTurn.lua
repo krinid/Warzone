@@ -177,6 +177,15 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	terrMod.AddSpecialUnits = {builder.Build()};
 
 	addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod}));
+
+	--increase count for total # Behemoths created this game for this player
+	local playerGameData = Mod.PlayerGameData;
+	local playerGameDataPlayer = playerGameData[order.PlayerID] or {}; --get PlayerGameData for this player, set to {} if nil
+	print ("[BEHEMOTH] # Behemoths created this game before this purchase: " .. tostring (playerGameDataPlayer.TotalBehemothsCreatedThisGame or 0));
+	playerGameDataPlayer.TotalBehemothsCreatedThisGame = 1 + (playerGameDataPlayer.TotalBehemothsCreatedThisGame or 0); --get # of Behemoths already created this game for this player, if nil then default to 0, then add 1 to reflect the Behemoth just created
+	print ("[BEHEMOTH] # Behemoths created this game after this purchase: " .. tostring (playerGameDataPlayer.TotalBehemothsCreatedThisGame or 0));
+	playerGameData[order.PlayerID] = playerGameDataPlayer;
+	Mod.PlayerGameData = playerGameData; --save PlayerGameData
 end
 
 function countSUinstances (armies)

@@ -844,9 +844,9 @@ function airstrikeCheckboxClicked()
 		CreateLabel(UIcontainer).SetText(" ");
 
 		AirstrikeMoveUnitsWithAirliftCard = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard).SetInteractable(true).SetText("Move units with airlift cards");
-		UI.CreateLabel (UIcontainer).SetText("• UNCHECK this if using Late Airlifts or Transport Only Airlifts mods").SetColor (getColourCode ("error"));
-		UI.CreateLabel (UIcontainer).SetText("• checked - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with mods Late Airlifts or Tranport Only Airlifts");
-		UI.CreateLabel (UIcontainer).SetText("• unchecked - moves units using mod code; does not create airlift travel arrows -- works with mods Late Airlifts or Transport Only Airlifts");
+		UI.CreateLabel (UIcontainer).SetText("• UNCHECK this if using Transport Only Airlifts mods").SetColor (getColourCode ("error"));
+		UI.CreateLabel (UIcontainer).SetText("• checked - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with Tranport Only Airlifts mod; works properly with Late Airlifts v2 mod (but not Late Airlifts v1)");
+		UI.CreateLabel (UIcontainer).SetText("• unchecked - moves units using mod code; does not create airlift travel arrows -- works with mods Transport Only Airlifts");
 
 		--local horz = CreateHorz(UIcontainer);
 		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
