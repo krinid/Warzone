@@ -22,7 +22,7 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 
 	horz = UI.CreateHorizontalLayoutGroup(MainUI).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("Gold amount: ");
-	UI.CreateButton(MainUI).SetText("Purchase a Behemoth").SetOnClick(PurchaseClicked);
+	UI.CreateButton(MainUI).SetText("Purchase a Behemoth").SetOnClick(PurchaseClicked).SetColor ("#008000");
 
 	local intMaxAvailableGold = game.LatestStanding.NumResources(game.Us.ID, WL.ResourceType.Gold); --amount of gold player has available (but some might be spent already)
 	local intAvailableGold = game.LatestStanding.NumResources(game.Us.ID, WL.ResourceType.Gold); --max available gold minus any already spent this turn -- once I figured out how to do that; for now just use max available gold
@@ -43,7 +43,7 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	"\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]");
 
 	BehemothCost_NumberInputField = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(intMaxAvailableGold).SetValue(intAvailableGold).SetPreferredWidth(100);--.SetOnChange(OnGoldAmountChanged);
-	BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetOnClick (
+	BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetColor ("#00F4FF").SetOnClick (
 		function ()
 			BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
 			--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
@@ -141,14 +141,17 @@ end
 
 function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, close)
 	Close2 = close;
+	setMaxSize(400, 500);
 
 	local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
 	UI.CreateLabel(vert).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
+	UI.CreateLabel(vert).SetText("• max " ..tostring (Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5).. " units can be on map per player simultaneously");
+	UI.CreateLabel(vert).SetText("• " ..tostring (Mod.PlayerGameData.TotalBehemothsCreatedThisGame or 0).. " of max " ..tostring (Mod.Settings.BehemothMaxTotalPerPlayer or -1).. " units created so far\n");
 
-	SelectTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(SelectTerritoryClicked);
+	SelectTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetColor ("#00F4FF").SetOnClick(SelectTerritoryClicked);
 	TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
 
-	buttonBuyBehemoth = UI.CreateButton(vert).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked);
+	buttonBuyBehemoth = UI.CreateButton(vert).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
 
 	local behemothCost = BehemothCost_NumberInputField.GetValue();
 	local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
@@ -169,7 +172,7 @@ function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	-- local behemothPower = getBehemothPower(BehemothGoldSpent);
 	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to"); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Behemoth to").SetColor(getColourCode("error")); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
 	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
@@ -188,9 +191,9 @@ function TerritoryClicked(terrDetails)
 	else
 		--Territory was clicked, check it
 		if (Game.LatestStanding.Territories[terrDetails.ID].OwnerPlayerID ~= Game.Us.ID) then
-			TargetTerritoryInstructionLabel.SetText("Select a territory that you own");
+			TargetTerritoryInstructionLabel.SetText("Select a territory that you own").SetColor(getColourCode("error"));
 		else
-			TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
+			TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name).SetColor(getColourCode("subheading"));
 			SelectedTerritory = terrDetails;
 			buttonBuyBehemoth.SetInteractable(true);
 		end

@@ -24,32 +24,34 @@ function Client_PresentConfigureUI(rootParent)
 	local intMaxBehemothsTotalForAllPlayers = Mod.Settings.BehemothMaxTotalForAllPlayers or -1; --default to -1; this means no limit
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
-	UI.CreateLabel (line).SetText ("Gold level 1 (G1)");
+	UI.CreateLabel (line).SetText ("Gold level 1 (G1)").SetColor ("#00CCFF");
 	UI.CreateEmpty (line); UI.CreateEmpty (line); UI.CreateEmpty (line);
 	-- UI.CreateLabel (line).SetText ("_").SetColor ("#000000");
 	goldLevel1NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel1).SetPreferredWidth (60);
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
-	UI.CreateLabel (line).SetText ("Gold level 2 (G2) ");
+	UI.CreateLabel (line).SetText ("Gold level 2 (G2) ").SetColor ("#00CCFF");
 	UI.CreateEmpty (line); UI.CreateEmpty (line); UI.CreateEmpty (line);
 	-- UI.CreateLabel (line).SetText ("_").SetColor ("#000000");
 	goldLevel2NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel2).SetPreferredWidth (60);
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
-	UI.CreateLabel (line).SetText ("Gold level 3 (G3) ");
+	UI.CreateLabel (line).SetText ("Gold level 3 (G3) ").SetColor ("#00CCFF");
 	UI.CreateEmpty (line); UI.CreateEmpty (line); UI.CreateEmpty (line);
 	goldLevel3NIF = UI.CreateNumberInputField (line).SetValue (intGoldLevel3).SetPreferredWidth (60);
 
-	UI.CreateLabel (rootParent).SetText ("\n[Max # of Behemoths]");
+	UI.CreateLabel (rootParent).SetText ("\n[Max # of Behemoths]").SetColor ("#FFFF00");
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	UI.CreateLabel (line).SetText ("Per player simultaneously: ");
-	maxBehemothsSimulPerPlayer = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsSimulPerPlayer).SetInteractable(true).SetPreferredWidth (40);
+	maxBehemothsSimulPerPlayer = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsSimulPerPlayer).SetInteractable(true).SetPreferredWidth (40).SetSliderMinValue (1).SetSliderMaxValue (5);
+	UI.CreateLabel (rootParent).SetText ("[minimum 1, maximum 5]").SetColor ("#770077");
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	UI.CreateLabel (line).SetText ("        Per player per game: ");
-	maxBehemothsTotalPerPlayer = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsTotalPerPlayer).SetInteractable(true).SetPreferredWidth (40);
+	maxBehemothsTotalPerPlayer = UI.CreateNumberInputField (line).SetInteractable(true).SetPreferredWidth (40).SetSliderMinValue (5).SetSliderMaxValue (15).SetValue (intMaxBehemothsTotalPerPlayer);
+	UI.CreateLabel (rootParent).SetText ("[set to -1 for No Limit, no minimum or maximum values]").SetColor ("#770077");
 	-- UI.CreateLabel (line).SetText (" ").SetFlexibleWidth (0.5);
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	UI.CreateLabel (line).SetText ("For all players simultaneously: ");
@@ -57,7 +59,7 @@ function Client_PresentConfigureUI(rootParent)
 	local line = UI.CreateHorizontalLayoutGroup (rootParent).SetFlexibleWidth (1.0);
 	UI.CreateLabel (line).SetText ("For all players total per game: ");
 	maxBehemothsTotalForAllPlayers = UI.CreateNumberInputField (line).SetValue (intMaxBehemothsTotalForAllPlayers).SetInteractable(false);
-	UI.CreateLabel (rootParent).SetText ("(use -1 for No limit)");
+	-- UI.CreateLabel (rootParent).SetText ("(use -1 for No limit)");
 
 	-- UI.CreateLabel (rootParent).SetText ("_").SetColor ("#000000");
 	UI.CreateLabel (rootParent).SetText (" \n ");
@@ -66,7 +68,7 @@ function Client_PresentConfigureUI(rootParent)
 	UI.CreateLabel (rootParent).SetText ("When checked, a Behemoth can attack neutral territories of any size without taking damage, cannot die during the attack");
 
 	local line = UI.CreateHorizontalLayoutGroup (rootParent);
-	UI.CreateLabel (line).SetText ("Strength against neutrals: ");
+	UI.CreateLabel (line).SetText ("Strength against neutrals: ").SetColor ("#00CCFF");
 	neutralStrengthNIF = UI.CreateNumberInputField (line).SetWholeNumbers(false).SetValue (intStrengthAgainstNeutrals);
 	UI.CreateLabel (rootParent).SetText ("• <1.0 - reduced damage vs neutrals");
 	UI.CreateLabel (rootParent).SetText ("• =1.0 - normal damage vs neutrals");
