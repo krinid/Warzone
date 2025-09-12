@@ -896,20 +896,63 @@ function forestFireCheckboxClicked()
 		vertForestFireSettingsDetails = CreateVert(vertForestFireSettingsHeading);
 		UIcontainer = vertForestFireSettingsDetails;
 		ForestFireDetailsline1 = CreateHorz(UIcontainer);
-		ForestFireDetailsline2 = CreateHorz(UIcontainer);
-		ForestFireDetailsline3 = CreateHorz(UIcontainer);
-		CreateLabel(ForestFireDetailsline1).SetText("Duration: ");
+
+		--set default values if not configured already
+		Mod.Settings.ForestFireDuration = Mod.Settings.ForestFireDuration or 3; --get Duration amount from Mod.Settings, default to 3
+		Mod.Settings.ForestFireSpreadRange = Mod.Settings.ForestFireSpreadRange or 5; --get Spread Range from Mod.Settings, default to 5
+		Mod.Settings.ForestFireDamage = Mod.Settings.ForestFireDamage or 15; --get Fixed Damage amount from Mod.Settings, default to 25
+		Mod.Settings.ForestFireDamagePercent = Mod.Settings.ForestFireDamagePercent or 0; --get % Damage amount from Mod.Settings, default to 0
+		Mod.Settings.ForestFireDamageDeltaWithSpread = Mod.Settings.ForestFireDamageDeltaWithSpread or 25; --get damage reduction amount (%), default to 25
+
+		-- safe boolean defaults (false must remain false)
+		Mod.Settings.ForestFireAffectNeutrals = (Mod.Settings.ForestFireAffectNeutrals == nil) and true or Mod.Settings.ForestFireAffectNeutrals;
+		Mod.Settings.ForestFireAllowFriendlyFire = (Mod.Settings.ForestFireAllowFriendlyFire == nil) and true or Mod.Settings.ForestFireAllowFriendlyFire;
+
+		UI.CreateLabel (ForestFireDetailsline1).SetText("Duration: ");
 		ForestFireCardDuration = CreateNumberInputField(ForestFireDetailsline1).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ForestFireDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(ForestFireDetailsline2).SetText("Number of pieces to divide the card into: ");
-		ForestFireCardPiecesNeeded = CreateNumberInputField(ForestFireDetailsline2).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzForestFireSpreadRange = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireSpreadRange).SetText ("Spread range (# territories): ");
+		ForestFireSpreadRange = UI.CreateNumberInputField (horzForestFireSpreadRange).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.ForestFireSpreadRange).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(ForestFireDetailsline3).SetText("Pieces given to each player at the start: ");
-		ForestFireCardStartPieces = CreateNumberInputField(ForestFireDetailsline3).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzForestFireDamageDeltaWithSpread = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireDamageDeltaWithSpread).SetText ("Damage reduction as it spreads (%): ");
+		ForestFireDamageDeltaWithSpread = UI.CreateNumberInputField (horzForestFireDamageDeltaWithSpread).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.ForestFireDamageDeltaWithSpread).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzForestFireDamage = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireDamage).SetText ("Damage (%): ");
+		ForestFireDamagePercent = UI.CreateNumberInputField (horzForestFireDamage).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.ForestFireDamagePercent).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzForestFireDamage = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireDamage).SetText ("Damage (fixed): ");
+		ForestFireDamage = UI.CreateNumberInputField (horzForestFireDamage).SetSliderMinValue(1).SetSliderMaxValue(25).SetValue(Mod.Settings.ForestFireDamage).SetWholeNumbers(true).SetInteractable(true);
+
+		ForestFireFriendlyFire = UI.CreateCheckBox (UIcontainer).SetIsChecked(Mod.Settings.ForestFireAllowFriendlyFire).SetInteractable(true).SetText("Friendly fire (can harm yourself)");
+		ForestFireAffectNeutrals = UI.CreateCheckBox (UIcontainer).SetIsChecked(Mod.Settings.ForestFireAffectNeutrals).SetInteractable(true).SetText("Affects neutrals");
+
+		local horzForestFireCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		ForestFireCardPiecesNeeded = CreateNumberInputField(horzForestFireCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzForestFireCardStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel(horzForestFireCardStartPieces).SetText("Pieces given to each player at the start: ");
+		ForestFireCardStartPieces = CreateNumberInputField(horzForestFireCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireStartPieces).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzForestFirePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFirePiecesPerTurn).SetText ("  Minimum pieces awarded per turn: ");
+		CardPiecesPiecesPerTurn = UI.CreateNumberInputField (horzForestFirePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFireCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzForestFireCardWeight).SetText("Card weight: ");
-		ForestFireCardWeight = CreateNumberInputField(horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		ForestFireCardWeight = CreateNumberInputField(horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireCardWeight).SetWholeNumbers(false).SetInteractable(true);
+
+    local intSpreadRange    = Mod.Settings.ForestFireSpreadRange or 5; --get Spread Range from Mod.Settings, default to 5
+    local intDamageDelta    = Mod.Settings.ForestFireDamageDeltaWithSpread or 25; --get damage reduction amount (%), default to 25
+
+    -- safe boolean defaults (false must remain false)
+    local boolAffectNeutrals   = (Mod.Settings.ForestFireAffectNeutrals == nil) and true or Mod.Settings.ForestFireAffectNeutrals;
+    local boolAllowFriendlyFire = (Mod.Settings.ForestFireAllowFriendlyFire == nil) and true or Mod.Settings.ForestFireAllowFriendlyFire;
+
 	end
 end
 
@@ -1033,7 +1076,7 @@ function nukeCheckboxClicked ()
 		NukeCardConnectedTerritoriesSpreadDamageDelta = CreateNumberInputField(horzNukeCardConnectedTerritoriesSpreadDamageDelta).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta).SetWholeNumbers(true).SetInteractable(true);
 		CreateLabel(UIcontainer).SetText("(damage is reduced with each step from epicenter)");
 		CreateHorz(UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
-		
+
 		horzNukeFriendlyfire = CreateHorz(UIcontainer);
 		NukeFriendlyfire = CreateCheckBox(horzNukeFriendlyfire).SetIsChecked(Mod.Settings.NukeFriendlyfire).SetInteractable(true).SetText("Friendly fire (can harm yourself)");
 
@@ -1066,6 +1109,11 @@ function nukeCheckboxClicked ()
 		horzNukeCardStartPieces = CreateHorz (UIcontainer);
 		CreateLabel(horzNukeCardStartPieces).SetText("Pieces given to each player at the start: ");
 		NukeCardStartPieces = CreateNumberInputField(horzNukeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardStartPieces).SetWholeNumbers(true).SetInteractable(true);
+
+		local horzNukePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukePiecesPerTurn).SetText ("  Minimum pieces awarded per turn: ");
+		Mod.Settings.NukePiecesPerTurn = Mod.Settings.NukePiecesPerTurn or 1; --default to 1 if not configured
+		NukePiecesPerTurn = UI.CreateNumberInputField (horzNukePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
 		horzNukeCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzNukeCardWeight).SetText("Card weight (how common the card is): ");
@@ -1428,6 +1476,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.NukeImplementationPhase = NukeImplementationPhase.GetText();
 		Mod.Settings.NukeFriendlyfire = NukeFriendlyfire.GetIsChecked();
 		Mod.Settings.NukeCardPiecesNeeded = NukeCardPiecesNeeded.GetValue();
+		Mod.Settings.NukePiecesPerTurn = NukePiecesPerTurn.GetValue();
 		Mod.Settings.NukeCardStartPieces = NukeCardStartPieces.GetValue();
 		Mod.Settings.NukeCardWeight = NukeCardWeight.GetValue();
 	end
@@ -1489,7 +1538,14 @@ function updateModSettingsFromUI()
 		Mod.Settings.ForestFireDuration = ForestFireCardDuration.GetValue();
 		Mod.Settings.ForestFirePiecesNeeded = ForestFireCardPiecesNeeded.GetValue();
 		Mod.Settings.ForestFireStartPieces = ForestFireCardStartPieces.GetValue();
+		Mod.Settings.ForestFirePiecesPerTurn = CardPiecesPiecesPerTurn.GetValue();
 		Mod.Settings.ForestFireCardWeight = ForestFireCardWeight.GetValue();
+		Mod.Settings.ForestFireSpreadRange = ForestFireSpreadRange.GetValue();
+		Mod.Settings.ForestFireDamageDeltaWithSpread = ForestFireDamageDeltaWithSpread.GetValue();
+		Mod.Settings.ForestFireDamagePercent = ForestFireDamagePercent.GetValue();
+		Mod.Settings.ForestFireDamage = ForestFireDamage.GetValue();
+		Mod.Settings.ForestFireAllowFriendlyFire = ForestFireFriendlyFire.GetIsChecked ();
+		Mod.Settings.ForestFireAffectNeutrals = ForestFireAffectNeutrals.GetIsChecked ();
 	end
 end
 

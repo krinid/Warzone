@@ -297,8 +297,8 @@ function createCards_newCards(alert, addCard);
 		print("ForestFireStartPieces="..tostring(Mod.Settings.ForestFireStartPieces))
 		print("ForestFirePiecesPerTurn="..tostring(Mod.Settings.ForestFirePiecesPerTurn))
 
-		local strForestFireDesc = "Start a forest fire that spreads farther each turn"; ---&&& add details of FF specs
-		Mod.Settings.ForestFireCardID = addCard("Forest Fire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
+		local strForestFireDesc = "Ignite a wildfire that spreads farther each turn";
+		Mod.Settings.ForestFireCardID = addCard("Wildfire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
 		Mod.Settings.ForestFireDescription = strForestFireDesc;
 	end
 	--print ("END   create new cards");
@@ -354,7 +354,8 @@ function createCards_originalCCP_cards (alert, addCard)
 				strNukeDesc = strNukeDesc .. "\n\nNegative damage has been configured, which transforms the result into a Healing Nuke. This will increase army counts on territories instead of reducing them.";
 		end
 
-		Mod.Settings.NukeCardID = addCard("Nuke", strNukeDesc, "nuke_card_image_130x180.png", Mod.Settings.NukeCardPiecesNeeded, 1, Mod.Settings.NukeCardStartPieces, Mod.Settings.NukeCardWeight);
+		Mod.Settings.NukeCardID = addCard("Nuke", strNukeDesc, "nuke_card_image_130x180.png", Mod.Settings.NukeCardPiecesNeeded, Mod.Settings.NukePiecesPerTurn, Mod.Settings.NukeCardStartPieces, Mod.Settings.NukeCardWeight);
+
 		Mod.Settings.NukeDescription = strNukeDesc;
 		if Mod.Settings.NukeCardID == nil then
 				print ("Nuke cardID is nil");

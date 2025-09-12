@@ -6,6 +6,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	for playerID,objPlayer in pairs (game.ServerGame.Game.Players) do
 		local intIncome = objPlayer.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total;
+		if (playerID == nil or game.ServerGame.LatestTurnStanding.Resources [playerID] == nil or game.ServerGame.LatestTurnStanding.Resources [playerID][WL.ResourceType.Gold] == nil) then return; end --if playerID or the resources table is nil, just exit; maybe player is eliminated/booted?
 		local intGoldInHand = game.ServerGame.LatestTurnStanding.Resources [playerID][WL.ResourceType.Gold];
 		-- print (playerID.."/"..objPlayer.DisplayName (nil, false).. ", gold " ..game.ServerGame.LatestTurnStanding.Resources [playerID][WL.ResourceType.Gold].. ", income " ..objPlayer.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total); --assume 0 reinf cards, use most recent standing, bypass army cap, bypass sanction cards
 		-- print (playerID.."/"..objPlayer.DisplayName (nil, false).. ", gold " ..intGoldInHand.. ", income " ..intIncome); --assume 0 reinf cards, use most recent standing, bypass army cap, bypass sanction cards
