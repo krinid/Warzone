@@ -1907,7 +1907,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 			neutralizeData[targetTerritoryID] = nil;
 			impactedTerritory.RemoveSpecialUnitsOpt = {specialUnitID}; --remove the 'Neutralized' special unit from the territory
 
-			print ("[DENEUTRALIZE] remove special "..specialUnitID.."::");
+			print ("[DENEUTRALIZE] remove special " ..tostring (specialUnitID).. "::");
 			--print ("[DENEUTRALIZE] #specials on target territory: "..#impactedTerritory.NumArmies.SpecialUnits.."::]");
 			--for k,sp in pairs (currentTargetTerritory.NumAries.SpecialUnits) do
 			--	print ("[DENEUTRALIZE] "..k..", special Name: "..sp.Name..", proxyType "..sp.proxyType..", ID "..sp.ID.."::");

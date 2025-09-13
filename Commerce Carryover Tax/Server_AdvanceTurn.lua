@@ -11,8 +11,9 @@ function Server_AdvanceTurn_End(game, addOrder)
 		-- print (playerID.."/"..objPlayer.DisplayName (nil, false).. ", gold " ..game.ServerGame.LatestTurnStanding.Resources [playerID][WL.ResourceType.Gold].. ", income " ..objPlayer.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total); --assume 0 reinf cards, use most recent standing, bypass army cap, bypass sanction cards
 		-- print (playerID.."/"..objPlayer.DisplayName (nil, false).. ", gold " ..intGoldInHand.. ", income " ..intIncome); --assume 0 reinf cards, use most recent standing, bypass army cap, bypass sanction cards
 		local intTaxableAmount = math.max (1, math.floor (intGoldInHand - (intIncome * intTaxStartAmount) + 0.5)); --minimum 1 gold if above threshold up
-		local intTaxAmount = math.floor (intTaxableAmount * intTaxRate); --round down to nearest whole gold
-		-- print ("  taxable amount " ..intTaxableAmount.. ", tax amount " ..intTaxAmount);
+		local intTaxAmount = math.floor (intTaxableAmount * intTaxRate + 0.5); --round to nearest whole gold
+		if (intGoldInHand > 0) then intTaxAmount = math.max (1, intTaxAmount); end --if player is carrying over gold, minimum tax is 1 gold
+		print ("  taxable amount " ..intTaxableAmount.. ", tax amount " ..intTaxAmount);
 		if (intTaxAmount > 0) then
 				addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, {}, {WL.IncomeMod.Create (playerID, -intTaxAmount, "Carryover tax (" .. tostring (intTaxAmount) .. ")")}));
 		end
