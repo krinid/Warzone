@@ -47,9 +47,9 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
     elseif (strCardBeingPlayed=="Airstrike") then
         print ("PLAY AIRSTRIKE");
         play_Airstrike_card (game, cardInstance, playCard)
-    elseif (strCardBeingPlayed=="Forest Fire") then
-        print ("PLAY FOREST FIRE");
-        play_ForestFire_card (game, cardInstance, playCard)
+    elseif (strCardBeingPlayed=="Forest Fire" or strCardBeingPlayed=="Wildfire") then
+        print ("PLAY WILDFIRE");
+        play_Wildfire_card (game, cardInstance, playCard)
     else
         print ("A custom card that the Custom Card Pack A does not handle has been played. card played="..strCardBeingPlayed.."::");
     end
@@ -597,7 +597,7 @@ function play_Isolation_card(game, cardInstance, playCard)
 end
 
 function play_Pestilence_card(game, cardInstance, playCard)
-    if(game.Us.HasCommittedOrders == true)then
+    if (game.Us.HasCommittedOrders == true) then
         UI.Alert("You need to uncommit first");
         return;
     end
@@ -687,6 +687,50 @@ function Pestilence(playerID,game,playCard,rootParent,close)
         print ("[PESTILENCE] card played; ".. strPlayerName_cardPlayer .. " invokes pestilence on " .. strTargetPlayerName, strModData, Gift);
         close();
     end
+end
+
+function play_Wildfire_card (game, cardInstance, playCard)
+    TargetTerritoryID = nil;
+    TargetTerritoryName = nil;
+    -- local strWildfireImplementationPhase; --friendly name of the turnPhase Wildfires will execute on
+    -- local intImplementationPhase;     --the internal WL # that represents the turnPhase that Wildfires will execte on
+
+    -- strWildfireImplementationPhase = Mod.Settings.WildfireImplementationPhase;
+    -- intImplementationPhase = WLturnPhases()[strWildfireImplementationPhase];
+    -- print ("Wildfire turnPhase=="..strWildfireImplementationPhase.."/"..intImplementationPhase.."::");
+
+    game.CreateDialog(
+    function(rootParent, setMaxSize, setScrollable, game, close)
+        setMaxSize(400, 300);
+        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        CreateLabel (vert).SetText ("[WILDFIRE]\n\n").SetColor (getColourCode("card play heading"));
+
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+        TargetTerritoryClicked("Select the territory you wish to ignite with Wildfire"); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+
+        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
+        function()
+            --check for CANCELED request, ie: no territory selected
+            if (TargetTerritoryID == nil) then
+                UI.Alert("No territory selected. Please select a territory.");
+                return;
+            end
+            print ("[!player!] Wildfire order input prep::");
+            print ("[!player!] Wildfire order input::terr=" .. TargetTerritoryName .."::Wildfire|" .. TargetTerritoryID.."::");
+
+            local strWildfireMessage = strPlayerName_cardPlayer .." ignites wildfire on " .. TargetTerritoryName;
+            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+            if (WL.IsVersionOrHigher("5.34.1")) then
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Wildfire", 8, getColourInteger(255, 128, 0))}; --Dark Red annotation background for Wildfire
+                playCard (strWildfireMessage, 'Wildfire|' .. TargetTerritoryID, nil, nil, jumpToActionSpotOpt);
+                -- playCard (strAirstrikeMsg, strAirstrikeOrder, nil, territoryAnnotations, jumpToActionSpotOpt); --[[, intImplementationPhase]]
+            else
+                playCard (strWildfireMessage, 'Wildfire|' .. TargetTerritoryID);
+            end
+            close();
+        end);
+    end);
 end
 
 function play_Nuke_card(game, cardInstance, playCard)

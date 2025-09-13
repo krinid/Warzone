@@ -48,6 +48,7 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel(UImain).SetText("Friendly fire (can harm yourself): " .. tostring(Mod.Settings.NukeFriendlyfire));
         CreateLabel(UImain).SetText("Implementation phase: " .. Mod.Settings.NukeImplementationPhase);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.NukeCardPiecesNeeded);
+        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.NukePiecesPerTurn);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.NukeCardStartPieces);
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.NukeCardWeight);
     end
@@ -177,7 +178,7 @@ function Client_PresentSettingsUI(rootParent)
 
     if (Mod.Settings.AirstrikeEnabled == true) then
         CreateLabel(UImain).SetText("\n[AIRSTRIKE]").SetColor(getColourCode("card play heading"));
-        CreateLabel(UImain).SetText("Conduct an aerial assault on any territory, bypassing normal borders.");
+        CreateLabel(UImain).SetText("Use an airlift to attack an enemy. Send armies from one of your territories to anywhere on the map");
 		CreateLabel(UImain).SetText("\nDeployment yield (%): "..Mod.Settings.AirstrikeDeploymentYield);
 		CreateLabel(UImain).SetText("• % of units that are killed during Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
 		CreateLabel(UImain).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
@@ -204,13 +205,20 @@ function Client_PresentSettingsUI(rootParent)
     end
 
     if (Mod.Settings.ForestFireEnabled == true) then
-        CreateLabel(UImain).SetText("\n[FOREST FIRE]").SetColor(getColourCode("card play heading"));
+        CreateLabel(UImain).SetText("\n[WILDFIRE]").SetColor(getColourCode("card play heading"));
         CreateLabel(UImain).SetText("Ignite a fire that gradually spreads to neighboring territories.");
         CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.ForestFireDuration);
+        CreateLabel(UImain).SetText("Spread range: " .. tostring (Mod.Settings.ForestFireSpreadRange or 5)); --get Spread Range from Mod.Settings, default to 5
+		CreateLabel(UImain).SetText("% damage: " .. tostring (Mod.Settings.ForestFireDamagePercent or 0)); --get % Damage amount from Mod.Settings, default to 0
+		CreateLabel(UImain).SetText("Fixed damage: " .. tostring (Mod.Settings.ForestFireDamage or 15)); --get Fixed Damage amount from Mod.Settings, default to 25
+		CreateLabel(UImain).SetText("% reduction with spread: " .. tostring (Mod.Settings.ForestFireDamageDeltaWithSpread or 25)); --get Fixed Damage amount from Mod.Settings, default to 25
+		CreateLabel(UImain).SetText("Affects neutrals: " .. tostring ((Mod.Settings.ForestFireAffectNeutrals == nil) and true or Mod.Settings.ForestFireAffectNeutrals)); --get AffectsNeutrals boolean value from Mod.Settings, default to true
+		CreateLabel(UImain).SetText("Friendly fire: " .. tostring ((Mod.Settings.ForestFireAllowFriendlyFire == nil) and true or Mod.Settings.ForestFireAllowFriendlyFire)); --get AffectsNeutrals boolean value from Mod.Settings, default to true
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.ForestFirePiecesNeeded);
+        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.ForestFirePiecesPerTurn);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.ForestFireStartPieces);
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.ForestFireCardWeight);
-    end
+end
 
     if (Mod.Settings.EarthquakeEnabled == true) then
         CreateLabel(UImain).SetText("\n[EARTHQUAKE]").SetColor(getColourCode("card play heading"));
