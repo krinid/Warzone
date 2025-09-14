@@ -162,6 +162,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado == true) then showTornadoData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
     if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.ForestFire == true) then showWildfireData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Shield == true) then
@@ -289,9 +290,21 @@ function showPestilenceData ()
 
     for k,v in pairs (Mod.PublicGameData.PestilenceData) do
         --printObjectDetails (v,"record", "PestilenceData");
-        CreateLabel (MenuWindow).SetText ("["..k.."] target " ..v.targetPlayer.."/"..toPlayerName (v.targetPlayer, Game)..", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", warning T"..v.PestilenceWarningTurn..", Start T"..v.PestilenceStartTurn..", End T"..v.PestilenceEndTurn);
+        CreateLabel (MenuWindow).SetText ("["..k.."] target " ..v.territory.."/"..toPlayerName (v.targetPlayer, Game)..", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", warning T"..v.PestilenceWarningTurn..", Start T"..v.PestilenceStartTurn..", End T"..v.PestilenceEndTurn);
 		--for reference: publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
+    end
+end
 
+function showWildfireData ()
+    CreateLabel (MenuWindow).SetText ("\nWildfire data:");
+    CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.WildfireData));
+
+	if (tablelength (Mod.PublicGameData.WildfireData)) == 0 then CreateLabel (MenuWindow).SetText ("WildfireData is empty"); return; end
+
+    for k,v in pairs (Mod.PublicGameData.WildfireData) do
+        --printObjectDetails (v,"record", "PestilenceData");
+        CreateLabel (MenuWindow).SetText ("["..k.."] terr " ..v.territory.. "/" ..getTerritoryName (v.territory, Game).. ", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", start T"..v.turnNumberWildfireStarts.. ", cycle# "..v.cycleNumber..", #terrs impacted " ..tablelength(v.territoryState));
+		-- ref: Wildfire record is: territory, castingPlayer, turnNumberWildfireStarts, cycleNumber, territoryState (array of impacted territories)
     end
 end
 

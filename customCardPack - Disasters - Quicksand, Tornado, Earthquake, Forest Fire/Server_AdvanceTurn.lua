@@ -2357,12 +2357,12 @@ local function getTeamIDOrNil(game, playerID)
     return p.Team; -- integer or nil
 end
 
-local function AreOnSameTeam(game, playerA, playerB)
+local function areOnSameTeam(game, playerA, playerB)
     if (playerA == nil or playerB == nil) then return false; end
     if (playerA == playerB) then return true; end
     local teamA = getTeamIDOrNil(game, playerA);
     local teamB = getTeamIDOrNil(game, playerB);
-    if (teamA == nil or teamB == nil) then return false; end
+    if (teamA == nil or teamB == nil or teamA == -1 or teamB == -1) then return false; end -- -1 means 'no team'
     return teamA == teamB;
 end
 
@@ -2392,7 +2392,7 @@ local function canIgniteTerritory (game, terrID, intCastingPlayer, cfg)
     -- if territory is Shield, is neutral and AffectsNeutrals==false or is self or teammate and FriendlyFire==false, don't do damage or ignite the territory
     if (territoryHasActiveShield(standing)) then return false; --check for Shield
 	elseif ((standing.OwnerPlayerID == WL.PlayerID.Neutral) and not cfg.boolAffectNeutrals) then return false; --check for Neutral + AffectsNeutrals==false
-	elseif (not cfg.boolAllowFriendlyFire and AreOnSameTeam(game, intCastingPlayer, standing.OwnerPlayerID)) then return false; --check for self/teammate + FriendlyFire==false
+	elseif (not cfg.boolAllowFriendlyFire and areOnSameTeam(game, intCastingPlayer, standing.OwnerPlayerID)) then return false; --check for self/teammate + FriendlyFire==false
 	else return true;
 	end
 end
@@ -2411,7 +2411,7 @@ local function applyWildfireStructureDelta(game, terrID, delta, tblModifiedTerri
 	structures[key] = math.max (0, newVal);
 
 	impactedTerritory.SetStructuresOpt = structures;
-	table.insert(tblModifiedTerritories, impactedTerritory);
+	table.insert (tblModifiedTerritories, impactedTerritory);
 end
 
 -- process 1 cycle (1 turn) of a wildfire instance (there can be multiple wildfires active at same time)
@@ -2463,8 +2463,13 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 			end
 		end
 		if (tblTerritoryState [terrID] ~= nil and tblTerritoryState [terrID] == 0) then
-			--extinguish the fire & change to -1
-			applyWildfireStructureDelta (game, terrID, -1, tblModifiedTerritories);
+			--extinguish the fire & remove 1 Wildfire custom structure from the territory; leverage tblWildfireCountsForExtinguishingTerrs so the proper count is removed in case of multiple wildfires burning on the same territory
+			--the structure count is a fixed # within LatestTurnStanding at time of processing this order, so if reference that, it will always be the # of wildfires present on the territory at the start of the invocation of Server_TurnAdvance_Order for this current order
+			--save the actual delta value from the custom structure count on LatestTurnStanding in LatestTurnStanding [terrID]
+			if (tblWildfireCountsForTerrs [terrID] == nil) then tblWildfireCountsForTerrs [terrID] = 0; end --if not set, set to 0
+			tblWildfireCountsForTerrs [terrID] = tblWildfireCountsForTerrs [terrID] - 1; --remove 1 Wildfire structure
+			-- applyWildfireStructureDelta (game, terrID, -1, tblModifiedTerritories);
+			applyWildfireStructureDelta (game, terrID, tblWildfireCountsForTerrs [terrID], tblModifiedTerritories);
 			tblTerritoryState[terrID] = -1; --set to -1 to indicate that the burn for this wildfire on this territory is extinguished, no need to process it further on successive cycles
 			intNumExtinguishedThisTurn = intNumExtinguishedThisTurn + 1;
 			print ("  EXTINGUISH terr " ..tostring(terrID).. "/" ..getTerritoryName (terrID, game).. ", #turnsLeft " .. tostring(intTurnsLeft));
@@ -2534,11 +2539,7 @@ function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, int
 	end
 end
 
--- ==============================
--- Public API: Cast + Per-turn
--- ==============================
-
--- Call this when the card is played to start a wildfire at targetTerritoryID
+--executed when a Wildfire card is played
 function execute_Wildfire_operation (game, order, addOrder, targetTerritoryID)
 	local cfg = loadWildfireConfig();
 	local publicGameData = Mod.PublicGameData;
@@ -2563,40 +2564,11 @@ function execute_Wildfire_operation (game, order, addOrder, targetTerritoryID)
 	-- Initialize the state table and ignite epicenter immediately if allowed
 	local tblTerritoryState = {};
 	local tblModifiedTerritories = {};
+	tblWildfireCountsForTerrs = {}; --used to count the # of wildfires present on territories w/extinguishing or spreading fires; needed b/c the #Structures count is a fixed point reference from LatestTurnStanding received at start of turn
 	--local tblAnnotations = {}; -- kept but not assigned (commented out later)
 
 	--ignite epicenter (if possible -- iff not shielded, etc)
 	wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlayer, 0, tblTerritoryState, tblModifiedTerritories); --use 0 for cycle number b/c this is epicenter (0 distance/0th cycle, no damage reduction)
-
-	-- Epicenter ignition check
-	-- if (CanIgniteTerritory(game, targetTerritoryID, intCastingPlayer, cfg)) then
-		-- Distance for epicenter is 0
-		-- local intDamage = ComputeDamageForTick(game, targetTerritoryID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, 0);
-
-		-- if (intDamage > 0) then
-			-- -- Start burning
-			-- tblTerritoryState[targetTerritoryID] = cfg.intDuration;
-
-			-- -- Apply first-tick damage and add wildfire structure
-			-- local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-			-- impactedTerritory.AddArmies = -intDamage;
-
-			-- local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
-			-- if (structures == nil) then structures = {}; end
-			-- local key = WL.StructureType.Custom("wildfire");
-			-- local cur = structures[key];
-			-- if (cur == nil) then cur = 0; end
-			-- structures[key] = cur + 1;
-			-- impactedTerritory.SetStructuresOpt = structures;
-
-			-- -- structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] + 1;
-
-			-- -- Optional epicenter annotation "Fire" or "." - COMMENTED OUT
-			-- -- tblAnnotations[targetTerritoryID] = WL.TerritoryAnnotation.Create(".", 3, getColourInteger(125, 0, 0));
-
-			-- table.insert(tblModifiedTerritories, impactedTerritory);
-	-- 	end
-	-- end
 
 	-- Create and store the wildfire record
 	local intStartTurn = game.ServerGame.Game.TurnNumber or 0;
@@ -2637,19 +2609,26 @@ function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlaye
 			tblTerritoryState[targetTerritoryID] = cfg.intDuration;
 
 			-- Apply first-tick damage and add wildfire structure
-			local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+			local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);
 			impactedTerritory.AddArmies = -intDamage;
 
-			local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
-			if (structures == nil) then structures = {}; end
-			local key = WL.StructureType.Custom("wildfire");
-			local cur = structures[key];
-			if (cur == nil) then cur = 0; end
-			structures[key] = cur + 1;
-			impactedTerritory.SetStructuresOpt = structures;
+			-- local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
+			-- if (structures == nil) then structures = {}; end
+			-- local key = WL.StructureType.Custom ("wildfire");
+			-- local cur = structures[key];
+			-- if (cur == nil) then cur = 0; end
+			-- structures[key] = cur + 1;
+			-- impactedTerritory.SetStructuresOpt = structures;
 			-- Optional epicenter annotation "Fire" or "." - COMMENTED OUT
 			-- tblAnnotations[targetTerritoryID] = WL.TerritoryAnnotation.Create(".", 3, getColourInteger(125, 0, 0));
-			table.insert(tblModifiedTerritories, impactedTerritory);
+
+			--ignore a new fire & add 1 Wildfire custom structure to the territory; leverage tblWildfireCountsForExtinguishingTerrs so the proper count is added in case of multiple wildfires burning on the same territory
+			--the structure count is a fixed # within LatestTurnStanding at time of processing this order, so if reference that, it will always be the # of wildfires present on the territory at the start of the invocation of Server_TurnAdvance_Order for this current order
+			--save the actual delta value from the custom structure count on LatestTurnStanding in LatestTurnStanding [terrID]
+			if (tblWildfireCountsForTerrs [targetTerritoryID] == nil) then tblWildfireCountsForTerrs [targetTerritoryID] = 0; end --if not set, set to 0
+			tblWildfireCountsForTerrs [targetTerritoryID] = tblWildfireCountsForTerrs [targetTerritoryID] + 1; --remove 1 Wildfire structure
+			applyWildfireStructureDelta (game, targetTerritoryID, tblWildfireCountsForTerrs [targetTerritoryID], tblModifiedTerritories);
+			table.insert (tblModifiedTerritories, impactedTerritory);
 		end
 	end
 end
@@ -2660,6 +2639,7 @@ function process_Wildfires_for_turn(game, addOrder)
 
     local publicGameData = Mod.PublicGameData;
     local tblWildfireData = publicGameData.WildfireData or {};
+	tblWildfireCountsForTerrs = {}; --used to count the # of wildfires present on territories w/extinguishing or spreading fires; needed b/c the #Structures count is a fixed point reference from LatestTurnStanding received at start of turn
 
     local idsToRemove = {};
 
@@ -2679,9 +2659,6 @@ function process_Wildfires_for_turn(game, addOrder)
     publicGameData.WildfireData = tblWildfireData;
     Mod.PublicGameData = publicGameData;
 end
---   &&&END OF CHATGPT WILDFIRECODE
---   &&&END OF CHATGPT WILDFIRECODE
---   &&&END OF CHATGPT WILDFIRECODE
 
 function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	local modifiedTerritories = {}; --create table of modified territories to pass back to WZ to update the territories and associate with the order
