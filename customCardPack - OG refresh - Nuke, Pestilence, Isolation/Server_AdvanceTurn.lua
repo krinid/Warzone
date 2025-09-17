@@ -1311,7 +1311,7 @@ end
 function execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, targetPlayerID)
     print("[PROCESS CARD BLOCK] playerID="..gameOrder.PlayerID.." :: playerID="..targetPlayerID);
 	--get player
-	local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {});
+	local event = WL.GameOrderEvent.Create (targetPlayerID, gameOrder.Description, {gameOrder.PlayerID, targetPlayerID});
     addOrder(event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.CardBlockData == nil) then publicGameData.CardBlockData = {}; end
