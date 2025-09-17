@@ -2422,6 +2422,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 	wildfireRecord.cycleNumber = wildfireRecord.cycleNumber + 1;
 	local intCurrentCycle   = wildfireRecord.cycleNumber;
     local tblTerritoryState = wildfireRecord.territoryState; --non-contiguous array: [terrID] = intTurnsLeftToBurn (0=extinguished)
+	local cfg = loadWildfireConfig();
 		-- territory = targetTerritoryID,
 		-- castingPlayer = intCastingPlayer,
 		-- turnNumberWildfireStarts = intStartTurn,
@@ -2449,7 +2450,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 				applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, intTurnsLeft, tblTerritoryState, tblModifiedTerritories); --apply damage to territories already ignited
 
 				--process borders, ignite bordering territories if the # of cycles is within the spread range
-				if (intCurrentCycle <= Mod.Settings.ForestFireSpreadRange) then --only spread to bordering territories if the # of cycles is within the spread range
+				if (intCurrentCycle <= cfg.intSpreadRange) then --only spread to bordering territories if the # of cycles is within the spread range
 					for _, conn in pairs (game.Map.Territories[terrID].ConnectedTo) do
 						print ("    IGNITE CHECK terr " ..tostring(conn.ID).. "/" ..getTerritoryName (conn.ID, game).. ", #newBorder " ..tostring(tblNewBorderingTerritories [conn.ID]).. ", tblTS[id] " ..tostring (tblTerritoryState [conn.ID]));
 						if (tblNewBorderingTerritories [conn.ID] == nil and tblTerritoryState [conn.ID] == nil) then
@@ -2541,7 +2542,7 @@ end
 
 --executed when a Wildfire card is played
 function execute_Wildfire_operation (game, order, addOrder, targetTerritoryID)
-	local cfg = loadWildfireConfig();
+	local cfg = loadWildfireConfig ();
 	local publicGameData = Mod.PublicGameData;
 	local tblWildfireData = publicGameData.WildfireData or {};
 
@@ -2635,7 +2636,7 @@ end
 
 -- Call this once per turn (e.g., in Server_AdvanceTurn_End or suitable place) to advance all active wildfires.
 function process_Wildfires_for_turn(game, addOrder)
-    local cfg = loadWildfireConfig();
+    local cfg = loadWildfireConfig ();
 
     local publicGameData = Mod.PublicGameData;
     local tblWildfireData = publicGameData.WildfireData or {};
@@ -2651,7 +2652,7 @@ function process_Wildfires_for_turn(game, addOrder)
     end
 
     -- Remove completed wildfires
-    for _, wid in ipairs(idsToRemove) do
+    for _, wid in ipairs (idsToRemove) do
         tblWildfireData[wid] = nil;
     end
 
