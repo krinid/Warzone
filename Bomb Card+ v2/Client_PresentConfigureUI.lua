@@ -1,4 +1,3 @@
-
 function Client_PresentConfigureUI(rootParent)
 	local killPercentage = Mod.Settings.killPercentage;
 	if killPercentage == nil then killPercentage = 25; end
@@ -56,6 +55,21 @@ function Client_PresentConfigureUI(rootParent)
 	-- if (Mod.Settings.BombImplementationPhase == nil) then Mod.Settings.BombImplementationPhase = WL.TurnPhase.BombCards; end
 	-- BombImplementationPhase = UI.CreateButton (row4a).SetInteractable(true).SetText(Mod.Settings.BombImplementationPhase).SetOnClick(Bomb_turnPhaseButton_clicked);
 
+	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (vert);
+	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+	BombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzBombPlusCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusPiecesNeeded or 10).SetWholeNumbers(true).SetInteractable(true);
+
+	local horzBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (vert);
+	UI.CreateLabel(horzBombPlusCardStartPieces).SetText("Pieces given to each player at the start: ");
+	BombPlusCardStartPieces = UI.CreateNumberInputField (horzBombPlusCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusStartPieces or 1).SetWholeNumbers(true).SetInteractable(true);
+
+	local horzBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (vert);
+	UI.CreateLabel (horzBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
+	BombPlusPiecesPerTurn = UI.CreateNumberInputField (horzBombPlusCardPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusPiecesPerTurn or 1).SetWholeNumbers(true).SetInteractable(true);
+
+	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (vert);
+	UI.CreateLabel (horzBombPlusCardWeight).SetText("Card weight: ");
+	BombPlusCardWeight = UI.CreateNumberInputField(horzBombPlusCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusCardWeight or 1).SetWholeNumbers(false).SetInteractable(true);
 end
 
 function displayBombPhaseText (labelObject, boolDelayed)

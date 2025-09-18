@@ -1,74 +1,47 @@
 function Server_AdvanceTurn_Start (game,addNewOrder)
-	skippedBombs = {};
-	-- memory = {};
-	executed = false;
-end
-
-function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)	
-	if(executed == false)then
-		if(order.proxyType == 'GameOrderPlayCardBomb')then
-			-- addNewOrder(WL.GameOrderDiscard.Create(order.PlayerID, order.CardInstanceID));
-			if (Mod.Settings.delayed) then
-				skippedBombs[#skippedBombs+1] = order;
-			else
-				PlayBombCard(game, order, addNewOrder);
-			end
-			skipThisOrder(WL.ModOrderControl.SkipAndSupressSkippedMessage);
-		end
-	end
 end
 
 function Server_AdvanceTurn_End(game,addNewOrder)
-	if(executed == false) then
-		executed = true;
-		for _, order in pairs(skippedBombs) do
-			if (order.PlayerID~=nil) then
-				bomber = game.ServerGame.Game.PlayingPlayers[order.PlayerID];
-				if (bomber ~= nil) then
-					bombedID = game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].OwnerPlayerID;
-					if (bombedID == WL.PlayerID.Neutral or bombedID == nil or game.ServerGame.Game.PlayingPlayers[bombedID] == nil) then
-						PlayBombCard(game, order, addNewOrder);
-					else
-						bombed = game.ServerGame.Game.PlayingPlayers[bombedID];
-						if (bomber.Team~=bombed.Team or (bombed.Team == -1 and bombed.ID ~= order.PlayerID)) then
-							PlayBombCard(game, order, addNewOrder);
-						end
-					end
-				end
-			end
-		end
-	end
 end
 
-function round (input)
-	local wholePart = math.floor(input);
-	local decimalPart = input - wholePart;
-	if (decimalPart) >= 0.5 then
-		return wholePart +1;
-	else
-		return wholePart;
+function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
+	print ("!".. order.proxyType);
+	if ((Mod.Settings.UseCustomCard == nil and order.proxyType == 'GameOrderPlayCardBomb') or (Mod.Settings.UseCustomCard == true and order.proxyType == 'GameOrderPlayCardCustom')) then
+		PlayBombCard(game, order, addNewOrder);
+		if (Mod.Settings.UseCustomCard == nil) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip original order if using standard Bomb Card
 	end
 end
 
 function PlayBombCard (game, order, addNewOrder)
 	--there is no way to modify the damage of the existing Bomb Card order, so must skip that order, create a new order that mimics it but does the desired damage amount
 	--New order moves the camera, shows the "Bomb" annotation, consumes the Bomb card
-	local terrMod = WL.TerritoryModification.Create(order.TargetTerritoryID);
+
+	local intTargetTerritoryID;
+	--get target territory ID; if card is played from a standard Bomb cad, get it from order.PlayerID; if played from the custom Bomb+ card, get it from the order.ModData
+	if (order.proxyType == 'GameOrderPlayCardBomb') then
+		intTargetTerritoryID = order.TargetTerritoryID;
+	else
+		local modDataContent = split (order.ModData, "|");
+		-- printDebug ("[GameOrderPlayCardCustom] modData=="..order.ModData.."::");
+		--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
+		intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the source territory ID
+	end
+
+	local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
 	local armies;
-	local strBombMsg = getPlayerName (game, order.PlayerID).. " bombs " ..game.Map.Territories[order.TargetTerritoryID].Name;
+	local strBombMsg = getPlayerName (game, order.PlayerID).. " bombs " ..game.Map.Territories[intTargetTerritoryID].Name;
 
 	--if a territory with an active Shield is being Bombed, nullify the damage
 	--also only process if Shield module is active (or if current game predates ActiveModule)
 	-- if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID])) then
 
 	--if a shield is on the target territory, do not apply any damage
-	-- print ("SHIELD == ".. tostring (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID])));
-	if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID])) then
+	if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID])) then
 		--don't need to do anything
 		-- print ("SHIELD yes");
 	else
 		-- print ("SHIELD no");
-		armies = game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies;
+		armies = game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.NumArmies;
 		armies = math.floor (armies * Mod.Settings.killPercentage / 100 + Mod.Settings.armiesKilled + 0.5);
 
 		-- print ("ARMIES DELTA "..armies);
@@ -77,15 +50,15 @@ function PlayBombCard (game, order, addNewOrder)
 		-- print ("fixed " .. tostring (Mod.Settings.armiesKilled));
 		-- print ("total reduction " .. math.floor (armies * Mod.Settings.killPercentage / 100 + Mod.Settings.armiesKilled + 0.5));
 		terrMod.AddArmies = -armies;
-		if (armies >= game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies and Mod.Settings.EmptyTerritoriesGoNeutral and (Mod.Settings.SpecialUnitsPreventNeutral == false or tablelength(game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.SpecialUnits) == 0)) then
+		if (armies >= game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.NumArmies and Mod.Settings.EmptyTerritoriesGoNeutral and (Mod.Settings.SpecialUnitsPreventNeutral == false or tablelength(game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.SpecialUnits) == 0)) then
 				terrMod.SetOwnerOpt = WL.PlayerID.Neutral;
 		end
 	end
 
 	local event = WL.GameOrderEvent.Create (order.PlayerID, strBombMsg, {}, {terrMod});
 	event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
-	event.TerritoryAnnotationsOpt = {[order.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
-	event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.TargetTerritoryID); --move the camera to the target territory
+	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
+	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	addNewOrder (event, false); --add new order that removes the played Bomb card + applies modified damage amount; use 'false' to not skip the order if orig order is skipped b/c this function will skip it every time
 end
 
@@ -129,4 +102,17 @@ function territoryHasActiveShield (territory)
 	end
 
 	return (false);
+end
+
+function split(inputstr, sep)
+	if inputstr == nil then return {}; end
+	if sep == nil then
+			sep = "%s"
+	end
+	local t={} ; i=1
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			t[i] = str
+			i = i + 1
+	end
+	return t
 end
