@@ -297,7 +297,14 @@ function createCards_newCards(alert, addCard);
 		print("ForestFireStartPieces="..tostring(Mod.Settings.ForestFireStartPieces))
 		print("ForestFirePiecesPerTurn="..tostring(Mod.Settings.ForestFirePiecesPerTurn))
 
-		local strForestFireDesc = "Ignite a wildfire that spreads farther each turn";
+		local strForestFireDesc = "Ignite a wildfire on a territory that spreads to all neighbouring territories each turn for " ..tostring(Mod.Settings.ForestFireSpreadRange).. " turns. Each impacted territory will burn for " ..tostring(Mod.Settings.ForestFireDuration).. " turns."
+		strForestFireDesc = strForestFireDesc .. "\n\nThe epicenter will take " ..tostring (Mod.Settings.ForestFireDamagePercent).. "% + " ..tostring (Mod.Settings.ForestFireDamage).. " fixed damage, and reduce by " ..tostring (Mod.Settings.ForestFireDamageDeltaWithSpread).. "% with each spread step."
+
+		if (Mod.Settings.ForestFireAffectNeutrals == false) then strForestFireDesc = strForestFireDesc .. "\n\nNeutral territories are not impacted by wildfire."; end
+
+		if (Mod.Settings.ForestFireAllowFriendlyFire == true) then strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is enabled, so your own Wildfires will burn your territories.";
+		else strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is disabled, so you are immune to damage from your own Wildfires."; end
+
 		Mod.Settings.ForestFireCardID = addCard("Wildfire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
 		Mod.Settings.ForestFireDescription = strForestFireDesc;
 	end

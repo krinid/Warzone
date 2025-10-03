@@ -939,8 +939,8 @@ function forestFireCheckboxClicked()
 		ForestFireCardStartPieces = CreateNumberInputField(horzForestFireCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFirePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
-		UI.CreateLabel (horzForestFirePiecesPerTurn).SetText ("  Minimum pieces awarded per turn: ");
-		CardPiecesPiecesPerTurn = UI.CreateNumberInputField (horzForestFirePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (horzForestFirePiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
+		ForestFirePiecesPerTurn = UI.CreateNumberInputField (horzForestFirePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFireCardWeight = CreateHorz(UIcontainer);
 		CreateLabel(horzForestFireCardWeight).SetText("Card weight: ");
@@ -1538,7 +1538,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.ForestFireDuration = ForestFireCardDuration.GetValue();
 		Mod.Settings.ForestFirePiecesNeeded = ForestFireCardPiecesNeeded.GetValue();
 		Mod.Settings.ForestFireStartPieces = ForestFireCardStartPieces.GetValue();
-		Mod.Settings.ForestFirePiecesPerTurn = CardPiecesPiecesPerTurn.GetValue();
+		Mod.Settings.ForestFirePiecesPerTurn = ForestFirePiecesPerTurn.GetValue();
 		Mod.Settings.ForestFireCardWeight = ForestFireCardWeight.GetValue();
 		Mod.Settings.ForestFireSpreadRange = ForestFireSpreadRange.GetValue();
 		Mod.Settings.ForestFireDamageDeltaWithSpread = ForestFireDamageDeltaWithSpread.GetValue();

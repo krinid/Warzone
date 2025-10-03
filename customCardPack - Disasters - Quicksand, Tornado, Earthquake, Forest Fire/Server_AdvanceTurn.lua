@@ -137,7 +137,18 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	print ("[Server_AdvanceTurn_Start] START; turn#=="..turnNumber);
 
 	Phantom_processStartOfTurn (game, addNewOrder);
-	process_Wildfires_for_turn (game, addNewOrder);
+
+	print ("#wildfires active == " ..tablelength (Mod.PublicGameData.WildfireData), tostring (tablelength (Mod.PublicGameData.WildfireData)>0));
+	--if there any Wildfire is active, add an order to process Wildfire burning during the EB card play phase (after deployments)
+	if (tablelength (Mod.PublicGameData.WildfireData) > 0) then
+		local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+		--GameOrderEvent does accept 0 or WL.PlayerID.Neutral, but GameOrderEvent doesn't support specifying TurnPhase specification, but GameOrderCustom does so need to submit a GameOrderCustom event and thus need some player's playerID
+		addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire burns!", "Wildfire|Burn", {}, WL.TurnPhase.EmergencyBlockadeCards, nil, nil)); --add order to invoke wildifre burning during the EB card play phase
+		-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire|Burn", "Wildfire|Burn", nil, WL.TurnPhase.BombCards)); --add order to invoke wildifre burning during the EB card play phase
+		-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire|Burn", "Wildfire|Burn", nil, WL.TurnPhase.Gift)); --add order to invoke wildifre burning during the EB card play phase
+		-- process_Wildfires_for_turn (game, addNewOrder); --don't apply burning in _Start, but rather do it in the EB play card phase (above)
+		print ("________burn order added");
+	end
 
 	--testing purposes only! delme
 	--[[ local modifiedTerritories = eliminatePlayer (1, game.ServerGame.LatestTurnStanding.Territories, true, game.Settings.SinglePlayer);
@@ -495,6 +506,14 @@ function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOr
 		--but it should be skipped so it never appears for actual players
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
 		boolSkipOrder = true; --don't process any further on this order, just end execution in Server_AdvanceTurn_Order
+	elseif (order.proxyType == "GameOrderCustom" and order.Payload == "Wildfire|Burn") then
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom order, then add new orders to process Wildfire burning
+		process_Wildfires_for_turn (game, addNewOrder); --apply burning damage to territories impacted by Wildfire and spread to neighbours
+	-- elseif (order.proxyType == "GameOrderCustom" and order.Payload == "Wildfire|Burn") then
+	-- 	local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+	-- 	addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "@@WILDFIRE_BURN2@@", "@@WILDFIRE_BURN2@@", nil, WL.TurnPhase.EmergencyBlockadeCards)); --add order to invoke wildifre burning during the EB card play phase
+	-- elseif (order.proxyType == "GameOrderCustom" and order.Payload == "@@WILDFIRE_BURN2@@") then
+	-- 	process_Wildfires_for_turn (game, addNewOrder); --apply burning damage to territories impacted by Wildfire and spread to neighbours
 	end
 end
 
@@ -1801,7 +1820,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	--printObjectDetails (publicGameData.IsolationData, "[PRE  Isolation data]", "Execute Isolation operation");
 
 	if (Mod.Settings.IsolationDuration==0) then  --if Isolation duration is Permanent (don't auto-revert), set expiration turn to -1
-		turnNumber_IsolationExpires = -1; 
+		turnNumber_IsolationExpires = -1;
 	else --otherwise, set expire turn as current turn # + card Duration
 		turnNumber_IsolationExpires = game.Game.TurnNumber + Mod.Settings.IsolationDuration;
 	end
@@ -2441,19 +2460,31 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 	local intNumTerrsSpreadThisTurn = 0;
 	local intNumExtinguishedThisTurn = 0;
 	local tblNewBorderingTerritories = {}; --non-linear array to store territories bordering currently burning territories that were added this turn; if in this array, don't processing their borders; this is done so we process only 1 step outward and not the entire wildfire in 1 turn
-    for terrID, intTurnsLeft in pairs (tblTerritoryState) do --loop through all territories impacted by this wildfire, then apply burn damage to those that have >0 turns left to burn, and if any ==0 then extinguish them
-		print ("  terr " ..tostring(terrID).. "/" ..getTerritoryName (terrID, game).. ", #turnsLeft " .. tostring(intTurnsLeft));
+    for terrID, objTerritoryState in pairs (tblTerritoryState) do --loop through all territories impacted by this wildfire, then apply burn damage to those that have >0 turns left to burn, and if any ==0 then extinguish them
+		local intTurnsLeft = nil;
+		local intDistance = nil;
+		if (type(objTerritoryState) == "number") then
+			intTurnsLeft = objTerritoryState;
+			intDistance = 1;
+			tblTerritoryState[terrID] = {Duration = intTurnsLeft, Distance = intDistance};
+		else
+			intTurnsLeft = objTerritoryState.Duration;
+			intDistance = objTerritoryState.Distance;
+			-- reference: tblTerritoryState[targetTerritoryID] = {Duration = cfg.intDuration, Distance = intCycleNumber};
+		end
+
+		print ("  terr " ..tostring(terrID).. "/" ..getTerritoryName (terrID, game).. ", #turnsLeft " ..tostring(intTurnsLeft).. ", distance " ..tostring (intDistance));
 		--if #turns left to burn >0, ignite bordering territories
 
 		if (intTurnsLeft > 0) then --only process border territories if the current territory is still burning
 			 if (tblNewBorderingTerritories [terrID] == nil) then --only apply damage & process bordering territories if the territory being inspected wasn't added this turn
-				applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, intTurnsLeft, tblTerritoryState, tblModifiedTerritories); --apply damage to territories already ignited
+				applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, intTurnsLeft, intDistance, tblTerritoryState, tblModifiedTerritories); --apply damage to territories already ignited
 
 				--process borders, ignite bordering territories if the # of cycles is within the spread range
 				if (intCurrentCycle <= cfg.intSpreadRange) then --only spread to bordering territories if the # of cycles is within the spread range
 					for _, conn in pairs (game.Map.Territories[terrID].ConnectedTo) do
-						print ("    IGNITE CHECK terr " ..tostring(conn.ID).. "/" ..getTerritoryName (conn.ID, game).. ", #newBorder " ..tostring(tblNewBorderingTerritories [conn.ID]).. ", tblTS[id] " ..tostring (tblTerritoryState [conn.ID]));
-						if (tblNewBorderingTerritories [conn.ID] == nil and tblTerritoryState [conn.ID] == nil) then
+						-- print ("    IGNITE CHECK terr " ..tostring(conn.ID).. "/" ..getTerritoryName (conn.ID, game).. ", #newBorder " ..tostring(tblNewBorderingTerritories [conn.ID]).. ", tblTS[id] " ..tostring (tblTerritoryState [conn.ID]));
+						if (tblNewBorderingTerritories [conn.ID] == nil and tblTerritoryState [conn.ID] == nil) then --territory is not already burning
 							tblNewBorderingTerritories [conn.ID] = true; --track this territory so its bordering territories aren't processed so we don't process the entire WildFire cycle in 1 turn
 							intNumTerrsSpreadThisTurn = intNumTerrsSpreadThisTurn + 1;
 							wildfire_igniteTerritory (game, conn.ID, cfg, intCastingPlayer, intCurrentCycle, tblTerritoryState, tblModifiedTerritories);
@@ -2463,7 +2494,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 				end
 			end
 		end
-		if (tblTerritoryState [terrID] ~= nil and tblTerritoryState [terrID] == 0) then
+		if (tblTerritoryState [terrID] ~= nil and tblTerritoryState [terrID].Duration == 0) then
 			--extinguish the fire & remove 1 Wildfire custom structure from the territory; leverage tblWildfireCountsForExtinguishingTerrs so the proper count is removed in case of multiple wildfires burning on the same territory
 			--the structure count is a fixed # within LatestTurnStanding at time of processing this order, so if reference that, it will always be the # of wildfires present on the territory at the start of the invocation of Server_TurnAdvance_Order for this current order
 			--save the actual delta value from the custom structure count on LatestTurnStanding in LatestTurnStanding [terrID]
@@ -2471,7 +2502,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 			tblWildfireCountsForTerrs [terrID] = tblWildfireCountsForTerrs [terrID] - 1; --remove 1 Wildfire structure
 			-- applyWildfireStructureDelta (game, terrID, -1, tblModifiedTerritories);
 			applyWildfireStructureDelta (game, terrID, tblWildfireCountsForTerrs [terrID], tblModifiedTerritories);
-			tblTerritoryState[terrID] = -1; --set to -1 to indicate that the burn for this wildfire on this territory is extinguished, no need to process it further on successive cycles
+			tblTerritoryState[terrID].Duration = -1; --set to -1 to indicate that the burn for this wildfire on this territory is extinguished, no need to process it further on successive cycles
 			intNumExtinguishedThisTurn = intNumExtinguishedThisTurn + 1;
 			print ("  EXTINGUISH terr " ..tostring(terrID).. "/" ..getTerritoryName (terrID, game).. ", #turnsLeft " .. tostring(intTurnsLeft));
 		end
@@ -2481,7 +2512,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
     -- local boolAnyBurning = false;
     for k, v in pairs (tblTerritoryState) do
 		print ("  BURN STATE CHECK terr " ..k.. "/" ..getTerritoryName (k, game).. ", #turnsLeft " .. tostring(v));
-		if (v ~= nil and v > 0) then
+		if (v ~= nil and ((type (v) == "number" and (v > 0)) or (v.Duration > 0))) then
             -- boolAnyBurning = true;
 			intNumTerrsStillBurning = intNumTerrsStillBurning + 1;
         end
@@ -2502,7 +2533,8 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
         local event = WL.GameOrderEvent.Create (intCastingPlayer, strWildfireMessage, {intCastingPlayer}, tblModifiedTerritories);
         -- event.TerritoryAnnotationsOpt = tblAnnotations; -- COMMENTED OUT intentionally per instructions
 	    event.JumpToActionSpotOpt = createJumpToLocationObject (game, intEpicenter);
-        addOrder (event, true);
+        addOrder (event, false);
+		-- addOrder (event, true);
     end
 
     -- If complete, announce extinction
@@ -2511,17 +2543,18 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
         local msg = "The wildfire originating from territory " .. strEpicenterName .. " has fully extinguished";
         local endEvent = WL.GameOrderEvent.Create(intCastingPlayer, msg, {intCastingPlayer}, {});
 	    endEvent.JumpToActionSpotOpt = createJumpToLocationObject (game, intEpicenter);
-        addOrder (endEvent, true);
+        addOrder (event, false);
+		-- addOrder (event, true);
         return true; -- signal: remove this wildfire
     end
 
     return false; -- wildfire continues
 end
 
-function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, intTurnsLeft, tblTerritoryState, tblModifiedTerritories)
+function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, intTurnsLeft, intDistance, tblTerritoryState, tblModifiedTerritories)
 	print ("  [BURN DAMAGE] " .. tostring(terrID) .. "/" .. getTerritoryName (terrID, game) .. ", turnsLeft=" .. tostring(intTurnsLeft) .. ", cycle=" .. tostring(intCurrentCycle));
 	if (intTurnsLeft ~= nil and intTurnsLeft > 0) then
-		local intDistance = intCurrentCycle; --distanceMap[terrID] or cfg.intSpreadRange; -- if not found, assume max for safety
+		-- local intDistance = intCurrentCycle; --distanceMap[terrID] or cfg.intSpreadRange; -- if not found, assume max for safety
 		local intDamage = ComputeDamageForTick(game, terrID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intDistance);
 		print ("    [BURN DAMAGE] distance " ..tostring(intDistance) .. ", damage " ..tostring(intDamage));
 
@@ -2536,7 +2569,7 @@ function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, int
 			table.insert (tblModifiedTerritories, impactedTerritory);
 		end
 
-		tblTerritoryState[terrID] = intTurnsLeft - 1; -- decrement burn timer
+		tblTerritoryState[terrID].Duration = intTurnsLeft - 1; -- decrement burn timer
 	end
 end
 
@@ -2607,7 +2640,8 @@ function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlaye
 
 		if (intDamage > 0) then
 			-- Start burning
-			tblTerritoryState[targetTerritoryID] = cfg.intDuration;
+			-- tblTerritoryState[targetTerritoryID] = cfg.intDuration;
+			tblTerritoryState[targetTerritoryID] = {Duration = cfg.intDuration, Distance = intCycleNumber};
 
 			-- Apply first-tick damage and add wildfire structure
 			local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);
