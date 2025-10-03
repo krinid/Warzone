@@ -147,7 +147,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire|Burn", "Wildfire|Burn", nil, WL.TurnPhase.BombCards)); --add order to invoke wildifre burning during the EB card play phase
 		-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire|Burn", "Wildfire|Burn", nil, WL.TurnPhase.Gift)); --add order to invoke wildifre burning during the EB card play phase
 		-- process_Wildfires_for_turn (game, addNewOrder); --don't apply burning in _Start, but rather do it in the EB play card phase (above)
-		print ("________burn order added");
+		-- print ("________burn order added");
 	end
 
 	--testing purposes only! delme
@@ -2385,10 +2385,6 @@ local function areOnSameTeam(game, playerA, playerB)
     return teamA == teamB;
 end
 
--- ==============================
--- Damage / Ignition Logic
--- ==============================
-
 local function ComputeDamageForTick (game, terrID, intDamagePercent, intDamageFixed, intDamageDelta, intDistance)
     local standing = game.ServerGame.LatestTurnStanding.Territories[terrID];
     local intArmies = standing.NumArmies.NumArmies;
@@ -2396,7 +2392,7 @@ local function ComputeDamageForTick (game, terrID, intDamagePercent, intDamageFi
     local numPercent = (intDamagePercent / 100.0) * intArmies;
     local baseDamage = numPercent + intDamageFixed;
 
-    local reductionFactor = math.max(0.0, 1.0 - (intDamageDelta / 100.0) * intDistance);
+    local reductionFactor = math.max(0.0, 1.0 - (intDamageDelta / 100.0) ^ intDistance);
     local raw = baseDamage * reductionFactor;
 
     local rounded = math.floor(raw + 0.5);
@@ -2543,8 +2539,8 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
         local msg = "The wildfire originating from territory " .. strEpicenterName .. " has fully extinguished";
         local endEvent = WL.GameOrderEvent.Create(intCastingPlayer, msg, {intCastingPlayer}, {});
 	    endEvent.JumpToActionSpotOpt = createJumpToLocationObject (game, intEpicenter);
-        addOrder (event, false);
-		-- addOrder (event, true);
+        addOrder (endEvent, false);
+		-- addOrder (endEvent, true);
         return true; -- signal: remove this wildfire
     end
 
@@ -2615,10 +2611,12 @@ function execute_Wildfire_operation (game, order, addOrder, targetTerritoryID)
 	};
 	table.insert (tblWildfireData, wildfireRecord);
 
+	print ("WILDFIRE # tblModifiedTerritories " ..tostring (tablelength (tblModifiedTerritories)));
+
 	-- Emit a single event for the ignition (if anything changed)
 	if (#tblModifiedTerritories > 0) then
 		-- local strOwnerName = toPlayerName(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, game);
-		local strWildfireMessage = toPlayerName(intCastingPlayer, game) .. ' cast wildfire on ' .. strTargetName;
+		local strWildfireMessage = toPlayerName(intCastingPlayer, game) .. ' ignites wildfire on ' .. strTargetName;
 
 		local event = WL.GameOrderEvent.Create(intCastingPlayer, strWildfireMessage, {intCastingPlayer}, tblModifiedTerritories);
 		-- event.TerritoryAnnotationsOpt = tblAnnotations; -- COMMENTED OUT intentionally
