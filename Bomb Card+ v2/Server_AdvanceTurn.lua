@@ -6,7 +6,7 @@ end
 
 function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
 	print ("!".. order.proxyType);
-	if ((Mod.Settings.UseCustomCard == nil and order.proxyType == 'GameOrderPlayCardBomb') or (Mod.Settings.UseCustomCard == true and order.proxyType == 'GameOrderPlayCardCustom')) then
+	if ((Mod.Settings.UseCustomCard == nil and order.proxyType == 'GameOrderPlayCardBomb') or (Mod.Settings.UseCustomCard == true and order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Bomb+|")==true)) then
 		PlayBombCard(game, order, addNewOrder);
 		if (Mod.Settings.UseCustomCard == nil) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip original order if using standard Bomb Card
 	end
@@ -57,7 +57,7 @@ function PlayBombCard (game, order, addNewOrder)
 
 	local event = WL.GameOrderEvent.Create (order.PlayerID, strBombMsg, {}, {terrMod});
 	event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
-	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
+	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, 0)}; --mimic the base "Bomb" annotation
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	addNewOrder (event, false); --add new order that removes the played Bomb card + applies modified damage amount; use 'false' to not skip the order if orig order is skipped b/c this function will skip it every time
 end
@@ -115,4 +115,8 @@ function split(inputstr, sep)
 			i = i + 1
 	end
 	return t
+end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
 end

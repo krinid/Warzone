@@ -21,7 +21,7 @@ function play_BombPlus_card(game, cardInstance, playCard)
         setMaxSize(400, 600);
         local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
         UI.CreateLabel (vert).SetText ("[BOMB+]\n\n").SetColor (getColourCode("card play heading"));
-		UI.CreateLabel (vert).SetText (game.Settings.Cards[cardInstance.CardID].FriendlyDescription.."\n");
+		UI.CreateLabel (vert).SetText (game.Settings.Cards[cardInstance.CardID].FriendlyDescription.."\n \n");
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -43,18 +43,18 @@ function play_BombPlus_card(game, cardInstance, playCard)
                 return;
             end
 
-            local strBombPlusMessage = strPlayerName_cardPlayer .. " creates a Phantom on " .. TargetTerritoryName;
+            local strBombPlusMessage = strPlayerName_cardPlayer .. " plays a Bomb+ cards on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
 			local intTurnPhase = WL.TurnPhase.BombCards;
 			if (Mod.Settings.delayed == true) then intTurnPhase = WL.TurnPhase.BlockadeCards; end
 
             if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, getColourInteger(0, 0, 0))}; --use Black for Bomb
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, getColourInteger(0, 0, 0))}; --use Black for Bomb
                 -- playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
-                playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
+                playCard (strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
                 -- playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
-                playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase);
+                playCard (strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase);
             end
 
             close();
