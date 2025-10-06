@@ -2369,30 +2369,30 @@ end
 --     return p.DisplayName(nil, false);
 -- end
 
-local function getTeamIDOrNil(game, playerID)
+local function getTeamID (game, playerID)
     if (playerID == nil) then return nil; end
     local p = game.ServerGame.Game.Players[playerID];
     if (p == nil) then return nil; end
     return p.Team; -- integer or nil
 end
 
-local function areOnSameTeam(game, playerA, playerB)
+local function areTeammates (game, playerA, playerB)
     if (playerA == nil or playerB == nil) then return false; end
     if (playerA == playerB) then return true; end
-    local teamA = getTeamIDOrNil(game, playerA);
-    local teamB = getTeamIDOrNil(game, playerB);
+    local teamA = getTeamID (game, playerA);
+    local teamB = getTeamID (game, playerB);
     if (teamA == nil or teamB == nil or teamA == -1 or teamB == -1) then return false; end -- -1 means 'no team'
     return teamA == teamB;
 end
 
-local function ComputeDamageForTick (game, terrID, intDamagePercent, intDamageFixed, intDamageDelta, intDistance)
+local function calcWildfireDamage (game, terrID, intDamagePercent, intDamageFixed, intDamageDelta, intDistance)
     local standing = game.ServerGame.LatestTurnStanding.Territories[terrID];
     local intArmies = standing.NumArmies.NumArmies;
 
     local numPercent = (intDamagePercent / 100.0) * intArmies;
     local baseDamage = numPercent + intDamageFixed;
 
-    local reductionFactor = math.max(0.0, 1.0 - (intDamageDelta / 100.0) ^ intDistance);
+    local reductionFactor = math.max (0.0, (1.0 - intDamageDelta / 100.0) ^ intDistance);
     local raw = baseDamage * reductionFactor;
 
     local rounded = math.floor(raw + 0.5);
@@ -2407,7 +2407,7 @@ local function canIgniteTerritory (game, terrID, intCastingPlayer, cfg)
     -- if territory is Shield, is neutral and AffectsNeutrals==false or is self or teammate and FriendlyFire==false, don't do damage or ignite the territory
     if (territoryHasActiveShield(standing)) then return false; --check for Shield
 	elseif ((standing.OwnerPlayerID == WL.PlayerID.Neutral) and not cfg.boolAffectNeutrals) then return false; --check for Neutral + AffectsNeutrals==false
-	elseif (not cfg.boolAllowFriendlyFire and areOnSameTeam(game, intCastingPlayer, standing.OwnerPlayerID)) then return false; --check for self/teammate + FriendlyFire==false
+	elseif (not cfg.boolAllowFriendlyFire and areTeammates (game, intCastingPlayer, standing.OwnerPlayerID)) then return false; --check for self/teammate + FriendlyFire==false
 	else return true;
 	end
 end
@@ -2551,7 +2551,7 @@ function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, int
 	print ("  [BURN DAMAGE] " .. tostring(terrID) .. "/" .. getTerritoryName (terrID, game) .. ", turnsLeft=" .. tostring(intTurnsLeft) .. ", cycle=" .. tostring(intCurrentCycle));
 	if (intTurnsLeft ~= nil and intTurnsLeft > 0) then
 		-- local intDistance = intCurrentCycle; --distanceMap[terrID] or cfg.intSpreadRange; -- if not found, assume max for safety
-		local intDamage = ComputeDamageForTick(game, terrID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intDistance);
+		local intDamage = calcWildfireDamage (game, terrID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intDistance);
 		print ("    [BURN DAMAGE] distance " ..tostring(intDistance) .. ", damage " ..tostring(intDamage));
 
 		-- Skip if damage=0 (per requirement)
@@ -2629,12 +2629,12 @@ function execute_Wildfire_operation (game, order, addOrder, targetTerritoryID)
 end
 
 function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlayer, intCycleNumber, tblTerritoryState, tblModifiedTerritories)
-	print ("  [IGNITE] " .. tostring(targetTerritoryID) .. "/" .. getTerritoryName (targetTerritoryID, game) .. ", cycle=" .. tostring(intCycleNumber));
+	print ("  [IGNITE] " .. tostring(targetTerritoryID) .. "/" .. getTerritoryName (targetTerritoryID, game) .. ", cycle=" .. tostring(intCycleNumber).. ", canIgnite " ..tostring (canIgniteTerritory (game, targetTerritoryID, intCastingPlayer, cfg)));
 	if (tblTerritoryState [targetTerritoryID] ~= nil) then return; end --already burning, nothing more to do
 
 	if (canIgniteTerritory (game, targetTerritoryID, intCastingPlayer, cfg)) then
 		-- Distance for epicenter is 0
-		local intDamage = ComputeDamageForTick (game, targetTerritoryID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intCycleNumber);
+		local intDamage = calcWildfireDamage (game, targetTerritoryID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intCycleNumber);
 
 		if (intDamage > 0) then
 			-- Start burning
