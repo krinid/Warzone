@@ -1,0 +1,10 @@
+This mod allows players to build a fort.  Any armies on a territory with a fort cannot be harmed by an incoming attack, but any incoming attack will destroy the fort. Therefore, as an attacker, it's a good idea to attack a fort with 1 army to destroy it with minimal losses. Attacking forces will sustain regular damage from the forces present on the territory with a fort.
+
+Example 1: 1 army attacks a territory with 15 armies and a fort.
+- RESULT: Fort is destroyed, 15 defending armies take no damage, the single 1 attacking army is killed.
+
+Example 2: 10 armies attack a territory with 15 armies and a fort.
+- RESULT: Fort is destroyed, 15 defending armies take no damage, all 10 attacking armies are killed.
+
+Example 3: 100 armies attack a territory with 15 armies and a fort.
+- RESULT: Fort is destroyed, 15 defending armies take no damage, all 11 attacking armies are killed.
