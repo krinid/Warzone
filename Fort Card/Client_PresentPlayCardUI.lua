@@ -3,48 +3,49 @@ require('Utilities')
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
 --If your mod has multiple cards, you can look at game.Settings.Cards[cardInstance.CardID].Name to see which one was played
 function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog)
-    Game = game;
+	Game = game;
 
-    --If this dialog is already open, close the previous one. This prevents two copies of it from being open at once which can cause errors due to only saving one instance of TargetTerritoryBtn
-    if (Close ~= nil) then
-        Close();
-    end
+	--If this dialog is already open, close the previous one. This prevents two copies of it from being open at once which can cause errors due to only saving one instance of TargetTerritoryBtn
+	if (Close ~= nil) then
+		Close();
+	end
 
-    if (WL.IsVersionOrHigher("5.34")) then --closeCardsDialog callback did not exist prior to 5.34
-        closeCardsDialog();
-    end
+	if (WL.IsVersionOrHigher("5.34")) then --closeCardsDialog callback did not exist prior to 5.34
+		closeCardsDialog();
+	end
 
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        Close = close;
-        setMaxSize(400, 200);
-        local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+	game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
+		Close = close;
+		setMaxSize(400, 400);
+		local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
 
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+		TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetColor("#00FFFF").SetOnClick(TargetTerritoryClicked);
+		TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+		TargetTerritoryClicked ();
 
-        UI.CreateButton(vert).SetText("Play Card").SetOnClick(function()
-            if (TargetTerritoryID == nil) then
-                TargetTerritoryInstructionLabel.SetText("You must select a territory first");
-                return;
-            end
-            local td = game.Map.Territories[TargetTerritoryID];
+		-- UI.CreateButton(vert).SetText("Play Card").SetOnClick (TargetTerritoryButtonClicked); -- (playCard));
+		-- TargetTerritoryButtonClicked ();
+		UI.CreateButton(vert).SetText("Play Card").SetColor("#008000").SetOnClick(function()
+			if (TargetTerritoryID == nil) then
+				TargetTerritoryInstructionLabel.SetText("You must select a territory first");
+				return;
+			end
+			local td = game.Map.Territories[TargetTerritoryID];
 
-            local annotations = nil;
-            local jumpToSpot = nil;
+			local annotations = nil;
+			local jumpToSpot = nil;
 
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Build Fort") };
-                jumpToSpot = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
-            end
+			if (WL.IsVersionOrHigher("5.34.1")) then
+				annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Build Fort") };
+				jumpToSpot = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
+			end
 
-            if (playCard("Create a fort on " .. TargetTerritoryName, "CreateFort_" .. TargetTerritoryID, WL.TurnPhase.Attacks, annotations, jumpToSpot)) then
-                close();
-            end
-        end);
-    end);
+			if (playCard("Create a fort on " .. TargetTerritoryName, "BuildFortCard_" .. TargetTerritoryID, WL.TurnPhase.ReceiveCards, annotations, jumpToSpot)) then
+				close();
+			end
+		end);
+	end);
 end
-
-
 
 function TargetTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
@@ -54,9 +55,9 @@ end
 
 
 function TerritoryClicked(terrDetails)
-	if UI.IsDestroyed(TargetTerritoryBtn) then
+	if UI.IsDestroyed (TargetTerritoryBtn) then
 		-- Dialog was destroyed, so we don't need to intercept the click anymore
-		return WL.CancelClickIntercept; 
+		return WL.CancelClickIntercept;
 	end
 	TargetTerritoryBtn.SetInteractable(true);
 

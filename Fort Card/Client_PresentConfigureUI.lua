@@ -1,4 +1,3 @@
-
 function Client_PresentConfigureUI(rootParent)
 	if (not WL.IsVersionOrHigher("5.38")) then
 		UI.Alert("You must update your app to the latest version to use the Fort Card mod");

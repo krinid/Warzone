@@ -1,5 +1,4 @@
-
-function Client_SaveConfigureUI(alert)
+function Client_SaveConfigureUI (alert, addCard)
     Mod.Settings.NumPieces = numPieces.GetValue();
     Mod.Settings.CardWeight = cardWeight.GetValue();
     Mod.Settings.MinPieces = minPieces.GetValue();

@@ -1,4 +1,3 @@
-
 function Client_PresentSettingsUI(rootParent)
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
 	UI.CreateLabel(horz).SetText('Number of Pieces to divide the card into').SetPreferredWidth(290);
