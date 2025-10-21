@@ -124,7 +124,7 @@ function createCards_newCards(alert, addCard);
 				strCardBlockDesc = strCardBlockDesc .. "for " .. Mod.Settings.CardBlockDuration .. " turn"..plural(Mod.Settings.CardBlockDuration)..".";
 		end
 
-		Mod.Settings.CardBlockCardID = addCard("Card Block", strCardBlockDesc, "Card Block_blueback_130x180.png", Mod.Settings.CardBlockPiecesNeeded, Mod.Settings.CardBlockPiecesPerTurn, Mod.Settings.CardBlockStartPieces, Mod.Settings.CardBlockCardWeight, Mod.Settings.CardBlockDuration);      
+		Mod.Settings.CardBlockCardID = addCard("Card Block", strCardBlockDesc, "Card Block_blueback_130x180.png", Mod.Settings.CardBlockPiecesNeeded, Mod.Settings.CardBlockPiecesPerTurn, Mod.Settings.CardBlockStartPieces, Mod.Settings.CardBlockCardWeight, Mod.Settings.CardBlockDuration);
 		Mod.Settings.CardBlockDescription = strCardBlockDesc;
 	end
 
@@ -138,7 +138,7 @@ function createCards_newCards(alert, addCard);
 		print("CardPiecesPerTurn="..tostring(Mod.Settings.CardPiecesPerTurn))
 
 		local strCardPiecesDesc = "Receive "..Mod.Settings.CardPiecesNumWholeCardsToGrant.." whole card".. plural(Mod.Settings.CardPiecesNumWholeCardsToGrant).." and "..Mod.Settings.CardPiecesNumCardPiecesToGrant.." card piece"..plural(Mod.Settings.CardPiecesNumCardPiecesToGrant).." of a card of your choice.\n\nCard Pieces cards cannot be used to redeem pieces of Card Piece cards or pieces.";
-		Mod.Settings.CardPiecesCardID = addCard("Card Piece", strCardPiecesDesc, "Card Pieces_greenback_130x180.png", Mod.Settings.CardPiecesPiecesNeeded, Mod.Settings.CardPiecesPiecesPerTurn, Mod.Settings.CardPiecesStartPieces, Mod.Settings.CardPiecesCardWeight);      
+		Mod.Settings.CardPiecesCardID = addCard("Card Piece", strCardPiecesDesc, "Card Pieces_greenback_130x180.png", Mod.Settings.CardPiecesPiecesNeeded, Mod.Settings.CardPiecesPiecesPerTurn, Mod.Settings.CardPiecesStartPieces, Mod.Settings.CardPiecesCardWeight);
 		Mod.Settings.CardPiecesDescription = strCardPiecesDesc;
 	end
 

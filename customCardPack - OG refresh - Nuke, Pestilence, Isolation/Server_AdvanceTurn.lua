@@ -1591,7 +1591,7 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 
 	--fog the territory before creating the Phantom
 	local intFogLevel = WL.StandingFogLevel.Fogged;
-	if (Mod.Settings.PhantonFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantonFogLevel; end
+	if (Mod.Settings.PhantomFogLevel ~= nil) then intFogLevel = Mod.Settings.PhantomFogLevel; end
 	print ("Phantom fogs: "..intFogLevel, WL.StandingFogLevel.Fogged, WL.StandingFogLevel.OwnerOnly, WL.StandingFogLevel.Visible);
 	local intFogModPriority = tonumber (Mod.Settings.PhantomFogModPriority or 8000); --get FogMod priority mod setting; if nil default to 8000
 	local arrPlayerIDsToMakeVisible = getTeamPlayers (game, castingPlayerID); --get all players on the same team as the Phantom owner to make the fog visible to teammates as well
@@ -2297,46 +2297,6 @@ function process_Neutralize_expirations (game,addOrder)
 	Mod.PrivateGameData = privateGameData;
 end
 
---   &&&START OF CHATGPT WILDFIRECODE
---   &&&START OF CHATGPT WILDFIRECODE
---   &&&START OF CHATGPT WILDFIRECODE
--- ============================================
--- ForestFire (Wildfire) Module
--- ============================================
--- Settings expected (all under Mod.Settings.ForestFire...):
---   ForestFireDamage               (fixed damage per tick)                 default 15
---   ForestFireDamagePercent        (percent-of-armies damage per tick)     default 25
---   ForestFireDamageDeltaWithSpread(% damage falloff per spread step)      default 25
---   ForestFireDuration             (# turns a territory burns)             default 3
---   ForestFireSpreadRange          (# spread layers from epicenter)        default 5
---   ForestFireAffectNeutrals       (bool)                                  default true
---   ForestFireAllowFriendlyFire    (bool)                                  default true
---
--- Public game data structure (per wildfire):
---   Mod.PublicGameData.WildfireData[wildfire_ID] = {
---       targetTerritory,       -- [1] int
---       castingPlayer,         -- [2] int
---       WildfireStartTurn,     -- [3] int
---       currentCycle,          -- [4] int  (0-based; 0=epicenter, 1=first ring, etc.)
---       territoryState         -- [5] table keyed by TerritoryID, value=int turnsLeftToBurn (0=finished)
---   }
---
--- Notes:
--- * We compute shortest-path distance from epicenter each turn with BFS that
---   forbids traversal through nodes that cannot ignite (shielded, friendly-fire protected, or neutral when disabled).
--- * Damage each burn tick is based on the epicenter distance for that territory:
---     factor(d) = max(0, 1 - (intDamageDelta/100) * d)
---   and damage = round( (armies*percent + fixed) * factor(d) ). If result==0 => no tick applied.
--- * Structures: Custom("wildfire") increment on ignition; decrement on extinguish.
--- * Annotations prepared but commented out (structure is visible; dot annotations are optional/future).
--- * One GameOrderEvent per wildfire per processing call.
--- ============================================
-
-
--- ==============================
--- Helpers: Config + Data Access
--- ==============================
-
 local function loadWildfireConfig ()
     local intDuration       = Mod.Settings.ForestFireDuration or 3; --get Duration amount from Mod.Settings, default to 3
     local intSpreadRange    = Mod.Settings.ForestFireSpreadRange or 5; --get Spread Range from Mod.Settings, default to 5
@@ -2358,16 +2318,6 @@ local function loadWildfireConfig ()
         boolAllowFriendlyFire = boolAllowFriendlyFire
     };
 end
-
--- ==============================
--- Helpers: Game / Territory Utils
--- ==============================
-
--- local function toPlayerName(playerID, game)
---     local p = game.ServerGame.Game.Players[playerID];
---     if (p == nil) then return "Unknown Player"; end
---     return p.DisplayName(nil, false);
--- end
 
 local function getTeamID (game, playerID)
     if (playerID == nil) then return nil; end
@@ -2556,10 +2506,17 @@ function applyWildfireDamageToTerritory (game, terrID, cfg, intCurrentCycle, int
 
 		-- Skip if damage=0 (per requirement)
 		if (intDamage > 0) then
-			local impactedTerritory = WL.TerritoryModification.Create(terrID);
+			local impactedTerritory = WL.TerritoryModification.Create (terrID);
+			local targetTerritory = game.ServerGame.LatestTurnStanding.Territories[terrID];
+
 			impactedTerritory.AddArmies = -intDamage;
 
-			-- Optional dot annotation - COMMENTED OUT intentionally (structure is visible)
+			--if no SUs or armies remain after burn damage is applied, go neutral
+			if (#targetTerritory.NumArmies.SpecialUnits) == 0 and (targetTerritory.NumArmies.NumArmies <= intDamage) then
+				impactedTerritory.SetOwnerOpt = WL.PlayerID.Neutral; --if all armies are killed, make territory neutral
+			end
+
+			-- Optional dot annotation - COMMENTED OUT intentionally (b/c structure is visible and all terrs with a Wildfire structure will burn, so don't need structure + annotation, 1 is enough)
 			-- tblAnnotations[terrID] = WL.TerritoryAnnotation.Create(".", 3, getColourInteger(125, 0, 0));
 
 			table.insert (tblModifiedTerritories, impactedTerritory);
@@ -2860,7 +2817,7 @@ function CardBlock_processEndOfTurn(game, addOrder)
     if (publicGameData.CardBlockData == nil) then print("[CARD BLOCK] no data"); return; end
     for key, record in pairs(publicGameData.CardBlockData) do
          if (record.turnNumberBlockEnds > 0 and turnNumber >= record.turnNumberBlockEnds) then
-            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Card Block expired", {}, {});
+            local event = WL.GameOrderEvent.Create (record.castingPlayer, "Card Block expired", {}, {});
 			addOrder(event, true);
 			publicGameData.CardBlockData[key] = nil;
         end
