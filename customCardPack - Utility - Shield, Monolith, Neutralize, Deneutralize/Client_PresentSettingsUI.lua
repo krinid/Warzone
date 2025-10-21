@@ -48,7 +48,7 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel(UImain).SetText("Friendly fire (can harm yourself): " .. tostring(Mod.Settings.NukeFriendlyfire));
         CreateLabel(UImain).SetText("Implementation phase: " .. Mod.Settings.NukeImplementationPhase);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.NukeCardPiecesNeeded);
-        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.NukePiecesPerTurn);
+        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. tostring (Mod.Settings.NukePiecesPerTurn or 1));
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.NukeCardStartPieces);
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.NukeCardWeight);
     end
