@@ -55,7 +55,15 @@ function Client_PresentSettingsUI(rootParent)
 
     if (Mod.Settings.PestilenceEnabled == true) then
         CreateLabel(UImain).SetText("\n[PESTILENCE]").SetColor(getColourCode("card play heading"));
-        CreateLabel(UImain).SetText("Spread a debilitating plague across enemy territories to slowly weaken their forces.");
+        -- CreateLabel(UImain).SetText("Spread a debilitating plague across enemy territories to slowly weaken their forces.");
+		local strPlural_units = "";
+		local strPlural_duration = "";
+		if (Mod.Settings.PestilenceDuration > 1) then strPlural_duration = "s"; end
+		if (Mod.Settings.PestilenceStrength > 1) then strPlural_units = "s"; end
+		CreateLabel(UImain).SetText("Invoke pestilence on another player, reducing each of their territories by " ..Mod.Settings.PestilenceStrength.. " unit"..strPlural_units.. " at the end of the turn for " ..Mod.Settings.PestilenceDuration.. " turn"..strPlural_duration.. ".\n\nIf a territory is reduced to 0 armies, it will turn neutral.\n\nSpecial units are not affected by Pestilence, and will prevent a territory from turning to neutral.");
+		CreateLabel(UImain).SetText("\nPestilence timing (card is played on turn X):\n• (Turn X) - Pestilence is invoked, targeted player is notified");
+		CreateLabel(UImain).SetText("• (Turn X+1) - targeted player receives a reminder warning order");
+		CreateLabel(UImain).SetText("• (Turn X+2) - targeted player is impacted by Pestilence at the end of the turn");
         CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.PestilenceDuration);
         CreateLabel(UImain).SetText("Strength: " .. Mod.Settings.PestilenceStrength);
         CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.PestilencePiecesNeeded);
@@ -93,7 +101,7 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel(UImain).SetText("\n[PHANTOM]").SetColor(getColourCode("card play heading"));
         CreateLabel(UImain).SetText("Deploy a unit that absorbs light to obscure enemy visibility wherever it goes. Units attacking from the presence of a phantom carry the darkness with them.");
         CreateLabel(UImain).SetText("\nDuration: " .. Mod.Settings.PhantomDuration);
-        if (Mod.Settings.PhantomDuration == -1) then 
+        if (Mod.Settings.PhantomDuration == -1) then
             CreateLabel(UImain).SetText("(-1 indicates that the phantom remains permanently)");
         end
         local strFogLevel = "Normal Fog (can't see units or owner of territory)";
@@ -218,7 +226,7 @@ function Client_PresentSettingsUI(rootParent)
         CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.ForestFirePiecesPerTurn);
         CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.ForestFireStartPieces);
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.ForestFireCardWeight);
-end
+	end
 
     if (Mod.Settings.EarthquakeEnabled == true) then
         CreateLabel(UImain).SetText("\n[EARTHQUAKE]").SetColor(getColourCode("card play heading"));
@@ -257,138 +265,4 @@ end
         CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.QuicksandPiecesPerTurn);
         CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.QuicksandCardWeight);
     end
-
---[[	if (Mod.Settings.PestilenceEnabled == true) then
-		CreateLabel(UImain).SetText("\n[PESTILENCE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.PestilenceDuration);
-		CreateLabel(UImain).SetText("Strength: " .. Mod.Settings.PestilenceStrength);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.PestilencePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.PestilenceStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.PestilencePiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.PestilenceCardWeight);
-	end
-
-	if (Mod.Settings.IsolationEnabled == true) then
-		CreateLabel(UImain).SetText("\n[ISOLATION]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.IsolationDuration);
-		if (Mod.Settings.IsolationDuration == -1) then 
-			CreateLabel(UImain).SetText("(-1 indicates that isolation remains permanently)");
-		end
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.IsolationPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.IsolationStartPieces);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.IsolationCardWeight);
-	end
-
-	if (Mod.Settings.ShieldEnabled == true) then
-		CreateLabel(UImain).SetText("\n[SHIELD]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.ShieldDuration);
-        if (Mod.Settings.ShieldDuration == -1) then CreateLabel(UImain).SetText("(-1 indicates that the shield remains permanently)"); end
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: ".. Mod.Settings.ShieldPiecesNeeded);
-        CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.ShieldStartPieces);
-        CreateLabel(UImain).SetText("Minimum pieces awarded per turn: ".. Mod.Settings.ShieldPiecesPerTurn);
-        CreateLabel(UImain).SetText("Card weight (how common the card is): ".. Mod.Settings.ShieldCardWeight);
-    end
-
-	if (Mod.Settings.MonolithEnabled == true) then
-		CreateLabel(UImain).SetText("\n[MONOLITH]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.MonolithDuration);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.MonolithPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.MonolithStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.MonolithPiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.MonolithCardWeight);
-	end
-
-	if (Mod.Settings.NeutralizeEnabled == true) then
-		CreateLabel(UImain).SetText("\n[NEUTRALIZE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.NeutralizeDuration);
-		CreateLabel(UImain).SetText("Can use on Commander: " .. tostring(Mod.Settings.NeutralizeCanUseOnCommander));
-		CreateLabel(UImain).SetText("Can use on Special Units: " .. tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.NeutralizePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.NeutralizeStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.NeutralizePiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.NeutralizeCardWeight);
-	end
-
-	if (Mod.Settings.DeneutralizeEnabled == true) then
-		CreateLabel(UImain).SetText("\n[DENEUTRALIZE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.DeneutralizePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.DeneutralizeStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.DeneutralizePiecesPerTurn);
-		CreateLabel(UImain).SetText("Can use on natural neutrals: " .. tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals));
-		CreateLabel(UImain).SetText("Can use on neutralized territories: " .. tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories));
-		CreateLabel(UImain).SetText("Can assign to self: " .. tostring(Mod.Settings.DeneutralizeCanAssignToSelf));
-		CreateLabel(UImain).SetText("Can assign to another player: " .. tostring(Mod.Settings.DeneutralizeCanAssignToAnotherPlayer));
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.DeneutralizeCardWeight);
-	end
-
-	if (Mod.Settings.CardBlockEnabled == true) then
-		CreateLabel(UImain).SetText("\n[CARD BLOCK]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.CardBlockDuration);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.CardBlockPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.CardBlockStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.CardBlockPiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.CardBlockCardWeight);
-	end
-
-	if (Mod.Settings.CardPiecesEnabled == true) then
-		CreateLabel(UImain).SetText("\n[CARD PIECES]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Number of whole cards to grant: " .. Mod.Settings.CardPiecesNumWholeCardsToGrant);
-		CreateLabel(UImain).SetText("Number of card pieces to grant: " .. Mod.Settings.CardPiecesNumCardPiecesToGrant);
-		CreateLabel(UImain).SetText("Pieces needed to form a whole card: " .. Mod.Settings.CardPiecesPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.CardPiecesStartPieces);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.CardPiecesCardWeight);
-	end
-
-	if (Mod.Settings.AirstrikeEnabled == true) then
-		CreateLabel(UImain).SetText("\n[AIRSTRIKE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Can target neutrals: " .. tostring(Mod.Settings.AirstrikeCanTargetNeutrals));
-		CreateLabel(UImain).SetText("Can target players: " .. tostring(Mod.Settings.AirstrikeCanTargetPlayers));
-		CreateLabel(UImain).SetText("Can target fogged territories: " .. tostring(Mod.Settings.AirstrikeCanTargetFoggedTerritories));
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.AirstrikePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.AirstrikeStartPieces);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.AirstrikeCardWeight);
-	end
-
-	if (Mod.Settings.ForestFireEnabled == true) then
-		CreateLabel(UImain).SetText("\n[FOREST FIRE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.ForestFireDuration);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.ForestFirePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.ForestFireStartPieces);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.ForestFireCardWeight);
-	end
-
-	if (Mod.Settings.EarthquakeEnabled == true) then
-		CreateLabel(UImain).SetText("\n[EARTHQUAKE]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.EarthquakeDuration);
-		CreateLabel(UImain).SetText("Strength: " .. Mod.Settings.EarthquakeStrength);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.EarthquakePiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.EarthquakeStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.EarthquakePiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.EarthquakeCardWeight);
-	end
-
-	if (Mod.Settings.TornadoEnabled == true) then
-		CreateLabel(UImain).SetText("\n[TORNADO]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.TornadoDuration);
-		CreateLabel(UImain).SetText("Strength: " .. Mod.Settings.TornadoStrength);
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.TornadoPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.TornadoStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.TornadoPiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.TornadoCardWeight);
-	end
-
-	if (Mod.Settings.QuicksandEnabled == true) then
-		CreateLabel(UImain).SetText("\n[QUICKSAND]").SetColor(getColourCode("card play heading"));
-		CreateLabel(UImain).SetText("Duration: " .. Mod.Settings.QuicksandDuration);
-		CreateLabel(UImain).SetText("Block entry into territory: " .. tostring(Mod.Settings.QuicksandBlockEntryIntoTerritory));
-		CreateLabel(UImain).SetText("Block airlifts into territory: " .. tostring(Mod.Settings.QuicksandBlockAirliftsIntoTerritory));
-		CreateLabel(UImain).SetText("Block airlifts from territory: " .. tostring(Mod.Settings.QuicksandBlockAirliftsFromTerritory));
-		CreateLabel(UImain).SetText("Block exit from territory: " .. tostring(Mod.Settings.QuicksandBlockExitFromTerritory));
-		CreateLabel(UImain).SetText("Defend damage modifier: " .. Mod.Settings.QuicksandDefenderDamageTakenModifier .."x");
-		CreateLabel(UImain).SetText("Attack damage modifier: " .. Mod.Settings.QuicksandAttackerDamageTakenModifier .."x");
-		CreateLabel(UImain).SetText("Number of pieces to divide the card into: " .. Mod.Settings.QuicksandPiecesNeeded);
-		CreateLabel(UImain).SetText("Pieces given to each player at the start: " .. Mod.Settings.QuicksandStartPieces);
-		CreateLabel(UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.QuicksandPiecesPerTurn);
-		CreateLabel(UImain).SetText("Card weight (how common the card is): " .. Mod.Settings.QuicksandCardWeight);
-	end]]
 end
