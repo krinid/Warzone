@@ -1117,7 +1117,7 @@ function getUnitDescription_causesCrashWithDragons (sp) --(why? happens even wit
 end
 
 function getUnitDescription(sp)
-	if sp.ModData ~= nil then
+	if (sp.ModData ~= nil) then
 		--print("Has mod data");
 		-- local data = DataConverter.StringToData(sp.ModData);
 		-- if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
@@ -1131,7 +1131,8 @@ function getUnitDescription(sp)
 		-- print("Has no unit description");
 		return sp.ModData;
 	end
-	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+	-- return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+	return ("[empty]");
 end
 
 function subtitudeData(sp, data, text)
