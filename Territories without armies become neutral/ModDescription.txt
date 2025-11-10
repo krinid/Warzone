@@ -1,3 +1,1 @@
-As soon as territories have no actual armies or Special Units (eg: Commanders, Tanks, Dragons, Behemoths, Recruiters, etc), they will become neutral. This mechanism takes effect after every order during a given turn.
-
-If you use multi-attack, you could string together thousands of attacks. Use the "Limited Multimoves" mod to prevent this from happening.
+As soon as territories have no actual armies or special units (like Commanders), they will become neutral. Takes effect after every order.

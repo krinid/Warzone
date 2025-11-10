@@ -1,0 +1,8 @@
+This mod adds more custom cards to the game.
+New cards:
+Reconnaissance+ - Reconnaissance Cards with customizable range
+Recycle - sets the number armies on a territory to be the amount that was on it on the first turn and changes the owner to neutral. The armies that used to be on the territory get added to your income. Can only be played on one of your own territories
+Trap - like Blockade Cards except the territory become neutral when an enemy captures it
+Immobilize - prevents all army movement (including airlifts) to and from a territory that is next to or is one of yours
+Double Tap - allows you to make a second attack/transfer from a territory that you already issued an attack/transfer from. The attack must have failed for the card to take affect
+Rushed Blockade - like normal Blockade Cards but happen during the attacks phase - attack one territory then blockade it during the same turn

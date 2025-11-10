@@ -1,0 +1,3 @@
+This mod gives game hosts the ability to prevent army movements getting out of or into certain bonuses. Army movements within territories of the locked down bonus continue as normal, as long as they do not go outside of the bonus. Bonuses which are locked down must not overlap.
+Use Game > Mod: Locked Down Regions to lock down regions and view which regions are locked down.
+The game creator can lock-down and unlock-down as much bonuses whenever they want for whatever reason, it's completely up to them.

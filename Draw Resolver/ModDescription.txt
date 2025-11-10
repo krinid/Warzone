@@ -1,0 +1,2 @@
+This mod decides a random winner if all players vote. AIs automatically vote to decide random winner. Each player has an equal chance of winning. Useful for resolving draws in games that don't have vote to end.
+Go to Game > Mod: Draw Resolver to vote and to see who voted.

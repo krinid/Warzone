@@ -1,0 +1,1 @@
+This mod prevents Surveillance Cards from being played on bonuses with a large number of territories.

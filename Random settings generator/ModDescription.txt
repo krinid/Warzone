@@ -1,0 +1,6 @@
+This mod randomly generates the games settings.
+The map and bonus values are not changed.
+If there is a custom scenario, it is not changed and neither will distribution settings.
+The number of players/teams as well as boot times are also not changed.
+The following settings are optional to randomize: luck modifier, kill rates, one army stands guard, commerce, distribution mode, visibility of cards held/received, visibility of cards played, allowing use of fogs higher than normal fog.
+Note that mods can't read or write other mod's settings. If you would like to include random mods you will need to do that yourself.

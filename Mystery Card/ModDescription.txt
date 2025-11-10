@@ -1,0 +1,3 @@
+This mod adds a custom card to the game: a Mystery Card.
+
+When a Mystery Card is played, the player who played the card will be given a full random card (excluding the Mystery Card itself). These cards are played during the receive cards turn phase. If the player who tried to play the card before then gets eliminated, the card will not take affect but the card will be lost.

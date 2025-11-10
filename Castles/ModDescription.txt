@@ -1,0 +1,1 @@
+Enable purchasing of Castles. Armies can enter castles for extra protection. Castles take regular damage and are destroyed when they reach 0 health.

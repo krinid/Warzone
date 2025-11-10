@@ -1,0 +1,3 @@
+This mod skips all attacks AIs make on human players. You can choose if AIs can make transfers, attack other AIs and if they can attack neutrals.
+Note that this mod only understands built-in teams and not alliances made by mods.
+This mod should not be mixed with Advanced Diplo Mod v4 as it has its own AI settings and fully understands the teams associated with that mod.

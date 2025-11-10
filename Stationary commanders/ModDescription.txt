@@ -1,0 +1,2 @@
+This mod prevents commanders from moving. All attacks and transfers that involve commanders will go ahead but without the commander.
+If the game uses no-split mode and no players have more than 1 territory then commanders are allowed to move otherwise the game may not progress.
