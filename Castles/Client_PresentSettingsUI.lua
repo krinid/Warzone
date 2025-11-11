@@ -1,5 +1,3 @@
-require ("behemoth");
-
 function Client_PresentSettingsUI(rootParent)
     --be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiate this function
 

@@ -1,7 +1,3 @@
---TODOs:
---   - add description for invulnerability to neutrals & strength vs neutrals to ModDescription.txt & purchase dialog
-require ("behemoth");
-
 function Server_AdvanceTurn_End(game, addOrder)
 	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
