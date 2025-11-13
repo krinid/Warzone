@@ -54,15 +54,21 @@ end
 function showMechanics (rootParent, setMaxSize, setScrollable, game, close)
 	local MechanicsUI = rootParent;
 	setMaxSize (600, 500);
-
-	UI.CreateLabel (MechanicsUI).SetText ("Mechanics:\nThis mod promotes active, aggressive play, while penalizing passive play and card farming.").SetFlexibleWidth (1.0);
-	UI.CreateLabel (MechanicsUI).SetText ("\nFor each of the following actions you do not complete each turn, you will receive a Punishment of " ..tostring (1*punishmentIncrement*100).. "% or a Reward of +" ..tostring (1*rewardIncrement*100).. "% when you do complete them:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("[MECHANICS]").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
+	UI.CreateLabel (MechanicsUI).SetText ("This mod promotes active, aggressive play, while penalizing passive play and card farming. There are 3 components that affect how you will be Rewarded or Punished.").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("\n1) CURRENT TURN REWARDS or PUNISHMENTS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
+	UI.CreateLabel (MechanicsUI).SetText ("For each of the following actions you do not complete each turn, you will receive a Punishment of " ..tostring (1*punishmentIncrement*100).. "% or a Reward of +" ..tostring (1*rewardIncrement*100).. "% when you do complete them:").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText ("  (A) Attacks [at least 1 attack made]\n  (B) Captures [at least 1 capture made]\n  (C) Increasing your territory count [territory count increased by at least 1]").SetFlexibleWidth (1.0);
-	UI.CreateLabel (MechanicsUI).SetText ("\nIn addition to the most recent turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("\n2) LONG TERM PUNISHMENTS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
+	UI.CreateLabel (MechanicsUI).SetText ("In addition to the most recent turn Punishment/Reward, additional Punishments will be given when you have consecutive turns with no territory count increases, as follows:").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL1).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL2).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL3).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL4).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText ("\n3) CITY DISTRIBUTION REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
+	UI.CreateLabel (MechanicsUI).SetText ("Further rewards are available by building cities evenly across all your territories, as follows:").SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strCityRewards1).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strCityRewards2).SetFlexibleWidth (1.0);
 end
 
 function showAllPlayerDataButtonClick (rootParent, setMaxSize, setScrollable, game, close)
@@ -148,13 +154,14 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	-- if (game.Settings.CommerceGame == false) then alert ("Commerce must be enabled to function properly.\n\nIf you wish to use this mod, enable Commerce. Otherwise, disable this mod to proceed."); end
 	if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.LatestStanding.Territories, "Worker")) then
 		local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[game.Us.ID] = game.Game.Players [game.Us.ID]});
-		UI.CreateLabel (windowUI).SetText ("\nCITY REWARDS:\n• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("\nCOMPONENT 3 - CITY REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
+		UI.CreateLabel (windowUI).SetText ("• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
 		-- UI.CreateLabel (windowUI).SetText ("• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
-		UI.CreateLabel (windowUI).SetText ("• # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "• # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terr w/cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("• # terrs: " ..tostring (cityRewards[game.Us.ID].numTerritories).. "   • # cities: " ..tostring (cityRewards[game.Us.ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForTerritoriesWithCities).. "]   • av# cities/terrs with cities " ..tostring (cityRewards[game.Us.ID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
 		-- UI.CreateLabel (windowUI).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+"..tostring (cityRewards[game.Us.ID].numCities * cityRewardIncrement * cityRewards[game.Us.ID].numCitiesWithinTolerance).. "]").SetFlexibleWidth (1.0);
 		UI.CreateLabel (windowUI).SetText ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " [+" ..tostring (cityRewards[game.Us.ID].rewardForCityStacksWithinTolerance).. "]").SetFlexibleWidth (1.0);
 		-- UI.CreateLabel (windowUI).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities * cityRewards[game.Us.ID].numCitiesWithinTolerance * cityRewardIncrement).. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
-		UI.CreateLabel (windowUI).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].rewardTotal)).SetFlexibleWidth (1.0);--.. " [+"..tostring (cityRewardIncrement*100).."% * " ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " * " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. "]").SetFlexibleWidth (1.0);
+		UI.CreateLabel (windowUI).SetText ("• City reward: " ..tostring (cityRewards[game.Us.ID].rewardTotal).. " [+"..tostring (cityRewardIncrement*100).."% * (" ..tostring (cityRewards[game.Us.ID].numCitiesWithinTolerance).. " + " ..tostring (cityRewards[game.Us.ID].numTerritoriesWithCities).. ")]").SetFlexibleWidth (1.0);
 	end
 
 	-- attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));

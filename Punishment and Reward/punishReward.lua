@@ -5,7 +5,7 @@ intNumTurnsToEvaluate = 11; --track average values over 10 turns (make configura
 rewardIncrement = 0.1;
 punishmentIncrement = -0.1;
 cityAverageToleranceLevel = 0.25; --quantity of cities of a territory must be within this ratio of the average of (total cities)/(total territories) to receive the city bonus
-cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default 10% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
+cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default tolerance% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
 --^^ this ok for both (A) and (B) or do they need separate ratios?
 
 strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
@@ -13,6 +13,8 @@ strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*10
 strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -10% armies on all territories & territories with 0 units go neutral & blockade (with added units)]";
 strLongTermPunishmentL4 = "• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -20% armies on all territories, territories with 0 units go neutral & blockade (with added units)]";
 
+strCityRewards1 = "• +" ..tostring (cityRewardIncrement*100).. "% for each territory you own that has at least 1 city on it";
+strCityRewards2 = "• +" ..tostring (cityRewardIncrement*100).. "% for each territory you own that has a city quantity within " ..tostring (cityAverageToleranceLevel*100).. "% of your average # of cities per territory";
 --^^make some of these configurable in mod
 
 --long term punishments - # turns with no territory increase:
@@ -156,7 +158,9 @@ function assessCityRewards (territories, players)
 	for playerID, data in pairs (cityRewards) do
 		if (data.numTerritories > 0) then
 			-- data.aveCitiesPerTerritory = data.numCities / data.numTerritories;
-			data.aveCitiesPerTerritory = data.numCities / data.numTerritoriesWithCities;
+			if (data.numTerritoriesWithCities == 0) then data.numTerritoriesWithCities = 0; --avoid divide by 0 (generates result of NaN, which oddly multiplied by 0 later actually still gives a result of 0 and doesn't generate an error, but better to just avoid /0)
+			else data.aveCitiesPerTerritory = data.numCities / data.numTerritoriesWithCities;
+			end
 
 			local lowerBound = data.aveCitiesPerTerritory * (1 - cityAverageToleranceLevel);
 			local upperBound = data.aveCitiesPerTerritory * (1 + cityAverageToleranceLevel);

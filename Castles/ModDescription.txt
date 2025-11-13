@@ -1,1 +1,9 @@
-Enable purchasing of Castles. Armies can enter castles for extra protection. Castles take regular damage and are destroyed when they reach 0 health.
+Enable purchasing of Castles from the Commerce menu. Castles allow armies to enter the castle to bolster defense on a given territory.
+
+A territory can only have 1 castle.
+
+Castles have configurable base cost, addition cost increase per castle owned, maintenance cost per turn. A conversation ratio controls how armies scale to castle health. For example the default value of 2 means that when 1 army enters a castle, it adds 2 strength to the castle, which defines both the castle's health and defense power.
+
+Armies can be moved in or out of the castle via the mod menu, and these become orders in the Attack/Transfer phase.
+
+Special Units cannot enter castles.

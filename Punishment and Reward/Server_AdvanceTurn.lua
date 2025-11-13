@@ -115,15 +115,15 @@ function captureCardCounts (game)
 			-- Cards[k].WholeCards [vwc.CardID] = true;
 		end
 	end
-	for k,v in pairs (Cards) do --for each element table of player,PlayerCards
+	-- for k,v in pairs (Cards) do --for each element table of player,PlayerCards
 		-- print ("&&"..k,tostring (v),tostring(v.Pieces));
-		for k2,vp in pairs (v.Pieces) do
+		-- for k2,vp in pairs (v.Pieces) do
 			-- print ("[**PIECES] "..k,k2,vp);
-		end
-		for k3,vc in pairs (v.WholeCards) do
+		-- end
+		-- for k3,vc in pairs (v.WholeCards) do
 			-- print ("[**CARDS] "..k,k3,vc);
-		end
-	end
+		-- end
+	-- end
 end
 
 function Server_AdvanceTurn_End(game, addOrder)
@@ -164,7 +164,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	local intarrTerritoryCount_currentTurn = territoryCountAnalysis (game);
 
-	for ID,player in pairs (game.ServerGame.Game.PlayingPlayers) do
+	for ID,player in pairs (playerList) do
 		local intTerritoryCount_lastTurn = 0;
 		local intTerritoryCount_currentTurn = intarrTerritoryCount_currentTurn [ID];
 		local intPunishment_territoryCount = 0;
@@ -218,16 +218,31 @@ function Server_AdvanceTurn_End(game, addOrder)
 		-- punishment = (intPunishment_attack + intPunishment_capture + intPunishment_territoryCount) * punishmentIncrement;
 		--for reference: Income(armiesFromReinforcementCards integer, standing GameStanding, bypassArmyCap boolean, ignoreSanctionCards boolean) returns PlayerIncome: Determine's a player's income (number of armies they receive per turn)
 
+		print ("- - - Player " ..ID.. "/" ..getPlayerName (game, ID));
+		--check for presence of Workers -- flag it somewhere in PublicGameData, then display this iff Workers are in play or Can build cities (else it's irrelevant)
+		local intRewardIncomeForCities = 0;
+		local cityRewards = assessCityRewards (game.ServerGame.LatestTurnStanding.Territories, {[ID] = game.Game.Players [ID]});
+		intRewardIncomeForCities = cityRewards[ID].rewardTotal;
+
 		--calculate Punishments and Rewards
 		local incomeAdjustments = assessLongTermPunishment (publicGameData.PRdataByID [ID], game.Game.TurnNumber); --use actual current turn # b/c it just finished and should be included in the calculations
 		intRewardIncome = math.floor (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement * intIncome + 0.5); --round up/down appropriately
 		intPunishmentIncome = math.ceil ((incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement * intIncome); --NOTE: negative #'s, so just round up (less negative), never round down (more negative) for punishments
-		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome;
+		local intNewIncome = intIncome + intRewardIncome + intPunishmentIncome + intRewardIncomeForCities; --only used for display purposes, IncomeMod just uses the increase to buff/nerf income, not actual set the total new income
+
 		local intNetRU_PU_Change = (incomeAdjustments.CurrTurn.RewardUnits * rewardIncrement) + (incomeAdjustments.LongTermPunishmentUnits + incomeAdjustments.CurrTurn.PunishmentUnits) * punishmentIncrement;
 		intPunishmentRewardAdjustedIncome = math.floor (intNetRU_PU_Change * intIncome + 0.5); --round up/down appropriately
 		print ("LONG-TERM [ID " ..ID.. "] income punishment " ..incomeAdjustments.LongTermPunishmentUnits.. "PU, army reduction " ..incomeAdjustments.ArmyReduction.. "x, terr reduction " ..incomeAdjustments.TerritoryReduction.. "x, 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
 		print ("CURR TURN [ID " ..ID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
 		print ("COMBINED PUN/REW [ID " ..ID.. "] income "..intIncome.." [new " ..intNewIncome.. "], punishment "..intPunishmentIncome.. " [" ..incomeAdjustments.CurrTurn.PunishmentUnits.. "PU], reward " ..intRewardIncome.. " [" ..incomeAdjustments.CurrTurn.RewardUnits.. "RU], isAttack "..tostring (incomeAdjustments.CurrTurn.Attacks)..", isCapture ".. tostring (incomeAdjustments.CurrTurn.Captures)..", terrInc "..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
+
+		--only display city rewards info if cities can be built (ie: cost ~= nil) or Workers are in use
+		if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.ServerGame.LatestTurnStanding.Territories, "Worker")) then
+			print ("\nCITY REWARDS:\n• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.ServerGame.LatestTurnStanding.Territories, "Worker")));
+			print ("• # terrs: " ..tostring (cityRewards[ID].numTerritories).. "   • # cities: " ..tostring (cityRewards[ID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[ID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[ID].rewardForTerritoriesWithCities).. "]   • av# cities/terrs with cities " ..tostring (cityRewards[ID].aveCitiesPerTerritory));
+			print ("• Tolerance: " ..tostring (cityAverageToleranceLevel*100).. "%   • #terrs within Tolerance: " ..tostring (cityRewards[ID].numCitiesWithinTolerance).. " [+" ..tostring (cityRewards[ID].rewardForCityStacksWithinTolerance).. "]");
+			print ("• City reward: " ..tostring (cityRewards[ID].rewardTotal).. " [+"..tostring (cityRewardIncrement*100).."% * (" ..tostring (cityRewards[ID].numCitiesWithinTolerance).. " + " ..tostring (cityRewards[ID].numTerritoriesWithCities).. ")]");
+		end
 
 		--&&& combine these 2 and just make it display Punishment or Reward based on whether it's a net buff or nerf
 		local strPunishmentOrReward = "Flat income (punishment = reward)";
@@ -237,9 +252,17 @@ function Server_AdvanceTurn_End(game, addOrder)
 		else strPunishmentOrReward = "Flat income (punishment = reward)";
 		end
 
-		local strOrderMsg = strPunishmentOrReward.. ": " ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "% income";
+		local strDisplayablePunishmentRewardPercent = (intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%"; --eg: displays +30%, -20%, etc
+		local strDisplayableCityRewardsPercent = "+"..tostring ((cityRewardIncrement*100) * (cityRewards[ID].numCitiesWithinTolerance + cityRewards[ID].numTerritoriesWithCities)).. "%"; --eg: displays +5%, etc
+		local strOrderMsg = strPunishmentOrReward.. ": " ..strDisplayablePunishmentRewardPercent .. " income";
 
-		addOrder (WL.GameOrderEvent.Create (ID, strOrderMsg, {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..tostring (intPunishmentIncome + intRewardIncome).. ")")})); --floor = round down for punishment
+		--generate income mods to apply to event orders to modify each player's income; all users get at least 1 order indicating Punishment/Reward/Flat income, and optionally a second order if they are receiving City Rewards
+		-- local arrIncomeMods = {WL.IncomeMod.Create (ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..(intNetRU_PU_Change>0 and "+" or "")..tostring (intNetRU_PU_Change*100).. "%)"), WL.IncomeMod.Create(ID, intRewardIncomeForCities, "City Rewards")};
+		local arrIncomeMods = {WL.IncomeMod.Create (ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..strDisplayablePunishmentRewardPercent.. " income bonus)")};
+		if (intRewardIncomeForCities > 0) then table.insert (arrIncomeMods, WL.IncomeMod.Create(ID, intRewardIncomeForCities, "City Rewards (" ..strDisplayableCityRewardsPercent.. " city bonus)")); end
+
+		addOrder (WL.GameOrderEvent.Create (ID, strOrderMsg, {}, {}, {}, arrIncomeMods)); --floor = round down for punishment
+		-- addOrder (WL.GameOrderEvent.Create (ID, strOrderMsg, {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..tostring (intPunishmentIncome + intRewardIncome).. ")")})); --floor = round down for punishment
 		-- addOrder (WL.GameOrderEvent.Create (ID, "Punishment!", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome, "Punishment (" .. intPunishmentIncome..")")})); --floor = round down for punishment
 		-- addOrder (WL.GameOrderEvent.Create (ID, "Reward!",     {}, {}, {}, {WL.IncomeMod.Create(ID, intRewardIncome,     "Reward ("     .. intRewardIncome..")")})); --ceiling = round up for reward
 
@@ -252,7 +275,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 	-- print ("htc count "..#historicalTerritoryCount);
 	Mod.PublicGameData = publicGameData;
 
-	--crashNow ();
+	-- crashNow ();
 	print ("[S_AT_E] END");
 end
 
@@ -571,4 +594,18 @@ end
 --given 0-255 RGB integers, return a single 24-bit integer
 function getColourInteger (red, green, blue)
 	return red*256^2 + green*256 + blue;
+end
+
+function getPlayerName(game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs(game.Game.Players) do
+			if(tonumber(playerid) == tonumber(playerinfo.ID))then
+				return (playerinfo.DisplayName(nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end

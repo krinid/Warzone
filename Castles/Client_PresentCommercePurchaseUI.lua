@@ -1,37 +1,136 @@
+require ("castles");
+
 function Client_PresentCommercePurchaseUI(rootParent, game, close)
-	Close1 = close;
 	Game = game;
 
-	intCastleCost = 10;
-
-	if (game.Us.ID == nil) then UI.Alert ("Only active players can buy Castles") return; end
-
-	-- local MainUI = UI.CreateVerticalLayoutGroup(rootParent);
 	MainUI = UI.CreateVerticalLayoutGroup(rootParent);
 	UI.CreateLabel(MainUI).SetText("[CASTLE]\n\n").SetColor(getColourCode("card play heading"));
-	UI.CreateLabel(MainUI).SetText("A unit that provides additional protection to armies that enter the castle. The first castle built costs X, and each additional castle built costs Y, castle maintenance costs Z");
-
-	horz = UI.CreateHorizontalLayoutGroup(MainUI).SetFlexibleWidth(1);
-	UI.CreateLabel(horz).SetText("# Armies to move inside the Castle: ");
-	UI.CreateLabel(MainUI).SetText("  (Castles are created at the end of a turn. The # you enter here will move up to that many armies into the castle when it is created. These armies can be from deployments, airlifts, transfers into the territory or otherwise. Any armies not moved into the caslte will remain outside. Special Units cannot enter the castle)");
-	PurchaseCastleButton = UI.CreateButton(MainUI).SetText("Purchase Castle").SetOnClick(PurchaseClicked).SetColor ("#008000");
-	NumArmiesToMoveIntoCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
+	UI.CreateLabel(MainUI).SetText("Build a castle to provide additional protection to armies that enter the castle. Costs:\n"..
+		"• 1st castle: " ..tostring (intCastleBaseCost).. " gold\n• Increases: +" ..tostring (intCastleCostIncrease).. " gold per castle\n• Maintenance: " ..tostring (intCastleMaintenanceCost)..
+		" gpt per castle\n• Conversion ratio: " ..tostring (intArmyToCastlePowerRatio).. " [1 army = " ..tostring (intArmyToCastlePowerRatio).. " castle strength]");
+	if (game.Us.ID == nil) then UI.CreateLabel(MainUI).SetText("[Spectators can't buy Castles]").SetColor(getColourCode("error")); return; end --can spectators even see this? Can they click the "Build" (buy) button?
+	createPurchaseCastleUIcomponents ();
 end
 
-function startsWith(str, sub)
-	return string.sub(str, 1, string.len(sub)) == sub;
+function createPurchaseCastleUIcomponents ()
+	if (UI.IsDestroyed (vertPurchaseDialog) == false) then UI.Destroy (vertPurchaseDialog); end
+	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
+	local horz = UI.CreateHorizontalLayoutGroup (vertPurchaseDialog).SetFlexibleWidth (1);
+	PurchaseCastleButton = UI.CreateButton(horz).SetText("Purchase Castle").SetOnClick(PurchaseClicked).SetColor (getColourCode("button green"));
+	EnterExitCastleButton = UI.CreateButton(horz).SetText("Armies Enter/Exit Castle").SetColor(getColourCode("button magenta")).SetOnClick(enter_exit_Castle_dialog);
 end
 
---given a parameter 'armies' of type WL.Armies, return the # of a given SU present within it
---2nd parameter indicates pattern match (true) vs exact match (false)
-function countSUinstances (armies, strSUname, boolPatternMatch)
-	local intNumSUs = 0;
-	for _,su in pairs(armies.SpecialUnits) do
-		if (su.proxyType == 'CustomSpecialUnit' and ((boolPatternMatch and startsWith (su.Name, strSUname)) or (su.Name == strSUname))) then
-			intNumSUs = intNumSUs + 1;
+function enter_exit_Castle_dialog ()
+	UI.Destroy (vertPurchaseDialog);
+	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
+	SelectTerritoryBtn_CastleArmyMovements = UI.CreateButton(vertPurchaseDialog).SetText("Armies Enter/Exit - Select Territory").SetColor (getColourCode ("button cyan")).SetOnClick(SelectTerritoryClicked_CastleArmyMovements);
+	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
+	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
+	UI.CreateEmpty(vertPurchaseDialog);
+	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
+	UI.CreateEmpty(vertPurchaseDialog);
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	UI.CreateLabel(horz).SetText("# Armies to enter the Castle: ").SetColor (getColourCode("highlight"));
+	NumArmiesToEnterCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
+	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies on territory outside the castle to move inside the castle; Special Units cannot enter castles)").SetColor (getColourCode ("subheading"));
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	UI.CreateLabel(horz).SetText("# Armies to exit the Castle: ").SetColor (getColourCode("highlight"));
+	NumArmiesToExitCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
+	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies inside the castle to exit the castle to the territory)").SetColor (getColourCode ("subheading"));
+
+	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Add Order").SetOnClick(AddOrderButtonClicked).SetColor (getColourCode ("button green"));
+
+	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
+	SelectTerritoryClicked_CastleArmyMovements(); --start immediately in selection mode, no reason to require player to click the button
+end
+
+function SelectTerritoryClicked_CastleArmyMovements()
+	UI.InterceptNextTerritoryClick(TerritoryClicked_CastleArmyMovements);
+	-- local behemothPower = getBehemothPower(BehemothGoldSpent);
+	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	TargetTerritoryInstructionLabel.SetText("Select a castle to allow armies to Enter/Exit").SetColor (getColourCode("error")); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
+	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
+	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
+	SelectTerritoryBtn_CastleArmyMovements.SetInteractable(false);
+end
+
+function TerritoryClicked_CastleArmyMovements(terrDetails)
+	if (UI.IsDestroyed (SelectTerritoryBtn_CastleArmyMovements)) then return; end
+
+	SelectTerritoryBtn_CastleArmyMovements.SetInteractable(true);
+
+	if (terrDetails == nil) then
+		--The click request was cancelled.   Return to our default state.
+		TargetTerritoryInstructionLabel.SetText("");
+		SelectedTerritory = nil;
+		buttonAddOrder.SetInteractable(false);
+	else
+		--Territory was clicked, check it
+		if (Game.LatestStanding.Territories[terrDetails.ID].OwnerPlayerID ~= Game.Us.ID or countSUinstances (Game.LatestStanding.Territories[terrDetails.ID].NumArmies, "Castle", false) < 1) then
+			TargetTerritoryInstructionLabel.SetText("Select a territory that you own that has a Castle").SetColor(getColourCode("error"));
+			buttonAddOrder.SetInteractable(false);
+		else
+			TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name).SetColor(getColourCode("subheading"));
+			SelectedTerritory = terrDetails;
+			buttonAddOrder.SetInteractable(true);
 		end
 	end
-	return (intNumSUs);
+end
+
+function AddOrderButtonClicked()
+	-- local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
+	-- local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
+	-- local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+
+	-- if (countSUinstances (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false) > 0) then
+	-- 	UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has a castle; can only build 1 castle per territory");
+	-- 	return;
+	-- elseif (buildingCastleOnTerritoryThisTurn (Game, SelectedTerritory.ID) == true) then
+	-- 	UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has an order to build a castle; can only build 1 castle per territory");
+	-- 	return;
+	-- end
+
+	local orders = Game.Orders;
+	local objCastleSU = getSUonTerritory (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false);
+	if (objCastleSU == nil) then UI.Alert ("Couldn't find castle on territory"); return; end --this should never occur b/c this function is only called when a valid territory with a castle SU is specified
+
+	-- local intArmiesToEnterCastle = math.max (0, math.min (NumArmiesToEnterCastle.GetValue(), Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies.NumArmies));
+	-- local intArmiesToExitCastle = math.max (0, math.min (NumArmiesToExitCastle.GetValue(), objCastleSU.Health));
+	local intArmiesToEnterCastle = math.max (0, NumArmiesToEnterCastle.GetValue());
+	local intArmiesToExitCastle = math.max (0, NumArmiesToExitCastle.GetValue());
+	-- local intArmiesTerritoryDelta = math.max (0, intArmiesToExitCastle * intArmyToCastlePowerRatio - intArmiesToExitCastle); --actual army quantity that will change in the order (#exiting*ratio - #entering), should never go below 0 but use max just in case another mod does something funky
+	-- local msg = "";
+	-- if (intArmiesToEnterCastle > 0) then
+	-- 	msg = msg .. intArmiesToEnterCastle.. " armies enter castle";
+	-- elseif (intArmiesToExitCastle > 0) then
+	-- 	if (msg ~= "") then msg = msg .. "; "; end
+	-- 	msg = msg .. intArmiesToEnterCastle.. " armies enter castle";
+	-- end
+
+	if (intArmiesToEnterCastle > 0) then
+		local payload_Enter = 'Castle|Enter|' ..SelectedTerritory.ID.. "|" ..intArmiesToEnterCastle;
+		local msg_Enter = intArmiesToEnterCastle.. " armies enter castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
+		local customOrder_Enter = WL.GameOrderCustom.Create (Game.Us.ID, msg_Enter, payload_Enter);
+		customOrder_Enter.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
+		-- customOrder.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+		-- customOrder_Enter.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
+		table.insert(orders, customOrder_Enter);
+	end
+
+	if (intArmiesToExitCastle > 0) then
+		local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
+		local msg_Exit = intArmiesToExitCastle.. " armies exit castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
+		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit);
+		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
+		-- customOrder.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+		-- customOrder.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
+		table.insert(orders, customOrder_Exit);
+	end
+
+	Game.Orders = orders;
+	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 end
 
 function PurchaseClicked()
@@ -43,82 +142,65 @@ function PurchaseClicked()
 	local intCastleMaxPerPlayerPerGame = Mod.Settings.CastleMaxTotalPerPlayer or -1; --default to -1 (no limit) if not set by host
 	local numCastlesAlreadyHaveTotalPerGame = Mod.PlayerGameData.TotalCastlesCreatedThisGame or 0; --get # of Castles already created this game, if nil then default to 0
 	local numCastlesAlreadyHaveSimultaneously = 0;
+	intNumCastlesPurchaseOrdersThisTurn = 0;
 
 	--count # of Castles currently on the map (note: if fogged to the owning player by a Smoke Bomb, etc, then they won't be counted and the player could exceed the max while the fog is active)
-	for _,ts in pairs(Game.LatestStanding.Territories) do
-		if (ts.OwnerPlayerID == playerID) then
-			numCastlesAlreadyHaveSimultaneously = numCastlesAlreadyHaveSimultaneously + countSUinstances (ts.NumArmies, "Castle", true);
+	for _,terr in pairs (Game.LatestStanding.Territories) do
+		if (terr.OwnerPlayerID == playerID) then
+			numCastlesAlreadyHaveSimultaneously = numCastlesAlreadyHaveSimultaneously + countSUinstances (terr.NumArmies, "Castle", true);
 		end
 	end
 
-	for _,order in pairs(Game.Orders) do
+	for _,order in pairs (Game.Orders) do
 		if (order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, 'Castle|Purchase|')) then
 			numCastlesAlreadyHaveSimultaneously = numCastlesAlreadyHaveSimultaneously + 1;
 			numCastlesAlreadyHaveTotalPerGame = numCastlesAlreadyHaveTotalPerGame + 1;
+			intNumCastlesPurchaseOrdersThisTurn = intNumCastlesPurchaseOrdersThisTurn + 1;
 		end
 	end
 
-	-- limit # of Behemoths to value set by host (max 5) including units already on the map and bought in orders this turn
-	-- if (intBehemothMaxPerPlayerPerGame > 0 and numBehemothsAlreadyHaveTotalPerGame >= intBehemothMaxPerPlayerPerGame) then
-	-- 	UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
+	--block if matches: 'Castle|Purchase|' ..SelectedTerritory.ID
+
+	-- limit # of Castles to value set by host (max 5) including units already on the map and bought in orders this turn
+	-- if (intCastleMaxPerPlayerPerGame > 0 and numCastlesAlreadyHaveTotalPerGame >= intCastleMaxPerPlayerPerGame) then
+	-- 	UI.Alert("Cannot create another Castle\n\nAlready at max of " ..tostring (intCastleMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
 	-- 	return;
-	-- elseif (numBehemothsAlreadyHaveSimultaneously >= intBehemothMaxSimultaneousPerPlayer) then
-	-- 	UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
+	-- elseif (numCastlesAlreadyHaveSimultaneously >= intCastleMaxSimultaneousPerPlayer) then
+	-- 	UI.Alert("Cannot create another Castle\n\nAlready at max of " ..tostring (intCastleMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
 	-- 	return;
 	-- end
 
-	-- BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
-	-- if (BehemothGoldSpent <= 0) then UI.Alert ("Behemoth cost must be >0"); return; end
+	UI.Destroy (vertPurchaseDialog);
+	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
+	SelectTerritoryBtn = UI.CreateButton(vertPurchaseDialog).SetText("Purchase Castle - Select Territory").SetColor ("#00F4FF").SetOnClick(SelectTerritoryClicked);
+	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
+	buttonBuyCastle = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
 
-	UI.Destroy (PurchaseCastleButton);
-	if (SelectTerritoryBtn == nil) then
-		SelectTerritoryBtn = UI.CreateButton(MainUI).SetText("Select Territory").SetColor ("#00F4FF").SetOnClick(SelectTerritoryClicked);
-		TargetTerritoryInstructionLabel = UI.CreateLabel(MainUI).SetText("");
-		buttonBuyCastle = UI.CreateButton(MainUI).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
-	end
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	UI.CreateLabel(horz).SetText("# Armies to move inside the Castle: ").SetColor (getColourCode("highlight"));
+	NumArmiesToMoveIntoCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
+	UI.CreateLabel(vertPurchaseDialog).SetText("   Castles are created at end of turn. Armies up to the # specified here will move into the castle when it is created. Special Units cannot enter the castle").SetColor ("#FFFF00");
 
-	local intNumArmiesToMoveInsideCastle = NumArmiesToMoveIntoCastle.GetValue();
 	SelectTerritoryBtn.SetInteractable (false);
 	SelectTerritoryClicked(); --start immediately in selection mode, no reason to require player to click the button
 
-	-- Close1();
-end
+	local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
+	local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
+	local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+	local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
 
-
-function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, close)
-	Close2 = close;
-	setMaxSize(400, 500);
-
-	local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-	UI.CreateLabel(vert).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
-	UI.CreateLabel(vert).SetText("• max " ..tostring (Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5).. " units can be on map per player simultaneously");
-	UI.CreateLabel(vert).SetText("• " ..tostring (Mod.PlayerGameData.TotalBehemothsCreatedThisGame or 0).. " of max " ..tostring (Mod.Settings.BehemothMaxTotalPerPlayer or -1).. " units created so far\n");
-
-	SelectTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetColor ("#00F4FF").SetOnClick(SelectTerritoryClicked);
-	TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-
-	buttonBuyCastle = UI.CreateButton(vert).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
-
-	local behemothCost = BehemothCost_NumberInputField.GetValue();
-	local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
-	local behemothPowerFactor = 1.0; --always use factor of 1.0, it's too complicated with separate factors, etc
-	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost " ..tostring (BehemothGoldSpent).. ", Health ".. behemothPower.. "\nAttack power ".. behemothPower * (1+behemothPowerFactor)..", Defense power ".. (behemothPower * behemothPowerFactor)/4);
-	UI.CreateLabel(vert).SetText("Takes damage before Armies");
-	-- UI.CreateLabel(vert).SetText("\nBehemoth properties:\nCost "..BehemothGoldSpent.."\nPower: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor.."\n\n"..
-	-- 	"Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 0.9+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
-	-- 	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
-	SelectTerritoryBtn.SetInteractable (false);
-	print ("name==Behemoth (power ".. tostring (math.floor (behemothPower*10)/10) ..')');
-
-	SelectTerritoryClicked(); --start immediately in selection mode, no reason to require player to click the button
+	UI.CreateLabel(vertPurchaseDialog).SetText("• Next castle cost: " ..tostring (intCastleCost).. " gold");
+	UI.CreateLabel(vertPurchaseDialog).SetText("• # of castles already built: " ..tostring (intNumCastlesOwned));
+	UI.CreateLabel(vertPurchaseDialog).SetText("• # of castle purchase orders this turn: " ..tostring (intNumCastlesPurchaseOrdersThisTurn));
+	UI.CreateLabel(vertPurchaseDialog).SetText("• Current castle maintenance: " ..tostring (intCurrentMaintenanceCost).. " gpt");
+	-- UI.CreateLabel(vertPurchaseDialog).SetText("• Future castle maintenance: X");
 end
 
 function SelectTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	-- local behemothPower = getBehemothPower(BehemothGoldSpent);
 	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Castle to").SetColor(getColourCode("error")); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
+	TargetTerritoryInstructionLabel.SetText("Select a territory to spawn the Castle to").SetColor (getColourCode("error")); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
 	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
 	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
 	SelectTerritoryBtn.SetInteractable(false);
@@ -147,36 +229,26 @@ function TerritoryClicked(terrDetails)
 end
 
 function CompletePurchaseClicked()
-	local msg = 'Buy Castle for '..intCastleCost..' gold, spawn to ' .. SelectedTerritory.Name;
-	local payload = 'Castle|Purchase|' ..SelectedTerritory.ID.. "|" ..intCastleCost;
+	local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
+	local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
+	local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+
+	if (countSUinstances (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false) > 0) then
+		UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has a castle; can only build 1 castle per territory");
+		return;
+	elseif (buildingCastleOnTerritoryThisTurn (Game, SelectedTerritory.ID) == true) then
+		UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has an order to build a castle; can only build 1 castle per territory");
+		return;
+	end
+
+	local msg = 'Buy Castle for '..intCastleCost..' gold, spawn to ' .. SelectedTerritory.Name ..", " ..tostring (math.max (0, NumArmiesToMoveIntoCastle.GetValue())).. " armies move inside";
+	local payload = 'Castle|Purchase|' ..SelectedTerritory.ID.. "|" ..math.max (0, NumArmiesToMoveIntoCastle.GetValue()).. "|" ..intCastleCost;
 	local orders = Game.Orders;
-	local customOrder = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost } );
-    customOrder.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
+	local customOrder = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.ReceiveCards);
+	customOrder.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- customOrder.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
 	table.insert(orders, customOrder);
 	Game.Orders = orders;
-	-- Close1();
-end
-
---given 0-255 RGB integers, return a single 24-bit integer
-function getColourInteger (red, green, blue)
-	return red*256^2 + green*256 + blue;
-end
-
-function createJumpToLocationObject (game, targetTerritoryID)
-	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create(1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
-	return (WL.RectangleVM.Create(
-		game.Map.Territories[targetTerritoryID].MiddlePointX,
-		game.Map.Territories[targetTerritoryID].MiddlePointY,
-		game.Map.Territories[targetTerritoryID].MiddlePointX,
-		game.Map.Territories[targetTerritoryID].MiddlePointY));
-end
-
-function getColourCode (itemName)
-    if (itemName=="card play heading") then return "#0099FF"; --medium blue
-    elseif (itemName=="error")  then return "#FF0000"; --red
-	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
-    else return "#AAAAAA"; --return light grey for everything else
-    end
+	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 end
