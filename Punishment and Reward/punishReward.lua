@@ -10,8 +10,8 @@ cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the toler
 
 strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
 strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces";
-strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -10% armies on all territories & territories with 0 units go neutral & blockade (with added units)]";
-strLongTermPunishmentL4 = "• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, [future: -20% armies on all territories, territories with 0 units go neutral & blockade (with added units)]";
+strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, -10% armies on all territories, [future consideration: territories with 0 units go neutral & blockade (with added units)]";
+strLongTermPunishmentL4 = "• 10+ turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, -20% armies on all territories, [future consideration: territories with 0 units go neutral & blockade (with added units)]";
 
 strCityRewards1 = "• +" ..tostring (cityRewardIncrement*100).. "% for each territory you own that has at least 1 city on it";
 strCityRewards2 = "• +" ..tostring (cityRewardIncrement*100).. "% for each territory you own that has a city quantity within " ..tostring (cityAverageToleranceLevel*100).. "% of your average # of cities per territory";

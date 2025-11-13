@@ -75,9 +75,11 @@ function showAllPlayerDataButtonClick (rootParent, setMaxSize, setScrollable, ga
 	setMaxSize (800, 600);
 
 	for k,v in pairs (Mod.PublicGameData.PRdataByID) do
-		-- if (k ~= clientPlayerID) then 
-		showIncomeAssessment (game, rootParent, k, game.Game.TurnNumber-1);
-		UI.CreateLabel (rootParent).SetText ("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n\n").SetFlexibleWidth (1.0);
+		-- only show data for active players, skip eliminated/booted/surrendered/declined players
+		if (game.Game.Players [k].State == WL.GamePlayerState.Playing) then
+			showIncomeAssessment (game, rootParent, k, game.Game.TurnNumber-1);
+			UI.CreateLabel (rootParent).SetText ("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n\n").SetFlexibleWidth (1.0);
+		end
 	end
 end
 
@@ -86,6 +88,12 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	local incomeAdjustments;
 
 	incomeAdjustments = assessLongTermPunishment (Mod.PublicGameData.PRdataByID [playerID], turnNumber); --use -1 b/c current turn number from the client during order entry is 1 higher than the # of actually finished turns
+
+	print ("-------------------player "..playerID.. "/" ..getPlayerName (game, playerID) ..", player state: " ..game.Game.Players [playerID].State.."/".. WL.GamePlayerState.ToString (game.Game.Players [playerID].State));
+	--skip non-active players (they were eliminated, booted, declined the game, etc)
+	if (game.Game.Players [playerID].State ~= WL.GamePlayerState.Playing) then
+		return; --do nothing, just return
+	end;
 
 	print ("-----NO_INCREASE #turns evaluated " ..incomeAdjustments.NumTurnsEvaluatedOn.. ", #turns total " ..tostring (incomeAdjustments.NumTurnsWithNoIncrease).. ", consecutive " ..tostring (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease).. ", average " ..tostring (incomeAdjustments.AverageTerritoryCount).. ", highest " ..tostring (incomeAdjustments.HighestTerritoryCount));
 	print ("Curr-turn Penalty " ..tostring (incomeAdjustments.CurrTurn.PunishmentUnits).. ", Reward " ..tostring (incomeAdjustments.CurrTurn.RewardUnits).. ", attacks " ..tostring (incomeAdjustments.CurrTurn.Attacks).. ", captures " ..tostring (incomeAdjustments.CurrTurn.Captures).. ", #territories " ..tostring (incomeAdjustments.CurrTurn.TerritoryCount).. ", terr increased " ..tostring (incomeAdjustments.CurrTurn.TerritoryCountIncreased));
