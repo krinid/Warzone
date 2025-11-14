@@ -1,0 +1,10 @@
+Transforms cities into civilian militia that defend a territory to avoid capture. While armies or Special Units remain on a territory, cities play no role. But when all armies and Special Units are killed, civilians rise up to defend their land.
+
+Cities built on territories cannot be captured, they must be destroyed before the territory can be captured. 1 city has the strength of 1 army.
+
+Example:
+When attacking a territory with 5 units and 2 cities:
+(A) attack army of <8 units: reduces the armies, has no effect on the cities, territory is not captured
+(B) attack army of 8 units: kills the 5 defending units, cities are unharmed, territory is not captured
+(C) attack army of 10 units: kills the 5 defending units, destroys 1 city, 1 city remains, territory is not captured
+(C) attack army of >=11 units: kills the 5 defending units, destroys 2 cities, no cities remains, territory is captured
