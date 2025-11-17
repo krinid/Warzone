@@ -30,6 +30,7 @@ function PlayBombCard (game, order, addNewOrder)
 	local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
 	local armies;
 	local strBombMsg = getPlayerName (game, order.PlayerID).. " bombs " ..game.Map.Territories[intTargetTerritoryID].Name;
+	local terr = game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID]; --target territory
 
 	--if a territory with an active Shield is being Bombed, nullify the damage
 	--also only process if Shield module is active (or if current game predates ActiveModule)
@@ -41,14 +42,18 @@ function PlayBombCard (game, order, addNewOrder)
 		-- print ("SHIELD yes");
 	else
 		-- print ("SHIELD no");
-		armies = game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.NumArmies;
+		armies = terr.NumArmies.NumArmies;
 		armies = math.floor (armies * Mod.Settings.killPercentage / 100 + Mod.Settings.armiesKilled + 0.5);
 
-		-- print ("ARMIES DELTA "..armies);
-		-- print ("terr Armies " .. tostring (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID].NumArmies.NumArmies));
-		-- print ("% "..tostring (Mod.Settings.killPercentage/100));
-		-- print ("fixed " .. tostring (Mod.Settings.armiesKilled));
-		-- print ("total reduction " .. math.floor (armies * Mod.Settings.killPercentage / 100 + Mod.Settings.armiesKilled + 0.5));
+		local intCurrentCityCount = (terr.Structures and terr.Structures [WL.StructureType.City]) or 0;
+		local intNumCitiesToDestroy = Mod.Settings.NumCitiesDestroyedByBombPlay or 0;
+		if (intCurrentCityCount > 0 and intNumCitGiesToDestroy > 0) then
+			local intNewCityCount = math.max (0, intCurrentCityCount - intNumCitiesToDestroy);
+			local structures = terr.Structures or {};
+			structures [WL.StructureType.City] = intNewCityCount;
+			terrMod.SetStructuresOpt = structures;
+		end
+
 		terrMod.AddArmies = -armies;
 		if (armies >= game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.NumArmies and Mod.Settings.EmptyTerritoriesGoNeutral and (Mod.Settings.SpecialUnitsPreventNeutral == false or tablelength(game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID].NumArmies.SpecialUnits) == 0)) then
 				terrMod.SetOwnerOpt = WL.PlayerID.Neutral;

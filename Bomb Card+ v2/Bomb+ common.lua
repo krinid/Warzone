@@ -14,10 +14,30 @@ function get_BombPlus_description ()
 		end
 	end
 
-	strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute at the ";
-
-	if (Mod.Settings.delayed == true) then strBombPlusDesc = strBombPlusDesc .. "end of the turn (after attack/transfer orders are processed).";
-	else strBombPlusDesc = strBombPlusDesc .. "start of the turn (after deployments but before attacks).";
-	end
+	strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..(tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase."
 	return (strBombPlusDesc);
+end
+
+function WLturnPhases ()
+	--WLturnPhases = {'CardsWearOff', 'Purchase', 'Discards', 'OrderPriorityCards', 'SpyingCards', 'ReinforcementCards', 'Deploys', 'BombCards', 'EmergencyBlockadeCards', 'Airlift', 'Gift', 'Attacks', 'BlockadeCards', 'DiplomacyCards', 'SanctionCards', 'ReceiveCards', 'ReceiveGold'};
+	local WLturnPhasesTable = {
+		['CardsWearOff'] = WL.TurnPhase.CardsWearOff,
+		['Purchase'] = WL.TurnPhase.Purchase,
+		['Discards'] = WL.TurnPhase.Discards,
+		['OrderPriorityCards'] = WL.TurnPhase.OrderPriorityCards,
+		['SpyingCards'] = WL.TurnPhase.SpyingCards,
+		['ReinforcementCards'] = WL.TurnPhase.ReinforcementCards,
+		['Deploys'] = WL.TurnPhase.Deploys,
+		['BombCards'] = WL.TurnPhase.BombCards,
+		['EmergencyBlockadeCards'] = WL.TurnPhase.EmergencyBlockadeCards,
+		['Airlift'] = WL.TurnPhase.Airlift,
+		['Gift'] = WL.TurnPhase.Gift,
+		['Attacks'] = WL.TurnPhase.Attacks,
+		['BlockadeCards'] = WL.TurnPhase.BlockadeCards,
+		['DiplomacyCards'] = WL.TurnPhase.DiplomacyCards,
+		['SanctionCards'] = WL.TurnPhase.SanctionCards,
+		['ReceiveCards'] = WL.TurnPhase.ReceiveCards,
+		['ReceiveGold'] = WL.TurnPhase.ReceiveGold
+	};
+	return WLturnPhasesTable;
 end

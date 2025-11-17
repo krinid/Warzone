@@ -7,9 +7,12 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.killPercentage = killPercentage;
 	--just use the %; >100% will have no effect; <0% will actually heal
 
-	local delayed = cboxBombPhaseDelayed.GetIsChecked();
-	if (delayed == nil) then delayed = false; end
-    Mod.Settings.delayed = delayed;
+	-- local delayed = cboxBombPhaseDelayed.GetIsChecked();
+	-- if (delayed == nil) then delayed = false; end
+    -- Mod.Settings.delayed = delayed;
+    Mod.Settings.delayed = nil;
+	-- UI.Alert (BombImplementationPhase.GetText (), WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase));
+	--Mod.Settings.BombImplementationPhase is already set when selecting the turn phase, don't need to do anything here
 
 	local armiesKilled = armiesKilledInput.GetValue();
 
@@ -17,6 +20,7 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.BombPlusStartPieces = BombPlusCardStartPieces.GetValue ();
 	Mod.Settings.BombPlusPiecesPerTurn = BombPlusPiecesPerTurn.GetValue ();
 	Mod.Settings.BombPlusCardWeight = BombPlusCardWeight.GetValue ();
+	Mod.Settings.NumCitiesDestroyedByBombPlay = NIFnumCitiesDestroyedByBomb.GetValue ();
 
 	--don't limit this; allow >1000 and negative bomb values; "healing bombs" in essence
 	--if armiesKilled < 0 or armiesKilled > 1000 then alert('Armies killed must be set between 0 to 1000'); end

@@ -11,27 +11,22 @@ function Client_PresentConfigureUI(rootParent)
 	local boolSpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral;
 	if (boolSpecialUnitsPreventNeutral == nil) then boolSpecialUnitsPreventNeutral = true; end
 
-	local intBombImplementationPhase = Mod.Settings.BombImplementationPhase;
-	if (intBombImplementationPhase == nil) then intBombImplementationPhase = false; end
+	if (Mod.Settings.BombImplementationPhase == nil) then Mod.Settings.BombImplementationPhase = WL.TurnPhase.BombCards; end
 
 	local boolEmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral;
 	if (boolEmptyTerritoriesGoNeutral == nil) then boolEmptyTerritoriesGoNeutral = true; end
+
+	if (Mod.Settings.NumCitiesDestroyedByBombPlay == nil) then Mod.Settings.NumCitiesDestroyedByBombPlay = 10; end
 
 	local vert = UI.CreateVerticalLayoutGroup(rootParent);
 
     local row1 = UI.CreateHorizontalLayoutGroup(vert);
 	UI.CreateLabel(row1).SetText('Damage (%): ');
-    killPercentageInput = UI.CreateNumberInputField(row1)
-		.SetSliderMinValue(0)
-		.SetSliderMaxValue(100)
-		.SetValue(killPercentage);
+    killPercentageInput = UI.CreateNumberInputField(row1).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(killPercentage);
 
 	local row2 = UI.CreateHorizontalLayoutGroup(vert);
 	UI.CreateLabel(row2).SetText('Fixed damage: ');
-    armiesKilledInput = UI.CreateNumberInputField(row2)
-		.SetSliderMinValue(0)
-		.SetSliderMaxValue(25)
-		.SetValue(armiesKilled);
+    armiesKilledInput = UI.CreateNumberInputField(row2).SetSliderMinValue(0).SetSliderMaxValue(25).SetValue(armiesKilled);
 
 	UI.CreateLabel(vert).SetText('[% damage is applied first, the fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)]');
 
@@ -40,20 +35,20 @@ function Client_PresentConfigureUI(rootParent)
     cboxEmptyTerritoriesGoNeutral = UI.CreateCheckBox(UI.CreateHorizontalLayoutGroup(vert)).SetIsChecked(boolEmptyTerritoriesGoNeutral).SetText ("Territories reduced to 0 armies turn Neutral").SetIsChecked (boolEmptyTerritoriesGoNeutral);
 
 	local row3 = UI.CreateHorizontalLayoutGroup(vert);
-	-- UI.CreateLabel(row4).SetText('Special Units prevent territory from turning neutral after bombing: ');
     specialUnitsInput = UI.CreateCheckBox(row3).SetIsChecked(boolSpecialUnitsPreventNeutral).SetText ("Special Units prevent territory from turning neutral");
 	UI.CreateLabel(vert).SetText('  - when checked, a Bombed territory reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
 	UI.CreateLabel(vert).SetText('  - when unchecked, a Bombed territory reduced to 0 will turn neutral, even if it has Special Units on it');
 
-	local row4a = UI.CreateHorizontalLayoutGroup(vert);
-	local row4b = UI.CreateHorizontalLayoutGroup(vert);
-	-- UI.CreateLabel(row3).SetText('Delayed: off = card happens at the beggining of the turn, on = card happens at the end of the turn.');
-	local labelBombImplentationPhase = UI.CreateLabel(row4a);
-	cboxBombPhaseDelayed = UI.CreateCheckBox(row4b).SetIsChecked(delayed).SetText ("Check to move Bomb impacts to end of turn").SetOnValueChanged (function () displayBombPhaseText (labelBombImplentationPhase, cboxBombPhaseDelayed.GetIsChecked()); end);
-	displayBombPhaseText (labelBombImplentationPhase, delayed);
-	UI.CreateLabel(vert).SetText("  - unchecked - normal Bomb functionality @ start of turn after deployments, before orders\n  - checked - Bombs are executed at the end of the turn, after all orders have been processed");
-	-- if (Mod.Settings.BombImplementationPhase == nil) then Mod.Settings.BombImplementationPhase = WL.TurnPhase.BombCards; end
-	-- BombImplementationPhase = UI.CreateButton (row4a).SetInteractable(true).SetText(Mod.Settings.BombImplementationPhase).SetOnClick(Bomb_turnPhaseButton_clicked);
+	local row4 = UI.CreateHorizontalLayoutGroup(vert);
+	UI.CreateLabel(row4).SetText('# cities destroyed by a Bomb+ card play: ');
+    NIFnumCitiesDestroyedByBomb = UI.CreateNumberInputField(row4).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByBombPlay);
+	UI.CreateLabel(vert).SetText("· Set to 0 = Bomb+ plays don't destroy cities");
+	UI.CreateLabel(vert).SetText("· Set to >=1 = this quantity of cities are destroyed when a Bomb+ card is played");
+
+	local row5 = UI.CreateHorizontalLayoutGroup(vert);
+	UI.CreateEmpty (vert);
+	UI.CreateLabel(row5).SetText('Turn phase where bombs are executed: ');
+	BombImplementationPhase = UI.CreateButton (row5).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
 
 	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (vert);
 	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
@@ -72,13 +67,6 @@ function Client_PresentConfigureUI(rootParent)
 	BombPlusCardWeight = UI.CreateNumberInputField(horzBombPlusCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusCardWeight or 1).SetWholeNumbers(false).SetInteractable(true);
 end
 
-function displayBombPhaseText (labelObject, boolDelayed)
-	local strBombImplementationPhase = "Start of turn";
-	if (boolDelayed == true) then strBombImplementationPhase = "End of turn"; end
-	labelObject.SetText('\nTurn phase where bombs are executed: ' .. strBombImplementationPhase);
-	-- UI.Alert ('\nTurn phase where bombs are executed: ' .. strBombImplementationPhase);
-end
-
 function Bomb_turnPhaseButton_clicked ()
 	print ("turnPhase button clicked");
 
@@ -95,5 +83,6 @@ function Bomb_turnPhase_selected (turnPhase)
 	print ("turnPhase selected=="..tostring(turnPhase));
 	print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
 	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
+	Mod.Settings.BombImplementationPhase = turnPhase.value;
 	BombImplementationPhase.SetText (turnPhase.name);
 end

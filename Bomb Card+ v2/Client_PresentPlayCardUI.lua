@@ -43,12 +43,12 @@ function play_BombPlus_card(game, cardInstance, playCard)
                 return;
             end
 
-            local strBombPlusMessage = strPlayerName_cardPlayer .. " plays a Bomb+ cards on " .. TargetTerritoryName;
+            local strBombPlusMessage = strPlayerName_cardPlayer .. " plays a Bomb+ card on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-			local intTurnPhase = WL.TurnPhase.BombCards;
-			if (Mod.Settings.delayed == true) then intTurnPhase = WL.TurnPhase.BlockadeCards; end
+			local intTurnPhase = (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards);
+			-- UI.Alert (intTurnPhase.. ", " ..WL.TurnPhase.ToString (intTurnPhase));
 
-            if (WL.IsVersionOrHigher("5.34.1")) then
+			if (WL.IsVersionOrHigher("5.34.1")) then
                 local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, getColourInteger(0, 0, 0))}; --use Black for Bomb
                 -- playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
                 playCard (strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
