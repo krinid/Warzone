@@ -139,9 +139,9 @@ function addEndOfTurnCardPieces(game)
 
 	for teamType in pairs(pgd.teams) do
 		for teamId in pairs(pgd.teams[teamType]) do
-			print ("__teamType " ..teamType.. ", teamId " ..tostring (teamId));
-			print ("  __pgd " ..tostring (pgd).. ", pgd.teams " ..tostring (pgd.teams).. ", pgd.teams.teamed " ..tostring (pgd.teams.teamed).. ", pgd.teams.teamed[teamId] " ..tostring (pgd.teams.teamed[teamId]).. ", pgd.teams.teamed[teamId].members " ..tostring (pgd.teams.teamed[teamId].members));
-			print ("  __endOfTurnPieces " ..tostring (endOfTurnPieces).. ", endOfTurnPieces.teamed " ..tostring (endOfTurnPieces.teamed).. ", endOfTurnPieces.teamed[teamId] " ..tostring (endOfTurnPieces.teamed[teamId]));
+			-- print ("__teamType " ..teamType.. ", teamId " ..tostring (teamId));
+			-- print ("  __pgd " ..tostring (pgd).. ", pgd.teams " ..tostring (pgd.teams).. ", pgd.teams.teamed " ..tostring (pgd.teams.teamed).. ", pgd.teams.teamed[teamId] " ..tostring (pgd.teams.teamed[teamId]).. ", pgd.teams.teamed[teamId].members " ..tostring (pgd.teams.teamed[teamId].members));
+			-- print ("  __endOfTurnPieces " ..tostring (endOfTurnPieces).. ", endOfTurnPieces.teamed " ..tostring (endOfTurnPieces.teamed).. ", endOfTurnPieces.teamed[teamId] " ..tostring (endOfTurnPieces.teamed[teamId]));
 
 			if teamType == 'teamed' and endOfTurnPieces ~= nil and endOfTurnPieces.teamed ~= nil and endOfTurnPieces.teamed[teamId] ~= nil and endOfTurnPieces.teamed[teamId].members ~= nil then
 				pgd.teams.teamed[teamId].members = endOfTurnPieces.teamed[teamId].members;
