@@ -14,7 +14,9 @@ function get_BombPlus_description ()
 		end
 	end
 
-	strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..(tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase."
+	strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..WL.TurnPhase.ToString (tonumber ((Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed ~= nil and Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase.";
+	-- strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..(tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase.";
+	-- UI.Alert ("BombImplementationPhase " ..tostring (Mod.Settings.BombImplementationPhase).. ", " ..tostring (Mod.Settings.delayed) .." --> ".. strBombPlusDesc);
 	return (strBombPlusDesc);
 end
 

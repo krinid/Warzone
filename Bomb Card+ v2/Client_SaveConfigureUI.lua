@@ -10,7 +10,15 @@ function Client_SaveConfigureUI (alert, addCard)
 	-- local delayed = cboxBombPhaseDelayed.GetIsChecked();
 	-- if (delayed == nil) then delayed = false; end
     -- Mod.Settings.delayed = delayed;
-    Mod.Settings.delayed = nil;
+    Mod.Settings.delayed = nil; --set this to nil to indicate that we're using the new methodology of Mod.Settings.BombImplementationPhase to indicate a proper WZ turn phase rather than just a delayed yes/no
+	--NOTE: original Bomb+ mod uses Mod.Settings.delayed to indicated whether Bomb+ hits in BombCards phase (false) or ReceiveCards phase (true); in this case Mod.Settings.BombImplementationPhase == nil
+	--      new Bomb+ mod sets Mod.Settings.delayed to nil and instead uses Mod.Settings.BombImplementationPhase to indicate the actual turn phase Bomb+ hits on, and it can be any available WZ TurnPhase
+
+	--del me-- testing only
+	-- Mod.Settings.BombImplementationPhase = nil;
+	-- Mod.Settings.delayed = false; --Bomb+ hits in BombCards phase
+	-- Mod.Settings.delayed = true; --Bomb+ hits in ReceiveCards phase
+
 	-- UI.Alert (BombImplementationPhase.GetText (), WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase));
 	--Mod.Settings.BombImplementationPhase is already set when selecting the turn phase, don't need to do anything here
 
