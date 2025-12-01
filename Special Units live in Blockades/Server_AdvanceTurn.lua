@@ -110,10 +110,10 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	-- addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "SUs created", {}, modifiedTerritories));
 
 	--this shows move order on ODD TURN #'s -- must invert it for EVEN TURN #'s
-	local moveOrder = game.ServerGame.CyclicMoveOrder; --Game.GetTurn (1);
-	for k,v in pairs (moveOrder) do
-		print (v, getPlayerName (game, v));
-	end
+	-- local moveOrder = game.ServerGame.CyclicMoveOrder; --Game.GetTurn (1);
+	-- for k,v in pairs (moveOrder) do
+	-- 	print (v, getPlayerName (game, v));
+	-- end
 end
 
 --for each killed SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)
