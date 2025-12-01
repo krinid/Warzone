@@ -40,14 +40,15 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 
 		if (strOperation == "Purchase") then
 			local goldSpent = tonumber (orderComponents[5]);
-			local intCastlePower = math.min (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies.NumArmies, intArmyCountSpecified * intArmyToCastlePowerRatio);
+			local intArmiesEnteringCastle = math.max (0, math.min (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies.NumArmies, intArmyCountSpecified));
+			local intCastlePower = intArmiesEnteringCastle * intArmyToCastlePowerRatio;
 			local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player_Server (game, order.PlayerID, "Castle", false);
 			local intNumCastlesPurchaseOrdersThisTurn = 0; --countSUsPurchasedThisTurn (Game, "Castle");
 			local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
 			-- local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
 
 			if (goldSpent >= intCastleCost) then
-				createCastle (game, order, addNewOrder, targetTerritoryID, intCastlePower);
+				createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnteringCastle, intCastlePower);
 			else
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
 				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price < proper cost of next castle (" ..tostring (intCastleCost).. " gold) attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
@@ -101,7 +102,7 @@ function modifyCastle (game, order, addNewOrder, targetTerritoryID, existingCast
 	addNewOrder (event, false);
 end
 
-function createCastle (game, order, addNewOrder, targetTerritoryID, castlePower)
+function createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnteringCastle, castlePower)
 	local targetTerritoryStanding = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
 
 	if (targetTerritoryStanding.OwnerPlayerID ~= order.PlayerID) then
@@ -117,7 +118,7 @@ function createCastle (game, order, addNewOrder, targetTerritoryID, castlePower)
 	terrMod.AddSpecialUnits = {castleSU};
 	terrMod.AddArmies = -castlePower;
 	local strDescription = "Purchased a Castle";
-	if (castlePower > 0) then strDescription = strDescription .. ", " ..tostring (castlePower).. " armies entered it"; end
+	if (castlePower > 0) then strDescription = strDescription .. ", " ..tostring (intArmiesEnteringCastle).. " armies entered it"; end
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
