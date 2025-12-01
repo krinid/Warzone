@@ -116,7 +116,7 @@ function createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnt
 	local castleSU = createCastleSU (castlePower);
 	local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
 	terrMod.AddSpecialUnits = {castleSU};
-	terrMod.AddArmies = -castlePower;
+	terrMod.AddArmies = -intArmiesEnteringCastle;
 	local strDescription = "Purchased a Castle";
 	if (castlePower > 0) then strDescription = strDescription .. ", " ..tostring (intArmiesEnteringCastle).. " armies entered it"; end
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
