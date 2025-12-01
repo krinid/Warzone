@@ -67,7 +67,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, -intNumArmiesToEnterCastle, objCastleSU.Health + intNumArmiesToEnterCastle * intArmyToCastlePowerRatio);
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
 			elseif (intNumArmiesToExitCastle > 0) then
-				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, intNumArmiesToExitCastle, objCastleSU.Health - intNumArmiesToExitCastle * intArmyToCastlePowerRatio);
+				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, intNumArmiesToExitCastle*2, objCastleSU.Health - intNumArmiesToExitCastle * intArmyToCastlePowerRatio);
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
 			end
 			--ref: local payload_Enter = 'Castle|Enter|' ..SelectedTerritory.ID.. "|" ..intArmiesToEnterCastle;
