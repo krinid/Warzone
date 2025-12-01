@@ -41,11 +41,16 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		if (strOperation == "Purchase") then
 			local goldSpent = tonumber (orderComponents[5]);
 			local intCastlePower = math.min (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies.NumArmies, intArmyCountSpecified * intArmyToCastlePowerRatio);
-			if (goldSpent > 0) then
+			local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player_Server (game, order.PlayerID, "Castle", false);
+			local intNumCastlesPurchaseOrdersThisTurn = 0; --countSUsPurchasedThisTurn (Game, "Castle");
+			local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+			-- local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
+
+			if (goldSpent >= intCastleCost) then
 				createCastle (game, order, addNewOrder, targetTerritoryID, intCastlePower);
 			else
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
-				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
+				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price < proper cost of next castle (" ..tostring (intCastleCost).. " gold) attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
 			end
 		elseif (strOperation == "Enter" or strOperation == "Exit") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
