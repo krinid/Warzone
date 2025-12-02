@@ -76,7 +76,7 @@ function showAllPlayerDataButtonClick (rootParent, setMaxSize, setScrollable, ga
 
 	--if not PR data exists yet, just exit; for example when entering orders for T1, there will be no data yet
 	if (Mod.PublicGameData.PRdataByID == nil) then
-		UI.CreateLabel (MenuWindow).SetText ("No Punishment/Reward data available yet").SetColor (getColourCode ("error")).SetAlignment(WL.TextAlignmentOptions.Left);
+		UI.CreateLabel (rootParent).SetText ("No Punishment/Reward data available yet").SetColor (getColourCode ("error")).SetAlignment(WL.TextAlignmentOptions.Left);
 		return;
 	end
 
