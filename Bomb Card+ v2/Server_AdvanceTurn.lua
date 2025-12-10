@@ -47,7 +47,7 @@ function PlayBombCard (game, order, addNewOrder)
 
 		local intCurrentCityCount = (terr.Structures and terr.Structures [WL.StructureType.City]) or 0;
 		local intNumCitiesToDestroy = Mod.Settings.NumCitiesDestroyedByBombPlay or 0;
-		if (intCurrentCityCount > 0 and intNumCitGiesToDestroy > 0) then
+		if (intCurrentCityCount > 0 and intNumCitiesToDestroy > 0) then
 			local intNewCityCount = math.max (0, intCurrentCityCount - intNumCitiesToDestroy);
 			local structures = terr.Structures or {};
 			structures [WL.StructureType.City] = intNewCityCount;
