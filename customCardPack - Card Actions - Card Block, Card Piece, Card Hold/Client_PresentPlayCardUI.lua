@@ -637,8 +637,8 @@ function play_Pestilence_card(game, cardInstance, playCard)
         -- CreateLabel (vertPestiCard).SetText ("\nCASTING TURN: Turn x".. game.Game.TurnNumber);
         -- CreateLabel (vertPestiCard).SetText ("\nWARNING TURN: Turn x".. game.Game.TurnNumber+1);
         -- CreateLabel (vertPestiCard).SetText ("\nEFFECT START TURN: Turn x".. game.Game.TurnNumber+2);
-		
-        local labelPlayersAlreadyTargetedByPestilence = UI.CreateLabel (vertPestiCard);
+
+		local labelPlayersAlreadyTargetedByPestilence = UI.CreateLabel (vertPestiCard);
         UI.CreateLabel (vertPestiCard).SetText ("\nSelect player to invoke Pestilence on:");
 
         printObjectDetails (Mod.PublicGameData.PestilenceData, "Pestilence data", "full PublicGameDdata.Pestilence");

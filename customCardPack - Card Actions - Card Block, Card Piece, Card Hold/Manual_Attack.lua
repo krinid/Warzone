@@ -21,6 +21,7 @@ require ('utilities'); --CardPack
 function process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, boolWZattackTransferOrder)
 	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
 	local DefendingArmies = DefendingTerritory.NumArmies;
+	local DefendingTerritory_Onwer = DefendingTerritory.OwnerPlayerID;
 
 	local sortedAttackerSpecialUnits = {};
 	local sortedDefenderSpecialUnits = {};
@@ -76,16 +77,12 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	end
 
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
-	-- print ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
 	printDebug ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
 	local defenderResult = apply_damage_to_specials_and_armies (sortedDefenderSpecialUnits, DefendingArmies.NumArmies, AttackDamage, game, addNewOrder, boolWZattackTransferOrder);
-	-- print ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
 	printDebug ("[ATTACKER TAKES DAMAGE] "..DefenseDamage..", DefensePower "..DefensePower..", DefenderDefensePower% ".. totalDefenderDefensePowerPercentage..", Def kill rate "..game.Settings.DefenseKillRate.." _________________");
 	local attackerResult = apply_damage_to_specials_and_armies (sortedAttackerSpecialUnits, AttackingArmies.NumArmies, DefenseDamage, game, addNewOrder, boolWZattackTransferOrder);
 	local boolAttackSuccessful = false; --indicates whether attacker is successful and should move units to target territory and take ownership of it
-	-- print ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned]");
 	printDebug ("[DEFENDER RESULT] #armies "..defenderResult.RemainingArmies .." ["..defenderResult.KilledArmies.. " died], #specials "..#defenderResult.SurvivingSpecials.." ["..#defenderResult.KilledSpecials.. " died, ".. #defenderResult.ClonedSpecials .." cloned, "..tablelength (defenderResult.DamageToSpecialUnits).." damaged]");
-	-- print ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned]");
 	printDebug ("[ATTACKER RESULT] #armies "..attackerResult.RemainingArmies .." ["..attackerResult.KilledArmies.. " died], #specials "..#attackerResult.SurvivingSpecials.." ["..#attackerResult.KilledSpecials.. " died, ".. #attackerResult.ClonedSpecials .." cloned, "..tablelength (attackerResult.DamageToSpecialUnits).." damaged]");
 	local damageToAllSpecialUnits = concatenateArrays (attackerResult.DamageToSpecialUnits, defenderResult.DamageToSpecialUnits); --combine elements from each array for attacker/defender to get a single array
 	printDebug ("[!DAMAGE SUs both DEFENDER & ATTACKER] #SUs "..tablelength (damageToAllSpecialUnits));

@@ -1501,7 +1501,8 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 
-    local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);
+    -- local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);
+    local builder = WL.CustomSpecialUnitBuilder.Create(WL.PlayerID.Neutral); --assign unit to Neutral, not the caster of the Monolith or owner of the territory; this makes it so it doesn't show up in the Attack/Transfer dialog
     builder.Name = 'Shield';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'shield_special unit_clearback.png';
@@ -1669,7 +1670,8 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 
 		-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
-		local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Monolith action)
+		-- local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Monolith action)
+		local builder = WL.CustomSpecialUnitBuilder.Create (WL.PlayerID.Neutral); --assign unit to Neutral, not the caster of the Monolith or owner of the territory; this makes it so it doesn't show up in the Attack/Transfer dialog
 		builder.Name = 'Monolith';
 		builder.IncludeABeforeName = false;
 		builder.ImageFilename = 'monolith special unit_clearback.png'; --max size of 60x100 pixels

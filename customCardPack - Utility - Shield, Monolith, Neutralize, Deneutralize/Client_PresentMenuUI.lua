@@ -290,7 +290,7 @@ function showPestilenceData ()
 
     for k,v in pairs (Mod.PublicGameData.PestilenceData) do
         --printObjectDetails (v,"record", "PestilenceData");
-        CreateLabel (MenuWindow).SetText ("["..k.."] target " ..v.territory.."/"..toPlayerName (v.targetPlayer, Game)..", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", warning T"..v.PestilenceWarningTurn..", Start T"..v.PestilenceStartTurn..", End T"..v.PestilenceEndTurn);
+        CreateLabel (MenuWindow).SetText ("[" ..tostring (k).. "] target " ..tostring (v.territory).. "/" ..tostring (toPlayerName (v.targetPlayer, Game)).. ", caster " ..tostring (v.castingPlayer).. "/" .. tostring  (toPlayerName (v.castingPlayer, Game)).. ", warning T" ..tostring (v.PestilenceWarningTurn).. ", Start T" ..tostring (v.PestilenceStartTurn).. ", End T".. tostring  (v.PestilenceEndTurn));
 		--for reference: publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
     end
 end
@@ -1117,7 +1117,7 @@ function getUnitDescription_causesCrashWithDragons (sp) --(why? happens even wit
 end
 
 function getUnitDescription(sp)
-	if sp.ModData ~= nil then
+	if (sp.ModData ~= nil) then
 		--print("Has mod data");
 		-- local data = DataConverter.StringToData(sp.ModData);
 		-- if data.Essentials ~= nil and data.Essentials.UnitDescription ~= nil then
@@ -1131,7 +1131,8 @@ function getUnitDescription(sp)
 		-- print("Has no unit description");
 		return sp.ModData;
 	end
-	return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+	-- return "This unit does not have a description. Please read the mod description of the mod that created this unit to get to know more about it";
+	return ("[empty]");
 end
 
 function subtitudeData(sp, data, text)
