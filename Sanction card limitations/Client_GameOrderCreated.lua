@@ -12,7 +12,7 @@ function Client_GameOrderCreated (game, order, skip)
 		if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage>=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
             print ("[Sanction card] self-sanction for +ve sanction SKIP");
             -- addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self for positive sanctions is disallowed - Skipping order", {}, {},{}));
-			UI.Alert ("Sanctioning yourself is disallowed - Skipping order");
+			UI.Alert ("Sanctioning yourself is disallowed");
             skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		elseif (order.PlayerID ~= order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
 			print ("[Sanction card] sanction on another for -ve sanction SKIP");
