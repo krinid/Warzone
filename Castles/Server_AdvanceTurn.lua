@@ -3,15 +3,18 @@ require ("castles");
 function Server_AdvanceTurn_End(game, addOrder)
 	local arrCastleMaintenanceIncomeMods = {};
 	for ID,_ in pairs (game.ServerGame.Game.PlayingPlayers) do
-		print ("END: "..intCastleMaintenanceCost, ID, countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false), math.floor (countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false) * intCastleMaintenanceCost * -1 + 0.5));
-		table.insert (arrCastleMaintenanceIncomeMods, WL.IncomeMod.Create (ID, math.floor (countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false) * intCastleMaintenanceCost * -1 + 0.5), "Castle maintenance"));
+		local intCastleMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false) * intCastleMaintenanceCost * -1 + 0.5);
+		print ("END: "..intCastleMaintenanceCost, ID, intCastleMaintenanceCost);
+
+		--if castle maintenance for current player in loop is > 0, add income mod to table to deduct cost from next turn's income; if ==0, don't add it so it doesn't clutter up the order with "Adds 0 to the income of [player]" messages
+		if (intCastleMaintenanceCost > 0) then table.insert (arrCastleMaintenanceIncomeMods, WL.IncomeMod.Create (ID, intCastleMaintenanceCost), "Castle maintenance"); end
 	end
-	-- addOrder (WL.GameOrderEvent.Create (0, "Castle maintenance", {}, {}, {}, {WL.IncomeMod.Create(ID, intPunishmentIncome + intRewardIncome, strPunishmentOrReward.. " (" ..tostring (intPunishmentIncome + intRewardIncome).. ")")})); --floor = round down for punishment
+
+	--add even if no orders are included, so there isn't a give away to other players that castles have been built (in the fog, etc) when the order suddenly appears on a given turn
+	--but since all castle maintenance is being processed as a single order, do players see the content of the order anyhow and thus know how many castles each player have even they can't see the castles themselves on the map?
 	addOrder (WL.GameOrderEvent.Create (0, "Castle maintenance", {}, {}, {}, arrCastleMaintenanceIncomeMods));
 
-
-
-	--set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
+	--FOR TESTING ONLY:: set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
 	--local boolHaltCodeExecutionAtEndofTurn = true;
 	local intHaltOnTurnNumber = 1;
