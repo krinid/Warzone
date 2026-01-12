@@ -1101,7 +1101,7 @@ function nukeCheckboxClicked ()
 		---| 'SanctionCards' # Sanction card turn phase
 		---| 'ReceiveCards' # Receive cards turn phase
 		---| 'ReceiveGold' # Receive gold turn phase <--- not sure if this is an official phase, but in Commerce games, it occurs after receiving card pieces; not documented on https://www.warzone.com/wiki/Turn_phases]]
-		
+
 		horzNukeCardPiecesNeeded = CreateHorz (UIcontainer);
 		CreateLabel(horzNukeCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
 		NukeCardPiecesNeeded = CreateNumberInputField(horzNukeCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);

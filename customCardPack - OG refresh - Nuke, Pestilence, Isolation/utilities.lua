@@ -494,6 +494,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
 	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Bomb+ Card") then return getColours()["Dark Magenta"]; --
 	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
 	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
 	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
