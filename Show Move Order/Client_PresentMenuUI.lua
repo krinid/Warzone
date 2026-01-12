@@ -66,9 +66,12 @@ function populateMoveOrderControl (moveOrderData)
 			playerID = moveOrderData [k];
 			-- print ("[CPMUI MO] ".. tostring(k),tostring(playerID),getPlayerName (Game, playerID),tostring(isPlayerActive (Game, playerID)).. ", cbox ".. tostring(cboxShowActivePlayersOnly.GetIsChecked()));
 			if (cboxShowActivePlayersOnly.GetIsChecked() == false or isPlayerActive (Game, playerID) == true) then
-				--game.ServerGame.Game.PlayingPlayers
-				numItemsDisplayed = numItemsDisplayed + 1;
-				UI.CreateLabel (vertMoveOrderDetails).SetText (numItemsDisplayed..". " ..getPlayerName (Game, playerID)).SetColor (Game.Game.PlayingPlayers [playerID].Color.HtmlColor);
+				--weed out players who never actually joined the game; eg: they were invited but declined, didn't accept before the game started, etc
+				--these players exist in the WZ MoveOrder array but not in Game.PlayingPlayers (a weird but true WZ quirk)
+				if (Game.Game.PlayingPlayers [playerID] ~= nil) then
+					numItemsDisplayed = numItemsDisplayed + 1;
+					UI.CreateLabel (vertMoveOrderDetails).SetText (numItemsDisplayed..". " ..getPlayerName (Game, playerID)).SetColor (Game.Game.PlayingPlayers [playerID].Color.HtmlColor);
+				end
 			end
 		end
 	end

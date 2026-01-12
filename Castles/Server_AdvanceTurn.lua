@@ -137,7 +137,7 @@ function createCastleSU (castlePower)
 	builder.DefensePower = castlePower;
 	builder.CombatOrder = 1; --fights directly after armies; this prevents a territory with armies outside and no armies inside a castle (castle SU has 0 health) to be destroyed despite armies there to defend it (logistically this would make no sense)
 	builder.Health = castlePower;
-	builder.CanBeGiftedWithGiftCard = true;
+	builder.CanBeGiftedWithGiftCard = false;
 	builder.CanBeTransferredToTeammate = false;
 	builder.CanBeAirliftedToSelf = false;
 	builder.CanBeAirliftedToTeammate = false;

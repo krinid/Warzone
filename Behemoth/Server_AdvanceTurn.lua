@@ -38,14 +38,16 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 	elseif (order.proxyType=='GameOrderAttackTransfer' and game.ServerGame.LatestTurnStanding.Territories [order.To].IsNeutral == true) then
 		--order is an attack on a neutral territory (technically it's an Attack or a Transfer, but since the target is neutral, it can only be an attack; though I suppose it's possible that some mod could do 'neutral moves' of some sort?)
 		--for any Behemoths in the order, do:
-			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage
+			--(A) check if Mod.Settings.BehemothInvulnerableToNeutrals == true and if so, ensure they take no damage (have to eliminate any damage and also ensure they weren't killed -- 2 totally different WZ mechanics to deal with)
 			--(B) ensure damage against the neutral is calculated correctly as per intStrengthAgainstNeutrals
 
 		local strSUtype = "Behemoth";
-		for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
-			--if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
+		local boolInvulnerableBehemothWasProtectedFromDeath = false; --used for OMS glitch detection; set to true if a B was killed but 'revived' due to being invulnerable to neutrals
+		-- for _,specialUnit in pairs (order.NumArmies.SpecialUnits) do
+		for _,specialUnit in pairs (result.ActualArmies.SpecialUnits) do
+			--check if SU name is 'Behemoth' or starts with 'Behemoth' (currently Behemoth names have power level appended to their names)
 			if (specialUnit.proxyType == 'CustomSpecialUnit' and (specialUnit.Name == strSUtype or string.sub (specialUnit.Name, 1, string.len (strSUtype)) == strSUtype)) then
-				--unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
+				--part (A) above: unit is a Behemoth, so if Mod.Settings.BehemothInvulnerableToNeutrals is set, ensure it neither dies nor takes any damage from the neutral
 				if (boolBehemothInvulnerableToNeutrals == true) then
 					--check if the Behemoth is slated to be killed & if so, remove it from the table result.AttackingArmiesKilled.SpecialUnits[specialunit]
 					--result.AttackingArmiesKilled.SpecialUnits is an array of special unit objects, where one property is ID; write code to check the array to see if the ID property of an element == specialUnit.ID, and if so, remove it from the array
@@ -53,14 +55,15 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 					for key = #newAttackingArmiesKilled_SpecialUnits, 1, -1 do
 						if (newAttackingArmiesKilled_SpecialUnits[key].ID == specialUnit.ID) then
 							table.remove (newAttackingArmiesKilled_SpecialUnits, key);
+							boolInvulnerableBehemothWasProtectedFromDeath = true;
 							-- print ("[BEHEMOTH] Killed attacking neutral -> nullify the kill; Name: ".. specialUnit.Name)
 						end
 					end
 					result.AttackingArmiesKilled = WL.Armies.Create (result.AttackingArmiesKilled.NumArmies, newAttackingArmiesKilled_SpecialUnits);
 
-					local newDamageToSpecialUnits = {}; --start with empty table, add the items to keep back into the table then reassign to result.DamageToSpecialUnits (this is the only way it works)
-					--result.DamageToSpecialUnits is a table with key of the ID of a special unit; write code to check each element of the table to see if the ID matches specialUnit.ID and if so remove it from the table
 					--check if the Behemoth is slated to take damage, and if so remove it from the table result.DamageToSpecialUnits[guid]
+					--result.DamageToSpecialUnits is a table with key of the ID of a special unit; write code to check each element of the table to see if the ID matches specialUnit.ID and if so remove it from the table
+					local newDamageToSpecialUnits = {}; --start with empty table, add the items to keep back into the table then reassign to result.DamageToSpecialUnits (this is the only way it works)
 					for key, intDamage in pairs(result.DamageToSpecialUnits) do
 						if (key == specialUnit.ID) then
 							-- print ("[BEHEMOTH] Damaged while attacking neutral -> nullify the damage; Damage ".. tostring (intDamage).. ", Name: ".. specialUnit.Name);
@@ -71,6 +74,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 					result.DamageToSpecialUnits = newDamageToSpecialUnits;
 				end
 
+				--part (B) above: ensure damage against the neutral is calculated correctly as per intStrengthAgainstNeutrals
 				local armiesBehemoth = WL.Armies.Create (0, {specialUnit}); --put Behemoth in armies object to get attack power & properly apply neutral damage factor intStrengthAgainstNeutrals
 
 				--calc gap between damage inclusive of intStrengthAgainstNeutrals and the damage already included in the result w/o respect to intStrengthAgainstNeutrals, then add it to result.DefendingArmiesKilled
@@ -117,11 +121,45 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 					end
 				end
 
+				--check here for OMS glitch; this occurs when OMS is in play when a Behemoth that is invulnerable to neutrals attacks a neutral with enough damage to capture it but the Behemoth itself takes enough damage to die so WZ deems
+				--the attack to have failed and thus reinstates the OMS army, but the mod stops the Behemoth from dying; thus the criteria for detecting the OMS glitch are:
+				-- (A) OMS is in play
+				-- (B) Behemoth Invulnerability to neutrals is in play
+				-- (C) the Behemoth was killed during the attack (and revived by this mod)
+				-- (D) there are is only 1 defending army left on the target territory (all SUs and other armies died) --> #armies at start of turn == #armies killed+1
+				-- (E) either (i)  no defending SUs and AttackPower * killRate >= #defending armies or
+				--            (ii) all defending SUs were killed
+				--evaluate condition (E) above
+				local boolOMSconditionApplies = false;
+				local intOMSconditionAdjuster = 0;
+				if (#game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits == 0 and intFullAttackDamage >= game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies) then boolOMSconditionApplies = true; intOMSconditionAdjuster = 1;--condition (E)(i)
+				elseif (#game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits >0 and #game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits == #result.DefendingArmiesKilled.SpecialUnits) then boolOMSconditionApplies = true; intOMSconditionAdjuster = 1; --condition (E)(ii)
+				end
+
+				print ("- - - - - - Behemoth OMS glitch check");
+				print ("OMS " .. tostring (game.Settings.OneArmyStandsGuard));
+				print ("Neutral-invulnerable Behemoth revived: " ..tostring (boolInvulnerableBehemothWasProtectedFromDeath));
+				print ("Target terr #armies " ..tostring (game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies).. ", #SUs " ..tostring (#game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits));
+				print ("Target terr #armies killed " ..tostring (result.DefendingArmiesKilled.NumArmies) .. ", #SUs killed " ..tostring (#result.DefendingArmiesKilled.SpecialUnits));
+				print ("Either of the following conditions are true: " ..tostring (boolOMSconditionApplies)); --condition (E)
+				print ("  0 Defending SUs & Full Attack Damage >= #Defending armies: " .. tostring (#game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits == 0 and intFullAttackDamage >= game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies)); --condition (E)(i)
+				print ("  1+ Defending SUs & all Defending SUs killed: " ..tostring (#game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits >0 and #game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits == #result.DefendingArmiesKilled.SpecialUnits)); --condition (E)(ii)
+
+				local boolOMSglitchDetected = boolOMSconditionApplies and game.Settings.OneArmyStandsGuard == true and boolInvulnerableBehemothWasProtectedFromDeath == true and #game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits == #result.DefendingArmiesKilled.SpecialUnits and result.DefendingArmiesKilled.NumArmies == game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies - 1;
+				print ("OMS glitch detected: " ..tostring (boolOMSglitchDetected).. ", OMS glitch adjuster value: " ..tostring (intOMSconditionAdjuster));
+
+				-- if (boolOMSglitchDetected) then
+				-- 	print ("INVOKING OMS GLITCH FIX");
+				-- 	-- result.DefendingArmiesKilled = WL.Armies.Create (game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies, result.DefendingArmiesKilled.SpecialUnits);
+				-- else
+				-- 	print ("NOT INVOKING OMS GLITCH FIX");
+				-- end
+
 				--this works for intStrengthAgainstNeutrals_default >=1.0 but not intStrengthAgainstNeutrals_default <1.0 b/c can't figure out how much of the damage done by the Behemoth is already included in intOldTotalDamage
 				--sometimes #territories is < total damage capable to do, thus intOldTotalDamage < total damage capable to do, thus can't just subtract total capable to do and add the gap between that and the real amount -- this may make damage go negative
 
-				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (intNewTotalDamage + 0.5), result.DefendingArmiesKilled.SpecialUnits);
-				-- print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. intStrengthAgainstNeutrals_default .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * intStrengthAgainstNeutrals_default) ..", apply gap " .. intDamageGap.. ", old total damage "..intOldTotalDamage.. ", new total damage ".. intNewTotalDamage);
+				result.DefendingArmiesKilled = WL.Armies.Create (math.floor (intNewTotalDamage + 0.5 + intOMSconditionAdjuster), result.DefendingArmiesKilled.SpecialUnits);
+				print ("[BEHEMOTH] Attacking neutral -> apply damage factor " .. intStrengthAgainstNeutrals_default .. "x, orig dmg ".. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate).. ", new damage " .. tostring (armiesBehemoth.AttackPower * game.Settings.OffenseKillRate * intStrengthAgainstNeutrals_default) ..", apply gap " .. intDamageGap.. ", old total damage "..intOldTotalDamage.. ", new total damage ".. intNewTotalDamage);
 			end
 		end
 	end

@@ -3,7 +3,11 @@ function Client_SaveConfigureUI(alert)
 	--[[if (game.Settings.CommerceGame == false) then
 		alert("The 'Buy Cards v2' mod requires Commerce in order to function. Please enable Commerce game in game settings or unselect this mod.");
 	end]] --would be nice to be able to do this but game doesn't exist yet! Can't access Settings of a game that hasn't been started yet
-	Mod.Settings.ReinforcementCardCost = ReinforcementCardCostinput.GetValue();
+
+	Mod.Settings.MaxBuyableCards = math.max (-1, MaxBuyableCards.GetValue()); --ensure value is -1 or >= 0; -1 = unlimited
+	Mod.Settings.CostIncreaseRate = CostIncreaseRate.GetValue()/100; --value can be negative (gets cheaper), 0, or positive (gets more expensive)
+
+	--[[ Mod.Settings.ReinforcementCardCost = ReinforcementCardCostinput.GetValue();
 	if(Mod.Settings.ReinforcementCardCost > 100000 or Mod.Settings.ReinforcementCardCost < 0)then
 		alert("Reinforcement card cost is invalid");
 	end
@@ -54,5 +58,5 @@ function Client_SaveConfigureUI(alert)
 	Mod.Settings.BombCardCost = BombCardCostinput.GetValue();
 	if(Mod.Settings.BombCardCost > 100000 or Mod.Settings.BombCardCost < 0)then
 		alert("bomb card cost invalid");
-	end
+	end ]]
 end

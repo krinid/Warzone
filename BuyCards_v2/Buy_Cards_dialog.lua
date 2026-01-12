@@ -2,7 +2,7 @@
 function displayMenu (game, windowUI, close)
 	--showDefinedCards (Game);
 	local publicGameData = Mod.PublicGameData;
-	local localPlayerIsHost = game.Us.ID == game.Settings.StartedBy;
+	local localPlayerIsHost = game.Us ~= nil and game.Us.ID == game.Settings.StartedBy;
 	local localPlayerIsPlayerInGame = (game.Us ~= nil) and (game.Game.PlayingPlayers[game.Us.ID] ~= nil);
 	-- if (game.Game.ID == 41159857 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Encirclement + Forts v2b" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
 	-- if (game.Game.ID == 41661316 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Biohazard" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
@@ -11,20 +11,33 @@ function displayMenu (game, windowUI, close)
 
 	--local buttonsCardPurchases = {};  --originally had these assigned but aren't actually using them, but leave them around until I'm sure they won't be required
 	local sliderCardPrices = {};
+	-- local arrIntNumCardPriceIncreases = {}; --# of card increases for each card = # of turns where a player has bought that card type
+	-- local arrIntNumCardsPurchased = {};
+	local arrIntNumCardPriceIncreases = Mod.PublicGameData.NumCardPriceIncreases or {}; --# of card increases for each card = # of turns where a player has bought that card type; don't update this mid-turn else prices will increase for all users which gets hard to predict, orders may fail, etc
+	local arrIntNumCardsPurchased = Mod.PublicGameData.NumCardsPurchased or {}; --running count of total cards of each type purchased by all players
+	local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
+	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
 
 	--delme delme delme -- for testing purposes only
 	--localPlayerIsHost = false;
 	--delme delme delme -- for testing purposes only
 
 	local vertHeader = UI.CreateVerticalLayoutGroup(windowUI).SetFlexibleWidth (1);
+	UI.CreateLabel (vertHeader).SetText ("Max # purchases per card type: " ..tostring ((intMaxBuyableCards==-1 and "unlimited") or intMaxBuyableCards)).SetColor (getColourCode ("minor heading"));
+	UI.CreateLabel (vertHeader).SetText ("Card price increase rate: " ..tostring (intCostIncreaseRate*100).. "%").SetColor (getColourCode ("minor heading"));
+	print ("Card price increase rate == " .. intCostIncreaseRate);
+	print ("Max # of card purchases per card type == " .. intMaxBuyableCards);
+
 	-- UI.CreateLabel (vertHeader).SetText ("[BUY CARDS]\n").SetColor (getColourCode("card play heading"));
 	--[[UI.CreateLabel (vertHeader).SetText ("Turn #"..game.Game.TurnNumber);
 	UI.CreateLabel (vertHeader).SetText ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	UI.CreateLabel (vertHeader).SetText ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));]]
 
-	print ("[BUY CARDS] Turn #"..game.Game.TurnNumber);
+	print ("[BUY CARDS] Turn #" ..tostring (game.Game ~= nil and game.Game.TurnNumber));
 	print ("Prices have been finalized == ".. tostring (publicGameData.CardData.CardPricesFinalized));
 	print ("Host has updated pricing == " .. tostring (publicGameData.CardData.HostHasAdjustedPricing));
+	print ("Card price increase rate == " .. intCostIncreaseRate);
+	print ("Max # of card purchases per card type == " .. intMaxBuyableCards);
 
 	local cardCount = 0;
 	local strUpdateButtonText = "Update Prices";
@@ -101,6 +114,11 @@ function displayMenu (game, windowUI, close)
 	local cardCountRegular_Buyable = 0;
 	local cardCountCustom_Buyable = 0;
 	for cardID, cardRecord in pairs (publicGameData.CardData.DefinedCards) do
+		local intNumCardPieceIncreases = arrIntNumCardPriceIncreases[cardID] or 0;
+		local intNumCardsPurchased = arrIntNumCardsPurchased[cardID] or 0;
+		local intActualCardPrice = math.floor (cardRecord.Price * (1 + (intNumCardPieceIncreases * intCostIncreaseRate)) + 0.5);
+		local intRemainingPurchaseForCardType = intMaxBuyableCards - (arrIntNumCardsPurchased[cardID] or 0);
+
 		cardCountTotal = cardCountTotal + 1;
 		--regular cards go in the Vert area and are listed at the top
 		--custom cards go in the Vert area and are listed at the bottom
@@ -122,8 +140,13 @@ function displayMenu (game, windowUI, close)
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
 			--only show Buy button if player is active in the game (but still show the prices to everyone regardless)
-			if (localPlayerIsPlayerInGame == true) then UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (game, cardRecord); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name))); end
--- UI.Alert ("Card|"..tostring (cardRecord.Name).."/"..cardRecord.Name.."/"..getColourCode ("Card|"..tostring (cardRecord.Name)));
+			-- if (localPlayerIsPlayerInGame == true) then UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (game, cardRecord, intActualCardPrice); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name))); end
+			if (localPlayerIsPlayerInGame == true) then
+				local strButtonMsg = "Buy "..cardRecord.Name.. " for " ..intActualCardPrice.. tostring ((intMaxBuyableCards==-1 and "") or (" [" ..intRemainingPurchaseForCardType.. " left]"));
+				UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText(strButtonMsg).SetOnClick(function() purchaseCard (game, cardRecord, intActualCardPrice); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name)));
+				print ("[BUY CARD] card=="..cardID.."/"..cardRecord.Name.. ", base price=="..cardRecord.Price..", actual price=="..intActualCardPrice..", numCardsPurchased=="..intNumCardsPurchased..", maxBuyableCards=="..intMaxBuyableCards);
+			end
+			-- UI.Alert ("Card|"..tostring (cardRecord.Name).."/"..cardRecord.Name.."/"..getColourCode ("Card|"..tostring (cardRecord.Name)));
 		end
 
 		--if client player is the host & prices aren't finalized, show a slider to be able to set the card price
@@ -204,14 +227,14 @@ function toPlayerName(playerid, game)
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found
 end
 
-function purchaseCard (game, cardRecord)
+function purchaseCard (game, cardRecord, intActualCardPrice)
 	print ("buy "..cardRecord.ID,cardRecord.Name,cardRecord.Price);
 	local strMessage = "Buy "..cardRecord.Name.." Card";
-	local strPayload = "Buy Cards|"..cardRecord.ID .."|"..cardRecord.Price; --include card price here to compare in AdvanceTurn_Order, and if price paid != card price, client side tampering has occurred (or price changed via mod update after client submitted an order [oopsie])
+	local strPayload = "Buy Cards|"..cardRecord.ID .."|"..intActualCardPrice; --include card price here to compare in AdvanceTurn_Order, and if price paid != card price, client side tampering has occurred (or price changed via mod update after client submitted an order [oopsie])
 	print (strMessage);
 	print (strPayload);
-	print ("custom order=="..game.Us.ID..", "..strMessage..", "..strPayload..", ".."resource=="..WL.ResourceType.Gold..", price=="..cardRecord.Price);
-	local order = WL.GameOrderCustom.Create (game.Us.ID, strMessage, strPayload, {[WL.ResourceType.Gold] = cardRecord.Price });
+	print ("custom order==" ..game.Us.ID.. ", " ..strMessage.. ", "..strPayload.. ", resource==" ..WL.ResourceType.Gold.. ", base price==" ..cardRecord.Price.. ", actual price=="..intActualCardPrice);
+	local order = WL.GameOrderCustom.Create (game.Us.ID, strMessage, strPayload, {[WL.ResourceType.Gold] = intActualCardPrice});
 
 	local orders = game.Orders;
 	if (game.Us.HasCommittedOrders == true) then
@@ -324,17 +347,19 @@ function getColourCode (itemName)
 	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
 	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --green
 	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
-	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
 	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
 	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
 	elseif (itemName=="Card|Airlift") then return "#777777"; --
 	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
 	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
 	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
 	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
 	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Bomb+ Card") then return getColours()["Dark Magenta"]; --
 	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
 	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
 	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
@@ -342,7 +367,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
 	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
 	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
-	elseif (itemName=="Card|Card Pieces" or itemName=="Card|Card Piece") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
 	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
 	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
@@ -352,7 +377,6 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
 	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
-	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --

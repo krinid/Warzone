@@ -1,13 +1,53 @@
 require ("behemoth");
 
 function getColourCode (itemName)
-    if (itemName=="card play heading") then return "#0099FF"; --medium blue
+    if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
     elseif (itemName=="error")  then return "#FF0000"; --red
 	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
+	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
+	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --green
+	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
+	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
+	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Airlift") then return "#777777"; --
+	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
+	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
+	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Bomb+ Card") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
+	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
+	elseif (itemName=="Card|Isolation") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
+	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
+	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
+	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Deneutralize") then return getColours()["Green"]; --
+	elseif (itemName=="Card|Earthquake") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Tornado") then return getColours()["Charcoal"]; --
+	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
+	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
     else return "#AAAAAA"; --return light grey for everything else
     end
 end
-
 
 function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	Close1 = close;
@@ -17,7 +57,10 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 
 	local MainUI = UI.CreateVerticalLayoutGroup(rootParent);
 	UI.CreateLabel(MainUI).SetText("[BEHEMOTH]\n\n").SetColor(getColourCode("card play heading"));
-	UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it. Using low quantities gold will result in a Behemoth weaker than the # of armies you would receive for the same gold.");
+	UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it. See Mechanics for details.");
+	-- BehemothMechanics_Button = UI.CreateButton(horz).SetText("[?] FAQ - Behemoth mechanics]").SetColor ("#FFFF00").SetOnClick (MechanicsClicked);
+	BehemothMechanics_Button = UI.CreateButton(MainUI).SetText("[?] FAQ - Behemoth mechanics").SetColor ("#FFFF00").SetOnClick (function () game.CreateDialog (createMechanicsWindow); end);
+	-- UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it. Using low quantities gold will result in a Behemoth weaker than the # of armies you would receive for the same gold.");
 	--CreateLabel(MainUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 
 	horz = UI.CreateHorizontalLayoutGroup(MainUI).SetFlexibleWidth(1);
@@ -30,35 +73,31 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 	--getArmiesDeployedThisTurnSoFar (Game, terrDetails.ID) + Game.LatestStanding.Territories[terrDetails.ID].NumArmies.NumArmies; --get available gold including subtraction of any gold already spent this turn
 
 	--get values from Mod.Settings, if nil then assign default values
-	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
-	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
-	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
-	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
-	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
-
-	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately. For same amount of gold spent:"..
-	"\n\n• < ".. tostring (intGoldLevel1).. " --> weaker than armies"..
-	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> stronger than armies [linearly]"..
-	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> much stronger than armies [multiplicatively]"..
-	"\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]");
+	-- local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
+	-- local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
+	-- local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
+	-- local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
+	-- local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
 
 	BehemothCost_NumberInputField = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(intMaxAvailableGold).SetValue(intAvailableGold).SetPreferredWidth(100);--.SetOnChange(OnGoldAmountChanged);
-	BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetColor ("#00F4FF").SetOnClick (
-		function ()
-			BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
-			--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
-			-- local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
-			local behemothPower = getBehemothPower(BehemothGoldSpent);
-			local behemothPowerFactor = 1.0; --keep it simple
-			-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-			Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower.."\nAttack power  " ..behemothPower.. ", Defense power ".. math.floor (behemothPower / 4 + 0.5)..
-				"\nTakes damage before Armies"..
-				"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
-			-- Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
-			-- 	"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
-			-- 	"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
-			-- 	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
-		end);
+	BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetColor ("#00F4FF").SetOnClick (DetailsClicked);
+	-- BehemothCost_Button = UI.CreateButton(horz).SetText("Details").SetColor ("#00F4FF").SetOnClick (
+	-- 	function ()
+	-- 		BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
+	-- 		--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
+	-- 		-- local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+	-- 		local behemothPower = getBehemothPower(BehemothGoldSpent);
+	-- 		local behemothPowerFactor = 1.0; --keep it simple
+	-- 		-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	-- 		Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower.."\nAttack power  " ..behemothPower.. ", Defense power ".. math.floor (behemothPower / 4 + 0.5)..
+	-- 			"\nTakes damage before Armies"..
+	-- 			"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+	-- 		-- Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
+	-- 		-- 	"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
+	-- 		-- 	"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
+	-- 		-- 	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+	-- 	end);
+	Behemoth_details_ErrorMsg_Label = UI.CreateLabel (rootParent);
 	Behemoth_details_Label = UI.CreateLabel (rootParent);
 end
 
@@ -98,9 +137,97 @@ function countSUinstances (armies, strSUname, boolPatternMatch)
 	return (intNumSUs);
 end
 
+-- function MechanicsClicked ()
+-- 	local MainUI = game.CreateDialog (createMechanicsWindow);
+
+-- 	--get values from Mod.Settings, if nil then assign default values
+-- 	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
+-- 	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
+-- 	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
+-- 	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
+-- 	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
+
+
+-- 	-- local MainUI = UI.CreateVerticalLayoutGroup(MechanicsWindow);
+-- 	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately. For same amount of gold spent:"..
+-- 	"\n\n• < ".. tostring (intGoldLevel1).. " --> weaker than armies"..
+-- 	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> stronger than armies [linearly]" ..
+-- 	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> much stronger than armies [multiplicatively]" ..
+-- 	"\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]" ..
+-- 	"\nOther properties:\nBehemoths takes damage before Armies" ..
+-- 	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals)..
+-- 	"\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+
+-- 	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately. For same amount of gold spent:");
+-- 	Behemoth_details_Label.SetText ("\nThe amount of gold you spend generates a value for 'Behemoth Power' using the above formula patterns. " ..
+-- 		"This value directly determines Behemoth health and Attack Power, and Defense Power is 25% of this value.");
+-- end
+
+function createMechanicsWindow (rootParent, setMaxSize, setScrollable, game, close)
+    setMaxSize(600, 600);
+	local MainUI = rootParent;
+	UI.CreateLabel(MainUI).SetText("[BEHEMOTH - FAQ / Mechanics]\n\n").SetColor(getColourCode("card play heading")).SetAlignment (WL.TextAlignmentOptions.Left);
+	-- UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it.");
+	UI.CreateLabel(MainUI).SetText("A unit whose strength scales with the amount of gold you spend to create it. Using low quantities gold will result in a Behemoth weaker than the # of armies you would receive for the same gold.");
+
+	--get values from Mod.Settings, if nil then assign default values
+	local intGoldLevel1 = Mod.Settings.BehemothGoldLevel1 or intGoldLevel1_default;
+	local intGoldLevel2 = Mod.Settings.BehemothGoldLevel2 or intGoldLevel2_default;
+	local intGoldLevel3 = Mod.Settings.BehemothGoldLevel3 or intGoldLevel3_default;
+	local boolBehemothInvulnerableToNeutrals = (Mod.Settings.BehemothInvulnerableToNeutrals == nil and boolBehemothInvulnerableToNeutrals_default) or Mod.Settings.BehemothInvulnerableToNeutrals;
+	local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
+
+
+	-- local MainUI = UI.CreateVerticalLayoutGroup(MechanicsWindow);
+	UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately.\n\nIn this specific game/template, for same amount of gold spent, a Behemoth will be:\n(assumes no army multiplier)");
+
+	UI.CreateLabel (MainUI).SetText ("• < ".. tostring (intGoldLevel1).. " --> weaker than armies"..
+	"\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> stronger than armies [linearly]" ..
+	"\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> much stronger than armies [multiplicatively]" ..
+	"\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]").SetColor (getColourCode("subheading"));
+
+	UI.CreateLabel (MainUI).SetText ("\nOther properties:").SetColor (getColourCode("minor heading"));
+	UI.CreateLabel (MainUI).SetText ("Behemoths takes damage: before Armies" ..
+	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals)..
+	"\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+
+	UI.CreateLabel (MainUI).SetText ("\nThe amount of gold you spend generates a value for 'Behemoth Power' using the above formula patterns. " ..
+		"This value directly determines Behemoth health and Attack Power, and Defense Power is 25% of this value.");
+
+	-- UI.CreateLabel (MainUI).SetText ("\nYou decide how much gold to spend, and Behemoth strength increases appropriately. For same amount of gold spent:"..
+	-- "\n\n• < ".. tostring (intGoldLevel1).. " --> weaker than armies [linearly]"..
+	-- "\n• ≥ ".. tostring (intGoldLevel1).. ", < ".. tostring (intGoldLevel2).. " --> stronger than armies [linearly]"..
+	-- "\n• ≥ ".. tostring (intGoldLevel2).. ", < ".. tostring (intGoldLevel3).. " --> much stronger than armies [multiplicatively]"..
+	-- "\n• ≥ ".. tostring (intGoldLevel3).. " --> overwhelmingly stronger than armies [exponentially]");
+end
+
+function DetailsClicked ()
+	BehemothGoldSpent = BehemothCost_NumberInputField.GetValue();
+	--UI.Alert("Behemoth power: "..tostring (BehemothGoldSpent));
+	-- local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+	local behemothPower = getBehemothPower(BehemothGoldSpent);
+	local behemothPowerFactor = 1.0; --keep it simple
+	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
+	if (behemothPower > 100000) then Behemoth_details_ErrorMsg_Label.SetText ("Behemoth power exceeds max value of 100,000; reduce your gold spending").SetColor ("#FF0000");
+	else Behemoth_details_ErrorMsg_Label.SetText ("");
+	end
+
+	Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower.."\nAttack power  " ..behemothPower.. ", Defense power ".. math.floor (behemothPower / 4 + 0.5)..
+		"\nTakes damage before Armies"..
+		"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+	-- Behemoth_details_Label.SetText ("\nBehemoth properties:\nCost "..BehemothGoldSpent..", Health ".. behemothPower..", Power: " .. behemothPower..", Scaling factor: " .. behemothPowerFactor.."\n\n"..
+	-- 	"POWER Attack ".. behemothPower * (1+behemothPowerFactor)..", Defense ".. behemothPower * behemothPowerFactor.."\n   (Modifier - Attack ".. 0.9+behemothPowerFactor..", Defense ".. 0.6+behemothPowerFactor..")"..
+	-- 	"\nCombat order: before armies\nDamage absorbed when attacked: ".. behemothPower * behemothPowerFactor..
+	-- 	"\nInvulnerable to Neutrals: ".. tostring (boolBehemothInvulnerableToNeutrals).."\nStrength against Neutrals: ".. tostring (intStrengthAgainstNeutrals).."x");
+end
+
 function PurchaseClicked()
 	--Check if they're already at max simultaneous or max total per player per game limits.  Add in how many they have on the map plus how many purchase orders they've already made
 	--We check on the client for player convenience. Another check happens on the server, so even if someone hacks their client and removes this check they still won't be able to go over the max.
+
+	DetailsClicked (); --update the details pane
+	local behemothPower = math.floor (getBehemothPower(BehemothGoldSpent) + 0.5);
+	if (behemothPower > 100000) then UI.Alert ("Behemoth power exceeds max value of 100,000; reduce your gold spending"); return; end
 
 	local playerID = Game.Us.ID;
 	local intBehemothMaxSimultaneousPerPlayer = Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5; --default to 5 if not set

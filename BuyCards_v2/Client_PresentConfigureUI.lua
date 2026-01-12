@@ -1,7 +1,23 @@
 function Client_PresentConfigureUI(rootParent)
 	rootParentobj = rootParent;
-	
-	ReinforcementCardCostinit = Mod.Settings.ReinforcementCardCost;
+
+	UI.CreateLabel(rootParentobj).SetText("Card prices are set by the host once the game starts\n");
+
+	local vert = UI.CreateVerticalLayoutGroup(rootParent);
+	local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
+	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
+
+	local rowMaxBuyableCards = UI.CreateHorizontalLayoutGroup(vert);
+	UI.CreateLabel(rowMaxBuyableCards).SetText('Card purchase limit: ').SetPreferredWidth(290).SetColor ("#FFFF00");
+    MaxBuyableCards = UI.CreateNumberInputField(rowMaxBuyableCards).SetSliderMinValue(0).SetSliderMaxValue(100).SetWholeNumbers (true).SetValue(intMaxBuyableCards).SetPreferredWidth(290);
+	UI.CreateLabel (vert).SetText ("  (max # of each card that can be bought; -1 = unlimited)");
+
+	local rowCostIncreaseRate = UI.CreateHorizontalLayoutGroup(vert);
+	UI.CreateLabel(rowCostIncreaseRate).SetText('Cost increase (%): ').SetPreferredWidth(290).SetColor ("#FFFF00");;
+    CostIncreaseRate = UI.CreateNumberInputField(rowCostIncreaseRate).SetSliderMinValue(0).SetSliderMaxValue(100).SetWholeNumbers (false).SetValue(intCostIncreaseRate*100).SetPreferredWidth(290);
+	UI.CreateLabel (vert).SetText ("  (the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn for a given player who buys >1 of the same type of card)");
+
+	--[[ ReinforcementCardCostinit = Mod.Settings.ReinforcementCardCost;
 	if(ReinforcementCardCostinit == nil)then
 		ReinforcementCardCostinit = 0;
 	end
@@ -54,8 +70,9 @@ function Client_PresentConfigureUI(rootParent)
 	if(BombCardCostinit == nil)then
 		BombCardCostinit = 0;
 	end
-	ShowUI();
+	ShowUI(); ]]
 end
+
 function ShowUI()
 
 local maxvalue = 1000;
@@ -65,7 +82,7 @@ local maxvalue = 1000;
 	UI.CreateLabel(rootParentobj).SetText("- Regular cards (standard cards built into Warzone) can have prices assigned below, and you can finalize the costs once the game starts)");
 	UI.CreateLabel(rootParentobj).SetText("- Custom cards must have their prices assigned after game starts via the Game/Mod: Buy Cards v2 menu - only the host can set the prices").SetColor("#FFFF00");
 	UI.CreateLabel(rootParentobj).SetText("\nEnter the prices for the Regular Cards below:").SetColor ("#00CCCC");
-	
+
 	horz = UI.CreateHorizontalLayoutGroup(rootParentobj); --.SetPreferredWidth (301);
 	UI.CreateLabel(horz).SetPreferredWidth(200).SetText('Reinforcement Card:');
 	ReinforcementCardCostinput = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetPreferredWidth(50).SetSliderMaxValue(maxvalue).SetValue(ReinforcementCardCostinit);
@@ -113,7 +130,7 @@ local maxvalue = 1000;
 	horz = UI.CreateHorizontalLayoutGroup(rootParentobj); --.SetPreferredWidth (301);
 	UI.CreateLabel(horz).SetPreferredWidth(200).SetText('Surveillance Card:');
 	SurveillanceCardCostinput = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetPreferredWidth(50).SetSliderMaxValue(maxvalue).SetValue(SurveillanceCardCostinit);
-	
+
 	horz = UI.CreateHorizontalLayoutGroup(rootParentobj); --.SetPreferredWidth (301);
 	UI.CreateLabel(horz).SetPreferredWidth(200).SetText('Bomb Card:');
 	BombCardCostinput = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetPreferredWidth(50).SetSliderMaxValue(maxvalue).SetValue(BombCardCostinit);
