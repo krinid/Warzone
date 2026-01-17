@@ -143,7 +143,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 	if (intArmiesToExitCastle > 0) then
 		local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
 		local msg_Exit = intArmiesToExitCastle.. " armies exit castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
-		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit, {}, WL.TurnPhase.ReceiveCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
+		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit, {}, WL.TurnPhase.BlockadeCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
 		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		table.insert(orders, customOrder_Exit);

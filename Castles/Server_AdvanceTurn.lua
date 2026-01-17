@@ -51,7 +51,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			end
 		elseif (strOperation == "Enter" or strOperation == "Exit") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
-			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); return; end
+			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Entry/Exit failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
 
 			local intNumArmiesToEnterCastle = math.max (0, math.min ((strOperation == "Enter" and intArmyCountSpecified or 0), game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies));
 			local intNumArmiesToExitCastle  = math.max (0, math.min ((strOperation == "Exit"  and intArmyCountSpecified or 0), math.floor (objCastleSU.Health / intArmyToCastlePowerRatio)));
@@ -67,19 +67,18 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			--ref: local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
 		elseif (strOperation == "Scuttle") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
-			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); return; end
+			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
 			--ref: local payload_Scuttle = 'Castle|Scuttle|' ..SelectedTerritory.ID;
-
-			--if there are armies in the castle (SU has health>0), force armies to exit the castle
-			local intNumArmiesToExitCastle  = math.floor (objCastleSU.Health / intArmyToCastlePowerRatio);
-
-			if (intNumArmiesToExitCastle > 0) then
-				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, intNumArmiesToExitCastle, 0);
-			end
 
 			local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
 			terrMod.RemoveSpecialUnitsOpt = {objCastleSU.ID};
+			local intNumArmiesToExitCastle  = math.floor (objCastleSU.Health / intArmyToCastlePowerRatio); --if there are armies in the castle (SU has health>0), force armies to exit the castle
 			local strDescription = "Castle scuttled on " ..getTerritoryName (targetTerritoryID, game);
+			if (intNumArmiesToExitCastle > 0) then
+				terrMod.AddArmies = intNumArmiesToExitCastle;
+				strDescription = strDescription .. "; " ..tostring (intNumArmiesToExitCastle).. " armies exited castle";
+			end
+
 			local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle scuttled", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
