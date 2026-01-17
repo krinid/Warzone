@@ -70,6 +70,13 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); return; end
 			--ref: local payload_Scuttle = 'Castle|Scuttle|' ..SelectedTerritory.ID;
 
+			--if there are armies in the castle (SU has health>0), force armies to exit the castle
+			local intNumArmiesToExitCastle  = math.floor (objCastleSU.Health / intArmyToCastlePowerRatio);
+
+			if (intNumArmiesToExitCastle > 0) then
+				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, intNumArmiesToExitCastle, 0);
+			end
+
 			local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
 			terrMod.RemoveSpecialUnitsOpt = {objCastleSU.ID};
 			local strDescription = "Castle scuttled on " ..getTerritoryName (targetTerritoryID, game);
