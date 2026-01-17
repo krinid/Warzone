@@ -18,12 +18,32 @@ function createPurchaseCastleUIcomponents ()
 	local horz = UI.CreateHorizontalLayoutGroup (vertPurchaseDialog).SetFlexibleWidth (1);
 	PurchaseCastleButton = UI.CreateButton(horz).SetText("Purchase Castle").SetOnClick(PurchaseClicked).SetColor (getColourCode("button green"));
 	EnterExitCastleButton = UI.CreateButton(horz).SetText("Armies Enter/Exit Castle").SetColor(getColourCode("button magenta")).SetOnClick(enter_exit_Castle_dialog);
+	ScuttleCastleButton = UI.CreateButton(horz).SetText("Scuttle Castle").SetColor(getColourCode("button red")).SetOnClick(scuttle_Castle_dialog);
+end
+
+function scuttle_Castle_dialog ()
+	UI.Destroy (vertPurchaseDialog);
+	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
+	SelectTerritoryBtn_CastleArmyMovements = UI.CreateButton(vertPurchaseDialog).SetText("Scuttle Castle - Select Territory").SetColor (getColourCode ("button cyan")).SetOnClick(function () SelectTerritoryClicked_CastleArmyMovements ("Select a castle to scuttle"); end);
+	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
+	UI.CreateLabel(vertPurchaseDialog).SetText("**Any armies inside the castle will die when castle is scuttled").SetColor (getColourCode ("subheading"));
+	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
+	UI.CreateEmpty(vertPurchaseDialog);
+	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
+	UI.CreateEmpty(vertPurchaseDialog);
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	UI.CreateLabel(horz).SetText("Cost to scuttle castle: " ..tostring (intCastleScuttleCost)).SetColor (getColourCode("highlight"));
+
+	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Scuttle Castle").SetOnClick(ScuttleCastleButtonClicked).SetColor (getColourCode ("button green"));
+	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
+	SelectTerritoryClicked_CastleArmyMovements ("Select a castle to scuttle"); --start immediately in selection mode, no reason to require player to click the button
 end
 
 function enter_exit_Castle_dialog ()
 	UI.Destroy (vertPurchaseDialog);
 	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
-	SelectTerritoryBtn_CastleArmyMovements = UI.CreateButton(vertPurchaseDialog).SetText("Armies Enter/Exit - Select Territory").SetColor (getColourCode ("button cyan")).SetOnClick(SelectTerritoryClicked_CastleArmyMovements);
+	SelectTerritoryBtn_CastleArmyMovements = UI.CreateButton(vertPurchaseDialog).SetText("Armies Enter/Exit - Select Territory").SetColor (getColourCode ("button cyan")).SetOnClick (function () SelectTerritoryClicked_CastleArmyMovements ("Select a castle to allow armies to Enter/Exit"); end);
 	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
 	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
 	UI.CreateEmpty(vertPurchaseDialog);
@@ -40,19 +60,15 @@ function enter_exit_Castle_dialog ()
 	NumArmiesToExitCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
 	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies inside the castle to exit the castle to the territory)").SetColor (getColourCode ("subheading"));
 
-	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Add Order").SetOnClick(AddOrderButtonClicked).SetColor (getColourCode ("button green"));
+	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Add Order").SetOnClick(AddOrderButtonClicked_ArmiesEnterExit).SetColor (getColourCode ("button green"));
 
 	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
-	SelectTerritoryClicked_CastleArmyMovements(); --start immediately in selection mode, no reason to require player to click the button
+	SelectTerritoryClicked_CastleArmyMovements ("Select a castle to allow armies to Enter/Exit"); --start immediately in selection mode, no reason to require player to click the button
 end
 
-function SelectTerritoryClicked_CastleArmyMovements()
+function SelectTerritoryClicked_CastleArmyMovements (strDisplayMessage)
 	UI.InterceptNextTerritoryClick(TerritoryClicked_CastleArmyMovements);
-	-- local behemothPower = getBehemothPower(BehemothGoldSpent);
-	-- local behemothPowerFactor = getBehemothPowerFactor(behemothPower);
-	TargetTerritoryInstructionLabel.SetText("Select a castle to allow armies to Enter/Exit").SetColor (getColourCode("error")); --\nBehemoth power: " .. behemothPower.."\nScaling factor: " .. behemothPowerFactor);
-	--.."\n\n".."Attack power ".. behemothPower * (1+behemothPowerFactor).."\nDefense power ".. behemothPower * behemothPowerFactor.."\nAttack power modifier factor ".. 1+behemothPowerFactor.."\nDefense power modifier factor ".. 0.6+behemothPowerFactor..
-	--	"\nCombat order is before armies\nHealth ".. behemothPower.."\nDamage absorbed when attacked ".. behemothPower * behemothPowerFactor);
+	TargetTerritoryInstructionLabel.SetText (strDisplayMessage).SetColor (getColourCode("error"));
 	SelectTerritoryBtn_CastleArmyMovements.SetInteractable(false);
 end
 
@@ -79,19 +95,25 @@ function TerritoryClicked_CastleArmyMovements(terrDetails)
 	end
 end
 
-function AddOrderButtonClicked()
-	-- local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
-	-- local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
-	-- local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+function ScuttleCastleButtonClicked ()
+	local orders = Game.Orders;
+	local objCastleSU = getSUonTerritory (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false);
+	if (objCastleSU == nil) then UI.Alert ("Couldn't find castle on territory"); return; end --this should never occur b/c this function is only called when a valid territory with a castle SU is specified
 
-	-- if (countSUinstances (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false) > 0) then
-	-- 	UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has a castle; can only build 1 castle per territory");
-	-- 	return;
-	-- elseif (buildingCastleOnTerritoryThisTurn (Game, SelectedTerritory.ID) == true) then
-	-- 	UI.Alert("Territory '" ..SelectedTerritory.Name.. "' already has an order to build a castle; can only build 1 castle per territory");
-	-- 	return;
-	-- end
+	local payload_Scuttle = 'Castle|Scuttle|' ..SelectedTerritory.ID;
+	local msg_Scuttle = "Castle scuttled on " ..getTerritoryName (SelectedTerritory.ID, Game);
+	local customOrder_Scuttle = WL.GameOrderCustom.Create (Game.Us.ID, msg_Scuttle, payload_Scuttle, { [WL.ResourceType.Gold] = intCastleScuttleCost }, WL.TurnPhase.GiftCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
 
+	customOrder_Scuttle.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
+	customOrder_Scuttle.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Scuttle Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	-- customOrder_Scuttle.OccursInPhaseOpt = WL.TurnPhase.GiftCards;
+	table.insert(orders, customOrder_Scuttle);
+
+	Game.Orders = orders;
+	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+end
+
+function AddOrderButtonClicked_ArmiesEnterExit()
 	local orders = Game.Orders;
 	local objCastleSU = getSUonTerritory (Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies, "Castle", false);
 	if (objCastleSU == nil) then UI.Alert ("Couldn't find castle on territory"); return; end --this should never occur b/c this function is only called when a valid territory with a castle SU is specified
@@ -112,20 +134,18 @@ function AddOrderButtonClicked()
 	if (intArmiesToEnterCastle > 0) then
 		local payload_Enter = 'Castle|Enter|' ..SelectedTerritory.ID.. "|" ..intArmiesToEnterCastle;
 		local msg_Enter = intArmiesToEnterCastle.. " armies enter castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
-		local customOrder_Enter = WL.GameOrderCustom.Create (Game.Us.ID, msg_Enter, payload_Enter);
+		local customOrder_Enter = WL.GameOrderCustom.Create (Game.Us.ID, msg_Enter, payload_Enter, nil, WL.TurnPhase.EmergencyBlockadeCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
 		customOrder_Enter.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
-		-- customOrder.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
-		-- customOrder_Enter.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
+		customOrder_Enter.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army enter", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		table.insert(orders, customOrder_Enter);
 	end
 
 	if (intArmiesToExitCastle > 0) then
 		local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
 		local msg_Exit = intArmiesToExitCastle.. " armies exit castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
-		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit);
+		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit, nil, WL.TurnPhase.EmergencyBlockadeCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
 		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
-		-- customOrder.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
-		-- customOrder.OccursInPhaseOpt = WL.TurnPhase.ReceiveCards;
+		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		table.insert(orders, customOrder_Exit);
 	end
 

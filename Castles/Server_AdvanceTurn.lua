@@ -22,18 +22,11 @@ function Server_AdvanceTurn_End(game, addOrder)
 end
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
-	--get values for Behemoth strength vs Neutrals & Invulnerability vs Neutrals; if not set, set to default values
-	-- boolBehemothInvulnerableToNeutrals_default = true; --comment this out in Behemoth mod (it's set in behemoth.lua) but uncomment it in Airstrike mod
-	-- intStrengthAgainstNeutrals_default = 2.0; --comment this out in Behemoth mod (it's set in behemoth.lua) but uncomment it in Airstrike mod
-	-- local intStrengthAgainstNeutrals = Mod.Settings.BehemothStrengthAgainstNeutrals or intStrengthAgainstNeutrals_default;
-	-- local boolBehemothInvulnerableToNeutrals = Mod.Settings.BehemothInvulnerableToNeutrals or boolBehemothInvulnerableToNeutrals_default;
-
-	if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Castle|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
+	if (order.proxyType == 'GameOrderCustom' and startsWith(order.Payload, 'Castle|')) then  --look for the order inserted in Client_PresentCommercePurchaseUI
 		local orderComponents = split (order.Payload, '|');
-		--reference: 	local payload = 'Behemoth|Purchase|' .. SelectedTerritory.ID.."|"..BehemothGoldSpent;
 		local strOperation = orderComponents[2];
 		local targetTerritoryID = tonumber (orderComponents[3]);
-		local intArmyCountSpecified = math.max (0, tonumber (orderComponents[4]));
+		local intArmyCountSpecified = math.max (0, tonumber (orderComponents[4]) or 0);
 
 		-- print ("- - - - - -" ..targetTerritoryID, tostring (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies.NumArmies));
 		-- print (tostring (game.ServerGame.LatestTurnStanding ==nil));
@@ -58,13 +51,10 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			end
 		elseif (strOperation == "Enter" or strOperation == "Exit") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
+			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); return; end
+
 			local intNumArmiesToEnterCastle = math.max (0, math.min ((strOperation == "Enter" and intArmyCountSpecified or 0), game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies));
 			local intNumArmiesToExitCastle  = math.max (0, math.min ((strOperation == "Exit"  and intArmyCountSpecified or 0), math.floor (objCastleSU.Health / intArmyToCastlePowerRatio)));
-
-			--^^check for nil -- throw error/abort if so
-
-	-- local intArmiesToEnterCastle = math.max (0, math.min (NumArmiesToEnterCastle.GetValue(), Game.LatestStanding.Territories[SelectedTerritory.ID].NumArmies.NumArmies));
-	-- local intArmiesToExitCastle = math.max (0, math.min (NumArmiesToExitCastle.GetValue(), objCastleSU.Health));
 
 			if (intNumArmiesToEnterCastle > 0) then
 				modifyCastle (game, order, addNewOrder, targetTerritoryID, objCastleSU, -intNumArmiesToEnterCastle, objCastleSU.Health + intNumArmiesToEnterCastle * intArmyToCastlePowerRatio);
@@ -75,6 +65,19 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			end
 			--ref: local payload_Enter = 'Castle|Enter|' ..SelectedTerritory.ID.. "|" ..intArmiesToEnterCastle;
 			--ref: local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
+		elseif (strOperation == "Scuttle") then
+			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
+			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); return; end
+			--ref: local payload_Scuttle = 'Castle|Scuttle|' ..SelectedTerritory.ID;
+
+			local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
+			terrMod.RemoveSpecialUnitsOpt = {objCastleSU.ID};
+			local strDescription = "Castle scuttled on " ..getTerritoryName (targetTerritoryID, game);
+			local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
+			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle scuttled", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip order & suppress the 'Mod skipped order' message, since an order with details will be added below
+			addNewOrder (event, false);
 		else
 			print ("[CASTLE] unsupported operation: " .. strOperation);
 			return;
@@ -94,14 +97,14 @@ function modifyCastle (game, order, addNewOrder, targetTerritoryID, existingCast
 	end
 
 	local newCastleSU = createCastleSU (castlePower);
-	local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
+	local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
 	terrMod.AddSpecialUnits = {newCastleSU};
 	terrMod.RemoveSpecialUnitsOpt = {existingCastleSU.ID};
 	terrMod.AddArmies = intNumArmiesOnTerritoryDelta;
 	local strDescription = tostring (math.abs (intNumArmiesOnTerritoryDelta)).. " armies " ..(intNumArmiesOnTerritoryDelta <0 and "entered" or "exited").. " castle  on " ..getTerritoryName (targetTerritoryID, game); --if delta is -ve then armies entered castle, else they exited
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	-- event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle army enter/exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	addNewOrder (event, false);
 end
 

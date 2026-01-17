@@ -5,6 +5,7 @@ intArmyToCastlePowerRatio = 2; --armies moving into the castle are multiplied by
 intCastleBaseCost = 0; --cost of 1st castle
 intCastleCostIncrease = 5; --cumulative cost increase for each additional castle
 intCastleMaintenanceCost = 2; --each castle costs this much gpt, gets removed at end of turn so going into next turn, income is reduced appropriately
+intCastleScuttleCost = intCastleMaintenanceCost * 2; --scuttle cost is 2x maintenance cost
 
 --given 0-255 RGB integers, return a single 24-bit integer
 function getColourInteger (red, green, blue)
@@ -28,6 +29,7 @@ function getColourCode (itemName)
 	elseif (itemName=="button cyan") then return "#00F4FF"; --cyan
 	elseif (itemName=="button green") then return "#008000"; --green
 	elseif (itemName=="button magenta") then return "#FF00FF"; --magenta
+	elseif (itemName=="button red") then return "#FF0000"; --red
     else return "#AAAAAA"; --return light grey for everything else
     end
 end
