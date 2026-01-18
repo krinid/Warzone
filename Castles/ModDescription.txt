@@ -1,17 +1,11 @@
-Enable purchasing of Castles from the Commerce menu. Armies can enter castles to bolster defense on a given territory.
-
-A territory can only have 1 castle.
-
-Castles have configurable base cost, additional cost increase per castle owned and maintenance cost per turn. A conversion ratio controls how armies scale to castle health. The default value of 2 means that when 1 army enters a castle, it adds 2 strength to the castle, which defines both the castle's health and defense power.
-
-Armies can be moved in or out of the castle via the Commerce menu (the "Build" button below the gold quantity indicator).
-
-Order execution timing:
-- Army Entry occurs at the same time Emergency Blockade cards are played. (after Bombs, before Attack/Transfers)
-- Army Exit occurs at the same time Blockade cards are played. (after Attack/Transfers)
-- Castle Scuttles occur at the same time Blockade cards are played. (after Attack/Transfers)
-- Castle Purchases occur at the same time new card pieces are received. (after Attack/Transfers)
-
-Special Units cannot enter castles.
+Purchase Castles from the Commerce menu. Armies can enter castles to bolster defense on a given territory. Special Units cannot enter castles. A territory can only have 1 castle.
 
 Castles do not protect armies or Special Units on the territory it resides on. To protect armies, they need to enter the castle.
+
+Castles have configurable base cost, additional cost increase per castle owned and maintenance cost per turn. A conversion ratio controls how armies scale to castle health. Default value of 2 means that when 1 army enters a castle, it adds 2 strength to the castle, which defines both castle's Health and Defense Power.
+
+Order execution timing:
+• Army Entry - same time as Emergency Blockade cards (after Bombs, before Attack/Transfers)
+• Army Exit - same time as Blockade cards are played (after Attack/Transfers)
+• Castle Scuttles - same time as Blockade cards are played (after Attack/Transfers)
+• Castle Purchases - same time as new card pieces are received (after Attack/Transfers)
