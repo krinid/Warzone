@@ -43,15 +43,20 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
 			-- local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
 
-			if (goldSpent >= intCastleCost) then
+			--check if player owns the target territory; if player doesn't own the territory anymore, cancel the castle build
+			--also check if player paid enough gold for the castle, and if not, cancel the castle build (and flag them as a cheater); can only happen if they hack the client (etc)
+			if (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID ~= order.PlayerID) then
+				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
+				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed; territory no longer owned (" ..getTerritoryName (targetTerritoryID, game).. ")", {}, {}), false);
+			elseif (goldSpent >= intCastleCost) then --player paid the right amount of gold (or more - which shouldn't happen)
 				createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnteringCastle, intCastlePower);
-			else
+			else --player didn't pay enough gold; hacked the client? cancel build & flag as cheater
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
 				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price < proper cost of next castle (" ..tostring (intCastleCost).. " gold) attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
 			end
 		elseif (strOperation == "Enter" or strOperation == "Exit") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
-			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Entry/Exit failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle " ..strOperation.. " failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
 
 			local intNumArmiesToEnterCastle = math.max (0, math.min ((strOperation == "Enter" and intArmyCountSpecified or 0), game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies));
 			local intNumArmiesToExitCastle  = math.max (0, math.min ((strOperation == "Exit"  and intArmyCountSpecified or 0), math.floor (objCastleSU.Health / intArmyToCastlePowerRatio)));
