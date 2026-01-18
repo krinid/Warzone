@@ -149,7 +149,7 @@ function createCastleSU (castlePower)
 	builder.ImageFilename = 'Castle_60x63_clearBack.png'; --max size of 60x100 pixels
 	builder.AttackPower = 0; --castle can't attack so this value doesn't matter, but set it to 0 in case some mod does something weird with it
 	builder.DefensePower = castlePower;
-	builder.CombatOrder = 1; --fights directly after armies; this prevents a territory with armies outside and no armies inside a castle (castle SU has 0 health) to be destroyed despite armies there to defend it (logistically this would make no sense)
+	builder.CombatOrder = 10001; --fights after armies and most SUs; castles don't defend armies or SUs on the territory, only the armies inside the castle itself
 	builder.Health = castlePower;
 	builder.CanBeGiftedWithGiftCard = false;
 	builder.CanBeTransferredToTeammate = false;

@@ -1,9 +1,17 @@
-Enable purchasing of Castles from the Commerce menu. Castles allow armies to enter the castle to bolster defense on a given territory.
+Enable purchasing of Castles from the Commerce menu. Armies can enter castles to bolster defense on a given territory.
 
 A territory can only have 1 castle.
 
-Castles have configurable base cost, addition cost increase per castle owned, maintenance cost per turn. A conversation ratio controls how armies scale to castle health. For example the default value of 2 means that when 1 army enters a castle, it adds 2 strength to the castle, which defines both the castle's health and defense power.
+Castles have configurable base cost, additional cost increase per castle owned and maintenance cost per turn. A conversion ratio controls how armies scale to castle health. The default value of 2 means that when 1 army enters a castle, it adds 2 strength to the castle, which defines both the castle's health and defense power.
 
-Armies can be moved in or out of the castle via the mod menu, and these become orders in the Attack/Transfer phase.
+Armies can be moved in or out of the castle via the Commerce menu (the "Build" button below the gold quantity indicator).
+
+Order execution timing:
+- Army Entry occurs at the same time Emergency Blockade cards are played. (after Bombs, before Attack/Transfers)
+- Army Exit occurs at the same time Blockade cards are played. (after Attack/Transfers)
+- Castle Scuttles occur at the same time Blockade cards are played. (after Attack/Transfers)
+- Castle Purchases occur at the same time new card pieces are received. (after Attack/Transfers)
 
 Special Units cannot enter castles.
+
+Castles do not protect armies or Special Units on the territory it resides on. To protect armies, they need to enter the castle.
