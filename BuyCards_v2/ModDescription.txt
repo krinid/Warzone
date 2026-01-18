@@ -1,1 +1,5 @@
-This mod allows you to make cards purchasable with gold. As such, Commerce mode must be enabled. This mod supports both Regular cards (standard cards built into Warzone) and also Custom cards defined by mods.
+Makes cards purchasable with gold. Requires Commerce mode to be enabled. Supports both Regular cards (standard cards built into Warzone) and Custom cards defined by mods.
+
+Options:
+• Max # of purchases: The limit is shared among all players. When a given card type reaches the limit, no further cards of that type can be purchased by any player. Set to -1 for unlimited card purchases.
+• Card price increase: Card price for a given card type increases on the following turn by a fixed % of original base card price each turn a card purchase of that type is made by any player. # of cards purchased and # of players purchasing the card does not change the increase amount.
