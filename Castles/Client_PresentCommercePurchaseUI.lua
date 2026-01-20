@@ -107,9 +107,8 @@ function ScuttleCastleButtonClicked ()
 	customOrder_Scuttle.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Scuttle.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Scuttle Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Scuttle);
-	insertOrder (customOrder_Scuttle, orders);
-
-	Game.Orders = orders;
+	insertOrder (Game,customOrder_Scuttle, orders);
+	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 end
 
@@ -139,7 +138,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Enter.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Enter.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army enter", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert (orders, customOrder_Enter);
-		insertOrder (customOrder_Enter, orders);
+		insertOrder (Game, customOrder_Enter, orders);
 	end
 
 	if (intArmiesToExitCastle > 0) then
@@ -149,16 +148,17 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert(orders, customOrder_Exit);
-		insertOrder (customOrder_Exit, orders);
+		insertOrder (Game, customOrder_Exit, orders);
 	end
 
 	displayOrders (orders);
-	Game.Orders = orders;
+	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 end
 
---find correct spot in order list to add new order based on its phase #
-function insertOrder (newOrder, orderList)
+--find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
+--if orders are written back the game.Orders out of sequence according to the OccursInPhase property, a runtime error is thrown
+function insertOrder (Game, newOrder, orderList)
 	local intNewOrderPhase = newOrder.OccursInPhase or -1;
 	for i, existingOrder in pairs (orderList) do
 		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
@@ -168,6 +168,7 @@ function insertOrder (newOrder, orderList)
 		end
 	end
 	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
+	Game.Orders = orderList;
 	return orderList;
 end
 
@@ -306,7 +307,7 @@ function CompletePurchaseClicked()
 	customOrder_Purchase.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Purchase.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Purchase);
-	insertOrder (customOrder_Purchase, orders);
-	Game.Orders = orders;
+	insertOrder (Game, customOrder_Purchase, orders);
+	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 end
