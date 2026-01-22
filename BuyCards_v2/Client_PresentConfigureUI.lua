@@ -5,7 +5,7 @@ function Client_PresentConfigureUI(rootParent)
 
 	local vert = UI.CreateVerticalLayoutGroup(rootParent);
 	local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
-	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
+	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card; default to 0.1 for purpose of game settings by host
 
 	local rowMaxBuyableCards = UI.CreateHorizontalLayoutGroup(vert);
 	UI.CreateLabel(rowMaxBuyableCards).SetText('Card purchase limit: ').SetPreferredWidth(290).SetColor ("#FFFF00");

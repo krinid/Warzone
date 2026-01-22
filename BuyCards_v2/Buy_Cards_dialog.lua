@@ -16,7 +16,7 @@ function displayMenu (game, windowUI, close)
 	local arrIntNumCardPriceIncreases = Mod.PublicGameData.NumCardPriceIncreases or {}; --# of card increases for each card = # of turns where a player has bought that card type; don't update this mid-turn else prices will increase for all users which gets hard to predict, orders may fail, etc
 	local arrIntNumCardsPurchased = Mod.PublicGameData.NumCardsPurchased or {}; --running count of total cards of each type purchased by all players
 	local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
-	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
+	local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.0; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card; default to 0.0 for purpose of ongoing games where this value isn't set (so card prices in ongoing games doesn't increase)
 
 	--delme delme delme -- for testing purposes only
 	--localPlayerIsHost = false;
