@@ -165,7 +165,7 @@ function assessCityRewards (territories, players)
 			--calc lower and upper bound to compare for the tolerance range for city stack distribution
 			--use floor for lower bound & ceiling for upper bound so lower bound is always a different integer than upper bound; this is beneficial esp for small ave city #'s where 25% of that value would result in the same lower and upper bound and thus be too restrictive
 			local lowerBound = math.floor (data.aveCitiesPerTerritory * (1 - cityAverageToleranceLevel));
-			local upperBound = math.ceiling (data.aveCitiesPerTerritory * (1 + cityAverageToleranceLevel));
+			local upperBound = math.ceil (data.aveCitiesPerTerritory * (1 + cityAverageToleranceLevel));
 
 			-- Count territories where city count falls within the tolerance range
 			for _, terr in pairs(territories) do
