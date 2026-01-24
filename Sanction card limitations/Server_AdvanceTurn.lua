@@ -13,13 +13,13 @@ function Server_AdvanceTurn_Order(game,order,result,skip,addOrder)
 
 	if (order.proxyType == 'GameOrderPlayCardSanctions') then
 		print ("[Sanction card] cast "..order.PlayerID..", target "..order.SanctionedPlayerID..", strength "..game.Settings.Cards[WL.CardID.Sanctions].Percentage);
-		if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage>=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
-			print ("[Sanction card] self-sanction for +ve sanction SKIP");
-			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self with positive sanctions is disallowed - Skipping order", {}, {},{}));
+		if (order.PlayerID == order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage >=0 and disallowNormalSanctionsOnSelf) then --self-sanction for +ve sanction; skip if disallowed
+			print ("[Sanction card] self-sanction for +ve sanction SKIP");           
+			if (game.Game.Players[k].IsAI == false) then addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanction self with positive sanctions is disallowed - Skipping order", {}, {},{})); end --only display message for human players; no need to notify players that an AI order was suppressed
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
-		elseif (order.PlayerID ~= order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage<0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
+		elseif (order.PlayerID ~= order.SanctionedPlayerID and game.Settings.Cards[WL.CardID.Sanctions].Percentage <0 and disallowReverseSanctionsOnOthers) then --sanction on another for -ve sanction; skip if disallowed
 			print ("[Sanction card] sanction on another for -ve sanction SKIP");
-			addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning others with reverse sanctions is disallowed - Skipping order", {}, {},{}));
+			if (game.Game.Players[k].IsAI == false) then addOrder(WL.GameOrderEvent.Create(order.PlayerID, "Sanctioning others with reverse sanctions is disallowed - Skipping order", {}, {},{})); end --only display message for human players; no need to notify players that an AI order was suppressed
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this order & suppress the order in order history
 		else
 			print ("[Sanction card] permitted sanction type");
