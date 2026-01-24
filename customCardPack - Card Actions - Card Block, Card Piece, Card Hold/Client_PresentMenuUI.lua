@@ -131,7 +131,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	for k,v in pairs (game.Game.Players) do
 		local strPlayerIsHost = "";
 		if (k == game.Settings.StartedBy) then strPlayerIsHost = " [HOST]"; end
-		TopLabel.SetText (TopLabel.GetText() .. "\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing).. ", IsAI: " ..tostring (game.Game.Players[k].IsAI).. ", IsAIorHumanTurnedIntoAI: " ..tostring (IsAIOrHumanTurnedIntoAI).. strPlayerIsHost);
+		TopLabel.SetText (TopLabel.GetText() .. "\nPlayer "..k .."/"..toPlayerName (k, game)..", State: "..tostring(v.State).."/"..tostring(WLplayerStates ()[v.State]).. ", IsActive: "..tostring(game.Game.Players[k].State == WL.GamePlayerState.Playing).. ", IsAI: " ..tostring (game.Game.Players[k].IsAI).. ", IsAIorHumanTurnedIntoAI: " ..tostring (game.Game.Players[k].IsAIOrHumanTurnedIntoAI ).. strPlayerIsHost);
 	end
 
 	--this shows all Global Functions! wow
