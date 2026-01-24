@@ -162,7 +162,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 			for ID, cterritory in pairs(connectedTerritories) do
 				if territories[ID].OwnerPlayerID == WL.PlayerID.Neutral then		-- if neutral
 					if not alreadyChecked[ID] then-- and we haven't seen him yet
-						if(WB.appliesToAllNeutrals or WB.appliesToMinArmies <= territories[ID].NumArmies.NumArmies)then
+						if (WB.appliesToMinArmies <= territories[ID].NumArmies.NumArmies) then
 							local result = thaSearch(ID, depth+1)
 							if(result == 0)then
 								return 0;
@@ -187,7 +187,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 	if game.ServerGame.Game.TurnNumber > WB.delayFromStart then	-- just a good load of checking if the territory meets the mod's criterias
 		for tid, nterritory in pairs(territories) do	
 			if(nterritory.IsNeutral)then
-				if(WB.appliesToAllNeutrals or WB.appliesToMinArmies <= nterritory.NumArmies.NumArmies)then
+				if (WB.appliesToMinArmies <= nterritory.NumArmies.NumArmies) then
 					if(WB.ADVANCEDVERSION)then
 						advancedVersion(tid, nterritory)
 					else

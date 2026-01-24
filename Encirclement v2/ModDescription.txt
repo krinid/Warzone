@@ -1,8 +1,5 @@
 ENCIRCLEMENT:
-When a territory gets fully surrounded by other players, it is more difficult to defend it. The game creator can configure the mod such that:
-- You cannot deploy on encircled territories anymore
-- You slowly lose armies on encircled territories
-- Encircled territories turn neutral immediately
+When a player's territory is surrounded on all bordering territories by other players, they can't deploy new armies, and the army counts present are reduced. If the territory reaches 0 armies, it turns neutral.
 
 WEAKEN BLOCKADES:
-This mod removes a quantity of armies from neutral territories when they are sorrounded by the same player, this avoids large stacks of neutral to function as wastelands instead of blockades. You can select to use the advanced version, that way the mod also has effect on groups of neutral territories, as long as they are all at a maximum of 4 moves from each other, however this might impact the performance.
+When a neutral territory is surrounded by a single player, the armies present are reduced. Enabling 'Long Rang Encirclement' permits surrounding neutrals up to a distance of 4 territories away.

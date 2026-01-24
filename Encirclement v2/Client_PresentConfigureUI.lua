@@ -1,8 +1,6 @@
 --TODOs:
--- - include functionality to surround neutrals (which is timely b/c Weaken Blockades has had errors during configuration since the 'accessed a destroyed object' upgrade)
--- - eliminate orders that don't actually have any effect (actually this is for WB not Encircle -- after neutrals have gone to 0, it continues to add orders each turn to reduce them)
 -- - add configurable functionality to block gifts, airlifts in/out of surrounded territories 
--- - add 'advanced mode' to encircle (can encircle from a configurable distance)
+-- - add 'advanced mode' to encircle players (can encircle from a configurable distance)
 -- - configurable varying % reductions based on the surround distance, eg:
 -- 	- surrounding from 3 doesn't stop reinforcements but causes loss of 1 unit/turn
 -- 	- surrounding from 2 doesn't stop reinforcements but causes loss of 10% units/turn + blocks airlifts
@@ -17,7 +15,7 @@ function Client_PresentConfigureUI(rootParent)
     --Encirclement:
 	Init(rootParent);
     root = GetRoot();
-    CreateLabel(root).SetText("[ENCIRCLEMENT]").SetColor("#FFFF00").SetFlexibleWidth(1);
+    CreateLabel(root).SetText("\n[ENCIRCLEMENT]").SetColor("#FFFF00").SetFlexibleWidth(1);
     CreateLabel(root).SetText("(1+ players surrounding 1 single territory of another player)").SetColor("#00FFFF").SetFlexibleWidth(1);
     textColor = GetColors().TextColor;
 
@@ -62,9 +60,9 @@ function Client_PresentConfigureUI(rootParent)
 	percentualOrFixed = Mod.Settings.WeakenBlockades.percentualOrFixed or false; --default to false; false == use % amount
 	fixedArmiesRemoved = Mod.Settings.WeakenBlockades.fixedArmiesRemoved or 10;
 	percentualArmiesRemoved = Mod.Settings.WeakenBlockades.percentualArmiesRemoved or 51;
-	delayFromStart = Mod.Settings.WeakenBlockades.delayFromStart or 0;
-	appliesToAllNeutrals = Mod.Settings.WeakenBlockades.appliesToAllNeutrals or true;
-	appliesToMinArmies = Mod.Settings.WeakenBlockades.appliesToMinArmies or 25;
+	delayFromStart = (Mod.Settings.WeakenBlockades.delayFromStart or 0) + 1;
+	-- appliesToAllNeutrals = Mod.Settings.WeakenBlockades.appliesToAllNeutrals or true;
+	appliesToMinArmies = Mod.Settings.WeakenBlockades.appliesToMinArmies or 1;
 	ADVANCEDVERSION = Mod.Settings.WeakenBlockades.ADVANCEDVERSION or true;
 
 	CreateLabel (mainContainer).SetText ("Army reduction method: ");
@@ -93,48 +91,54 @@ function Client_PresentConfigureUI(rootParent)
 
 		-- percentualOrFixed = PercentOrFixed_Fixed.GetIsChecked ();
 		-- UI.Alert (percentualOrFixed);
+		local line = CreateHorz(pofSubCont).SetFlexibleWidth(1);
 		if (percentualOrFixed == true) then
-			farLabel = CreateLabel(pofSubCont).SetText("Army reduction - Fixed amount:");
-			farSlider = CreateNumberInputField(pofSubCont).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(fixedArmiesRemoved);
+			farLabel = CreateLabel(line).SetText("Army reduction (Fixed amount):").SetFlexibleWidth(0.66);
+			farSlider = CreateNumberInputField(line).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(fixedArmiesRemoved).SetFlexibleWidth(0.34);
 		else
-			parLabel = CreateLabel(pofSubCont).SetText("Army reduction - Percentage:");
-			parSlider = CreateNumberInputField(pofSubCont).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(percentualArmiesRemoved);
+			parLabel = CreateLabel(line).SetText("Army reduction (%):").SetFlexibleWidth(0.66);
+			parSlider = CreateNumberInputField(line).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(percentualArmiesRemoved).SetFlexibleWidth(0.34);
 		end
 	end
 
 	typeOfRemovalFnt ();
 
 	local dlsCont = CreateHorizontalLayoutGroup(mainContainer)
-	dlsLabel = CreateLabel(dlsCont).SetText("Effect begins on turn #: ");
-	dlsSlider = CreateNumberInputField(dlsCont).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(delayFromStart);
+	dlsLabel = CreateLabel(dlsCont).SetText("Effect begins on turn #: ").SetFlexibleWidth(0.66);
+	dlsSlider = CreateNumberInputField(dlsCont).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(delayFromStart).SetFlexibleWidth(0.34);
 
 	local atanCont = CreateVerticalLayoutGroup(mainContainer);
+	atmaCont = CreateHorizontalLayoutGroup(atanCont);
+	atmaLabel = CreateLabel(atmaCont).SetText("Applies to neutrals with minimum quantity of armies: ").SetFlexibleWidth(0.66);
+	atmaSlider = CreateNumberInputField(atmaCont).SetSliderMinValue(10).SetSliderMaxValue(100).SetValue(appliesToMinArmies).SetFlexibleWidth(0.34);
+	atmaLabel = CreateLabel(mainContainer).SetText("(use 1 to apply to all neutrals)\n");
 
-	function appliesToFnt(check)
-		appliesToAllNeutrals = check
-		if(check)then
-			appliesToMinArmies = atmaSlider.GetValue()
-			SetWindow(atmaWin)
-			DestroyWindow(atmaWin)
-			SetWindow(mainWin)
-		else
-			atmaWin = "appliesToMinArmiesWindow"
-			AddSubWindow(mainWin, atmaWin);
-			SetWindow(atmaWin)
-			atmaCont = CreateHorizontalLayoutGroup(atanCont)															   
-			atmaLabel = CreateLabel(atmaCont).SetText("Only applies to neutral territories whose armies are at least: ")				  				-- Label
-			atmaSlider = CreateNumberInputField(atmaCont).SetSliderMinValue(10).SetSliderMaxValue(100).SetValue(appliesToMinArmies)
-		end
-	end
+	-- function appliesToFnt(check)
+	-- 	-- appliesToAllNeutrals = check
+	-- 	if(check)then
+	-- 		appliesToMinArmies = atmaSlider.GetValue()
+	-- 		-- SetWindow(atmaWin)
+	-- 		-- DestroyWindow(atmaWin)
+	-- 		-- SetWindow(mainWin)
+	-- 	else
+	-- 		atmaWin = "appliesToMinArmiesWindow"
+	-- 		AddSubWindow(mainWin, atmaWin);
+	-- 		SetWindow(atmaWin)
+	-- 		atmaCont = CreateHorizontalLayoutGroup(atanCont)															   
+	-- 		atmaLabel = CreateLabel(atmaCont).SetText("Only applies to neutral territories whose armies are at least: ")				  				-- Label
+	-- 		atmaSlider = CreateNumberInputField(atmaCont).SetSliderMinValue(10).SetSliderMaxValue(100).SetValue(appliesToMinArmies)
+	-- 	end
+	-- end
 
-	CreateCheckBox(atanCont).SetIsChecked(appliesToAllNeutrals).SetText("Applies to all neutrals").SetOnValueChanged(function(IsChecked) showedreturnmessage = false; appliesToFnt(IsChecked) end)
-	if appliesToAllNeutrals == false then
-		appliesToFnt(appliesToAllNeutrals)
-	end
+	-- CreateCheckBox(atanCont).SetIsChecked(appliesToAllNeutrals).SetText("Size limitation").SetOnValueChanged(function(IsChecked) showedreturnmessage = false; appliesToFnt(IsChecked) end)
+	-- CreateCheckBox(atanCont).SetIsChecked(appliesToAllNeutrals).SetText("Applies to all neutrals").SetOnValueChanged(function(IsChecked) showedreturnmessage = false; appliesToFnt(IsChecked) end)
+	-- if appliesToAllNeutrals == false then
+	-- 	appliesToFnt(appliesToAllNeutrals)
+	-- end
 
 	SetWindow(mainWin)
 	local ADVVERCont = CreateVerticalLayoutGroup(mainContainer)
-	CreateCheckBox(ADVVERCont).SetIsChecked(ADVANCEDVERSION).SetText("Use advanced version").SetOnValueChanged(function(IsChecked) showedreturnmessage = false; setADVVER(IsChecked) end)
+	CreateCheckBox(ADVVERCont).SetIsChecked(ADVANCEDVERSION).SetText("Enable Long Range Encirclement (can surround a group of neutrals up to distance 4 of territories away)").SetOnValueChanged(function(IsChecked) showedreturnmessage = false; setADVVER(IsChecked) end)
 	function setADVVER(check)
 		ADVANCEDVERSION = check
 	end
