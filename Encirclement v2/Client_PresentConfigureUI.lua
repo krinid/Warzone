@@ -31,7 +31,7 @@ function Client_PresentConfigureUI(rootParent)
 
     local line = CreateHorz(root).SetFlexibleWidth(1);
     disallowDeploymentsInput = CreateCheckBox(line).SetText(" ").SetIsChecked(disallowDeployments);
-    CreateLabel(line).SetText("Cannot deployment armies on encircled territories").SetColor(textColor);
+    CreateLabel(line).SetText("Cannot deploy armies on encircled territories").SetColor(textColor);
 
     line = CreateHorz(root).SetFlexibleWidth(1);
     removeArmiesInput = CreateCheckBox(line).SetText(" ").SetIsChecked(removeArmies).SetOnValueChanged(updateSubWindow);
