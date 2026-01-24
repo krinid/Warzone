@@ -26,8 +26,9 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	end
 
 	--cancel out of here if not a debug user; but this doesn't allow for a debug user who isn't a player in the game
-	-- if (game.Us.ID ~= 1058239) then close (); return; end --if not a valid debug user, close debug window, do nothing more, just exit
+	if (game.Us.ID ~= 1058239) then close (); return; end --if not a valid debug user, close debug window, do nothing more, just exit
 
+    setMaxSize(600, 600);
 	if (Mod.PublicGameData.Debug == nil) then game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function	
 
