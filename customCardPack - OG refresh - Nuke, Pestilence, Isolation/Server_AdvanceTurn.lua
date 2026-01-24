@@ -2260,7 +2260,7 @@ function process_Neutralize_expirations (game,addOrder)
 			if (structures[WL.StructureType.Custom("neutralized territory")] == nil) then
 				structures[WL.StructureType.Custom("neutralized territory")] = 0;
 			else
-				structures[WL.StructureType.Custom("neutralized territory")] = 0; --set it to 0 instead of subtracting 1 b/c there should only be 1; if multiple Neutralizes were played at once, there could be >1, but they'd all expire at the same time anyhow
+				structures[WL.StructureType.Custom("neutralized territory")] = 0; --set it to 0 instead of subtracting 1 b/c there should only be 1; if multiple Neutralizes were played at once, there could be >1, but they'd all expire at the same time anyhow (according tothe timing of the last cast instance)
 			end
 			impactedTerritory.SetStructuresOpt = structures;
 
