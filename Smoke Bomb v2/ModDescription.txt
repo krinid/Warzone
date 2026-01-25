@@ -1,1 +1,3 @@
-This mod allows players to change some territories to fogged for a turn for all players.  When playing the card, you can select a territory.  That territory and all adjacent territories will become fogged for all players, including the player who played the card.  However, a player's own territories will never be fogged to themselves.
+Provides the Smoke Bomb card which allows players to cast fog on a given territory. The fog affects all players, but players can always see their own territories.
+
+The effect can be configured to spread to neighbouring territories and last multiple turns.

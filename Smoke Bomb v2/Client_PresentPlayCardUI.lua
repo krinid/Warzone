@@ -8,8 +8,8 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog
     if (Close ~= nil) then
         Close();
     end
-    
-    if (WL.IsVersionOrHigher("5.34")) then --closeCardsDialog callback did not exist prior to 5.34
+
+	if (WL.IsVersionOrHigher("5.34")) then --closeCardsDialog callback did not exist prior to 5.34
         closeCardsDialog();
     end
 
@@ -38,11 +38,15 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog
             end
 
 
-            if (playCard("Detonate a smoke bomb on " .. TargetTerritoryName, "SmokeBomb|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
+            if (playCard ("Detonate a smoke bomb on " .. TargetTerritoryName, "SmokeBomb|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
                 close();
             end
-        end);
-		TargetTerritoryClicked (); --automatically prompt for territory selection
+
+		end);
+
+	local strDescription = "\nSmoke bomb range: " ..tostring (Mod.Settings.Range) .. "\nDuration: " ..tostring (Mod.Settings.Duration).. " turn(s)";
+	UI.CreateLabel (vert).SetText (strDescription);
+	TargetTerritoryClicked (); --automatically prompt for territory selection
     end);
 end
 
@@ -63,8 +67,6 @@ function TerritoryClicked(terrDetails)
 
     TargetTerritoryBtn.SetInteractable(true);
 
-    local terr = Game.LatestStanding.Territories[terrDetails.ID];
-
 	if (terrDetails == nil) then
 		--The click request was cancelled.   Return to our default state.
 		TargetTerritoryInstructionLabel.SetText("");
@@ -75,17 +77,19 @@ function TerritoryClicked(terrDetails)
 		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
-	end
+		local arrSmokeBombTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.Range); --get resultant set of territories that Smoke Bomb will impact & highlight them
+		Game.HighlightTerritories (arrSmokeBombTerrs); --highlight the impacted terrs
 
-	-- print (terrDetails.ID,terrDetails.Name);
-	--compare to 71, Mauritania
-	print ("Distance from 71/Mauritania to " ..terrDetails.ID .."/" ..terrDetails.Name .." is " .. tostring (getTerritoryDistance (Game, 71, terrDetails.ID)));
-	local intDistance, closestTerrID = getDistanceToPlayersNearestTerritory (Game, terrDetails.ID, 1);
-	print ("Distance from " ..terrDetails.ID .."/" ..terrDetails.Name .." to AI1 is " ..tostring (intDistance) .. " @ " ..intDistance .."/".. Game.Map.Territories [closestTerrID].Name);
-	local intDistanceAB, playerAterrID, playerBterrID = getShortestDistanceBetweenPlayers (Game, 1, 1058239);
-print ("players "..Game.Game.Players[1].ID, Game.Game.Players[1058239].ID);
-	print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" .." and " .. tostring (playerBterrID) .. "/");
-	print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" ..tostring (Game.Map.Territories [playerAterrID].Name) .." and " .. tostring (playerBterrID) .. "/" ..tostring (Game.Map.Territories [playerBterrID].Name));
+		-- print (terrDetails.ID,terrDetails.Name);
+		--compare to 71, Mauritania
+		print ("Distance from 71/Mauritania to " ..terrDetails.ID .."/" ..terrDetails.Name .." is " .. tostring (getTerritoryDistance (Game, 71, terrDetails.ID)));
+		local intDistance, closestTerrID = getDistanceToPlayersNearestTerritory (Game, terrDetails.ID, 1);
+		print ("Distance from " ..terrDetails.ID .."/" ..terrDetails.Name .." to AI1 is " ..tostring (intDistance) .. " @ " ..intDistance .."/".. Game.Map.Territories [closestTerrID].Name);
+		local intDistanceAB, playerAterrID, playerBterrID = getShortestDistanceBetweenPlayers (Game, 1, 1058239);
+		print ("players "..Game.Game.Players[1].ID, Game.Game.Players[1058239].ID);
+		print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" .." and " .. tostring (playerBterrID) .. "/");
+		print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" ..tostring (Game.Map.Territories [playerAterrID].Name) .." and " .. tostring (playerBterrID) .. "/" ..tostring (Game.Map.Territories [playerBterrID].Name));
+	end
 end
 
 -- return integer distance between two territories
@@ -213,4 +217,32 @@ function getShortestDistanceBetweenPlayers (game, playerAID, playerBID)
     end
 
     return -1, nil, nil; -- players not connected
+end
+
+--return array list of territory IDs within specified distance from the target territory
+function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
+    local arrTerrProcessed = {}; --list of terrs already processed
+    local arrTerrResults = {}; --resultant list of terrs within specified distance
+    local arrTerrListToProcess = {}; --terrs remaining to be processed
+
+	local intDepth = 0;
+    arrTerrProcessed [targetTerritoryID] = true;
+    table.insert (arrTerrResults, targetTerritoryID);
+    table.insert (arrTerrListToProcess, targetTerritoryID);
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local intNextTerrID = {};
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+                if not arrTerrProcessed [neighbourTerrID] then
+                    arrTerrProcessed [neighbourTerrID] = true;
+                    table.insert(arrTerrResults, neighbourTerrID);
+                    table.insert(intNextTerrID, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = intNextTerrID;
+        intDepth = intDepth + 1;
+    end
+    return (arrTerrResults);
 end

@@ -749,12 +749,12 @@ function play_Nuke_card(game, cardInstance, playCard)
         local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
         CreateLabel (vert).SetText ("[NUKE]\n\n").SetColor (getColourCode("card play heading"));
 
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
+        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked_Nuke);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory you wish to nuke."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+        TargetTerritoryClicked_Nuke ("Select the territory you wish to nuke."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
         UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
-        function() 
+        function()
             --check for CANCELED request, ie: no territory selected
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
@@ -767,9 +767,9 @@ function play_Nuke_card(game, cardInstance, playCard)
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
             if (WL.IsVersionOrHigher("5.34.1")) then
                 local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 8, getColourInteger(175, 0, 0))}; --Dark Red annotation background for Nuke
-                playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
+                playCard (strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
-                playCard(strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);
+                playCard (strNukeMessage, 'Nuke|' .. TargetTerritoryID, intImplementationPhase);
             end
             close();
         end);
@@ -1127,7 +1127,32 @@ function SUpanel_selectAll ()
 	for k,cbox in pairs (airstrikeObject.SUcheckboxes) do cbox.SetIsChecked(true); end
 end
 
-function TargetTerritoryClicked(strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
+function TargetTerritoryClicked_Nuke (strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
+	UI.InterceptNextTerritoryClick(TerritoryClicked_Nuke);
+	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
+	TargetTerritoryBtn.SetInteractable(false);
+end
+
+function TerritoryClicked_Nuke (terrDetails)
+	if (UI.IsDestroyed (TargetTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable
+    TargetTerritoryBtn.SetInteractable(true);
+
+	if (terrDetails == nil) then
+		--The click request was cancelled.   Return to our default state.
+		TargetTerritoryInstructionLabel.SetText("");
+		TargetTerritoryID = nil;
+        TargetTerritoryName = nil;
+	else
+		--Territory was clicked, remember its ID
+		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
+		TargetTerritoryID = terrDetails.ID;
+        TargetTerritoryName = terrDetails.Name;
+		local arrSmokeBombTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo); --get resultant set of territories that Smoke Bomb will impact & highlight them
+		Game.HighlightTerritories (arrSmokeBombTerrs); --highlight the impacted terrs
+	end
+end
+
+function TargetTerritoryClicked (strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
 	TargetTerritoryBtn.SetInteractable(false);
@@ -1165,4 +1190,32 @@ function PlayerButton(player)
 		TargetPlayerID = player.ID;
 	end
 	return ret;
+end
+
+--return array list of territory IDs within specified distance from the target territory
+function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
+    local arrTerrProcessed = {}; --list of terrs already processed
+    local arrTerrResults = {}; --resultant list of terrs within specified distance
+    local arrTerrListToProcess = {}; --terrs remaining to be processed
+
+	local intDepth = 0;
+    arrTerrProcessed [targetTerritoryID] = true;
+    table.insert (arrTerrResults, targetTerritoryID);
+    table.insert (arrTerrListToProcess, targetTerritoryID);
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local intNextTerrID = {};
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+                if not arrTerrProcessed [neighbourTerrID] then
+                    arrTerrProcessed [neighbourTerrID] = true;
+                    table.insert(arrTerrResults, neighbourTerrID);
+                    table.insert(intNextTerrID, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = intNextTerrID;
+        intDepth = intDepth + 1;
+    end
+    return (arrTerrResults);
 end
