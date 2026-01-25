@@ -82,13 +82,13 @@ function TerritoryClicked(terrDetails)
 
 		-- print (terrDetails.ID,terrDetails.Name);
 		--compare to 71, Mauritania
-		print ("Distance from 71/Mauritania to " ..terrDetails.ID .."/" ..terrDetails.Name .." is " .. tostring (getTerritoryDistance (Game, 71, terrDetails.ID)));
-		local intDistance, closestTerrID = getDistanceToPlayersNearestTerritory (Game, terrDetails.ID, 1);
-		print ("Distance from " ..terrDetails.ID .."/" ..terrDetails.Name .." to AI1 is " ..tostring (intDistance) .. " @ " ..intDistance .."/".. Game.Map.Territories [closestTerrID].Name);
-		local intDistanceAB, playerAterrID, playerBterrID = getShortestDistanceBetweenPlayers (Game, 1, 1058239);
-		print ("players "..Game.Game.Players[1].ID, Game.Game.Players[1058239].ID);
-		print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" .." and " .. tostring (playerBterrID) .. "/");
-		print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" ..tostring (Game.Map.Territories [playerAterrID].Name) .." and " .. tostring (playerBterrID) .. "/" ..tostring (Game.Map.Territories [playerBterrID].Name));
+		-- print ("Distance from 71/Mauritania to " ..terrDetails.ID .."/" ..terrDetails.Name .." is " .. tostring (getTerritoryDistance (Game, 71, terrDetails.ID)));
+		-- local intDistance, closestTerrID = getDistanceToPlayersNearestTerritory (Game, terrDetails.ID, 1);
+		-- print ("Distance from " ..terrDetails.ID .."/" ..terrDetails.Name .." to AI1 is " ..tostring (intDistance) .. " @ " ..intDistance .."/".. Game.Map.Territories [closestTerrID].Name);
+		-- local intDistanceAB, playerAterrID, playerBterrID = getShortestDistanceBetweenPlayers (Game, 1, 1058239);
+		-- print ("players "..Game.Game.Players[1].ID, Game.Game.Players[1058239].ID);
+		-- print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" .." and " .. tostring (playerBterrID) .. "/");
+		-- print ("Distance from player[1] and player [2] is " ..tostring (intDistanceAB).. " between " .. tostring (playerAterrID) .."/" ..tostring (Game.Map.Territories [playerAterrID].Name) .." and " .. tostring (playerBterrID) .. "/" ..tostring (Game.Map.Territories [playerBterrID].Name));
 	end
 end
 
