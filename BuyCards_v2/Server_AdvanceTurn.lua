@@ -84,7 +84,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 		local intNumCardPieceIncreases = arrIntNumCardPriceIncreases[cardID] or 0;
 		local intNumCardsPurchased = arrIntNumCardsPurchased[cardID] or 0;
 		local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
-		local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.1; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
+		local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.0; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card
 		local intActualCardPrice = math.floor (cardRecord.Price * (1 + (intNumCardPieceIncreases * intCostIncreaseRate)) + 0.5);
 
 		print ("customOrderType=="..customOrderType..", card=="..cardID.."/"..strCardName ..", base price=="..cardRecord.Price..", actual price=="..intActualCardPrice..", numCardsPurchased=="..intNumCardsPurchased..", maxBuyableCards=="..intMaxBuyableCards);

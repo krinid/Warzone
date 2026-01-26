@@ -345,7 +345,8 @@ function getColourCode (itemName)
     elseif (itemName=="error")  then return "#FF0000"; --red
 	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
 	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
-	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --green
+	elseif (itemName=="ok") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
+	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
 	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
 	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
 	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
@@ -376,7 +377,9 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Tornado") then return getColours()["Charcoal"]; --
 	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
 	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
