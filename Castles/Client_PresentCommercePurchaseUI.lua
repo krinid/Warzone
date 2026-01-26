@@ -9,16 +9,35 @@ function Client_PresentCommercePurchaseUI(rootParent, game, close)
 		"• 1st castle: " ..tostring (intCastleBaseCost).. " gold\n• Increases: +" ..tostring (intCastleCostIncrease).. " gold per castle\n• Maintenance: " ..tostring (intCastleMaintenanceCost)..
 		" gpt per castle\n• Conversion ratio: " ..tostring (intArmyToCastlePowerRatio).. " [1 army = " ..tostring (intArmyToCastlePowerRatio).. " castle strength]");
 	if (game.Us.ID == nil) then UI.CreateLabel(MainUI).SetText("[Spectators can't buy Castles]").SetColor(getColourCode("error")); return; end --can spectators even see this? Can they click the "Build" (buy) button?
-	createPurchaseCastleUIcomponents ();
+
+	vertCastleButtons = UI.CreateVerticalLayoutGroup (rootParent);
+	vertCastleStats = UI.CreateVerticalLayoutGroup (rootParent);
+	createPurchaseCastleUIcomponents (vertCastleButtons);
+	displayCastleStats (vertCastleStats);
 end
 
-function createPurchaseCastleUIcomponents ()
+function createPurchaseCastleUIcomponents (targetContainer)
 	if (UI.IsDestroyed (vertPurchaseDialog) == false) then UI.Destroy (vertPurchaseDialog); end
-	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
+	vertPurchaseDialog = UI.CreateVerticalLayoutGroup (targetContainer);
 	local horz = UI.CreateHorizontalLayoutGroup (vertPurchaseDialog).SetFlexibleWidth (1);
 	PurchaseCastleButton = UI.CreateButton(horz).SetText("Purchase Castle").SetOnClick(PurchaseClicked).SetColor (getColourCode("button green"));
 	EnterExitCastleButton = UI.CreateButton(horz).SetText("Armies Enter/Exit Castle").SetColor(getColourCode("button magenta")).SetOnClick(enter_exit_Castle_dialog);
 	ScuttleCastleButton = UI.CreateButton(horz).SetText("Scuttle Castle").SetColor(getColourCode("button red")).SetOnClick(scuttle_Castle_dialog);
+end
+
+function displayCastleStats (targetContainer)
+	local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
+	local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
+	local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+	local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
+
+	if (UI.IsDestroyed (vertCastleStatsDialog) == false) then UI.Destroy (vertCastleStatsDialog); end
+	vertCastleStatsDialog = UI.CreateVerticalLayoutGroup (targetContainer);
+	UI.CreateLabel(vertCastleStatsDialog).SetText("Your castle stats:");
+	UI.CreateLabel(vertCastleStatsDialog).SetText("• Next castle cost: " ..tostring (intCastleCost).. " gold");
+	UI.CreateLabel(vertCastleStatsDialog).SetText("• # of castles already built: " ..tostring (intNumCastlesOwned));
+	UI.CreateLabel(vertCastleStatsDialog).SetText("• # of castle purchase orders this turn: " ..tostring (intNumCastlesPurchaseOrdersThisTurn));
+	UI.CreateLabel(vertCastleStatsDialog).SetText("• Current castle maintenance: " ..tostring (intCurrentMaintenanceCost).. " gpt");
 end
 
 function scuttle_Castle_dialog ()
@@ -109,7 +128,8 @@ function ScuttleCastleButtonClicked ()
 	-- table.insert(orders, customOrder_Scuttle);
 	insertOrder (Game,customOrder_Scuttle, orders);
 	-- Game.Orders = orders;
-	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	displayCastleStats (vertCastleStats);
 end
 
 function AddOrderButtonClicked_ArmiesEnterExit()
@@ -153,7 +173,8 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 
 	displayOrders (orders);
 	-- Game.Orders = orders;
-	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	displayCastleStats (vertCastleStats);
 end
 
 --find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
@@ -242,15 +263,15 @@ function PurchaseClicked()
 	SelectTerritoryBtn.SetInteractable (false);
 	SelectTerritoryClicked(); --start immediately in selection mode, no reason to require player to click the button
 
-	local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
-	local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
-	local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
-	local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
+	-- local intNumCastlesOwned = countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false);
+	-- local intNumCastlesPurchaseOrdersThisTurn = countSUsPurchasedThisTurn (Game, "Castle");
+	-- local intCastleCost = intCastleBaseCost + intCastleCostIncrease * (intNumCastlesOwned + intNumCastlesPurchaseOrdersThisTurn);
+	-- local intCurrentMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player (Game, Game.Us.ID, "Castle", false) * intCastleMaintenanceCost + 0.5);
 
-	UI.CreateLabel(vertPurchaseDialog).SetText("• Next castle cost: " ..tostring (intCastleCost).. " gold");
-	UI.CreateLabel(vertPurchaseDialog).SetText("• # of castles already built: " ..tostring (intNumCastlesOwned));
-	UI.CreateLabel(vertPurchaseDialog).SetText("• # of castle purchase orders this turn: " ..tostring (intNumCastlesPurchaseOrdersThisTurn));
-	UI.CreateLabel(vertPurchaseDialog).SetText("• Current castle maintenance: " ..tostring (intCurrentMaintenanceCost).. " gpt");
+	-- UI.CreateLabel(vertPurchaseDialog).SetText("• Next castle cost: " ..tostring (intCastleCost).. " gold");
+	-- UI.CreateLabel(vertPurchaseDialog).SetText("• # of castles already built: " ..tostring (intNumCastlesOwned));
+	-- UI.CreateLabel(vertPurchaseDialog).SetText("• # of castle purchase orders this turn: " ..tostring (intNumCastlesPurchaseOrdersThisTurn));
+	-- UI.CreateLabel(vertPurchaseDialog).SetText("• Current castle maintenance: " ..tostring (intCurrentMaintenanceCost).. " gpt");
 	-- UI.CreateLabel(vertPurchaseDialog).SetText("• Future castle maintenance: X");
 end
 
@@ -309,5 +330,6 @@ function CompletePurchaseClicked()
 	-- table.insert(orders, customOrder_Purchase);
 	insertOrder (Game, customOrder_Purchase, orders);
 	-- Game.Orders = orders;
-	createPurchaseCastleUIcomponents (); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+	displayCastleStats (vertCastleStats);
 end
