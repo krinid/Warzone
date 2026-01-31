@@ -1944,7 +1944,11 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		impactedTerritory.SetOwnerOpt=impactedTerritoryOwnerID;
 		impactedTerritoryOwnerName = toPlayerName (impactedTerritoryOwnerID, game);
 
+		--reassign SUs on the terr to the new owner
+		convert_SUs (game, gameOrder.PlayerID, impactedTerritoryOwnerID, currentTargetTerritory.NumArmies.SpecialUnits, targetTerritoryID, addOrder);
 		table.insert (modifiedTerritories, impactedTerritory);
+
+		--DELETE any the Neutralize structures!
 
 		local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Deneutralize action
 		local strDeneutralizeOrderMessage = toPlayerName(castingPlayerID, game) ..' deneutralized ' .. targetTerritoryName .. ', assigned to '..impactedTerritoryOwnerName;
@@ -1953,6 +1957,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --use Green colour for Deneutralize
+		-- impactedTerritory.RemoveSpecialUnitsOpt = currentTargetTerritory.NumArmies.SpecialUnits; --remove SUs on the territory
 		addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 	else
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
@@ -1964,6 +1969,62 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
 		addOrder (addAirLiftCardEvent, false);
 	end
+end
+
+--for each SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)
+function convert_SUs (game, orderPlayerID, otherPlayerID, SpecialUnits, targetTerritoryID, addOrder)
+	print ("\n\n\n[pkSUs] START");
+	local clonedSUs = {};
+	local removeSUs = {};
+	for k,sp in pairs (SpecialUnits) do
+		--don't capture Commanders/Bosses/other built-in SUs - just let them die normally, only capture Custom SUs (CustomSpecialUnits)
+		if (sp.proxyType == "CustomSpecialUnit") then
+			local sp_OwnerID = sp.OwnerID;
+			--this code is to recreate a new SP of the same type with same properties -- not good b/c it needs all the PNG image files (which is limited to 5)
+			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
+
+			--this code is to clone an SU & change the owner -- a much nicer solution, don't need to recreate the SU, don't need to worry about PNG image files, works with all custom SUs
+			local builder = WL.CustomSpecialUnitBuilder.CreateCopy(sp);
+			builder.OwnerID = otherPlayerID;
+			local newSP = builder.Build();
+			print ("SP killed: "..k, sp.proxyType.."; , SP owner "..sp_OwnerID.. "/".. getPlayerName (game, sp_OwnerID)..", clone to " ..newSP.OwnerID.. "/".. getPlayerName (game, newSP.OwnerID));
+			table.insert (clonedSUs, newSP);
+			table.insert (removeSUs, sp.ID);
+		end
+	end
+
+	if (#clonedSUs == 0) then print ("[pkSUs] No SUs to clone"); return; --no SUs to clone, do nothing, just exit the function; possibly there were Commanders/Bosses/non-CustomSpecialUnits that were involved/killed - ignore them
+	else print ("[pkSUs] ".. #clonedSUs.. " SUs cloned");
+	end
+
+	--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
+	local specialsToAdd = split_table_into_blocks (clonedSUs, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
+	local targetTerritory = WL.TerritoryModification.Create (targetTerritoryID)
+
+	--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
+	for _,v in pairs (specialsToAdd) do
+		targetTerritory.AddSpecialUnits = v; --add Specials to target territory
+		targetTerritory.RemoveSpecialUnitsOpt = removeSUs; --remove the cloned/converted SUs
+		local event = WL.GameOrderEvent.Create (orderPlayerID, "[converting Special Units]", {}, {targetTerritory});
+		-- local annotations = {};
+		-- annotations [sourceTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [SOURCE]", 30, getColourInteger (0, 255, 0)); --show source territory in Green annotation
+		-- annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Airstrike [TARGET]", 30, getColourInteger (255, 0, 0)); --show target territory in Red annotation
+		-- event.TerritoryAnnotationsOpt = annotations; --use Red colour for Airstrike target, Green for source
+		-- event.TerritoryAnnotationsOpt = {[targetTerritory] = WL.TerritoryAnnotation.Create ("Airstrike", 10, getColourInteger (255, 0, 0))}; --use Red colour for Airstrike
+		addOrder (event, true); --skip the order if the original attack order gets skipped
+	end
+end
+
+function split_table_into_blocks (data, blockSize)
+	local blocks = {};
+	for i = 1, #data, blockSize do
+		local block = {};
+		for j = i, math.min(i + blockSize - 1, #data) do
+			table.insert(block, data[j]);
+		end
+		table.insert(blocks, block);
+	end
+	return blocks;
 end
 
 function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, targetTerritoryID)

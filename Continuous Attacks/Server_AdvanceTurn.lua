@@ -114,7 +114,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			intInfiniteLoopStopper = intInfiniteLoopStopper + 1;
 			if (intInfiniteLoopStopper > 100) then
 				-- addNewOrder (WL.GameOrderCustom.Create ({order.PlayerID, "Continuous Attack - potential infinite loop; ending this attack cycle", {}));
-				addNewOrder (WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Continuous Attack - potential infinite loop; ending this attack cycle"));
+				addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Continuous Attack - potential infinite loop; ending this attack cycle"));
 				print ("#################### Continuous Attack - potential infinite loop; ending this attack cycle");
 				-- crashMe.Now(); end
 				intInfiniteLoopStopper = 0; --reset for the next continuous attack cycle; only abort the current cycle, not all going forward for this turn

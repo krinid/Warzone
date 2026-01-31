@@ -1,11 +1,11 @@
 When an attack is made, this mod causes the surviving attackers to immediately continually attack the same defending territory on the same turn until either all attackers or defenders die, or neither takes damage anymore, up to a max of 100 repeated attacks.
 
 Example:   (standard kill rates of Offensive 60%, Defensive 70%)
-- 12 armies attack 10 defending armies:
-	- 1st cycle: 12 attacks 10
-	- 2nd cycle: 4 attacks 3
-	- 3rd cycle: 2 attacks 1 --> Attackers win, capture the target territory
+• 12 armies attack 10 defending armies:
+	• 1st cycle: 12 attacks 10
+	• 2nd cycle: 4 attacks 3
+	• 3rd cycle: 2 attacks 1 --> Attackers win, capture the target territory
 
-- 11 armies attack 10 defending armies:
-	- 1st cycle: 10 attacks 10
-	- 2nd cycle: 3 attacks 4 --> Defenders win, target territory is not captured
+• 11 armies attack 10 defending armies:
+	• 1st cycle: 10 attacks 10
+	• 2nd cycle: 3 attacks 4 --> Defenders win, target territory is not captured

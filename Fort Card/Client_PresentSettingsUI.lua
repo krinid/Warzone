@@ -1,31 +1,7 @@
 function Client_PresentSettingsUI(rootParent)
-    local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-	UI.CreateLabel(horz).SetText('Number of Pieces to divide the card into').SetPreferredWidth(290);
-    numPieces = UI.CreateNumberInputField(horz)
-        .SetSliderMinValue(1)
-        .SetSliderMaxValue(11)
-        .SetValue(Mod.Settings.NumPieces or 4);
-
-    local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-    UI.CreateLabel(horz).SetText('Card weight (how common the card is)').SetPreferredWidth(290);
-    cardWeight = UI.CreateNumberInputField(horz)
-        .SetWholeNumbers(false)
-        .SetSliderMinValue(0)
-        .SetSliderMaxValue(5)
-        .SetValue(Mod.Settings.Weight or 1.0);
-
-	local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-    UI.CreateLabel(horz).SetText('Minimum pieces awarded per turn').SetPreferredWidth(290);
-    minPieces = UI.CreateNumberInputField(horz)
-        .SetSliderMinValue(0)
-        .SetSliderMaxValue(5)
-        .SetValue(Mod.Settings.MinPieces or 1);
-
-	local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-    UI.CreateLabel(horz).SetText('Pieces given to each player at the start').SetPreferredWidth(290);
-    initialPieces = UI.CreateNumberInputField(horz)
-        .SetSliderMinValue(0)
-        .SetSliderMaxValue(5)
-        .SetValue(Mod.Settings.InitialPieces or 5);
-
+	UI.CreateLabel(rootParent).SetText("Forts are built at the end of a turn. They block all incoming damage from 1 attack, then the fort is destroyed. Attackers still takes damage normally from the defender's units.");
+	UI.CreateLabel(rootParent).SetText('• Number of Pieces to divide the card into: ' .. tostring (Mod.Settings.NumPieces or 4)).SetPreferredWidth(290);
+    UI.CreateLabel(rootParent).SetText('• Card weight (how common the card is): ' ..tostring (Mod.Settings.Weight or 1.0)).SetPreferredWidth(290);
+    UI.CreateLabel(rootParent).SetText('• Minimum pieces awarded per turn: ' ..tostring (Mod.Settings.MinPieces or 1)).SetPreferredWidth(290);
+    UI.CreateLabel(rootParent).SetText('• Pieces given to each player at the start: ' ..tostring (Mod.Settings.InitialPieces or 5)).SetPreferredWidth(290);
 end

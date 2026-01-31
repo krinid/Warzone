@@ -183,7 +183,7 @@ TODOs:
 		- allow negative damage to deliver on the healing bomb requests?
 ]]
 
-require("UI_Events");
+-- require("UI_Events");
 require("utilities");
 
 function Client_PresentConfigureUI(rootParent)
@@ -200,94 +200,94 @@ function loadActiveModules ()
 end
 
 function create_card_checkbox_UI_controls (rootParent)
-	GlobalRoot=nil;
-    GlobalRoot = CreateVert(rootParent).SetFlexibleWidth(1);
-    Init();
-    DestroyWindow();
+	-- GlobalRoot=nil;
+    -- GlobalRoot = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+    -- Init();
+    -- DestroyWindow();
 
-	local MainModUI = CreateWindow(CreateVert(GlobalRoot).SetFlexibleWidth(1));
-	CreateLabel(MainModUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
+	local MainModUI = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+	UI.CreateLabel (MainModUI).SetText("Select which cards to enable:").SetColor(getColourCode ("subheading"));
 
 	if (activeModules["Nuke"] == true) then
-		vertNukeSettingsHeading = CreateVert(MainModUI);
-		NukeCardCheckbox = CreateCheckBox(vertNukeSettingsHeading).SetText("Nuke").SetIsChecked(Mod.Settings.NukeEnabled).SetOnValueChanged(function() nukeCheckboxClicked() end).SetInteractable(true);
+		vertNukeSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		NukeCardCheckbox = UI.CreateCheckBox (vertNukeSettingsHeading).SetText("Nuke").SetIsChecked(Mod.Settings.NukeEnabled).SetOnValueChanged(function() nukeCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Pestilence"] == true) then
-		vertPestiSettingsHeading = CreateVert(MainModUI);
-		PestilenceCheckbox = CreateCheckBox(vertPestiSettingsHeading).SetText("Pestilence").SetIsChecked(Mod.Settings.PestilenceEnabled).SetOnValueChanged(function() pestilenceCheckboxClicked() end).SetInteractable(true);
+		vertPestiSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		PestilenceCheckbox = UI.CreateCheckBox (vertPestiSettingsHeading).SetText("Pestilence").SetIsChecked(Mod.Settings.PestilenceEnabled).SetOnValueChanged(function() pestilenceCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Isolation"] == true) then
-		vertIsolationSettingsHeading = CreateVert(MainModUI);
-		IsolationCardCheckbox = CreateCheckBox(vertIsolationSettingsHeading).SetText("Isolation").SetIsChecked(Mod.Settings.IsolationEnabled).SetOnValueChanged(function() isolationCheckboxClicked() end).SetInteractable(true);
+		vertIsolationSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		IsolationCardCheckbox = UI.CreateCheckBox (vertIsolationSettingsHeading).SetText("Isolation").SetIsChecked(Mod.Settings.IsolationEnabled).SetOnValueChanged(function() isolationCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Shield"] == true) then
-		vertShieldSettingsHeading = CreateVert(MainModUI);
-		ShieldCardCheckbox = CreateCheckBox(vertShieldSettingsHeading).SetText("Shield").SetIsChecked(Mod.Settings.ShieldEnabled).SetOnValueChanged(function() shieldCheckboxClicked() end).SetInteractable(true);
+		vertShieldSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		ShieldCardCheckbox = UI.CreateCheckBox (vertShieldSettingsHeading).SetText("Shield").SetIsChecked(Mod.Settings.ShieldEnabled).SetOnValueChanged(function() shieldCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Monolith"] == true) then
-		vertMonolithSettingsHeading = CreateVert(MainModUI);
-		MonolithCardCheckbox = CreateCheckBox(vertMonolithSettingsHeading).SetText("Monolith").SetIsChecked(Mod.Settings.MonolithEnabled).SetOnValueChanged(function() monolithCheckboxClicked() end).SetInteractable(true);
+		vertMonolithSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		MonolithCardCheckbox = UI.CreateCheckBox (vertMonolithSettingsHeading).SetText("Monolith").SetIsChecked(Mod.Settings.MonolithEnabled).SetOnValueChanged(function() monolithCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Phantom"] == true) then
-		vertPhantomSettingsHeading = CreateVert(MainModUI);
-		PhantomCardCheckbox = CreateCheckBox(vertPhantomSettingsHeading).SetText("Phantom").SetIsChecked(Mod.Settings.PhantomEnabled).SetOnValueChanged(function() phantomCheckboxClicked() end).SetInteractable(true);
+		vertPhantomSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		PhantomCardCheckbox = UI.CreateCheckBox (vertPhantomSettingsHeading).SetText("Phantom").SetIsChecked(Mod.Settings.PhantomEnabled).SetOnValueChanged(function() phantomCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Neutralize"] == true) then
-		vertNeutralizeSettingsHeading = CreateVert(MainModUI);
-		NeutralizeCardCheckbox = CreateCheckBox(vertNeutralizeSettingsHeading).SetText("Neutralize").SetIsChecked(Mod.Settings.NeutralizeEnabled).SetOnValueChanged(function() neutralizeCheckboxClicked() end).SetInteractable(true);
+		vertNeutralizeSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		NeutralizeCardCheckbox = UI.CreateCheckBox (vertNeutralizeSettingsHeading).SetText("Neutralize").SetIsChecked(Mod.Settings.NeutralizeEnabled).SetOnValueChanged(function() neutralizeCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Deneutralize"] == true) then
-		vertDeneutralizeSettingsHeading = CreateVert(MainModUI);
-		DeneutralizeCardCheckbox = CreateCheckBox(vertDeneutralizeSettingsHeading).SetText("Deneutralize").SetIsChecked(Mod.Settings.DeneutralizeEnabled).SetOnValueChanged(function() deneutralizeCheckboxClicked() end).SetInteractable(true);
+		vertDeneutralizeSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		DeneutralizeCardCheckbox = UI.CreateCheckBox (vertDeneutralizeSettingsHeading).SetText("Deneutralize").SetIsChecked(Mod.Settings.DeneutralizeEnabled).SetOnValueChanged(function() deneutralizeCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Card Block"] == true) then
-		vertCardBlockSettingsHeading = CreateVert(MainModUI);
-		CardBlockCardCheckbox = CreateCheckBox(vertCardBlockSettingsHeading).SetText("Card Block").SetIsChecked(Mod.Settings.CardBlockEnabled).SetOnValueChanged(function() cardBlockCheckboxClicked() end).SetInteractable(true);
+		vertCardBlockSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		CardBlockCardCheckbox = UI.CreateCheckBox (vertCardBlockSettingsHeading).SetText("Card Block").SetIsChecked(Mod.Settings.CardBlockEnabled).SetOnValueChanged(function() cardBlockCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Card Hold"] == true) then
-		vertCardHoldSettingsHeading = CreateVert(MainModUI);
-		CardHoldCardCheckbox = CreateCheckBox(vertCardHoldSettingsHeading).SetText("Card Hold").SetIsChecked(Mod.Settings.CardHoldEnabled).SetOnValueChanged(function() cardHoldCheckboxClicked() end).SetInteractable(true);
+		vertCardHoldSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		CardHoldCardCheckbox = UI.CreateCheckBox (vertCardHoldSettingsHeading).SetText("Card Hold").SetIsChecked(Mod.Settings.CardHoldEnabled).SetOnValueChanged(function() cardHoldCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Card Pieces"] == true) then
-		vertCardPiecesSettingsHeading = CreateVert(MainModUI);
-		CardPiecesCardCheckbox = CreateCheckBox(vertCardPiecesSettingsHeading).SetText("Card Pieces").SetIsChecked(Mod.Settings.CardPiecesEnabled).SetOnValueChanged(function() cardPiecesCheckboxClicked() end).SetInteractable(true);
+		vertCardPiecesSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		CardPiecesCardCheckbox = UI.CreateCheckBox (vertCardPiecesSettingsHeading).SetText("Card Pieces").SetIsChecked(Mod.Settings.CardPiecesEnabled).SetOnValueChanged(function() cardPiecesCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Tornado"] == true) then
-		vertTornadoSettingsHeading = CreateVert(MainModUI);
-		TornadoCardCheckbox = CreateCheckBox(vertTornadoSettingsHeading).SetText("Tornado").SetIsChecked(Mod.Settings.TornadoEnabled).SetOnValueChanged(function() tornadoCheckboxClicked() end).SetInteractable(true);
+		vertTornadoSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		TornadoCardCheckbox = UI.CreateCheckBox (vertTornadoSettingsHeading).SetText("Tornado").SetIsChecked(Mod.Settings.TornadoEnabled).SetOnValueChanged(function() tornadoCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Quicksand"] == true) then
-		vertQuicksandSettingsHeading = CreateVert(MainModUI);
-		QuicksandCardCheckbox = CreateCheckBox(vertQuicksandSettingsHeading).SetText("Quicksand").SetIsChecked(Mod.Settings.QuicksandEnabled).SetOnValueChanged(function() quicksandCheckboxClicked() end).SetInteractable(true);
+		vertQuicksandSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		QuicksandCardCheckbox = UI.CreateCheckBox (vertQuicksandSettingsHeading).SetText("Quicksand").SetIsChecked(Mod.Settings.QuicksandEnabled).SetOnValueChanged(function() quicksandCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Earthquake"] == true) then
-		vertEarthquakeSettingsHeading = CreateVert(MainModUI);
-		EarthquakeCardCheckbox = CreateCheckBox(vertEarthquakeSettingsHeading).SetText("Earthquake").SetIsChecked(Mod.Settings.EarthquakeEnabled).SetOnValueChanged(function() earthquakeCheckboxClicked() end).SetInteractable(true);
+		vertEarthquakeSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		EarthquakeCardCheckbox = UI.CreateCheckBox (vertEarthquakeSettingsHeading).SetText("Earthquake").SetIsChecked(Mod.Settings.EarthquakeEnabled).SetOnValueChanged(function() earthquakeCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Airstrike"] == true) then
-		vertAirstrikeSettingsHeading = CreateVert(MainModUI);
-		--CreateLabel(vertAirstrikeSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
-		AirstrikeCardCheckbox = CreateCheckBox(vertAirstrikeSettingsHeading).SetText("Airstrike").SetIsChecked(Mod.Settings.AirstrikeEnabled).SetOnValueChanged(function() airstrikeCheckboxClicked() end).SetInteractable(true);
+		vertAirstrikeSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		--UI.CreateLabel (vertAirstrikeSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
+		AirstrikeCardCheckbox = UI.CreateCheckBox (vertAirstrikeSettingsHeading).SetText("Airstrike").SetIsChecked(Mod.Settings.AirstrikeEnabled).SetOnValueChanged(function() airstrikeCheckboxClicked() end).SetInteractable(true);
 	end
 
 	if (activeModules["Forest Fire"] == true) then
-		vertForestFireSettingsHeading = CreateVert(MainModUI);
-		-- CreateLabel(vertForestFireSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
-		ForestFireCardCheckbox = CreateCheckBox(vertForestFireSettingsHeading).SetText("Wildfire").SetIsChecked(Mod.Settings.ForestFireEnabled).SetOnValueChanged(function() forestFireCheckboxClicked() end).SetInteractable(true);
+		vertForestFireSettingsHeading = UI.CreateVerticalLayoutGroup (MainModUI);
+		-- UI.CreateLabel (vertForestFireSettingsHeading).SetText ("- - - - - Coming soon - - - - -");
+		ForestFireCardCheckbox = UI.CreateCheckBox (vertForestFireSettingsHeading).SetText("Wildfire").SetIsChecked(Mod.Settings.ForestFireEnabled).SetOnValueChanged(function() forestFireCheckboxClicked() end).SetInteractable(true);
 	end
 end
 
@@ -322,32 +322,32 @@ function cardHoldCheckboxClicked()
 			UI.Destroy(vertCardHoldSettingsDetails);
 		end
 	else
-		vertCardHoldSettingsDetails = CreateVert(vertCardHoldSettingsHeading);
+		vertCardHoldSettingsDetails = UI.CreateVerticalLayoutGroup (vertCardHoldSettingsHeading);
 		local UIcontainer = vertCardHoldSettingsDetails;
-		local horzCardHoldDuration = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldDuration).SetText("Duration: ");
-		CardHoldDuration = CreateNumberInputField(horzCardHoldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardHoldDuration).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardHoldDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldDuration).SetText("Duration: ");
+		CardHoldDuration = UI.CreateNumberInputField (horzCardHoldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardHoldDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardHoldNewCardHoldLimit = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldNewCardHoldLimit).SetText("New card hold limit: ");
-		CardHoldNewCardHoldLimit = CreateNumberInputField(horzCardHoldNewCardHoldLimit).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldNewCardHoldLimit).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("(temporary new limit for # of cards that can be held before a player is forced to play or discard)");
+		local horzCardHoldNewCardHoldLimit = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldNewCardHoldLimit).SetText("New card hold limit: ");
+		CardHoldNewCardHoldLimit = UI.CreateNumberInputField (horzCardHoldNewCardHoldLimit).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldNewCardHoldLimit).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("(temporary new limit for # of cards that can be held before a player is forced to play or discard)");
 
-		local horzCardHoldPiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		CardHoldPiecesNeeded = CreateNumberInputField(horzCardHoldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardHoldPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		CardHoldPiecesNeeded = UI.CreateNumberInputField (horzCardHoldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardHoldStartPieces = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldStartPieces).SetText("Pieces given to each player at the start: ");
-		CardHoldStartPieces = CreateNumberInputField(horzCardHoldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardHoldStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldStartPieces).SetText("Pieces given to each player at the start: ");
+		CardHoldStartPieces = UI.CreateNumberInputField (horzCardHoldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardHoldPiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		CardHoldPiecesPerTurn = CreateNumberInputField(horzCardHoldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardHoldPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		CardHoldPiecesPerTurn = UI.CreateNumberInputField (horzCardHoldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardHoldCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzCardHoldCardWeight).SetText("Card weight: ");
-		CardHoldCardWeight = CreateNumberInputField(horzCardHoldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzCardHoldCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardHoldCardWeight).SetText("Card weight: ");
+		CardHoldCardWeight = UI.CreateNumberInputField (horzCardHoldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
 end
 
@@ -361,27 +361,27 @@ function cardBlockCheckboxClicked()
             UI.Destroy(vertCardBlockSettingsDetails);
         end
     else
-        vertCardBlockSettingsDetails = CreateVert(vertCardBlockSettingsHeading);
+        vertCardBlockSettingsDetails = UI.CreateVerticalLayoutGroup (vertCardBlockSettingsHeading);
         local UIcontainer = vertCardBlockSettingsDetails;
-        local horzCardBlockDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzCardBlockDuration).SetText("Duration: ");
-        CardBlockDuration = CreateNumberInputField(horzCardBlockDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardBlockDuration).SetWholeNumbers(true).SetInteractable(true);
+        local horzCardBlockDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzCardBlockDuration).SetText("Duration: ");
+        CardBlockDuration = UI.CreateNumberInputField (horzCardBlockDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.CardBlockDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardBlockPiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzCardBlockPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        CardBlockPiecesNeeded = CreateNumberInputField(horzCardBlockPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardBlockPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzCardBlockPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        CardBlockPiecesNeeded = UI.CreateNumberInputField (horzCardBlockPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardBlockStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzCardBlockStartPieces).SetText("Pieces given to each player at the start: ");
-        CardBlockStartPieces = CreateNumberInputField(horzCardBlockStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardBlockStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzCardBlockStartPieces).SetText("Pieces given to each player at the start: ");
+        CardBlockStartPieces = UI.CreateNumberInputField (horzCardBlockStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardBlockPiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzCardBlockPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        CardBlockPiecesPerTurn = CreateNumberInputField(horzCardBlockPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardBlockPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzCardBlockPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        CardBlockPiecesPerTurn = UI.CreateNumberInputField (horzCardBlockPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardBlockCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzCardBlockCardWeight).SetText("Card weight: ");
-		CardBlockCardWeight = CreateNumberInputField(horzCardBlockCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzCardBlockCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardBlockCardWeight).SetText("Card weight: ");
+		CardBlockCardWeight = UI.CreateNumberInputField (horzCardBlockCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
 end
 
@@ -395,32 +395,32 @@ function earthquakeCheckboxClicked()
             UI.Destroy(vertEarthquakeSettingsDetails);
         end
     else
-        vertEarthquakeSettingsDetails = CreateVert(vertEarthquakeSettingsHeading);
+        vertEarthquakeSettingsDetails = UI.CreateVerticalLayoutGroup (vertEarthquakeSettingsHeading);
         local UIcontainer = vertEarthquakeSettingsDetails;
-        local horzEarthquakeDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzEarthquakeDuration).SetText("Duration: ");
-        EarthquakeDuration = CreateNumberInputField(horzEarthquakeDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.EarthquakeDuration).SetWholeNumbers(true).SetInteractable(true);
+        local horzEarthquakeDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzEarthquakeDuration).SetText("Duration: ");
+        EarthquakeDuration = UI.CreateNumberInputField (horzEarthquakeDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.EarthquakeDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzEarthquakeStrength = CreateHorz(UIcontainer);
-        CreateLabel(horzEarthquakeStrength).SetText("Strength: ");
-        EarthquakeStrength = CreateNumberInputField(horzEarthquakeStrength).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.EarthquakeStrength).SetWholeNumbers(true).SetInteractable(true);
-        CreateLabel(UIcontainer).SetText("(how much damage the Earthquake will do to each territory in the bonus each turn)");
+		local horzEarthquakeStrength = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzEarthquakeStrength).SetText("Strength: ");
+        EarthquakeStrength = UI.CreateNumberInputField (horzEarthquakeStrength).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.EarthquakeStrength).SetWholeNumbers(true).SetInteractable(true);
+        UI.CreateLabel (UIcontainer).SetText("(how much damage the Earthquake will do to each territory in the bonus each turn)");
 
-		local horzEarthquakePiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzEarthquakePiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        EarthquakePiecesNeeded = CreateNumberInputField(horzEarthquakePiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzEarthquakePiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzEarthquakePiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        EarthquakePiecesNeeded = UI.CreateNumberInputField (horzEarthquakePiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzEarthquakeStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzEarthquakeStartPieces).SetText("Pieces given to each player at the start: ");
-        EarthquakeStartPieces = CreateNumberInputField(horzEarthquakeStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakeStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzEarthquakeStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzEarthquakeStartPieces).SetText("Pieces given to each player at the start: ");
+        EarthquakeStartPieces = UI.CreateNumberInputField (horzEarthquakeStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzEarthquakePiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzEarthquakePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        EarthquakePiecesPerTurn = CreateNumberInputField(horzEarthquakePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzEarthquakePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzEarthquakePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        EarthquakePiecesPerTurn = UI.CreateNumberInputField (horzEarthquakePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzEarthquakeCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzEarthquakeCardWeight).SetText("Card weight: ");
-		EarthquakeCardWeight = CreateNumberInputField(horzEarthquakeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakeCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		local horzEarthquakeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzEarthquakeCardWeight).SetText("Card weight: ");
+		EarthquakeCardWeight = UI.CreateNumberInputField (horzEarthquakeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakeCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -434,33 +434,33 @@ function tornadoCheckboxClicked()
             UI.Destroy(vertTornadoSettingsDetails);
         end
     else
-        vertTornadoSettingsDetails = CreateVert(vertTornadoSettingsHeading);
+        vertTornadoSettingsDetails = UI.CreateVerticalLayoutGroup (vertTornadoSettingsHeading);
         local UIcontainer = vertTornadoSettingsDetails;
-        local horzTornadoDuration = CreateHorz(UIcontainer).SetFlexibleWidth (1.0);
-        CreateLabel(horzTornadoDuration).SetText("Duration: ").SetFlexibleWidth (0.5);
-        TornadoDuration = CreateNumberInputField(horzTornadoDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.TornadoDuration).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth (0.5);
-        CreateLabel(UIcontainer).SetText("(use -1 to make Tornados permanent)");
+        local horzTornadoDuration = UI.CreateHorizontalLayoutGroup (UIcontainer).SetFlexibleWidth (1.0);
+        UI.CreateLabel (horzTornadoDuration).SetText("Duration: ").SetFlexibleWidth (0.5);
+        TornadoDuration = UI.CreateNumberInputField (horzTornadoDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.TornadoDuration).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth (0.5);
+        UI.CreateLabel (UIcontainer).SetText("(use -1 to make Tornados permanent)");
 
-		local horzTornadoStrength = CreateHorz(UIcontainer);
-        CreateLabel(horzTornadoStrength).SetText("Strength: ");
-        TornadoStrength = CreateNumberInputField(horzTornadoStrength).SetSliderMinValue(1).SetSliderMaxValue(25).SetValue(Mod.Settings.TornadoStrength).SetWholeNumbers(true).SetInteractable(true);
-        CreateLabel(UIcontainer).SetText("(how much damage the Tornado will do each turn; Tornado does double damage on the 1st turn)");
+		local horzTornadoStrength = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzTornadoStrength).SetText("Strength: ");
+        TornadoStrength = UI.CreateNumberInputField (horzTornadoStrength).SetSliderMinValue(1).SetSliderMaxValue(25).SetValue(Mod.Settings.TornadoStrength).SetWholeNumbers(true).SetInteractable(true);
+        UI.CreateLabel (UIcontainer).SetText("(how much damage the Tornado will do each turn; Tornado does double damage on the 1st turn)");
 
-		local horzTornadoPiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzTornadoPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        TornadoPiecesNeeded = CreateNumberInputField(horzTornadoPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzTornadoPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzTornadoPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        TornadoPiecesNeeded = UI.CreateNumberInputField (horzTornadoPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzTornadoStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzTornadoStartPieces).SetText("Pieces given to each player at the start: ");
-        TornadoStartPieces = CreateNumberInputField(horzTornadoStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzTornadoStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzTornadoStartPieces).SetText("Pieces given to each player at the start: ");
+        TornadoStartPieces = UI.CreateNumberInputField (horzTornadoStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzTornadoPiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzTornadoPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        TornadoPiecesPerTurn = CreateNumberInputField(horzTornadoPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzTornadoPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzTornadoPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        TornadoPiecesPerTurn = UI.CreateNumberInputField (horzTornadoPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzTornadoCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzTornadoCardWeight).SetText("Card weight: ");
-		TornadoCardWeight = CreateNumberInputField(horzTornadoCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzTornadoCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzTornadoCardWeight).SetText("Card weight: ");
+		TornadoCardWeight = UI.CreateNumberInputField (horzTornadoCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
 end
 
@@ -474,51 +474,51 @@ function quicksandCheckboxClicked()
             UI.Destroy(vertQuicksandSettingsDetails);
         end
     else
-		vertQuicksandSettingsDetails = CreateVert(vertQuicksandSettingsHeading);
+		vertQuicksandSettingsDetails = UI.CreateVerticalLayoutGroup (vertQuicksandSettingsHeading);
         local UIcontainer = vertQuicksandSettingsDetails;
-        local horzQuicksandDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandDuration).SetText("Duration: ");
-        QuicksandDuration = CreateNumberInputField(horzQuicksandDuration).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandDuration).SetWholeNumbers(true).SetInteractable(true);
+        local horzQuicksandDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandDuration).SetText("Duration: ");
+        QuicksandDuration = UI.CreateNumberInputField (horzQuicksandDuration).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzQuicksandBlockEntry = CreateHorz(UIcontainer);
-        QuicksandBlockEntryIntoTerritory = CreateCheckBox(horzQuicksandBlockEntry).SetText("Block entry into territory").SetIsChecked(Mod.Settings.QuicksandBlockEntryIntoTerritory).SetInteractable(true);
-        CreateLabel(UIcontainer).SetText("(Recommendation: do not block entry or airlift into a territory; this reduces the value of quicksand b/c you will not be able to attack the units in quicksand to benefit from the increased damage they would take)");
+		local horzQuicksandBlockEntry = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        QuicksandBlockEntryIntoTerritory = UI.CreateCheckBox (horzQuicksandBlockEntry).SetText("Block entry into territory").SetIsChecked(Mod.Settings.QuicksandBlockEntryIntoTerritory).SetInteractable(true);
+        UI.CreateLabel (UIcontainer).SetText("(Recommendation: do not block entry or airlift into a territory; this reduces the value of quicksand b/c you will not be able to attack the units in quicksand to benefit from the increased damage they would take)");
 
-		local horzQuicksandBlockAirliftIn = CreateHorz(UIcontainer);
-        QuicksandBlockAirliftsIntoTerritory = CreateCheckBox(horzQuicksandBlockAirliftIn).SetText("Block airlifts into territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsIntoTerritory).SetInteractable(true);
+		local horzQuicksandBlockAirliftIn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        QuicksandBlockAirliftsIntoTerritory = UI.CreateCheckBox (horzQuicksandBlockAirliftIn).SetText("Block airlifts into territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsIntoTerritory).SetInteractable(true);
 
-		local horzQuicksandBlockAirliftOut = CreateHorz(UIcontainer);
-        QuicksandBlockAirliftsFromTerritory = CreateCheckBox(horzQuicksandBlockAirliftOut).SetText("Block airlifts from territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsFromTerritory).SetInteractable(true);
+		local horzQuicksandBlockAirliftOut = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        QuicksandBlockAirliftsFromTerritory = UI.CreateCheckBox (horzQuicksandBlockAirliftOut).SetText("Block airlifts from territory").SetIsChecked(Mod.Settings.QuicksandBlockAirliftsFromTerritory).SetInteractable(true);
 
-		local horzQuicksandBlockExit = CreateHorz(UIcontainer);
-        QuicksandBlockExitFromTerritory = CreateCheckBox(horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory).SetInteractable(true);
+		local horzQuicksandBlockExit = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        QuicksandBlockExitFromTerritory = UI.CreateCheckBox (horzQuicksandBlockExit).SetText("Block exit from territory").SetIsChecked(Mod.Settings.QuicksandBlockExitFromTerritory).SetInteractable(true);
 
-		local horzQuicksandDefendMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandDefendMod).SetText("Defender damage modifier: ");
-        QuicksandDefenderDamageTakenModifier = CreateNumberInputField(horzQuicksandDefendMod).SetWholeNumbers(false).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandDefenderDamageTakenModifier).SetInteractable(true);
-        CreateLabel(UIcontainer).SetText("(Multiplier for the damage to be sustained by defending armies when in quicksand; use 1.0 for no change; default is 1.5 for a 50% increase in damage to defenders)");
+		local horzQuicksandDefendMod = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandDefendMod).SetText("Defender damage modifier: ");
+        QuicksandDefenderDamageTakenModifier = UI.CreateNumberInputField (horzQuicksandDefendMod).SetWholeNumbers(false).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandDefenderDamageTakenModifier).SetInteractable(true);
+        UI.CreateLabel (UIcontainer).SetText("(Multiplier for the damage to be sustained by defending armies when in quicksand; use 1.0 for no change; default is 1.5 for a 50% increase in damage to defenders)");
         --Mod.Settings.QuicksandDefenderDamageTakenModifier = QuicksandDefenderDamageTakenModifier.GetValue();
 
-		local horzQuicksandAttackMod = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandAttackMod).SetText("Attack damage modifier: ");
-        QuicksandAttackerDamageTakenModifier = CreateNumberInputField(horzQuicksandAttackMod).SetWholeNumbers(false).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandAttackerDamageTakenModifier).SetInteractable(true);
-        CreateLabel(UIcontainer).SetText("(Multiplier for the damage to be sustained by attacking armies when in quicksand; use 1.0 for no change; default is 0.5 for a 50% decrease in damage to attackers)");
+		local horzQuicksandAttackMod = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandAttackMod).SetText("Attack damage modifier: ");
+        QuicksandAttackerDamageTakenModifier = UI.CreateNumberInputField (horzQuicksandAttackMod).SetWholeNumbers(false).SetSliderMinValue(0.1).SetSliderMaxValue(2.0).SetValue(Mod.Settings.QuicksandAttackerDamageTakenModifier).SetInteractable(true);
+        UI.CreateLabel (UIcontainer).SetText("(Multiplier for the damage to be sustained by attacking armies when in quicksand; use 1.0 for no change; default is 0.5 for a 50% decrease in damage to attackers)");
 
-		local horzQuicksandPiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        QuicksandPiecesNeeded = CreateNumberInputField(horzQuicksandPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		local horzQuicksandPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        QuicksandPiecesNeeded = UI.CreateNumberInputField (horzQuicksandPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzQuicksandStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandStartPieces).SetText("Pieces given to each player at the start: ");
-        QuicksandStartPieces = CreateNumberInputField(horzQuicksandStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		local horzQuicksandStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandStartPieces).SetText("Pieces given to each player at the start: ");
+        QuicksandStartPieces = UI.CreateNumberInputField (horzQuicksandStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzQuicksandPiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzQuicksandPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        QuicksandPiecesPerTurn = CreateNumberInputField(horzQuicksandPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzQuicksandPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzQuicksandPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        QuicksandPiecesPerTurn = UI.CreateNumberInputField (horzQuicksandPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzQuicksandCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzQuicksandCardWeight).SetText("Card weight: ");
-		QuicksandCardWeight = CreateNumberInputField(horzQuicksandCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzQuicksandCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzQuicksandCardWeight).SetText("Card weight: ");
+		QuicksandCardWeight = UI.CreateNumberInputField (horzQuicksandCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
 end
 
@@ -534,43 +534,43 @@ function phantomCheckboxClicked()
         else
         end
     else
-        vertPhantomSettingsDetails = CreateVert(vertPhantomSettingsHeading);
+        vertPhantomSettingsDetails = UI.CreateVerticalLayoutGroup (vertPhantomSettingsHeading);
         local UIcontainer = vertPhantomSettingsDetails;
-        CreateLabel(UIcontainer).SetText("A unit that absorbs light to obscure enemy visibility. Enemies see fog on any territories where a Phantom is present, and also on territories targeted by an attack or transfer that originates from a territory where a Phantom is present.");
+        UI.CreateLabel (UIcontainer).SetText("A unit that absorbs light to obscure enemy visibility. Enemies see fog on any territories where a Phantom is present, and also on territories targeted by an attack or transfer that originates from a territory where a Phantom is present.");
 
-		horzPhantomDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomDuration).SetText("Duration: ");
-        CreateLabel(UIcontainer).SetText("(use -1 to make permanent)");
-        PhantomDuration = CreateNumberInputField(horzPhantomDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PhantomDuration).SetWholeNumbers(true).SetInteractable(true);
+		horzPhantomDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomDuration).SetText("Duration: ");
+        UI.CreateLabel (UIcontainer).SetText("(use -1 to make permanent)");
+        PhantomDuration = UI.CreateNumberInputField (horzPhantomDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PhantomDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPhantomFogLevel = CreateHorz(UIcontainer);
+		horzPhantomFogLevel = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		groupPhantomFogLevel = UI.CreateRadioButtonGroup(horzPhantomFogLevel);
-        CreateLabel(horzPhantomFogLevel).SetText("Fog level: ");
+        UI.CreateLabel (horzPhantomFogLevel).SetText("Fog level: ");
 		PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
 		PhantomFog_Light = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Light Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.OwnerOnly);
-        CreateLabel(UIcontainer).SetText("• Normal Fog - can't see units or owner of Phantom fogged territories\n• Light Fog - can see owner but not units");
+        UI.CreateLabel (UIcontainer).SetText("• Normal Fog - can't see units or owner of Phantom fogged territories\n• Light Fog - can see owner but not units");
 
-		horzPhantomFogModPriority = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomFogModPriority).SetText("Fog priority: ");
-        PhantomFogModPriority = CreateNumberInputField(horzPhantomFogModPriority).SetSliderMinValue(1).SetSliderMaxValue(8999).SetValue(Mod.Settings.PhantomFogModPriority).SetWholeNumbers(true).SetInteractable(true);
-        -- CreateLabel(UIcontainer).SetText("• 8000 is default recommended setting\n• >= 9000 - breaks typical games, do not use this setting unless you've tested it in a test game and are using Commerce mode\n• >= 6000 - will override visibilty provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
-        CreateLabel(UIcontainer).SetText("• 8000 is default recommended setting\n• max value 8999\n• >= 6000 - will override visibility provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
+		horzPhantomFogModPriority = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomFogModPriority).SetText("Fog priority: ");
+        PhantomFogModPriority = UI.CreateNumberInputField (horzPhantomFogModPriority).SetSliderMinValue(1).SetSliderMaxValue(8999).SetValue(Mod.Settings.PhantomFogModPriority).SetWholeNumbers(true).SetInteractable(true);
+        -- UI.CreateLabel (UIcontainer).SetText("• 8000 is default recommended setting\n• >= 9000 - breaks typical games, do not use this setting unless you've tested it in a test game and are using Commerce mode\n• >= 6000 - will override visibilty provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
+        UI.CreateLabel (UIcontainer).SetText("• 8000 is default recommended setting\n• max value 8999\n• >= 6000 - will override visibility provided by Special Units\n• >= 3000 - will override visibility provided by Spy, Reconnaissance & Surveillance cards");
 
-		horzPhantomPiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        PhantomPiecesNeeded = CreateNumberInputField(horzPhantomPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzPhantomPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        PhantomPiecesNeeded = UI.CreateNumberInputField (horzPhantomPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPhantomStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomStartPieces).SetText("Pieces given to each player at the start: ");
-        PhantomStartPieces = CreateNumberInputField(horzPhantomStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzPhantomStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomStartPieces).SetText("Pieces given to each player at the start: ");
+        PhantomStartPieces = UI.CreateNumberInputField (horzPhantomStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPhantomPiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        PhantomPiecesPerTurn = CreateNumberInputField(horzPhantomPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		horzPhantomPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        PhantomPiecesPerTurn = UI.CreateNumberInputField (horzPhantomPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPhantomCardWeight = CreateHorz(UIcontainer);
-        CreateLabel(horzPhantomCardWeight).SetText("Card weight (how common the card is): ");
-        PhantomCardWeight = CreateNumberInputField(horzPhantomCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		horzPhantomCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzPhantomCardWeight).SetText("Card weight (how common the card is): ");
+        PhantomCardWeight = UI.CreateNumberInputField (horzPhantomCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomCardWeight).SetWholeNumbers(false).SetInteractable(true);
     end
 end
 
@@ -586,29 +586,29 @@ function shieldCheckboxClicked()
         else
         end
     else
-        vertShieldSettingsDetails = CreateVert(vertShieldSettingsHeading);
+        vertShieldSettingsDetails = UI.CreateVerticalLayoutGroup (vertShieldSettingsHeading);
         local UIcontainer = vertShieldSettingsDetails;
 
-		horzShieldDuration = CreateHorz(UIcontainer);
-        CreateLabel(horzShieldDuration).SetText("Duration: ");
-        CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending b/c you can't capture a territory where a Shield is present)");
-        ShieldDuration = CreateNumberInputField(horzShieldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ShieldDuration).SetWholeNumbers(true).SetInteractable(true);
+		horzShieldDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzShieldDuration).SetText("Duration: ");
+        UI.CreateLabel (UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending b/c you can't capture a territory where a Shield is present)");
+        ShieldDuration = UI.CreateNumberInputField (horzShieldDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ShieldDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		horzShieldPiecesNeeded = CreateHorz(UIcontainer);
-        CreateLabel(horzShieldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-        ShieldPiecesNeeded = CreateNumberInputField(horzShieldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzShieldPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzShieldPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+        ShieldPiecesNeeded = UI.CreateNumberInputField (horzShieldPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzShieldStartPieces = CreateHorz(UIcontainer);
-        CreateLabel(horzShieldStartPieces).SetText("Pieces given to each player at the start: ");
-        ShieldStartPieces = CreateNumberInputField(horzShieldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzShieldStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzShieldStartPieces).SetText("Pieces given to each player at the start: ");
+        ShieldStartPieces = UI.CreateNumberInputField (horzShieldStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		horzShieldPiecesPerTurn = CreateHorz(UIcontainer);
-        CreateLabel(horzShieldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-        ShieldPiecesPerTurn = CreateNumberInputField(horzShieldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		horzShieldPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzShieldPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+        ShieldPiecesPerTurn = UI.CreateNumberInputField (horzShieldPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horzShieldCardWeight = CreateHorz(UIcontainer);
-        CreateLabel(horzShieldCardWeight).SetText("Card weight (how common the card is): ");
-        ShieldCardWeight = CreateNumberInputField(horzShieldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		horzShieldCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+        UI.CreateLabel (horzShieldCardWeight).SetText("Card weight (how common the card is): ");
+        ShieldCardWeight = UI.CreateNumberInputField (horzShieldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldCardWeight).SetWholeNumbers(false).SetInteractable(true);
     end
 end
 
@@ -624,30 +624,30 @@ function monolithCheckboxClicked()
 		else
 		end
 	else
-		vertMonolithSettingsDetails = CreateVert(vertMonolithSettingsHeading);
+		vertMonolithSettingsDetails = UI.CreateVerticalLayoutGroup (vertMonolithSettingsHeading);
 		UIcontainer = vertMonolithSettingsDetails;
 
-		horzMonolithDuration = CreateHorz(UIcontainer);
+		horzMonolithDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
 
-		CreateLabel(horzMonolithDuration).SetText("Duration: ");
-		CreateLabel(UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending, because you can't capture a territory where a Monolith is present)");
-		MonolithDuration = CreateNumberInputField(horzMonolithDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.MonolithDuration).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (horzMonolithDuration).SetText("Duration: ");
+		UI.CreateLabel (UIcontainer).SetText("(use -1 to make permanent; caution: may prevent games from ending, because you can't capture a territory where a Monolith is present)");
+		MonolithDuration = UI.CreateNumberInputField (horzMonolithDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.MonolithDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		horzMonolithPiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel(horzMonolithPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		MonolithPiecesNeeded = CreateNumberInputField(horzMonolithPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzMonolithPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzMonolithPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		MonolithPiecesNeeded = UI.CreateNumberInputField (horzMonolithPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzMonolithStartPieces = CreateHorz(UIcontainer);
-		CreateLabel(horzMonolithStartPieces).SetText("Pieces given to each player at the start: ");
-		MonolithStartPieces = CreateNumberInputField(horzMonolithStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzMonolithStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzMonolithStartPieces).SetText("Pieces given to each player at the start: ");
+		MonolithStartPieces = UI.CreateNumberInputField (horzMonolithStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		horzMonolithPiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzMonolithPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		MonolithPiecesPerTurn = CreateNumberInputField(horzMonolithPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		horzMonolithPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzMonolithPiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		MonolithPiecesPerTurn = UI.CreateNumberInputField (horzMonolithPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horzMonolithCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzMonolithCardWeight).SetText("Card weight (how common the card is): ");
-		MonolithCardWeight = CreateNumberInputField(horzMonolithCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		horzMonolithCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzMonolithCardWeight).SetText("Card weight (how common the card is): ");
+		MonolithCardWeight = UI.CreateNumberInputField (horzMonolithCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -663,7 +663,7 @@ function neutralizeCheckboxClicked()
 		else
 		end
 	else
-		vertNeutralizeSettingsDetails = CreateVert(vertNeutralizeSettingsHeading);
+		vertNeutralizeSettingsDetails = UI.CreateVerticalLayoutGroup (vertNeutralizeSettingsHeading);
 		UIcontainer = vertNeutralizeSettingsDetails;
 
 		print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
@@ -671,33 +671,33 @@ function neutralizeCheckboxClicked()
         print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
         print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
 
-		horzNeutralizeDuration = CreateHorz(UIcontainer);
-		CreateLabel(horzNeutralizeDuration).SetText("Duration: ");
-		NeutralizeCardDuration = CreateNumberInputField(horzNeutralizeDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.NeutralizeDuration).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("(Use -1 to make Neutralize permanent)"); --"; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
+		horzNeutralizeDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizeDuration).SetText("Duration: ");
+		NeutralizeCardDuration = UI.CreateNumberInputField (horzNeutralizeDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.NeutralizeDuration).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("(Use -1 to make Neutralize permanent)"); --"; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
 		--is permanent Neutralize capable of creating a situation where a game can't conclude? Commander game, 2 players each have 1 territory only with Commander on it, they Neutralize each other; they are either both eliminated or both play on but can't move b/c Commanders are on Neutral territories
 		--don't think so b/c once they lose their last territories, it's gg; whichever goes to 0 territories first loses
 
-		horzNeutralizeCanUseOnCommander = CreateHorz(UIcontainer);
-		NeutralizeCanUseOnCommander = CreateCheckBox(horzNeutralizeCanUseOnCommander).SetIsChecked(Mod.Settings.NeutralizeCanUseOnCommander).SetInteractable(true).SetText("Can use on Commander");
-		horzNeutralizeCanUseOnSpecials = CreateHorz(UIcontainer);
-		NeutralizeCanUseOnSpecials = CreateCheckBox(horzNeutralizeCanUseOnSpecials).SetIsChecked(Mod.Settings.NeutralizeCanUseOnSpecials).SetInteractable(true).SetText("Can use on Special Units");
+		horzNeutralizeCanUseOnCommander = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		NeutralizeCanUseOnCommander = UI.CreateCheckBox (horzNeutralizeCanUseOnCommander).SetIsChecked(Mod.Settings.NeutralizeCanUseOnCommander).SetInteractable(true).SetText("Can use on Commander");
+		horzNeutralizeCanUseOnSpecials = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		NeutralizeCanUseOnSpecials = UI.CreateCheckBox (horzNeutralizeCanUseOnSpecials).SetIsChecked(Mod.Settings.NeutralizeCanUseOnSpecials).SetInteractable(true).SetText("Can use on Special Units");
 
-		horzNeutralizePiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel(horzNeutralizePiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		NeutralizePiecesNeeded = CreateNumberInputField(horzNeutralizePiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzNeutralizePiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizePiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		NeutralizePiecesNeeded = UI.CreateNumberInputField (horzNeutralizePiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzNeutralizeStartPieces = CreateHorz(UIcontainer);
-		CreateLabel(horzNeutralizeStartPieces).SetText("Pieces given to each player at the start: ");
-		NeutralizeStartPieces = CreateNumberInputField(horzNeutralizeStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzNeutralizeStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizeStartPieces).SetText("Pieces given to each player at the start: ");
+		NeutralizeStartPieces = UI.CreateNumberInputField (horzNeutralizeStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzNeutralizePiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzNeutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		NeutralizePiecesPerTurn = CreateNumberInputField(horzNeutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzNeutralizePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		NeutralizePiecesPerTurn = UI.CreateNumberInputField (horzNeutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzNeutralizeCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzNeutralizeCardWeight).SetText("Card weight: ");
-		NeutralizeCardWeight = CreateNumberInputField(horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzNeutralizeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizeCardWeight).SetText("Card weight: ");
+		NeutralizeCardWeight = UI.CreateNumberInputField (horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
 end
 
@@ -713,44 +713,77 @@ function deneutralizeCheckboxClicked()
 		else
 		end
 	else
-		vertDeneutralizeSettingsDetails = CreateVert(vertDeneutralizeSettingsHeading);
+		vertDeneutralizeSettingsDetails = UI.CreateVerticalLayoutGroup (vertDeneutralizeSettingsHeading);
 		UIcontainer = vertDeneutralizeSettingsDetails;
 
-		DeneutralizeDetailslineCardDesc = CreateVert(UIcontainer);
-		CreateLabel(DeneutralizeDetailslineCardDesc).SetText("Assign ownership of a neutral territory to a player.\n");
+		DeneutralizeDetailslineCardDesc = UI.CreateVerticalLayoutGroup (UIcontainer);
+		UI.CreateLabel (DeneutralizeDetailslineCardDesc).SetText("Assign ownership of a neutral territory to a player. Any Special Units on the territory will be assigned to the new owner. Exception: Commanders will remain owned by the original owner. When a territory owned by a player contains a Commander owned by another player, neither player will be able to control the Commander, but death of the Commander still eliminates the player that owns the Commander.\n");
 
-		horzDeneutralizeCanUseOnNaturalNeutrals = CreateHorz(UIcontainer);
-		DeneutralizeCanUseOnNaturalNeutrals = CreateCheckBox(horzDeneutralizeCanUseOnNaturalNeutrals).SetIsChecked(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals).SetInteractable(true).SetText("Can use on natural neutrals (not caused by Neutralize)");
+		horzDeneutralizeRange = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzDeneutralizeRange).SetText("\nRange: ");
+		DeneutralizeRange = UI.CreateNumberInputField (horzDeneutralizeRange).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeRange or 2).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("  (Distance [# territories] from any territory you own already where Deneutralize can be used)"); --.SetColor (getColourCode ("subheading"));
 
-		horzDeneutralizeCanUseOnNeutralizedTerritories = CreateHorz(UIcontainer);
-		DeneutralizeCanUseOnNeutralizedTerritories = CreateCheckBox(horzDeneutralizeCanUseOnNeutralizedTerritories).SetIsChecked(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories).SetInteractable(true).SetText("Can use on Neutralized territories");
+		local horzDeneutralizeImplementationPhase = UI.CreateHorizontalLayoutGroup(UIcontainer);
+		UI.CreateEmpty (UIcontainer);
+		UI.CreateLabel(horzDeneutralizeImplementationPhase).SetText('Turn phase where Deneutralize is executed: ');
+		DeneutralizeImplementationPhase = Mod.Settings.DeneutralizeImplementationPhase or 47;
+		DeneutralizeImplementationPhaseButton = UI.CreateButton (horzDeneutralizeImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (DeneutralizeImplementationPhase))).SetOnClick (Deneutralize_turnPhaseButton_clicked);
+
+		horzDeneutralizeCanUseOnNaturalNeutrals = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		DeneutralizeCanUseOnNaturalNeutrals = UI.CreateCheckBox (horzDeneutralizeCanUseOnNaturalNeutrals).SetIsChecked(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals).SetInteractable(true).SetText("Can use on natural neutrals (not caused by Neutralize)");
+
+		horzDeneutralizeCanUseOnNeutralizedTerritories = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		DeneutralizeCanUseOnNeutralizedTerritories = UI.CreateCheckBox (horzDeneutralizeCanUseOnNeutralizedTerritories).SetIsChecked(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories).SetInteractable(true).SetText("Can use on Neutralized territories");
 
 		--set UI controls for Assign to self & Assign to another player to be non-interactive (greyed out) and default values to True & False respectively
 		--not implementing these options at this time, so default to assign Deneutralize action to self only
-		horzDeneutralizeCanAssignToSelf = CreateHorz(UIcontainer);
-		DeneutralizeCanAssignToSelf = CreateCheckBox(horzDeneutralizeCanAssignToSelf).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToSelf).SetInteractable(false).SetText("Can assign to self");
-		--DeneutralizeCanAssignToSelf = CreateCheckBox(horzDeneutralizeCanAssignToSelf).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToSelf).SetInteractable(false).SetText("Can assign to self");
+		horzDeneutralizeCanAssignToSelf = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		DeneutralizeCanAssignToSelf = UI.CreateCheckBox (horzDeneutralizeCanAssignToSelf).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToSelf).SetInteractable(false).SetText("Can assign to self");
+		--DeneutralizeCanAssignToSelf = UI.CreateCheckBox (horzDeneutralizeCanAssignToSelf).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToSelf).SetInteractable(false).SetText("Can assign to self");
 
-		horzDeneutralizeCanAssignToAnotherPlayer = CreateHorz(UIcontainer);
-		DeneutralizeCanAssignToAnotherPlayer = CreateCheckBox(horzDeneutralizeCanAssignToAnotherPlayer).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetInteractable(false).SetText("Can assign to another player");
-		--DeneutralizeCanAssignToAnotherPlayer = CreateCheckBox(horzDeneutralizeCanAssignToAnotherPlayer).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetInteractable(true).SetText("Can assign to another player");
+		horzDeneutralizeCanAssignToAnotherPlayer = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		DeneutralizeCanAssignToAnotherPlayer = UI.CreateCheckBox (horzDeneutralizeCanAssignToAnotherPlayer).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetInteractable(true).SetText("Can assign to another player");
+		--DeneutralizeCanAssignToAnotherPlayer = UI.CreateCheckBox (horzDeneutralizeCanAssignToAnotherPlayer).SetIsChecked(Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetInteractable(true).SetText("Can assign to another player");
 
-		horzDeneutralizeCardPiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel (horzDeneutralizeCardPiecesNeeded).SetText("Number of pieces to divide the card into: ")
-		DeneutralizeCardPiecesNeeded = CreateNumberInputField(horzDeneutralizeCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzDeneutralizeCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzDeneutralizeCardPiecesNeeded).SetText("Number of pieces to divide the card into: ")
+		DeneutralizeCardPiecesNeeded = UI.CreateNumberInputField (horzDeneutralizeCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzDeneutralizeCardStartPieces = CreateHorz(UIcontainer);
-		CreateLabel (horzDeneutralizeCardStartPieces).SetText("Pieces given to each player at the start: ")
-		DeneutralizeCardStartPieces = CreateNumberInputField(horzDeneutralizeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzDeneutralizeCardStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzDeneutralizeCardStartPieces).SetText("Pieces given to each player at the start: ")
+		DeneutralizeCardStartPieces = UI.CreateNumberInputField (horzDeneutralizeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzDeneutralizePiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzDeneutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		DeneutralizePiecesPerTurn = CreateNumberInputField(horzDeneutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzDeneutralizePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzDeneutralizePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		DeneutralizePiecesPerTurn = UI.CreateNumberInputField (horzDeneutralizePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzDeneutralizeCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzDeneutralizeCardWeight).SetText("Card weight: ");
-		DeneutralizeCardWeight = CreateNumberInputField(horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		local horzDeneutralizeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzDeneutralizeCardWeight).SetText("Card weight: ");
+		DeneutralizeCardWeight = UI.CreateNumberInputField (horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
 	end
+end
+
+function Deneutralize_turnPhaseButton_clicked ()
+	print ("turnPhase button clicked");
+
+	WLturnPhases_PromptFromList = {}
+	-- for k,v in pairs(WLturnPhases()) do
+	for k,v in pairs(WL.TurnPhase) do
+		print ("newObj item=="..tostring(k),tostring(v));
+		if (tostring (k)) ~= "ToString" then table.insert (WLturnPhases_PromptFromList, {text=k, selected=function () Deneutralize_turnPhase_selected({name=k,value=v}); end}); end
+	end
+
+	UI.PromptFromList ("Select turn phase where Bomb cards will occur.\n\nThe default is BombCards, where bombs usually occur in core Warzone, which is after deployments, but before emergency blockade cards.\n\nIf you're not sure, the recommendation is to leave it at BombCards.", WLturnPhases_PromptFromList);
+end
+
+function Deneutralize_turnPhase_selected (turnPhase)
+	print ("turnPhase selected=="..tostring(turnPhase));
+	print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
+	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
+	Mod.Settings.DeneutralizeImplementationPhase = turnPhase.value;
+	DeneutralizeImplementationPhase = turnPhase.value;
+	DeneutralizeImplementationPhaseButton.SetText (turnPhase.name);
 end
 
 function cardPiecesCheckboxClicked()
@@ -765,40 +798,40 @@ function cardPiecesCheckboxClicked()
 		else
 		end
 	else
-		vertCardPiecesSettingsDetails = CreateVert(vertCardPiecesSettingsHeading);
+		vertCardPiecesSettingsDetails = UI.CreateVerticalLayoutGroup (vertCardPiecesSettingsHeading);
 		UIcontainer = vertCardPiecesSettingsDetails;
-		CardPiecesDetailslineCardDesc = CreateHorz(UIcontainer);
-		CardPiecesDetailsline1 = CreateHorz(UIcontainer);
-		CardPiecesDetailsline2 = CreateHorz(UIcontainer);
-		CardPiecesDetailsline3 = CreateHorz(UIcontainer);
-		CardPiecesDetailsline4 = CreateHorz(UIcontainer);
-		CardPiecesDetailsline5 = CreateHorz(UIcontainer);
-		CardPiecesDetailsline6 = CreateHorz(UIcontainer);
+		CardPiecesDetailslineCardDesc = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline1 = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline2 = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline3 = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline4 = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline5 = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		CardPiecesDetailsline6 = UI.CreateHorizontalLayoutGroup (UIcontainer);
 
-		CreateLabel(CardPiecesDetailslineCardDesc).SetText("This card will grant you cards or pieces of other cards used in the game. It cannot be played to receive cards or pieces of the Card Piece card itself.\n");
-		CreateLabel(CardPiecesDetailsline1).SetText("[FOR THE CARDS RECEIVED WHEN PLAYING a Card Piece card]").SetColor(getColourCode ("subheading"));
+		UI.CreateLabel (CardPiecesDetailslineCardDesc).SetText("This card will grant you cards or pieces of other cards used in the game. It cannot be played to receive cards or pieces of the Card Piece card itself.\n");
+		UI.CreateLabel (CardPiecesDetailsline1).SetText("[FOR THE CARDS RECEIVED WHEN PLAYING a Card Piece card]").SetColor(getColourCode ("subheading"));
 
-		CreateLabel(CardPiecesDetailsline2).SetText("   Number of whole cards to grant: ");
-		CardPiecesNumWholeCardsToGrant = CreateNumberInputField(CardPiecesDetailsline2).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumWholeCardsToGrant).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (CardPiecesDetailsline2).SetText("   Number of whole cards to grant: ");
+		CardPiecesNumWholeCardsToGrant = UI.CreateNumberInputField (CardPiecesDetailsline2).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumWholeCardsToGrant).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(CardPiecesDetailsline3).SetText("   Number of card pieces to grant:  ");
-		CardPiecesNumCardPiecesToGrant = CreateNumberInputField(CardPiecesDetailsline3).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumCardPiecesToGrant).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (CardPiecesDetailsline3).SetText("   Number of card pieces to grant:  ");
+		CardPiecesNumCardPiecesToGrant = UI.CreateNumberInputField (CardPiecesDetailsline3).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesNumCardPiecesToGrant).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(CardPiecesDetailsline4).SetText("[FOR COLLECTING the Card Piece card itself]").SetColor(getColourCode ("subheading"));
+		UI.CreateLabel (CardPiecesDetailsline4).SetText("[FOR COLLECTING the Card Piece card itself]").SetColor(getColourCode ("subheading"));
 
-		CreateLabel(CardPiecesDetailsline5).SetText("   Pieces needed to form a whole card: ");
-		CardPiecesPiecesNeeded = CreateNumberInputField(CardPiecesDetailsline5).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (CardPiecesDetailsline5).SetText("   Pieces needed to form a whole card: ");
+		CardPiecesPiecesNeeded = UI.CreateNumberInputField (CardPiecesDetailsline5).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		CreateLabel(CardPiecesDetailsline6).SetText("   Pieces given to each player at the start: ");
-		CardPiecesStartPieces = CreateNumberInputField(CardPiecesDetailsline6).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (CardPiecesDetailsline6).SetText("   Pieces given to each player at the start: ");
+		CardPiecesStartPieces = UI.CreateNumberInputField (CardPiecesDetailsline6).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardPiecesPiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzCardPiecesPiecesPerTurn).SetText("  Minimum pieces awarded per turn: ");
-		CardPiecesPiecesPerTurn = CreateNumberInputField(horzCardPiecesPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzCardPiecesPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardPiecesPiecesPerTurn).SetText("  Minimum pieces awarded per turn: ");
+		CardPiecesPiecesPerTurn = UI.CreateNumberInputField (horzCardPiecesPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzCardPiecesCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzCardPiecesCardWeight).SetText("  Card weight: ");
-		CardPiecesCardWeight = CreateNumberInputField(horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		local horzCardPiecesCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzCardPiecesCardWeight).SetText("  Card weight: ");
+		CardPiecesCardWeight = UI.CreateNumberInputField (horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -815,7 +848,7 @@ function airstrikeCheckboxClicked()
 		else
 		end
 	else
-		vertAirstrikeSettingsDetails = CreateVert(vertAirstrikeSettingsHeading);
+		vertAirstrikeSettingsDetails = UI.CreateVerticalLayoutGroup (vertAirstrikeSettingsHeading);
 		local UIcontainer = vertAirstrikeSettingsDetails;
 
 		--set default values if not configured already (could be for games that were added to templates before some of these settings were added)
@@ -833,22 +866,22 @@ function airstrikeCheckboxClicked()
 		if (Mod.Settings.AirstrikeCardWeight == nil) then Mod.Settings.AirstrikeCardWeight = 1; end
 
 
-		horz = CreateHorz(UIcontainer);
-		CreateLabel(horz).SetText("Deployment yield (%): ").SetColor (getColourCode ("subheading"));
+		horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horz).SetText("Deployment yield (%): ").SetColor (getColourCode ("subheading"));
 		if (Mod.Settings.AirstrikeDeploymentYield == nil) then Mod.Settings.AirstrikeDeploymentYield = 75; end
-		AirstrikeDeploymentYield = CreateNumberInputField(horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("• % of units that survive Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
-		CreateLabel(UIcontainer).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
-		CreateLabel(UIcontainer).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
-		CreateLabel(UIcontainer).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
-		CreateLabel(UIcontainer).SetText(" ");
+		AirstrikeDeploymentYield = UI.CreateNumberInputField (horz).SetSliderMinValue(50).SetSliderMaxValue(100).SetValue(Mod.Settings.AirstrikeDeploymentYield).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("• % of units that survive Airstrike execution\n     - they participate in the attack but die afterward\n     - they are considered to be shot out of the air on the way down");
+		UI.CreateLabel (UIcontainer).SetText("• 100%: all units deploy effectively\n     - no units die due to Deployment Yield");
+		UI.CreateLabel (UIcontainer).SetText("• 75%: only 75% of units deploy effectively\n     - 25% die during deployment after contributing to the attack");
+		UI.CreateLabel (UIcontainer).SetText("• Special Units aren't impacted by this setting\n     - Special Units never die during deployment\n     - but they can still be killed during the attack");
+		UI.CreateLabel (UIcontainer).SetText(" ");
 
 		AirstrikeMoveUnitsWithAirliftCard = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeMoveUnitsWithAirliftCard).SetInteractable(true).SetText("Move units with airlift cards");
 		UI.CreateLabel (UIcontainer).SetText("• UNCHECK this if using Transport Only Airlifts mods").SetColor (getColourCode ("error"));
 		UI.CreateLabel (UIcontainer).SetText("• checked - uses airlift cards to move units, creates the standard airlift travel arrow -- DOES NOT WORK with Tranport Only Airlifts mod; works properly with Late Airlifts v2 mod (but not Late Airlifts v1)");
 		UI.CreateLabel (UIcontainer).SetText("• unchecked - moves units using mod code; does not create airlift travel arrows -- works with mods Transport Only Airlifts");
 
-		--local horz = CreateHorz(UIcontainer);
+		--local horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		--use a Horz to give them a bit of indented space on the left to distinguish these checkboxes from the ones for the cards themselves
 		AirstrikeCanSendRegularArmies = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendRegularArmies).SetInteractable(true).SetText("Can send regular armies");
 		AirstrikeCanSendSpecialUnits = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanSendSpecialUnits).SetInteractable(false).SetText("Can send Special Units");
@@ -860,23 +893,23 @@ function airstrikeCheckboxClicked()
 		AirstrikeCanTargetStructures = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup(UIcontainer)).SetIsChecked (Mod.Settings.AirstrikeCanTargetStructures).SetInteractable(false).SetText("Can target structures");
 		UI.CreateLabel (UIcontainer).SetText("(caution recommended; Structures would be ignored by Airstrike b/c different mods have no way to interact with one another)");
 
-		CreateLabel(UIcontainer).SetText(" ");
+		UI.CreateLabel (UIcontainer).SetText(" ");
 
-		horz = CreateHorz(UIcontainer);
-		CreateLabel(horz).SetText("Number of pieces to divide the card into: ");
-		AirstrikeCardPiecesNeeded = CreateNumberInputField(horz).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horz).SetText("Number of pieces to divide the card into: ");
+		AirstrikeCardPiecesNeeded = UI.CreateNumberInputField (horz).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horz = CreateHorz(UIcontainer);
-		CreateLabel(horz).SetText("Pieces given to each player at the start: ");
-		AirstrikeCardStartPieces = CreateNumberInputField(horz).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horz).SetText("Pieces given to each player at the start: ");
+		AirstrikeCardStartPieces = UI.CreateNumberInputField (horz).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzAirstrikePiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzAirstrikePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		AirstrikeCardPiecesPerTurn = CreateNumberInputField(horzAirstrikePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		local horzAirstrikePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzAirstrikePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		AirstrikeCardPiecesPerTurn = UI.CreateNumberInputField (horzAirstrikePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horz = CreateHorz(UIcontainer);
-		CreateLabel(horz).SetText("Card weight: ");
-		AirstrikeCardWeight = CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horz).SetText("Card weight: ");
+		AirstrikeCardWeight = UI.CreateNumberInputField (horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -893,9 +926,9 @@ function forestFireCheckboxClicked()
 		else
 		end
 	else
-		vertForestFireSettingsDetails = CreateVert(vertForestFireSettingsHeading);
+		vertForestFireSettingsDetails = UI.CreateVerticalLayoutGroup (vertForestFireSettingsHeading);
 		UIcontainer = vertForestFireSettingsDetails;
-		ForestFireDetailsline1 = CreateHorz(UIcontainer);
+		ForestFireDetailsline1 = UI.CreateHorizontalLayoutGroup (UIcontainer);
 
 		--set default values if not configured already
 		Mod.Settings.ForestFireDuration = Mod.Settings.ForestFireDuration or 3; --get Duration amount from Mod.Settings, default to 3
@@ -909,7 +942,7 @@ function forestFireCheckboxClicked()
 		Mod.Settings.ForestFireAllowFriendlyFire = (Mod.Settings.ForestFireAllowFriendlyFire == nil) and true or Mod.Settings.ForestFireAllowFriendlyFire;
 
 		UI.CreateLabel (ForestFireDetailsline1).SetText("Duration: ");
-		ForestFireCardDuration = CreateNumberInputField(ForestFireDetailsline1).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ForestFireDuration).SetWholeNumbers(true).SetInteractable(true);
+		ForestFireCardDuration = UI.CreateNumberInputField (ForestFireDetailsline1).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.ForestFireDuration).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFireSpreadRange = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzForestFireSpreadRange).SetText ("Spread range (# territories): ");
@@ -932,19 +965,19 @@ function forestFireCheckboxClicked()
 
 		local horzForestFireCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzForestFireCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		ForestFireCardPiecesNeeded = CreateNumberInputField(horzForestFireCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		ForestFireCardPiecesNeeded = UI.CreateNumberInputField (horzForestFireCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFireCardStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel(horzForestFireCardStartPieces).SetText("Pieces given to each player at the start: ");
-		ForestFireCardStartPieces = CreateNumberInputField(horzForestFireCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		ForestFireCardStartPieces = UI.CreateNumberInputField (horzForestFireCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzForestFirePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzForestFirePiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
 		ForestFirePiecesPerTurn = UI.CreateNumberInputField (horzForestFirePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFirePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzForestFireCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzForestFireCardWeight).SetText("Card weight: ");
-		ForestFireCardWeight = CreateNumberInputField(horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		local horzForestFireCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzForestFireCardWeight).SetText("Card weight: ");
+		ForestFireCardWeight = UI.CreateNumberInputField (horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireCardWeight).SetWholeNumbers(false).SetInteractable(true);
 
     local intSpreadRange    = Mod.Settings.ForestFireSpreadRange or 5; --get Spread Range from Mod.Settings, default to 5
     local intDamageDelta    = Mod.Settings.ForestFireDamageDeltaWithSpread or 25; --get damage reduction amount (%), default to 25
@@ -969,120 +1002,48 @@ function nukeCheckboxClicked ()
 		else
 		end
 	else
-		vertNukeSettingsDetails = CreateVert(vertNukeSettingsHeading);
-		--vertNukeSettingsDetails = CreateVert(addHorizontalBufferSpacing (vertNukeSettingsHeading));
-		--CreateWindow (vertNukeSettingsHeading, "vertNukeSettingsDetails");
-		--CreateSubWindow (vertNukeSettingsHeading, "vertNukeSettingsDetails", vertNukeSettingsHeading);
-		UIcontainer = CreateVert(vertNukeSettingsDetails);
-		--UIcontainer = CreateVert(CreateHorz(CreateHorz(CreateHorz(CreateHorz(vertNukeSettingsDetails)))));
+		vertNukeSettingsDetails = UI.CreateVerticalLayoutGroup (vertNukeSettingsHeading);
+		UIcontainer = UI.CreateVerticalLayoutGroup (vertNukeSettingsDetails);
 
-		CreateLabel (UIcontainer).SetText ("Launch a nuke at any territory on the map. Requires neither proximity nor visibility to the territory. Configure damage for the epicenter and the blast range to extend outward from the epicenter.")
-		--horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
+		UI.CreateLabel (UIcontainer).SetText ("Launch a nuke at any territory on the map. Requires neither proximity nor visibility to the territory. Configure damage for the epicenter and the blast range to extend outward from the epicenter.")
 		horzNukeCardMainTerritoryDamage = UI.CreateHorizontalLayoutGroup(UIcontainer).SetFlexibleWidth(1.0);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.34);
-		vertA = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
-		CreateLabel(vertA).SetText("Damage (%):").SetFlexibleWidth(0.25);
-		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
-		vertB = CreateVert (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
-		CreateLabel(vertB).SetText("Fixed damage:").SetFlexibleWidth(0.25);
-		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		UI.CreateLabel (horzNukeCardMainTerritoryDamage).SetText("[Epicenter]").SetFlexibleWidth(0.34);
+		vertA = UI.CreateVerticalLayoutGroup (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
+		UI.CreateLabel (vertA).SetText("Damage (%):").SetFlexibleWidth(0.25);
+		NukeCardMainTerritoryDamage = UI.CreateNumberInputField (vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		vertB = UI.CreateVerticalLayoutGroup (horzNukeCardMainTerritoryDamage).SetFlexibleWidth(0.33);
+		UI.CreateLabel (vertB).SetText("Fixed damage:").SetFlexibleWidth(0.25);
+		NukeCardMainTerritoryFixedDamage = UI.CreateNumberInputField (vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
 
-		--horzNukeCardMainTerritoryFixedDamage = CreateHorz(UIcontainer);
-		--horzNukeCardConnectedTerritoryFixedDamage = CreateHorz(UIcontainer);
+		horzNukeCardConnectedTerritoryDamage = UI.CreateHorizontalLayoutGroup (UIcontainer).SetFlexibleWidth(1.0);
+		UI.CreateLabel (horzNukeCardConnectedTerritoryDamage).SetText("[Bordering\nterritories]").SetFlexibleWidth(0.34);
+		vertC = UI.CreateVerticalLayoutGroup (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
+		UI.CreateLabel (vertC).SetText("Damage (%): ").SetFlexibleWidth(0.33);
+		NukeCardConnectedTerritoryDamage = UI.CreateNumberInputField (vertC).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		vertD = UI.CreateVerticalLayoutGroup (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
+		UI.CreateLabel (vertD).SetText("Fixed damage: ").SetFlexibleWidth(0.25);
+		NukeCardConnectedTerritoryFixedDamage = UI.CreateNumberInputField (vertD).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
 
-		horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer).SetFlexibleWidth(1.0);
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("[Bordering\nterritories]").SetFlexibleWidth(0.34);
-		vertC = CreateVert (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
-		CreateLabel(vertC).SetText("Damage (%): ").SetFlexibleWidth(0.33);
-		NukeCardConnectedTerritoryDamage = CreateNumberInputField(vertC).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
-		vertD = CreateVert (horzNukeCardConnectedTerritoryDamage).SetFlexibleWidth(0.33);
-		CreateLabel(vertD).SetText("Fixed damage: ").SetFlexibleWidth(0.25);
-		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(vertD).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true).SetFlexibleWidth(0.25);
+		UI.CreateLabel (UIcontainer).SetText("Specify the % damage & fixed damage each of the epicenter and bordering territories will sustain. If both are specified, fixed damage will apply after % damage has been applied.");
+		UI.CreateHorizontalLayoutGroup (UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
+		horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetText("Blast range:"); --" \n(how many territories damage spreads to; 0=only impacts epicenter territory)");
+		NukeCardNumLevelsConnectedTerritoriesToSpreadTo = UI.CreateNumberInputField (horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetSliderMinValue(0).SetSliderMaxValue(5).SetValue(Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("(how many territories damage spreads to; 0=only impacts epicenter territory)");
+		UI.CreateHorizontalLayoutGroup (UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
 
-		CreateLabel(UIcontainer).SetText("Specify the % damage & fixed damage each of the epicenter and bordering territories will sustain. If both are specified, fixed damage will apply after % damage has been applied.");
+		horzNukeCardConnectedTerritoriesSpreadDamageDelta = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeCardConnectedTerritoriesSpreadDamageDelta).SetText("Damage reduction with spread (%):"); --" \n(damage is reduced with each step from epicenter)");
+		NukeCardConnectedTerritoriesSpreadDamageDelta = UI.CreateNumberInputField (horzNukeCardConnectedTerritoriesSpreadDamageDelta).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("(damage is reduced with each step from epicenter)");
+		UI.CreateHorizontalLayoutGroup (UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
 
+		horzNukeFriendlyfire = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		NukeFriendlyfire = UI.CreateCheckBox (horzNukeFriendlyfire).SetIsChecked(Mod.Settings.NukeFriendlyfire).SetInteractable(true).SetText("Friendly fire (can harm yourself)");
 
---[[		horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("[% damage]");
-		vertA = CreateVert (horzNukeCardMainTerritoryDamage);
-		CreateLabel(vertA).SetText("Epicenter (%): ");
-		NukeCardMainTerritoryDamage = CreateNumberInputField(vertA).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		vertB = CreateVert (horzNukeCardMainTerritoryDamage);
-		CreateLabel(vertB).SetText("Bordering territories (%): ");
-		horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		NukeCardConnectedTerritoryDamage = CreateNumberInputField(vertB).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("[Fixed damage done by nuke]\n");
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("Bordering territories (%): ");
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("Epicenter: ");
-
-		
-
-		horzNukeCardMainTerritoryFixedDamage = CreateHorz(UIcontainer);
-		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(horzNukeCardMainTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		--horzNukeCardConnectedTerritoryFixedDamage = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryFixedDamage).SetText("Bordering territories:");
-		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(horzNukeCardMainTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-]]
-
-
-		--[[CreateLabel(UIcontainer).SetText("[% damage done by nuke]");
-		horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("Epicenter (%): ");
-		NukeCardMainTerritoryDamage = CreateNumberInputField(horzNukeCardMainTerritoryDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		--horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("Bordering territories (%): ");
-		NukeCardConnectedTerritoryDamage = CreateNumberInputField(horzNukeCardMainTerritoryDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		CreateLabel(UIcontainer).SetText("[Fixed damage done by nuke]\n");
-		horzNukeCardMainTerritoryFixedDamage = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryFixedDamage).SetText("Epicenter: ");
-		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(horzNukeCardMainTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		--horzNukeCardConnectedTerritoryFixedDamage = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryFixedDamage).SetText("Bordering territories:");
-		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(horzNukeCardMainTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-]]
-
-		--[[horzNukeCardMainTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryDamage).SetText("Damage - Epicenter (%): ");
-		NukeCardMainTerritoryDamage = CreateNumberInputField(horzNukeCardMainTerritoryDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		horzNukeCardMainTerritoryFixedDamage = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardMainTerritoryFixedDamage).SetText("Fixed damage - Epicenter: \n(in addition to % damage, also applies a fixed amount of damage)");
-		NukeCardMainTerritoryFixedDamage = CreateNumberInputField(horzNukeCardMainTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardMainTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		horzNukeCardConnectedTerritoryDamage = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardConnectedTerritoryDamage).SetText("Damage - Bordering territories (%): ");
-		NukeCardConnectedTerritoryDamage = CreateNumberInputField(horzNukeCardConnectedTerritoryDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryDamage).SetWholeNumbers(true).SetInteractable(true);
-
-		horzNukeCardConnectedTerritoryFixedDamage = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardConnectedTerritoryFixedDamage).SetText("Fixed damage - Bordering territories: \n(in addition to % damage, also applies a fixed amount of damage)");
-		NukeCardConnectedTerritoryFixedDamage = CreateNumberInputField(horzNukeCardConnectedTerritoryFixedDamage).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoryFixedDamage).SetWholeNumbers(true).SetInteractable(true);
-]]
-		CreateHorz(UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
-		horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetText("Blast range:"); --" \n(how many territories damage spreads to; 0=only impacts epicenter territory)");
-		NukeCardNumLevelsConnectedTerritoriesToSpreadTo = CreateNumberInputField(horzNukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetSliderMinValue(0).SetSliderMaxValue(5).SetValue(Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("(how many territories damage spreads to; 0=only impacts epicenter territory)");
-		CreateHorz(UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
-
-		horzNukeCardConnectedTerritoriesSpreadDamageDelta = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardConnectedTerritoriesSpreadDamageDelta).SetText("Damage reduction with spread (%):"); --" \n(damage is reduced with each step from epicenter)");
-		NukeCardConnectedTerritoriesSpreadDamageDelta = CreateNumberInputField(horzNukeCardConnectedTerritoriesSpreadDamageDelta).SetSliderMinValue(0).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel(UIcontainer).SetText("(damage is reduced with each step from epicenter)");
-		CreateHorz(UIcontainer); --use as a vertical spacer between this and next item so it's clear which element the description text belongs to
-
-		horzNukeFriendlyfire = CreateHorz(UIcontainer);
-		NukeFriendlyfire = CreateCheckBox(horzNukeFriendlyfire).SetIsChecked(Mod.Settings.NukeFriendlyfire).SetInteractable(true).SetText("Friendly fire (can harm yourself)");
-
-		horzNukeImplementationPhase = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeImplementationPhase).SetText("Turn phase where nukes are executed:");
-		NukeImplementationPhase = CreateButton(horzNukeImplementationPhase).SetInteractable(true).SetText(Mod.Settings.NukeImplementationPhase).SetOnClick(Nuke_turnPhaseButton_clicked);
+		horzNukeImplementationPhase = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeImplementationPhase).SetText("Turn phase where nukes are executed:");
+		NukeImplementationPhase = UI.CreateButton (horzNukeImplementationPhase).SetInteractable(true).SetText(Mod.Settings.NukeImplementationPhase).SetOnClick(Nuke_turnPhaseButton_clicked);
 		--[[ Following are the actual WZ in-game turn phase sequence order as per https://www.warzone.com/wiki/Turn_phases; reference in code via WL.TurnPhase. prefix, eg: WL.TurnPhase.BombCards, etc
 		---| 'CardsWearOff' # Cards wearing off turn phase  <--- is this true? seems to happen late in turn, between receiving card pieces & receiving gold (tested for Sanctions wearing off)
 		---| 'Purchase' # Purchase turn phase
@@ -1102,23 +1063,22 @@ function nukeCheckboxClicked ()
 		---| 'ReceiveCards' # Receive cards turn phase
 		---| 'ReceiveGold' # Receive gold turn phase <--- not sure if this is an official phase, but in Commerce games, it occurs after receiving card pieces; not documented on https://www.warzone.com/wiki/Turn_phases]]
 
-		horzNukeCardPiecesNeeded = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		NukeCardPiecesNeeded = CreateNumberInputField(horzNukeCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzNukeCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		NukeCardPiecesNeeded = UI.CreateNumberInputField (horzNukeCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzNukeCardStartPieces = CreateHorz (UIcontainer);
-		CreateLabel(horzNukeCardStartPieces).SetText("Pieces given to each player at the start: ");
-		NukeCardStartPieces = CreateNumberInputField(horzNukeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzNukeCardStartPieces = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeCardStartPieces).SetText("Pieces given to each player at the start: ");
+		NukeCardStartPieces = UI.CreateNumberInputField (horzNukeCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukeCardStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
 		local horzNukePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzNukePiecesPerTurn).SetText ("  Minimum pieces awarded per turn: ");
 		Mod.Settings.NukePiecesPerTurn = Mod.Settings.NukePiecesPerTurn or 1; --default to 1 if not configured
 		NukePiecesPerTurn = UI.CreateNumberInputField (horzNukePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NukePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horzNukeCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzNukeCardWeight).SetText("Card weight (how common the card is): ");
-		NukeCardWeight = CreateNumberInputField(horzNukeCardWeight).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardWeight).SetWholeNumbers(true).SetInteractable(true);
-
+		horzNukeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNukeCardWeight).SetText("Card weight (how common the card is): ");
+		NukeCardWeight = UI.CreateNumberInputField (horzNukeCardWeight).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(Mod.Settings.NukeCardWeight).SetWholeNumbers(true).SetInteractable(true);
 	end
 end
 
@@ -1154,25 +1114,25 @@ function isolationCheckboxClicked()
 		end
 	else
 		--show Isolation settings in UI
-		vertIsolationSettingsDetails = CreateVert(vertIsolationSettingsHeading);
+		vertIsolationSettingsDetails = UI.CreateVerticalLayoutGroup (vertIsolationSettingsHeading);
 		UIcontainer = vertIsolationSettingsDetails;
 
-		horzIsolationDuration = CreateHorz(UIcontainer);
-		CreateLabel(horzIsolationDuration).SetText("Duration: ");
-		IsolationDuration = CreateNumberInputField(horzIsolationDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.IsolationDuration).SetWholeNumbers(true).SetInteractable(true);
-		CreateLabel (UIcontainer).SetText ("(Use -1 to make Isolation permanent; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
+		horzIsolationDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzIsolationDuration).SetText("Duration: ");
+		IsolationDuration = UI.CreateNumberInputField (horzIsolationDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.IsolationDuration).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText ("(Use -1 to make Isolation permanent; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
 
-		horzIsolationNumPiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel(horzIsolationNumPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		IsolationNumPiecesNeeded = CreateNumberInputField(horzIsolationNumPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzIsolationNumPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzIsolationNumPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		IsolationNumPiecesNeeded = UI.CreateNumberInputField (horzIsolationNumPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationPiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzIsolationStartingCardPieceQty = CreateHorz(UIcontainer);
-		CreateLabel(horzIsolationStartingCardPieceQty).SetText("Pieces given to each player at the start: ");
-		IsolationStartingCardPieceQty = CreateNumberInputField(horzIsolationStartingCardPieceQty).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzIsolationStartingCardPieceQty = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzIsolationStartingCardPieceQty).SetText("Pieces given to each player at the start: ");
+		IsolationStartingCardPieceQty = UI.CreateNumberInputField (horzIsolationStartingCardPieceQty).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
-		local horzIsolationCardWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzIsolationCardWeight).SetText("Card weight: ");
-		IsolationCardWeight = CreateNumberInputField(horzIsolationCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		local horzIsolationCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzIsolationCardWeight).SetText("Card weight: ");
+		IsolationCardWeight = UI.CreateNumberInputField (horzIsolationCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
 
@@ -1321,6 +1281,8 @@ function setDefaultValues()
 
 	if (Mod.Settings.DeneutralizeEnabled == nil) then
 		Mod.Settings.DeneutralizeEnabled = false;
+		Mod.Settings.DeneutralizeRange = 2;
+		Mod.Settings.DeneutralizeImplementationPhase = WL.TurnPhase.ReceiveCards;
 		Mod.Settings.DeneutralizePiecesNeeded = 10;
 		Mod.Settings.DeneutralizeStartPieces = 1;
 		Mod.Settings.DeneutralizePiecesPerTurn = 1;
@@ -1507,6 +1469,9 @@ function updateModSettingsFromUI()
 	end
 
 	if (not UI.IsDestroyed (vertDeneutralizeSettingsDetails)) then
+		Mod.Settings.DeneutralizeRange = DeneutralizeRange.GetValue ();
+		-- Mod.Settings.DeneutralizeImplementationPhase = DeneutralizeImplementationPhase.GetValue (); --this is set when the button is clicked; also the control is a Button and doesn't have a .GetValue method
+		Mod.Settings.DeneutralizeImplementationPhase = DeneutralizeImplementationPhase;
 		Mod.Settings.DeneutralizePiecesNeeded = DeneutralizeCardPiecesNeeded.GetValue();
 		Mod.Settings.DeneutralizeStartPieces = DeneutralizeCardStartPieces.GetValue();
 		Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals = DeneutralizeCanUseOnNaturalNeutrals.GetIsChecked();
@@ -1559,33 +1524,33 @@ function pestilenceCheckboxClicked()
 		else
 		end
 	else
-		vertPestiSettingsDetails = CreateVert(vertPestiSettingsHeading);
+		vertPestiSettingsDetails = UI.CreateVerticalLayoutGroup (vertPestiSettingsHeading);
 		UIcontainer = vertPestiSettingsDetails;
 
-		horzPestilenceDuration = CreateHorz(UIcontainer);
-		CreateLabel(horzPestilenceDuration).SetText("Duration: ");
-		PestilenceDuration = CreateNumberInputField(horzPestilenceDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PestilenceDuration).SetWholeNumbers(true).SetInteractable(true);
+		horzPestilenceDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestilenceDuration).SetText("Duration: ");
+		PestilenceDuration = UI.CreateNumberInputField (horzPestilenceDuration).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PestilenceDuration).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPestCardStrength = CreateHorz(UIcontainer);
-		CreateLabel(horzPestCardStrength).SetText("Strength: ");
-		PestCardStrength = CreateNumberInputField(horzPestCardStrength).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PestilenceStrength).SetWholeNumbers(true).SetInteractable(true);
+		horzPestCardStrength = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestCardStrength).SetText("Strength: ");
+		PestCardStrength = UI.CreateNumberInputField (horzPestCardStrength).SetSliderMinValue(1).SetSliderMaxValue(5).SetValue(Mod.Settings.PestilenceStrength).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPestNumPiecesNeeded = CreateHorz(UIcontainer);
-		CreateLabel(horzPestNumPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-		PestNumPiecesNeeded = CreateNumberInputField(horzPestNumPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilencePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
+		horzPestNumPiecesNeeded = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestNumPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+		PestNumPiecesNeeded = UI.CreateNumberInputField (horzPestNumPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilencePiecesNeeded).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPestilencePiecesPerTurn = CreateHorz(UIcontainer);
-		CreateLabel(horzPestilencePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
-		PestilencePiecesPerTurn = CreateNumberInputField(horzPestilencePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilencePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+		horzPestilencePiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestilencePiecesPerTurn).SetText("Minimum pieces awarded per turn: ");
+		PestilencePiecesPerTurn = UI.CreateNumberInputField (horzPestilencePiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilencePiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
 
-		horzPestStartingCardPieceQty = CreateHorz(UIcontainer);
-		CreateLabel(horzPestStartingCardPieceQty).SetText("Pieces given to each player at the start: ");
-		PestStartingCardPieceQty = CreateNumberInputField(horzPestStartingCardPieceQty).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceStartPieces).SetWholeNumbers(true).SetInteractable(true);
+		horzPestStartingCardPieceQty = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestStartingCardPieceQty).SetText("Pieces given to each player at the start: ");
+		PestStartingCardPieceQty = UI.CreateNumberInputField (horzPestStartingCardPieceQty).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
 		-- Add a weight setting for the Pestilence card
-		horzPestilenceWeight = CreateHorz(UIcontainer);
-		CreateLabel(horzPestilenceWeight).SetText("Card weight: ");
+		horzPestilenceWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzPestilenceWeight).SetText("Card weight: ");
 		PestilenceCardWeight=1.0;Mod.Settings.PestilenceCardWeight=1.0;
-		PestilenceCardWeight = CreateNumberInputField(horzPestilenceWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		PestilenceCardWeight = UI.CreateNumberInputField (horzPestilenceWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceCardWeight).SetWholeNumbers(false).SetInteractable(true);
 	end
 end
