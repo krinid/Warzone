@@ -867,3 +867,211 @@ function getTeamPlayers (game, playerID)
 	for k,v in pairs (teamPlayerIDs) do print ("team playerID #"..k..", "..v.."/"..getPlayerName (game, v)); end
 	return (teamPlayerIDs);
 end
+
+-- return integer distance between two territories
+-- returns:
+--   0  = same territory
+--   n  = number of hops between territories
+--   -1 = not reachable (shouldn't happen on valid maps, but safe)
+function getTerritoryDistance (game, sourceTerritoryID, targetTerritoryID)
+	if (sourceTerritoryID == targetTerritoryID) then return 0; end --same territory, distance is 0
+
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert (arrTerrListToProcess, sourceTerritoryID);
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if (neighbourTerrID == targetTerritoryID) then
+					return (intDepth); -- shortest path found
+				end
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+	return (-1); -- target is not reached from source
+end
+
+-- return distance from specific territory to the nearest territory owned by specified player
+-- returns:
+--   intDistance, intClosestTerritoryID
+--   -1, nil  --> if no territory found (player has no territories / unreachable)
+function getDistanceToPlayersNearestTerritory (game, sourceTerritoryID, targetPlayerID)
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert(arrTerrListToProcess, sourceTerritoryID);
+
+	-- check depth 0 case (source itself)
+	if (game.LatestStanding.Territories[sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					-- ownership check
+					if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+						return intDepth, neighbourTerrID; -- nearest match (guaranteed shortest)
+					end
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+
+	return -1, nil; -- player has no reachable territories
+end
+
+-- return shortest distance between two players
+-- returns:
+--   intDistance, intPlayerATerritoryID, intPlayerBTerritoryID
+--   -1, nil, nil  --> if no path exists (disconnected graph / invalid state)
+
+function getShortestDistanceBetweenPlayers (game, playerAID, playerBID)
+    local arrTerrProcessed = {};        -- terrs already processed
+    local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+    local arrTerrOrigin = {};           -- map: terrID -> originating Player A territory
+    local intDepth = 0;
+
+    -- initialize BFS frontier with all Player A territories
+    for terrID, terrObj in pairs(game.LatestStanding.Territories) do
+        if (terrObj.OwnerPlayerID == playerAID) then
+            arrTerrProcessed[terrID] = true;
+            arrTerrOrigin[terrID] = terrID; -- origin is itself
+            table.insert (arrTerrListToProcess, terrID);
+        end
+    end
+
+    -- edge case: no territories for one of the players
+    if (#arrTerrListToProcess == 0) then
+        return -1, nil, nil;
+    end
+
+    -- check depth 0 overlap (same territory ownership impossible, but safe)
+    for _, terrID in ipairs(arrTerrListToProcess) do
+        if (game.LatestStanding.Territories[terrID].OwnerPlayerID == playerBID) then
+            return 0, terrID, terrID;
+        end
+    end
+
+    while (#arrTerrListToProcess > 0) do
+        local arrNextTerrList = {};
+        intDepth = intDepth + 1;
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            local intOriginTerrID = arrTerrOrigin[terrID];
+            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+                if not arrTerrProcessed[neighbourTerrID] then
+                    arrTerrProcessed[neighbourTerrID] = true;
+                    arrTerrOrigin[neighbourTerrID] = intOriginTerrID;
+
+                    -- check if this neighbour belongs to Player B
+                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == playerBID) then
+                        return intDepth, intOriginTerrID, neighbourTerrID;
+                    end
+
+                    table.insert(arrNextTerrList, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = arrNextTerrList;
+    end
+
+    return -1, nil, nil; -- players not connected
+end
+
+--return array list of territory IDs within specified distance from the target territory
+function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
+    local arrTerrProcessed = {}; --list of terrs already processed
+    local arrTerrResults = {}; --resultant list of terrs within specified distance
+    local arrTerrListToProcess = {}; --terrs remaining to be processed
+
+	local intDepth = 0;
+    arrTerrProcessed [targetTerritoryID] = true;
+    table.insert (arrTerrResults, targetTerritoryID);
+    table.insert (arrTerrListToProcess, targetTerritoryID);
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local intNextTerrID = {};
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+                if not arrTerrProcessed [neighbourTerrID] then
+                    arrTerrProcessed [neighbourTerrID] = true;
+                    table.insert(arrTerrResults, neighbourTerrID);
+                    table.insert(intNextTerrID, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = intNextTerrID;
+        intDepth = intDepth + 1;
+    end
+    return (arrTerrResults);
+end
+
+-- returns array of territory IDs belonging to targetPlayerID (0=neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
+  local arrTerrProcessed = {};        -- list of terrs already processed
+    local arrTerrResults = {};          -- resultant list of matching terrs
+    local arrTerrListToProcess = {};    -- terrs remaining to be processed
+
+    local intDepth = 0;
+
+    -- initialize BFS with all territories owned by mainPlayerID
+    for terrID, terrObj in pairs (game.LatestStanding.Territories) do
+        if (terrObj.OwnerPlayerID == mainPlayerID) then
+            arrTerrProcessed[terrID] = true;
+            table.insert(arrTerrListToProcess, terrID);
+        end
+    end
+
+    -- if main player owns no territories, return empty result
+    if (#arrTerrListToProcess == 0) then
+        return arrTerrResults;
+    end
+
+    -- -- depth 0 check (only matters if mainPlayerID == targetPlayerID)
+    -- if (mainPlayerID == targetPlayerID) then
+    --     for _, terrID in ipairs(arrTerrListToProcess) do
+    --         table.insert(arrTerrResults, terrID);
+    --     end
+    -- end
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local arrNextTerrList = {};
+        intDepth = intDepth + 1;
+
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+                if not arrTerrProcessed[neighbourTerrID] then
+                    arrTerrProcessed[neighbourTerrID] = true;
+
+                    -- ownership filter
+                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+                        table.insert(arrTerrResults, neighbourTerrID);
+                    end
+
+                    table.insert(arrNextTerrList, neighbourTerrID);
+                end
+            end
+        end
+
+        arrTerrListToProcess = arrNextTerrList;
+    end
+
+    return arrTerrResults;
+end

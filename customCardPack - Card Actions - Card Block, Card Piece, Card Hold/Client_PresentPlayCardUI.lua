@@ -1,5 +1,5 @@
 require("utilities");
-require("UI_Events");
+-- require("UI_Events");
 
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
 function Client_PresentPlayCardUI(game, cardInstance, playCard)
@@ -86,8 +86,8 @@ function play_Shield_card(game, cardInstance, playCard)
 
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[SHIELD]\n\n").SetColor(getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[SHIELD]\n\n").SetColor(getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -146,8 +146,8 @@ function play_Phantom_card(game, cardInstance, playCard)
 
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[PHANTOM]\n\n").SetColor(getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[PHANTOM]\n\n").SetColor(getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -185,18 +185,18 @@ function play_CardBlock_card(game, cardInstance, playCard)
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
-        TargetPlayerBtn = CreateButton (vert).SetText("Select player...").SetOnClick(function() TargetPlayerClicked_Fizz(strPrompt) end);
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
+        TargetPlayerBtn = UI.CreateButton (vert).SetText("Select player").SetColor ("#00FFFF").SetOnClick(function() TargetPlayerClicked_Fizz(strPrompt) end);
 
-        CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
+        UI.CreateButton (vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
         function()
             if (TargetPlayerID == nil) then
                 UI.Alert("You must select a player");
                 return;
             end
 
-            print("[CARD BLOCK] order input: player=" .. TargetPlayerID .. "/".. toPlayerName(TargetPlayerID, game)..  " :: Card Block|" .. TargetPlayerID);
+            -- print("[CARD BLOCK] order input: player=" .. TargetPlayerID .. "/".. toPlayerName(TargetPlayerID, game)..  " :: Card Block|" .. TargetPlayerID);
             playCard(strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName(TargetPlayerID, game), 'Card Block|' .. TargetPlayerID, WL.TurnPhase.Discards);
             close();
         end);
@@ -217,12 +217,12 @@ function play_cardPiece_card (game, cardInstance, playCard)
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(600,500);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[CARD PIECES]").SetColor(getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[CARD PIECES]").SetColor(getColourCode("card play heading"));
 		local targetCardNumPiecesToGrant = Mod.Settings.CardPiecesNumCardPiecesToGrant;       --# of card pieces to grant as configured in Mod.Settings by game host
 		local targetCardNumWholeCardsToGrant = Mod.Settings.CardPiecesNumWholeCardsToGrant;   --# of whole cards to grant as configured in Mod.Settings by game host
-        CreateLabel(vert).SetText("\nGrants " ..tostring (targetCardNumWholeCardsToGrant).. " whole cards, " ..tostring (targetCardNumPiecesToGrant).. " card pieces").SetColor (getColourCode ("subheading"));
-        CreateLabel(vert).SetText("\n"..strPrompt);
+        UI.CreateLabel (vert).SetText("\nGrants " ..tostring (targetCardNumWholeCardsToGrant).. " whole cards, " ..tostring (targetCardNumPiecesToGrant).. " card pieces").SetColor (getColourCode ("subheading"));
+        UI.CreateLabel (vert).SetText("\n"..strPrompt);
 
 		for k,v in pairs(cards) do
 			print ("newObj item=="..k,v.."::");
@@ -231,7 +231,7 @@ function play_cardPiece_card (game, cardInstance, playCard)
 				local strButtonText = tostring (v).. " [" ..tostring (targetCardConfigNumPieces).. " piece" ..plural (targetCardConfigNumPieces).. " in a full card]";
 				-- local strButtonText = tostring (v).. "\n[grants " ..tostring(targetCardNumWholeCardsToGrant).. " cards, " ..tostring (targetCardNumPiecesToGrant).. " pieces; " ..tostring (targetCardConfigNumPieces).. " pieces in a full card]";
 
-				CreateButton (vert).SetText(strButtonText).SetOnClick(function() CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close) end).SetColor (getColourCode ("Card|"..tostring (v)));
+				UI.CreateButton (vert).SetText(strButtonText).SetOnClick(function() CardPiece_cardType_selected({cardID=k,cardName=v}, playCard, close) end).SetColor (getColourCode ("Card|"..tostring (v)));
 			end
 		end
     end);
@@ -271,10 +271,10 @@ function play_Earthquake_card(game, cardInstance, playCard)
 
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,400);
-        EarthquakeUI = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel (EarthquakeUI).SetText("[EARTHQUAKE]\n\n").SetColor(getColourCode("card play heading"));
-        buttonEarthquakeSelectBonus = CreateButton (EarthquakeUI).SetText("Select Bonus").SetInteractable(false).SetOnClick (function () buttonEarthquakeSelectBonus.SetInteractable(false); Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected); end);
-        labelEarthquakeSelectBonus = CreateLabel (EarthquakeUI).SetText("Select the bonus for the earthquake.\n");--.SetColor(getColourCode("card play heading"));
+        EarthquakeUI = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (EarthquakeUI).SetText("[EARTHQUAKE]\n\n").SetColor(getColourCode("card play heading"));
+        buttonEarthquakeSelectBonus = UI.CreateButton (EarthquakeUI).SetText("Select Bonus").SetInteractable(false).SetOnClick (function () buttonEarthquakeSelectBonus.SetInteractable(false); Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected); end);
+        labelEarthquakeSelectBonus = UI.CreateLabel (EarthquakeUI).SetText("Select the bonus for the earthquake.\n");--.SetColor(getColourCode("card play heading"));
         Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected);
         Earthquake_PlayCardButton = UI.CreateButton(EarthquakeUI).SetColor(WZcolours["Dark Green"]).SetText("Play Card").SetOnClick(function()
             if (Earthquake_SelectedBonus == nil) then
@@ -309,7 +309,7 @@ function play_Earthquake_card(game, cardInstance, playCard)
             --playCard(strEarthquakeMessage.."3", 'Earthquake3|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, nil, jumpToActionSpotOpt);
             close();
         end);
-        labelEarthquake_BonusTerrList = CreateLabel (EarthquakeUI);
+        labelEarthquake_BonusTerrList = UI.CreateLabel (EarthquakeUI);
     end);
 end
 
@@ -331,8 +331,8 @@ function EarthquakeTargetSelected(bonusDetails)
 
     for _, terrID in pairs(EarthquakeGame.Map.Bonuses[bonusDetails.ID].Territories) do
         strLabelText = strLabelText .. terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name.."\n";
-        --CreateLabel(EarthquakeUI).SetText (terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name);
-        --createButton(vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
+        --UI.CreateLabel (EarthquakeUI).SetText (terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name);
+        --UI.CreateButton (vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
     end
     Game.HighlightTerritories(Game.Map.Bonuses[bonusDetails.ID].Territories);
     Earthquake_PlayCardButton.SetInteractable(true);
@@ -345,8 +345,8 @@ function play_Tornado_card(game, cardInstance, playCard)
     print("[TORNADO] card play clicked, played by=" .. strPlayerName_cardPlayer);
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[TORNADO]\n\nSelect a territory to target with a Tornado:").SetColor(getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[TORNADO]\n\nSelect a territory to target with a Tornado:").SetColor(getColourCode("card play heading"));
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to target with Tornado");
@@ -373,8 +373,8 @@ function play_Quicksand_card(game, cardInstance, playCard)
     print("[QUICKSAND] card play clicked, played by=" .. strPlayerName_cardPlayer);
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400,300);
-        local vert = CreateVert(rootParent).SetFlexibleWidth(1);
-        CreateLabel(vert).SetText("[QUICKSAND]\n\nSelect a territory to convert into quicksand:").SetColor(getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
+        UI.CreateLabel (vert).SetText("[QUICKSAND]\n\nSelect a territory to convert into quicksand:").SetColor(getColourCode("card play heading"));
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
         TargetTerritoryClicked("Select the territory to apply Quicksand to");
@@ -402,8 +402,8 @@ function play_Monolith_card(game, cardInstance, playCard)
     --
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (vert).SetText ("[MONOLITH]\n\n").SetColor (getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        UI.CreateLabel (vert).SetText ("[MONOLITH]\n\n").SetColor (getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -436,57 +436,116 @@ function play_Monolith_card(game, cardInstance, playCard)
     end);
 end
 
+function createWindow1 (game1)
+	game1.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
+		-- setMaxSize(400, 300);
+		local window = {root=rootParent, setMaxSize=setMaxSize, setScrollable=setScrollable, game=game, close=close};
+		return (window);
+	end);
+
+	-- return (window);
+end
+
+function createWindow (game)
+    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
+
+	game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game2, close)
+        -- window.root = rootParent;
+        -- window.setMaxSize = setMaxSize;
+        -- window.setScrollable = setScrollable;
+        -- window.game = game2;
+        -- window.close = close;
+		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game, close = close};
+
+    end);
+
+    return window;
+end
+
 function play_Deneutralize_card (game, cardInstance, playCard)
-    game.CreateDialog(
-        function(rootParent, setMaxSize, setScrollable, game, close)
-            setMaxSize(400, 300);
-            --local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-            local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-            CreateLabel (vert).SetText ("[DENEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
+	local winPlayDeneutralize = createWindow (game);
+	winPlayDeneutralize.setMaxSize (400, 500);
+	local rootParent = winPlayDeneutralize.root;
+	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+	UI.CreateLabel (vert).SetText ("[DENEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
 
-            TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-            TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-            strDeneutralize_TerritorySelectText = "Select the territory you wish to deneutralize (convert from neutral to owned by a player).";
-            TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+	TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked).SetColor ("#00FFFF");
+	TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
+	strDeneutralize_TerritorySelectText = "   Select the territory you wish to deneutralize (convert from neutral and assign to a player)\n";
+	TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
+	UI.CreateLabel (vert).SetText("_").SetColor ("#151515");
 
-            --add player selection here, default to self but allow to assign to others
-            local assignToPlayerID = nil;
-            local assignToPlayerName = nil;
-            --add config items for can/can't assign to self/others
+	--add player selection here, default to self but allow to assign to others
+	local assignToPlayerID = nil;
+	local assignToPlayerName = nil;
+	--add config items for can/can't assign to self/others
 
-            UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
-                function() 
-                    --check for CANCELED request, ie: no territory selected
-                    if (TargetTerritoryID == nil) then
-                        UI.Alert("No territory selected. Please select a territory.");
-                        return;
-                    elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
-                        UI.Alert("The selected territory is not neutral. Select a different territory that is neutral.");
-                        TargetTerritoryClicked(strDeneutralize_TerritorySelectText); --bring up the territory select screen again
-                        return;
-                    end
+	--selected territory is  neutral, so apply the deneutralize order
+	assignToPlayerID = intPlayerID_cardPlayer;
+	assignToPlayerName = strPlayerName_cardPlayer;
+	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, Mod.Settings.DeneutralizeRange or 4000);
+	-- local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, 1);
+	game.HighlightTerritories (arrValidTerrs);
 
-                    --selected territory is  neutral, so apply the deneutralize order
-                    assignToPlayerID = intPlayerID_cardPlayer;
-                    assignToPlayerName = strPlayerName_cardPlayer;
+	local horzTargetPlayer = UI.CreateHorizontalLayoutGroup (vert);
 
-                    print ("Deneutralize order input::terr=" .. TargetTerritoryName .."::Neutralize|" .. TargetTerritoryID.."::");
-                    print ("territory="..TargetTerritoryName.."::,ID="..TargetTerritoryID.."::owner=="..game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID.."::neutralOwnerID="..WL.PlayerID.Neutral.."::assignToPlayerID="..assignToPlayerID.."::assignToPlayerName="..assignToPlayerName);
+	if (Mod.Settings.DeneutralizeCanAssignToAnotherPlayer == true) then
+		DeneutralizeSelectPlayerButton = UI.CreateButton(horzTargetPlayer).SetText("Select player").SetInteractable (Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetColor("#00FFFF").SetOnClick(function ()
+			local winSelectPlayer = createWindow (game);
+			winSelectPlayer.setMaxSize (600, 500);
+			UI.CreateLabel (winSelectPlayer.root).SetText ("Select player to assign target territory to:\n");
+				--generate list of players for popup to select from; exclude self & eliminated (non-active) players; include AIs - game.Game.PlayingPlayers provides this list (compared to game.Game.Players which includes all players ever associated to the game, even those that declined the invite, were removed by host, etc)
+				local numUserButtonsCreated = 0;
+				for playerID,player in pairs(game.Game.PlayingPlayers) do
+					UI.CreateButton(winSelectPlayer.root).SetText("Assign to: " ..toPlayerName(playerID,game)).SetColor (player.Color.HtmlColor).SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+					numUserButtonsCreated = numUserButtonsCreated + 1;
+				end
+				winSelectPlayer.setMaxSize (600, math.min (800, numUserButtonsCreated * 100));
+		end);
+		DeneutralizeSelectPlayerButton.SetText ("Reselect player");
+	end
 
-                    local strDeneutralizeMessage = strPlayerName_cardPlayer.." deneutralized " .. TargetTerritoryName ..", assigned to "..assignToPlayerName;
-                    local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-                    if (WL.IsVersionOrHigher("5.34.1")) then
-                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
-                        playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-                    else
-                        playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, WL.TurnPhase.Gift);
-                    end
-                    --official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
-                    close(); --close the popup dialog
-                end
-            );
-        end
-    );
+	TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText ("Assign to: " ..assignToPlayerName);
+	UI.CreateLabel (vert).SetText ("   Select the player to assign the target territory to");
+	UI.CreateLabel (vert).SetText("_").SetColor ("#151515");
+
+	UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
+		function ()
+
+			print ("---");
+			for k,v in pairs (arrValidTerrs) do print (k,v,getTerritoryName (k, game)); end
+			print ("SELECT: ".. TargetTerritoryID, getTerritoryName (TargetTerritoryID, game));
+
+			--check for CANCELED request, ie: no territory selected
+			if (TargetTerritoryID == nil) then
+				UI.Alert ("No territory selected. Please select a territory.");
+				return;
+			elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
+				UI.Alert ("The selected territory is not neutral. Select a different territory that is neutral.");
+				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); --bring up the territory select screen again
+				return;
+			elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
+				UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.DeneutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
+				game.HighlightTerritories (arrValidTerrs);
+				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
+				return;
+			end
+
+			-- print ("Deneutralize order input::terr=" .. TargetTerritoryName .."::Neutralize|" .. TargetTerritoryID.."::");
+			-- print ("territory="..TargetTerritoryName.."::,ID="..TargetTerritoryID.."::owner=="..game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID.."::neutralOwnerID="..WL.PlayerID.Neutral.."::assignToPlayerID="..assignToPlayerID.."::assignToPlayerName="..assignToPlayerName);
+
+			local strDeneutralizeMessage = strPlayerName_cardPlayer.." deneutralized " .. TargetTerritoryName ..", assigned to "..assignToPlayerName;
+			local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+			if (WL.IsVersionOrHigher("5.34.1")) then
+				local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
+				playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
+			else
+				playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift);
+			end
+			--official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
+			winPlayDeneutralize.close(); --close the popup dialog
+		end
+	);
 end
 
 function play_Neutralize_card (game, cardInstance, playCard)
@@ -504,8 +563,8 @@ function play_Neutralize_card (game, cardInstance, playCard)
     game.CreateDialog(
         function(rootParent, setMaxSize, setScrollable, game, close)
             setMaxSize(400, 300);
-            local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-            CreateLabel (vert).SetText ("[NEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
+            local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+            UI.CreateLabel (vert).SetText ("[NEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
 
             TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
             TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -567,8 +626,8 @@ function play_Isolation_card(game, cardInstance, playCard)
     --
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (vert).SetText ("[ISOLATION]\n\n").SetColor (getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        UI.CreateLabel (vert).SetText ("[ISOLATION]\n\n").SetColor (getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -610,7 +669,7 @@ function play_Pestilence_card(game, cardInstance, playCard)
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(800, 500);
 
-        local vertPestiCard = CreateVert (rootParent);
+        local vertPestiCard = UI.CreateVerticalLayoutGroup (rootParent);
         UI.CreateLabel(vertPestiCard).SetText('[PESTILENCE]').SetColor (getColourCode ("card play heading"));
         UI.CreateLabel(vertPestiCard).SetText('\n• Pestilence is not stackable, playing more than one instance has no additional effect');
         local PestilenceTargetPlayerFuncs={};
@@ -634,9 +693,9 @@ function play_Pestilence_card(game, cardInstance, playCard)
 
         UI.CreateLabel (vertPestiCard).SetText (strPestilenceMessageMechanics);
         UI.CreateLabel (vertPestiCard).SetText (strPestilenceMessageDetails).SetColor (getColourCode ("subheading"));
-        -- CreateLabel (vertPestiCard).SetText ("\nCASTING TURN: Turn x".. game.Game.TurnNumber);
-        -- CreateLabel (vertPestiCard).SetText ("\nWARNING TURN: Turn x".. game.Game.TurnNumber+1);
-        -- CreateLabel (vertPestiCard).SetText ("\nEFFECT START TURN: Turn x".. game.Game.TurnNumber+2);
+        -- UI.CreateLabel (vertPestiCard).SetText ("\nCASTING TURN: Turn x".. game.Game.TurnNumber);
+        -- UI.CreateLabel (vertPestiCard).SetText ("\nWARNING TURN: Turn x".. game.Game.TurnNumber+1);
+        -- UI.CreateLabel (vertPestiCard).SetText ("\nEFFECT START TURN: Turn x".. game.Game.TurnNumber+2);
 
 		local labelPlayersAlreadyTargetedByPestilence = UI.CreateLabel (vertPestiCard);
         UI.CreateLabel (vertPestiCard).SetText ("\nSelect player to invoke Pestilence on:");
@@ -669,7 +728,7 @@ function play_Pestilence_card(game, cardInstance, playCard)
             labelPlayersAlreadyTargetedByPestilence.SetText ("\nPlayers already targeted by Pestilence:" .. strPlayersAlreadyTargetedByPestilence .. "\n\n");
         end
         if (numUserButtonsCreated == 0) then
-            CreateLabel (vertPestiCard).SetText ("All players are already targeted by Pestilence. You cannot invoke Pestilence this turn.").SetColor (getColourCode("error"));
+            UI.CreateLabel (vertPestiCard).SetText ("All players are already targeted by Pestilence. You cannot invoke Pestilence this turn.").SetColor (getColourCode("error"));
         end
     end);
 end
@@ -702,8 +761,8 @@ function play_Wildfire_card (game, cardInstance, playCard)
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (vert).SetText ("[WILDFIRE]\n\n").SetColor (getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        UI.CreateLabel (vert).SetText ("[WILDFIRE]\n\n").SetColor (getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -746,8 +805,8 @@ function play_Nuke_card(game, cardInstance, playCard)
     game.CreateDialog(
     function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 300);
-        local vert = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (vert).SetText ("[NUKE]\n\n").SetColor (getColourCode("card play heading"));
+        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        UI.CreateLabel (vert).SetText ("[NUKE]\n\n").SetColor (getColourCode("card play heading"));
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked_Nuke);
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
@@ -788,8 +847,8 @@ function play_Airstrike_card (game, cardInstance, playCard)
         setMaxSize(600, 600);
         airstrikeObject = {}; --global variable
 		airstrikeObject.FROMselectedSUs = {}; --to store actual SU objects in order to create WL.Armies object to get its Attack Power
-        airstrikeObject.vertTop = CreateVert (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        CreateLabel (airstrikeObject.vertTop).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
+        airstrikeObject.vertTop = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        UI.CreateLabel (airstrikeObject.vertTop).SetText ("[AIRSTRIKE]\n\n").SetColor (getColourCode("card play heading"));
         local vertTop = airstrikeObject.vertTop;
 
         local sourceButtonHorz = UI.CreateHorizontalLayoutGroup (vertTop);
@@ -801,23 +860,23 @@ function play_Airstrike_card (game, cardInstance, playCard)
         TargetTerritoryBtn = UI.CreateButton(targetButtonHorz).SetText("Target Territory").SetOnClick(TargetTerritoryClicked_Airstrike);
         TargetTerritoryInstructionLabel = UI.CreateLabel(targetButtonHorz).SetText("").SetColor (getColourCode("minor heading"));
 
-        CreateLabel (vertTop).SetText (" "); --spacer
+        UI.CreateLabel (vertTop).SetText (" "); --spacer
 
-        local line = CreateHorz (vertTop);
-        CreateLabel (line).SetText ("Number of armies to send  ");
-        airstrikeObject.NIFarmies = CreateNumberInputField (line).SetValue(100).SetSliderMinValue(0).SetSliderMaxValue(1000);
-        --CreateLabel (vertTop).SetText ("[all Special Units will be sent; unit selector coming soon]").SetColor (getColourCode ("subheading"));
+        local line = UI.CreateHorizontalLayoutGroup (vertTop);
+        UI.CreateLabel (line).SetText ("Number of armies to send  ");
+        airstrikeObject.NIFarmies = UI.CreateNumberInputField (line).SetValue(100).SetSliderMinValue(0).SetSliderMaxValue(1000);
+        --UI.CreateLabel (vertTop).SetText ("[all Special Units will be sent; unit selector coming soon]").SetColor (getColourCode ("subheading"));
 
 		--if Mod Settings disallows sending Armies, force it to 0 (clearly to the player so it's obvious what's happening)
 		if (Mod.Settings.AirstrikeCanSendRegularArmies == nil or Mod.Settings.AirstrikeCanSendRegularArmies == false) then
 			airstrikeObject.NIFarmies.SetValue (0);
 			airstrikeObject.NIFarmies.SetInteractable (false);
-			CreateLabel (vertTop).SetText ("** This game is configured so you cannot send regular armies with an Airstrike").SetColor (getColourCode ("subheading"));
-			CreateLabel (vertTop).SetText (" "); --spacer
+			UI.CreateLabel (vertTop).SetText ("** This game is configured so you cannot send regular armies with an Airstrike").SetColor (getColourCode ("subheading"));
+			UI.CreateLabel (vertTop).SetText (" "); --spacer
 		end
 
 		airstrikeObject.SUpanelVert = UI.CreateVerticalLayoutGroup (vertTop).SetFlexibleWidth(1);
-        CreateLabel (vertTop).SetText (" "); --spacer
+        UI.CreateLabel (vertTop).SetText (" "); --spacer
 
         local playCardButtonhorz = UI.CreateHorizontalLayoutGroup (vertTop).SetFlexibleWidth(1.0);
         UI.CreateButton(playCardButtonhorz).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetFlexibleWidth(0.5).SetOnClick(
@@ -933,48 +992,48 @@ function updateAirstrikePanelDetails ()
         intTOdefensePower_kills = math.floor (airstrikeObject.TOdefensePower * Game.Settings.DefenseKillRate + 0.5);
     end
 
-    airstrikeObject.FROMTOhorz = CreateHorz (airstrikeObject.airstrikeSUvert).SetFlexibleWidth(1.0);
-    airstrikeObject.FROMvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
-    airstrikeObject.TOvert = CreateVert (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
+    airstrikeObject.FROMTOhorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert).SetFlexibleWidth(1.0);
+    airstrikeObject.FROMvert = UI.CreateVerticalLayoutGroup (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
+    airstrikeObject.TOvert = UI.CreateVerticalLayoutGroup (airstrikeObject.FROMTOhorz).SetFlexibleWidth(0.5);
 
     local strFROMteamText = ""; if (airstrikeObject.FROMplayerTeam >=0) then airstrikeObject.FROMplayerTeam = "/[team ".. tostring(airstrikeObject.FROMplayerTeam).."]"; end
     local strTOteamText = ""; if (airstrikeObject.TOplayerTeam >=0) then airstrikeObject.TOplayerTeam = "/[team ".. tostring(airstrikeObject.TOplayerTeam).."]"; end
-    CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(getPlayerName(Game, airstrikeObject.FROMplayerID))..strFROMteamText);
-    --CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower) .." [".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .. " [kills ".. tostring (intFROMattackPower_kills) .."]");
+    UI.CreateLabel (airstrikeObject.FROMvert).SetText ("FROM: "..tostring (getTerritoryName(SourceTerritoryID, Game))).SetColor("#33FF33");
+    UI.CreateLabel (airstrikeObject.FROMvert).SetText ("Owner: "..tostring(getPlayerName(Game, airstrikeObject.FROMplayerID))..strFROMteamText);
+    --UI.CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring(airstrikeObject.FROMattackPower) .." [".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .."]");
+    UI.CreateLabel (airstrikeObject.FROMvert).SetText ("Attack Power: ".. tostring (airstrikeObject.FROMattackPower_SelectedUnits) .. " [kills ".. tostring (intFROMattackPower_kills) .."]");
 
-    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring (airstrikeObject.FROMselectedArmies));
-    -- CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (#airstrikeObject.FROMselectedSUs) .."]");
-    CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring (#airstrikeObject.FROMselectedSUs));
-    airstrikeObject.TOhorz = CreateHorz (airstrikeObject.airstrikeSUvert);
-    CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
-    CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(getPlayerName (Game, airstrikeObject.TOplayerID))..strTOteamText);
-    CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower) .. " [kills ".. tostring (intTOdefensePower_kills) .."]");
-    CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
-    CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
-    --CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+    -- UI.CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring(airstrikeObject.FROMarmies).. " [".. tostring (airstrikeObject.FROMselectedArmies) .."]");
+    UI.CreateLabel (airstrikeObject.FROMvert).SetText ("#Armies: ".. tostring (airstrikeObject.FROMselectedArmies));
+    -- UI.CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring(airstrikeObject.FROMnumSpecials).. " [".. tostring (#airstrikeObject.FROMselectedSUs) .."]");
+    UI.CreateLabel (airstrikeObject.FROMvert).SetText ("#Special Units: ".. tostring (#airstrikeObject.FROMselectedSUs));
+    airstrikeObject.TOhorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
+    UI.CreateLabel (airstrikeObject.TOvert).SetText ("TO: "..tostring (getTerritoryName(TargetTerritoryID, Game))).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
+    UI.CreateLabel (airstrikeObject.TOvert).SetText ("Owner: "..tostring(getPlayerName (Game, airstrikeObject.TOplayerID))..strTOteamText);
+    UI.CreateLabel (airstrikeObject.TOvert).SetText ("Defense Power: ".. tostring(airstrikeObject.TOdefensePower) .. " [kills ".. tostring (intTOdefensePower_kills) .."]");
+    UI.CreateLabel (airstrikeObject.TOvert).SetText ("#Armies: ".. tostring(airstrikeObject.TOarmies));
+    UI.CreateLabel (airstrikeObject.TOvert).SetText ("#Special Units: ".. tostring(airstrikeObject.TOnumSpecials));
+    --UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
 
-	CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• armies that die in addition to regular battle damage taken\n• Special Units are not impacted");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
+	UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("\nDeployment yield: ".. airstrikeObject.DeploymentYield*100 .."% (for attacks)").SetColor (getColourCode("subheading"));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Armies shot out of sky: ".. airstrikeObject.DeploymentYieldLoss).SetColor (getColourCode("subheading"));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• armies that die in addition to regular battle damage taken\n• Special Units are not impacted");
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("• Airstrikes on own or team territories transfer units to the target territory with no Yield Deployment loss, but you still take over the target territory and any units present there");
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText (" ");
 
 	local AttackTransferHorz = UI.CreateHorizontalLayoutGroup (airstrikeObject.airstrikeSUvert);
-    CreateLabel (AttackTransferHorz).SetText ("Attack/Transfer: ");
-    CreateLabel (AttackTransferHorz).SetText (airstrikeObject.AttackTransfer).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
-    CreateLabel (AttackTransferHorz).SetText (" (at current time)");
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send regular armies: ".. tostring (Mod.Settings.AirstrikeCanSendRegularArmies));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Special Units: ".. tostring (Mod.Settings.AirstrikeCanSendSpecialUnits));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target fog: ".. tostring (Mod.Settings.AirstrikeCanTargetFoggedTerritories));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target neutrals: ".. tostring (Mod.Settings.AirstrikeCanTargetNeutrals));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target players: ".. tostring (Mod.Settings.AirstrikeCanTargetPlayers));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target structures: ".. tostring (Mod.Settings.AirstrikeCanTargetStructures));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Special Units: ".. tostring (Mod.Settings.AirstrikeCanTargetSpecialUnits));
-    CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Commanders: ".. tostring (Mod.Settings.AirstrikeCanTargetCommanders));
-	--CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Commanders: tbd"); --.. tostring (Mod.Settings.AirstrikeCan));
+    UI.CreateLabel (AttackTransferHorz).SetText ("Attack/Transfer: ");
+    UI.CreateLabel (AttackTransferHorz).SetText (airstrikeObject.AttackTransfer).SetColor((airstrikeObject.AttackTransfer=="Transfer" and ("#33FF33")) or "#FF3333"); --colour is GREEN for Transfer, RED for Attack or tbd (anything that isn't "Transfer")
+    UI.CreateLabel (AttackTransferHorz).SetText (" (at current time)");
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send regular armies: ".. tostring (Mod.Settings.AirstrikeCanSendRegularArmies));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Special Units: ".. tostring (Mod.Settings.AirstrikeCanSendSpecialUnits));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target fog: ".. tostring (Mod.Settings.AirstrikeCanTargetFoggedTerritories));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target neutrals: ".. tostring (Mod.Settings.AirstrikeCanTargetNeutrals));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target players: ".. tostring (Mod.Settings.AirstrikeCanTargetPlayers));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target structures: ".. tostring (Mod.Settings.AirstrikeCanTargetStructures));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Special Units: ".. tostring (Mod.Settings.AirstrikeCanTargetSpecialUnits));
+    UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can target Commanders: ".. tostring (Mod.Settings.AirstrikeCanTargetCommanders));
+	--UI.CreateLabel (airstrikeObject.airstrikeSUvert).SetText ("Can send Commanders: tbd"); --.. tostring (Mod.Settings.AirstrikeCan));
 end
 
 function SourceTerritorySelectButton_Clicked_Airstrike(strLabelText) --airstrikeObject.SourceTerritoryClicked_Airstrike, SourceTerritoryBtn)
@@ -1147,8 +1206,8 @@ function TerritoryClicked_Nuke (terrDetails)
 		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
-		local arrSmokeBombTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo); --get resultant set of territories that Smoke Bomb will impact & highlight them
-		Game.HighlightTerritories (arrSmokeBombTerrs); --highlight the impacted terrs
+		local arrNukeTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo); --get resultant set of territories that Smoke Bomb will impact & highlight them
+		Game.HighlightTerritories (arrNukeTerrs); --highlight the impacted terrs
 	end
 end
 

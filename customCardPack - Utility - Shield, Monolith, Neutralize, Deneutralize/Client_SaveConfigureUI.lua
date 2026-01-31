@@ -175,17 +175,19 @@ function createCards_newCards(alert, addCard);
 	end
 
 	if Mod.Settings.DeneutralizeEnabled == true then
-		print("Deneutralize settings:")
-		print("DeneutralizeEnabled="..tostring(Mod.Settings.DeneutralizeEnabled))
-		print("CanUseOnNeutralizedTerritories="..tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories))
-		print("CanUseOnNaturalNeutrals="..tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals))
-		print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander))
-		print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials))
-		print("DeneutralizePiecesNeeded="..tostring(Mod.Settings.DeneutralizePiecesNeeded))
-		print("DeneutralizeStartPieces="..tostring(Mod.Settings.DeneutralizeStartPieces))
-		print("DeneutralizePiecesPerTurn="..tostring(Mod.Settings.DeneutralizePiecesPerTurn))
+		-- print("Deneutralize settings:")
+		-- print("DeneutralizeEnabled="..tostring(Mod.Settings.DeneutralizeEnabled))
+		-- print("CanUseOnNeutralizedTerritories="..tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories))
+		-- print("CanUseOnNaturalNeutrals="..tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals))
+		-- print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander))
+		-- print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials))
+		-- print("DeneutralizePiecesNeeded="..tostring(Mod.Settings.DeneutralizePiecesNeeded))
+		-- print("DeneutralizeStartPieces="..tostring(Mod.Settings.DeneutralizeStartPieces))
+		-- print("DeneutralizePiecesPerTurn="..tostring(Mod.Settings.DeneutralizePiecesPerTurn))
 
-		local strDeneutralizeDesc = "Take ownership of a neutral territory. ";
+		if (Mod.Settings.DeneutralizeRange < 1 or Mod.Settings.DeneutralizeRange > 4000) then UI.Alert ("Range must be between 1-4000"); return; end
+
+		local strDeneutralizeDesc = "Take ownership (or assign to another player) of a neutral territory within " ..tostring (Mod.Settings.DeneutralizeRange) .. " steps from a territory you own already. ";
 		if ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == true) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == true)) then
 				strDeneutralizeDesc = strDeneutralizeDesc .. "This can be done on either natural neutral territories, or territories that were Neutralized (used a Neutralize card).";
 		elseif ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == true) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == false)) then
@@ -196,20 +198,21 @@ function createCards_newCards(alert, addCard);
 				--this means both settings are false, which doesn't make sense, the card would never be able to be played; spawn error and cancel
 				alert('Deneutralize cards must apply to natural neutral territories, Neutralized territories by use of a Neutralize card, or both options.');
 		end
+		strDeneutralizeDesc = strDeneutralizeDesc .. "\n\nDeneutralize executes in turn phase '" ..WL.TurnPhase.ToString (Mod.Settings.DeneutralizeImplementationPhase).. "'. ";
 		Mod.Settings.DeneutralizeCardID = addCard("Deneutralize", strDeneutralizeDesc, "deneutralize_greenback2_130x180.png", Mod.Settings.DeneutralizePiecesNeeded, Mod.Settings.DeneutralizePiecesPerTurn, Mod.Settings.DeneutralizeStartPieces, Mod.Settings.DeneutralizeCardWeight);
 		Mod.Settings.DeneutralizeDescription = strDeneutralizeDesc;
 	end
 
 	if Mod.Settings.EarthquakeEnabled == true then
-		print("Earthquake settings:")
-		print("EarthquakeEnabled="..tostring(Mod.Settings.EarthquakeEnabled))
-		print("EarthquakeDuration="..tostring(Mod.Settings.EarthquakeDuration))
-		print("EarthquakeStrength="..tostring(Mod.Settings.EarthquakeStrength))
-		print("EarthquakeDeltaEachTurn="..tostring(Mod.Settings.EarthquakeDeltaEachTurn))
-		print("EarthquakeAffectsNeutrals="..tostring(Mod.Settings.EarthquakeAffectsNeutrals))
-		print("EarthquakePiecesNeeded="..tostring(Mod.Settings.EarthquakePiecesNeeded))
-		print("EarthquakeStartPieces="..tostring(Mod.Settings.EarthquakeStartPieces))
-		print("EarthquakePiecesPerTurn="..tostring(Mod.Settings.EarthquakePiecesPerTurn))
+		-- print("Earthquake settings:")
+		-- print("EarthquakeEnabled="..tostring(Mod.Settings.EarthquakeEnabled))
+		-- print("EarthquakeDuration="..tostring(Mod.Settings.EarthquakeDuration))
+		-- print("EarthquakeStrength="..tostring(Mod.Settings.EarthquakeStrength))
+		-- print("EarthquakeDeltaEachTurn="..tostring(Mod.Settings.EarthquakeDeltaEachTurn))
+		-- print("EarthquakeAffectsNeutrals="..tostring(Mod.Settings.EarthquakeAffectsNeutrals))
+		-- print("EarthquakePiecesNeeded="..tostring(Mod.Settings.EarthquakePiecesNeeded))
+		-- print("EarthquakeStartPieces="..tostring(Mod.Settings.EarthquakeStartPieces))
+		-- print("EarthquakePiecesPerTurn="..tostring(Mod.Settings.EarthquakePiecesPerTurn))
 
 		local strEarthquakeDesc = "Invoke an earthquake that causes "..Mod.Settings.EarthquakeStrength.." damage to all territories in a selected bonus for " .. Mod.Settings.EarthquakeDuration .. " turn" .. plural(Mod.Settings.EarthquakeDuration) .. ". ";
 		if (Mod.Settings.EarthquakeDuration <= -1) then
