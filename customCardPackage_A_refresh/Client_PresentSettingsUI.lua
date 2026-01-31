@@ -153,7 +153,7 @@ function Client_PresentSettingsUI(rootParent)
     if (Mod.Settings.DeneutralizeEnabled == true) then
         UI.CreateLabel (UImain).SetText("\n[DENEUTRALIZE]").SetColor(getColourCode("card play heading"));
         UI.CreateLabel (UImain).SetText("Claim a neutral territory.");
-        UI.CreateLabel (UImain).SetText("Deneutralize range: " ..tostring (Mod.Settings.DeneutralizeRange));
+        UI.CreateLabel (UImain).SetText("Deneutralize range: " ..tostring ((Mod.Settings.DeneutralizeRange < 4000 and Mod.Settings.DeneutralizeRange) or Mod.Settings.DeneutralizeRange) or "Unlimited");
         UI.CreateLabel (UImain).SetText("Deneutralize execution phase: " ..tostring (WL.TurnPhase.ToString (Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift)));
         UI.CreateLabel (UImain).SetText("\nNumber of pieces to divide the card into: " .. Mod.Settings.DeneutralizePiecesNeeded);
         UI.CreateLabel (UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.DeneutralizePiecesPerTurn);
