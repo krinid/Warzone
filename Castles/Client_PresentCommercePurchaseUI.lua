@@ -174,8 +174,10 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		print ("CASTLE addOrder Exit " ..intArmiesToExitCastle);
 	end
 
-	displayOrders ("TO BE APPLIED:\n"..orders);
-	displayOrders ("Game.Orders:\n"..Game.Orders);
+	print ("ORDERS TO BE APPLIED:");
+	displayOrders (orders);
+	print ("Game.Orders:");
+	displayOrders (Game.Orders);
 	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 	displayCastleStats (vertCastleStats);
