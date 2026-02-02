@@ -159,7 +159,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Enter.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Enter.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army enter", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert (orders, customOrder_Enter);
-		insertOrder (Game, customOrder_Enter, orders);
+		Game.Orders = insertOrder (Game, customOrder_Enter, orders);
 		print ("CASTLE addOrder Enter " ..intArmiesToEnterCastle);
 	end
 
@@ -170,7 +170,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert(orders, customOrder_Exit);
-		insertOrder (Game, customOrder_Exit, orders);
+		Game.Orders = insertOrder (Game, customOrder_Exit, orders);
 		print ("CASTLE addOrder Exit " ..intArmiesToExitCastle);
 	end
 
@@ -195,7 +195,7 @@ function insertOrder (Game, newOrder, orderList)
 		end
 	end
 	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
-	Game.Orders = orderList;
+	-- Game.Orders = orderList;
 	return orderList;
 end
 
