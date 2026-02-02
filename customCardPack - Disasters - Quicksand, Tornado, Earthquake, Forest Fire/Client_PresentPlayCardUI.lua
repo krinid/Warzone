@@ -905,7 +905,7 @@ end
 function updateAirstrikePanelDetails ()
     --if (UI.IsDestroyed (airstrikeObject.airstrikeSUvert) ~= nil) then UI.Destroy (airstrikeObject.airstrikeSUvert); end
     if (not UI.IsDestroyed (airstrikeObject.airstrikeSUvert)) then UI.Destroy (airstrikeObject.airstrikeSUvert); end
-    airstrikeObject.airstrikeSUvert = CreateVerticalLayoutGroup (airstrikeObject.vertTop);
+    airstrikeObject.airstrikeSUvert = UI.CreateVerticalLayoutGroup (airstrikeObject.vertTop);
 
 	--set input field for max & current value to the # of armies on the select FROM territory for ease of use
     --if (SourceTerritoryID ~= nil) then airstrikeObject.NIFarmies.SetSliderMaxValue (Game.LatestStanding.Territories[SourceTerritoryID].NumArmies.NumArmies); end
