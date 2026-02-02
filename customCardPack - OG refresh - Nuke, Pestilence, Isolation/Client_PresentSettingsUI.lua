@@ -154,8 +154,13 @@ function Client_PresentSettingsUI(rootParent)
         UI.CreateLabel (UImain).SetText("\n[DENEUTRALIZE]").SetColor(getColourCode("card play heading"));
         UI.CreateLabel (UImain).SetText("Claim a neutral territory.");
         UI.CreateLabel (UImain).SetText("Deneutralize range: " ..tostring ((Mod.Settings.DeneutralizeRange ~= nil and Mod.Settings.DeneutralizeRange < 4000 and Mod.Settings.DeneutralizeRange) or "Unlimited"));
-        UI.CreateLabel (UImain).SetText("Deneutralize execution phase: " ..tostring (WL.TurnPhase.ToString (Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift)));
-        UI.CreateLabel (UImain).SetText("\nNumber of pieces to divide the card into: " .. Mod.Settings.DeneutralizePiecesNeeded);
+        local horz = UI.CreateHorizontalLayoutGroup (UImain);
+		UI.CreateLabel (horz).SetText("Deneutralize execution phase: " ..tostring (WL.TurnPhase.ToString (Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift)));
+		UI.CreateButton (horz).SetText ("[?1]").SetColor (getColourCode ("subheading")).SetOnClick (showPopUpTurnPhaseDescriptions_UIalert);
+		UI.CreateButton (horz).SetText ("[?2]").SetColor (getColourCode ("subheading")).SetOnClick (function () showPopUpTurnPhaseDescriptions_StylishDialog (gameRefresh_Game); end);
+		--UI.Alert (gameRefresh_Game.Us.ID); --a test to check if gameRefresh_Game has a valid non-nil value
+
+		UI.CreateLabel (UImain).SetText("\nNumber of pieces to divide the card into: " .. Mod.Settings.DeneutralizePiecesNeeded);
         UI.CreateLabel (UImain).SetText("Minimum pieces awarded per turn: " .. Mod.Settings.DeneutralizePiecesPerTurn);
         UI.CreateLabel (UImain).SetText("Can use on natural neutrals: " .. tostring(Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals));
         UI.CreateLabel (UImain).SetText("Can use on neutralized territories: " .. tostring(Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories));

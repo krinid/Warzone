@@ -475,6 +475,55 @@ function getColours()
     return colors;
 end
 
+function showPopUpTurnPhaseDescriptions_StylishDialog (game)
+	local winPlayDeneutralize = createWindow (game);
+	winPlayDeneutralize.setMaxSize (400, 500);
+	local rootParent = winPlayDeneutralize.root;
+
+	local winPlayDeneutralize2 = createWindow (game);
+	winPlayDeneutralize2.setMaxSize (400, 500);
+	local rootParent2 = winPlayDeneutralize2.root;
+
+	UI.CreateLabel (rootParent).SetText ("1 turn in Warzone consists of the following phases:\n");
+	UI.CreateLabel (rootParent2).SetText ("1 turn in Warzone consists of the following phases:\n");
+
+	local numUserButtonsCreated = 0;
+	for k,v in pairs(WL.TurnPhase) do
+		if (tostring (k) ~= "ToString") then UI.CreateButton (rootParent2).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		if (tostring (k) ~= "ToString") then UI.CreateLabel (rootParent).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		numUserButtonsCreated = numUserButtonsCreated + 1;
+	end
+end
+
+function showPopUpTurnPhaseDescriptions_UIalert ()
+	local strDescription = ("1 turn in Warzone consists of the following phases in this order:\n");
+
+	local numUserButtonsCreated = 0;
+	for k,v in pairs(WL.TurnPhase) do
+		if (tostring (k) ~= "ToString") then strDescription = strDescription .. tostring (k).."\n"; end
+		--"/"..tostring (v);  --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		numUserButtonsCreated = numUserButtonsCreated + 1;
+	end
+	local arrIntNumCardPriceIncreases = Mod.PublicGameData.NumCardPriceIncreases or {}; --# of card increases for each card = # of turns where a player has bought that card type; don't update this mid-turn else prices will increase for all users which gets hard to predict, orders may fail, etc
+	local arrIntNumCardsPurchased = Mod.PublicGameData.NumCardsPurchased or {}; --running count of total cards of each type purchased by all players
+	-- local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
+	-- local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.0; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card; default to 0.0 for purpose of ongoing games where this value isn't set (so card prices in ongoing games doesn't increase)
+	strDescription = strDescription .. "\ncard price increases ".. tostring (tablelength(arrIntNumCardPriceIncreases)) .. "\n# cards purchased " .. tostring (tablelength(intCostIncreaseRate));
+
+	UI.Alert (strDescription);
+
+end
+
+function createWindow (game)
+    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
+
+	game.CreateDialog (function(rootParent, setMaxSize, setScrollable, game2, close)
+		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game2, close = close};
+    end);
+
+    return window;
+end
+
 function getColourCode (itemName)
     if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
     elseif (itemName=="error")  then return "#FF0000"; --red
@@ -515,6 +564,22 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
 	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
+	elseif (itemName=="Phase|Purchase") then return "#007700";
+	elseif (itemName=="Phase|CardsWearOff") then return "#964B00";
+	elseif (itemName=="Phase|Discards") then return "#654321";
+	elseif (itemName=="Phase|OrderPriorityCards") then return getColours()["Yellow"];
+	elseif (itemName=="Phase|SpyingCards") then return getColours()["Red"];
+	elseif (itemName=="Phase|ReinforcementCards") then return getColours()["Dark Green"];
+	elseif (itemName=="Phase|Deploys") then return "#00BB00";
+	elseif (itemName=="Phase|BombCards") then return getColours()["Dark Magenta"];
+	elseif (itemName=="Phase|EmergencyBlockadeCards") then return getColours()["Royal Blue"];
+	elseif (itemName=="Phase|Airlift") then return "#777777";
+	elseif (itemName=="Phase|Gift") then return getColours()["Aqua"];
+	elseif (itemName=="Phase|Attacks") then return "#FF0000";
+	elseif (itemName=="Phase|BlockadeCards") then return getColours()["Blue"];
+	elseif (itemName=="Phase|DiplomacyCards") then return getColours()["Light Blue"];
+	elseif (itemName=="Phase|SanctionCards") then return getColours()["Purple"];
+	elseif (itemName=="Phase|ReceiveCards") then return "#005500";
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --

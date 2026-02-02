@@ -436,32 +436,6 @@ function play_Monolith_card(game, cardInstance, playCard)
     end);
 end
 
-function createWindow1 (game1)
-	game1.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-		-- setMaxSize(400, 300);
-		local window = {root=rootParent, setMaxSize=setMaxSize, setScrollable=setScrollable, game=game, close=close};
-		return (window);
-	end);
-
-	-- return (window);
-end
-
-function createWindow (game)
-    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
-
-	game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game2, close)
-        -- window.root = rootParent;
-        -- window.setMaxSize = setMaxSize;
-        -- window.setScrollable = setScrollable;
-        -- window.game = game2;
-        -- window.close = close;
-		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game, close = close};
-
-    end);
-
-    return window;
-end
-
 function play_Deneutralize_card (game, cardInstance, playCard)
 	local winPlayDeneutralize = createWindow (game);
 	winPlayDeneutralize.setMaxSize (400, 500);
