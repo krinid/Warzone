@@ -1,7 +1,12 @@
 require ("Buy_Cards_dialog");
 
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
+	gameRefresh_Game = game;
+	gameRefresh_Mod = Mod;
+	print ("PMUI gameRefresh_Game==nil " ..tostring (gameRefresh_Game==nil));
+
 	local vert = UI.CreateVerticalLayoutGroup(rootParent);
+
 	setMaxSize(400, 400);
 	if (game.Settings.CommerceGame == false) then
 		horz = UI.CreateHorizontalLayoutGroup(vert);

@@ -1,7 +1,10 @@
 require ("Buy_Cards_dialog");
 
 function Client_GameRefresh(clientGame)
-    if (clientGame == nil) then print ("[CLIENTGAME is nil]"); return; end
+	gameRefresh_Game = clientGame;
+	gameRefresh_Mod = Mod;
+
+	if (clientGame == nil) then print ("[CLIENTGAME is nil]"); return; end
     if (clientGame.Us == nil) then print ("[CLIENTGAME.Us is nil]"); return; end --player is probably a spectator, do nothing, just return
 
     local localPlayerIsHost = clientGame.Us.ID == clientGame.Settings.StartedBy;

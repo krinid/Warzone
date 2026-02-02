@@ -150,6 +150,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 	-- 	msg = msg .. intArmiesToEnterCastle.. " armies enter castle";
 	-- end
 
+	print ("CASTLE Enter " ..intArmiesToEnterCastle.. ", Exit " ..intArmiesToExitCastle);
 	if (intArmiesToEnterCastle > 0) then
 		local payload_Enter = 'Castle|Enter|' ..SelectedTerritory.ID.. "|" ..intArmiesToEnterCastle;
 		local msg_Enter = intArmiesToEnterCastle.. " armies enter castle on " ..getTerritoryName (SelectedTerritory.ID, Game);
@@ -159,6 +160,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Enter.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army enter", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert (orders, customOrder_Enter);
 		insertOrder (Game, customOrder_Enter, orders);
+		print ("CASTLE addOrder Enter " ..intArmiesToEnterCastle);
 	end
 
 	if (intArmiesToExitCastle > 0) then
@@ -169,6 +171,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 		-- table.insert(orders, customOrder_Exit);
 		insertOrder (Game, customOrder_Exit, orders);
+		print ("CASTLE addOrder Exit " ..intArmiesToExitCastle);
 	end
 
 	displayOrders (orders);
