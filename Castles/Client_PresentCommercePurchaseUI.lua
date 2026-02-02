@@ -45,6 +45,11 @@ function scuttle_Castle_dialog ()
 	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
 	SelectTerritoryBtn_CastleArmyMovements = UI.CreateButton(vertPurchaseDialog).SetText("Scuttle Castle - Select Territory").SetColor (getColourCode ("button cyan")).SetOnClick(function () SelectTerritoryClicked_CastleArmyMovements ("Select a castle to scuttle"); end);
 	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	buttonAddOrder = UI.CreateButton(horz).SetInteractable(false).SetText("Scuttle Castle").SetOnClick(ScuttleCastleButtonClicked).SetColor (getColourCode ("button green"));
+	buttonCancelScuttle = UI.CreateButton(horz).SetInteractable(true).SetText("Cancel Scuttle").SetColor (getColourCode ("button red")).SetOnClick(function () createPurchaseCastleUIcomponents (vertCastleButtons); displayCastleStats (vertCastleStats); end); --cancel order --> reset UI to orig state --> clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+
 	UI.CreateLabel(vertPurchaseDialog).SetText("**Armies inside castle will exit before scuttled").SetColor (getColourCode ("subheading"));
 	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
 	UI.CreateEmpty(vertPurchaseDialog);
@@ -54,7 +59,6 @@ function scuttle_Castle_dialog ()
 	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("Cost to scuttle castle: " ..tostring (intCastleScuttleCost)).SetColor (getColourCode("highlight"));
 
-	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Scuttle Castle").SetOnClick(ScuttleCastleButtonClicked).SetColor (getColourCode ("button green"));
 	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
 	SelectTerritoryClicked_CastleArmyMovements ("Select a castle to scuttle"); --start immediately in selection mode, no reason to require player to click the button
 end
@@ -70,6 +74,10 @@ function enter_exit_Castle_dialog ()
 	UI.CreateEmpty(vertPurchaseDialog);
 
 	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	buttonAddOrder = UI.CreateButton(horz).SetInteractable(false).SetText("Add Order").SetOnClick(AddOrderButtonClicked_ArmiesEnterExit).SetColor (getColourCode ("button green"));
+	buttonCancelOrder = UI.CreateButton(horz).SetInteractable(true).SetText("Cancel Order").SetColor (getColourCode ("button red")).SetOnClick(function () createPurchaseCastleUIcomponents (vertCastleButtons); displayCastleStats (vertCastleStats); end); --cancel order --> reset UI to orig state --> clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("# Armies to enter the Castle: ").SetColor (getColourCode("highlight"));
 	NumArmiesToEnterCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
 	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies on territory outside the castle to move inside the castle; Special Units cannot enter castles)").SetColor (getColourCode ("subheading"));
@@ -78,8 +86,6 @@ function enter_exit_Castle_dialog ()
 	UI.CreateLabel(horz).SetText("# Armies to exit the Castle: ").SetColor (getColourCode("highlight"));
 	NumArmiesToExitCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
 	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies inside the castle to exit the castle to the territory)").SetColor (getColourCode ("subheading"));
-
-	buttonAddOrder = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Add Order").SetOnClick(AddOrderButtonClicked_ArmiesEnterExit).SetColor (getColourCode ("button green"));
 
 	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
 	SelectTerritoryClicked_CastleArmyMovements ("Select a castle to allow armies to Enter/Exit"); --start immediately in selection mode, no reason to require player to click the button
@@ -126,7 +132,7 @@ function ScuttleCastleButtonClicked ()
 	customOrder_Scuttle.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Scuttle.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Scuttle Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Scuttle);
-	insertOrder (Game,customOrder_Scuttle, orders);
+	Game.Orders = insertOrder (Game,customOrder_Scuttle, orders);
 	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 	displayCastleStats (vertCastleStats);
@@ -259,7 +265,10 @@ function PurchaseClicked()
 	vertPurchaseDialog = UI.CreateVerticalLayoutGroup(MainUI);
 	SelectTerritoryBtn = UI.CreateButton(vertPurchaseDialog).SetText("Purchase Castle - Select Territory").SetColor ("#00F4FF").SetOnClick(SelectTerritoryClicked);
 	TargetTerritoryInstructionLabel = UI.CreateLabel(vertPurchaseDialog).SetText("");
-	buttonBuyCastle = UI.CreateButton(vertPurchaseDialog).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
+
+	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
+	buttonBuyCastle = UI.CreateButton(horz).SetInteractable(false).SetText("Purchase").SetOnClick(CompletePurchaseClicked).SetColor ("#008000");
+	buttonCancelPurchase = UI.CreateButton(horz).SetInteractable(true).SetText("Cancel Purchase").SetColor (getColourCode ("button red")).SetOnClick(function () createPurchaseCastleUIcomponents (vertCastleButtons); displayCastleStats (vertCastleStats); end); --cancel order --> reset UI to orig state --> clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 
 	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("# Armies to move inside the Castle: ").SetColor (getColourCode("highlight"));
@@ -334,7 +343,7 @@ function CompletePurchaseClicked()
 	customOrder_Purchase.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Purchase.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Purchase);
-	insertOrder (Game, customOrder_Purchase, orders);
+	Game.Orders = insertOrder (Game, customOrder_Purchase, orders);
 	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 	displayCastleStats (vertCastleStats);
