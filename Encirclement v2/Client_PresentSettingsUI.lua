@@ -41,23 +41,26 @@ function Client_PresentSettingsUI(rootParent)
 	local WB = Mod.Settings.WeakenBlockades
     local vert = UI.CreateVerticalLayoutGroup(rootParent);
     if WB.percentualOrFixed then
-        UI.CreateLabel(vert).SetText('Army reduction: ' ..WB.fixedArmiesRemoved.. " (fixed amount)"); --.SetColor('#4EFFFF');
+        UI.CreateLabel(vert).SetText('• Army reduction: ' ..WB.fixedArmiesRemoved.. " (fixed amount)"); --.SetColor('#4EFFFF');
     else
-        UI.CreateLabel(vert).SetText('Army reduction: ' ..WB.percentualArmiesRemoved.. "%"); --.SetColor('#FF4EFF');
+        UI.CreateLabel(vert).SetText('• Army reduction: ' ..WB.percentualArmiesRemoved.. "%"); --.SetColor('#FF4EFF');
     end
 
-    UI.CreateLabel(vert).SetText("Effect starts on turn #" ..tostring (WB.delayFromStart +1)); --.SetColor('#FFFF4E');
+    UI.CreateLabel(vert).SetText("• Effect starts on turn #" ..tostring (WB.delayFromStart +1)); --.SetColor('#FFFF4E');
 
-	if WB.appliesToAllNeutrals then
-        -- UI.CreateLabel(vert).SetText("Applies to neutral territories").SetColor('#FFFF4E');
+	if (WB.appliesToMinArmies == 0) then
+        UI.CreateLabel(vert).SetText("• Applies to all neutral territories").SetColor('#FFFF4E');
     else
-        UI.CreateLabel(vert).SetText("Only applies to neutral territories with at least " .. WB.appliesToMinArmies .. " armies").SetColor('#FFFF4E');
+        UI.CreateLabel(vert).SetText("• Only applies to neutral territories with at least " .. WB.appliesToMinArmies .. " armies").SetColor('#FFFF4E');
     end
 
     if WB.ADVANCEDVERSION then
-        UI.CreateLabel(vert).SetText("Advanced version: Activated\n").SetColor('#FF0000');
-        UI.CreateLabel(vert).SetText("(blocks of neutral territories up to distance of 4 territories can be surrounded and reduced)");
-    end
+        UI.CreateLabel(vert).SetText("• Neutral encircle mode: Advanced\n").SetColor('#FF0000');
+        UI.CreateLabel(vert).SetText("   (blocks of neutral territories up to distance of 4 territories can be surrounded and reduced)");
+    else
+        UI.CreateLabel(vert).SetText("• Neutral encircle mode: \n");
+        UI.CreateLabel(vert).SetText("   (only 1 single neutral territory can be surrounded and reduced)");
+	end
 end
 
 function rounding(num, numDecimalPlaces)

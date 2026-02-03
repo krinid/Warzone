@@ -94,6 +94,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 	end
 
 	function advancedVersion(tid, nterritory)
+		print ("[WB] ADV reduction START");
 		if not alreadyChecked[tid] then
 			groupNeutrals = {[tid] = true}
 			terrToCheck = {}
@@ -123,6 +124,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 					end
 
 					if (territories[id].NumArmies.NumArmies > 0 and negArmies ~= 0) then --don't submit order when no reduction is actually made
+						print ("[WB] ADV reduction PREP");
 						local decrement = WL.TerritoryModification.Create(id);
 						decrement.AddArmies = negArmies;
 						local intPlayerID = pbg or WL.PlayerID.Neutral;
@@ -137,6 +139,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 						local terr = game.Map.Territories[tid];
 						reduction.JumpToActionSpotOpt = WL.RectangleVM.Create(terr.MiddlePointX, terr.MiddlePointY, terr.MiddlePointX, terr.MiddlePointY)
 						addNewOrder(reduction);
+						print ("[WB] ADV reduction ADDORDER");
 						alreadyChecked[id] = true
 					end
 				end
@@ -184,11 +187,17 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 		end
 	end
 
+	print ("[WB] PRE call," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 	if game.ServerGame.Game.TurnNumber > WB.delayFromStart then	-- just a good load of checking if the territory meets the mod's criterias
+		-- print ("[WB] PRE call2," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 		for tid, nterritory in pairs(territories) do	
+			-- print ("[WB] PRE call3," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 			if(nterritory.IsNeutral)then
+				print ("[WB] PRE call4," ..WB.appliesToMinArmies, nterritory.NumArmies.NumArmies);
 				if (WB.appliesToMinArmies <= nterritory.NumArmies.NumArmies) then
+					print ("[WB] PRE call5," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 					if(WB.ADVANCEDVERSION)then
+						print ("[WB] ADV call");
 						advancedVersion(tid, nterritory)
 					else
 						baseVersion(tid, nterritory)

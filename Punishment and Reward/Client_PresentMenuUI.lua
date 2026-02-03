@@ -65,6 +65,11 @@ function showMechanics (rootParent, setMaxSize, setScrollable, game, close)
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL2).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL3).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL4).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL5).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL6).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL7).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL8).SetFlexibleWidth (1.0);
+	UI.CreateLabel (MechanicsUI).SetText (strLongTermPunishmentL9).SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText ("\n3) CITY DISTRIBUTION REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("subheading"));
 	UI.CreateLabel (MechanicsUI).SetText ("Further rewards are available by building cities evenly across all your territories, as follows:").SetFlexibleWidth (1.0);
 	UI.CreateLabel (MechanicsUI).SetText (strCityRewards1).SetFlexibleWidth (1.0);
