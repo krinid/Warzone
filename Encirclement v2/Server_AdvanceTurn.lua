@@ -55,6 +55,8 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 	local alreadyChecked = {}			-- To avoid checking territories twice in the advanced version
 	WB = Mod.Settings.WeakenBlockades
 	--tblprint(game.ServerGame.Game.Players)
+	local boolOverrideMinLimit = false; --oops botched a config setting, override of gameID is 43439047
+	if (game.Game.ID == 43439047 or game.Game.ID == 2661) then boolOverrideMinLimit = true; end --override settings of Encirc v3e -- accidentally set min neutral requirement to 25 (oof!)
 
 	function baseVersion(tid, nterritory)
 		connectedTerritories = game.Map.Territories[tid].ConnectedTo
@@ -93,8 +95,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 		end
 	end
 
-	function advancedVersion(tid, nterritory)
-		print ("[WB] ADV reduction START");
+	function advancedVersion_ORIG(tid, nterritory)
 		if not alreadyChecked[tid] then
 			groupNeutrals = {[tid] = true}
 			terrToCheck = {}
@@ -115,6 +116,62 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 				for id, _ in pairs(groupNeutrals) do
 					if(WB.percentualOrFixed)then
 						if(WB.fixedArmiesRemoved > territories[id].NumArmies.NumArmies)then
+							negArmies = -territories[id].NumArmies.NumArmies
+						else
+							negArmies = -WB.fixedArmiesRemoved
+						end
+					else
+						negArmies = -((territories[id].NumArmies.NumArmies * WB.percentualArmiesRemoved) / 100)
+					end
+					local decrement = WL.TerritoryModification.Create(id);
+					decrement.AddArmies = negArmies 
+					local reduction
+					if pbg == nil then
+						reduction = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Decrease armies in " .. game.Map.Territories[id].Name, {}, {decrement});
+					else 
+						reduction = WL.GameOrderEvent.Create(pbg, "Decrease armies in " .. game.Map.Territories[id].Name, {}, {decrement});
+					end
+					local terr = game.Map.Territories[tid];
+					reduction.JumpToActionSpotOpt = WL.RectangleVM.Create(terr.MiddlePointX, terr.MiddlePointY, terr.MiddlePointX, terr.MiddlePointY)
+					addNewOrder(reduction)
+					alreadyChecked[id] = true
+				end
+			elseif(result == 0)then
+				if(terrToCheck ~= nil and terrToCheck ~= {})then
+					for id, _ in pairs(terrToCheck) do
+						alreadyChecked[id] = true
+					end
+				end
+				for id, _ in pairs(groupNeutrals) do
+					alreadyChecked[id] = true
+				end
+			end
+		end
+	end
+	function advancedVersion(tid, nterritory)
+		-- print ("[WB] ADV reduction START");
+		-- print ("terr ADV start "..tid,game.Map.Territories[tid].Name);
+		if not alreadyChecked[tid] then
+			groupNeutrals = {[tid] = true}
+			terrToCheck = {}
+			pbg = nil  	-- the player bordering the chunk of territories
+			local result = thaSearch(tid, 0)
+			if(result ~= 0 and terrToCheck ~= nil and terrToCheck ~= {})then
+				for id, _ in pairs(terrToCheck) do
+					if not groupNeutrals[id] then
+						result = -1;
+						break;
+					end
+				end
+			end
+			if(result ~= 0 and result ~= -1)then
+				result = 1
+			end
+			if(result == 1)then
+				for id, _ in pairs(groupNeutrals) do
+					-- print ("terr "..id,game.Map.Territories[id].Name);
+					if(WB.percentualOrFixed)then
+						if(WB.fixedArmiesRemoved > territories[id].NumArmies.NumArmies)then
 							negArmies = -territories[id].NumArmies.NumArmies;
 						else
 							negArmies = -WB.fixedArmiesRemoved;
@@ -123,13 +180,14 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 						negArmies = -math.max (math.floor ((territories[id].NumArmies.NumArmies * WB.percentualArmiesRemoved) / 100 + 0.5), 1); --round to nearest army and minimum 1 army reduction
 					end
 
+					-- print ("[WB] ADV reduction pre-PREP,"..territories[id].NumArmies.NumArmies, negArmies);
 					if (territories[id].NumArmies.NumArmies > 0 and negArmies ~= 0) then --don't submit order when no reduction is actually made
-						print ("[WB] ADV reduction PREP");
+						-- print ("[WB] ADV reduction PREP");
 						local decrement = WL.TerritoryModification.Create(id);
 						decrement.AddArmies = negArmies;
 						local intPlayerID = pbg or WL.PlayerID.Neutral;
 						local reduction = WL.GameOrderEvent.Create(intPlayerID, "Encircled neutrals on " .. game.Map.Territories[id].Name, {}, {decrement});
-						reduction.TerritoryAnnotationsOpt = {[id] = WL.TerritoryAnnotation.Create ("Encircled", 8, getColourInteger (200, 0, 0))};
+						reduction.TerritoryAnnotationsOpt = {[id] = WL.TerritoryAnnotation.Create ("Encircled neutrals", 8, getColourInteger (200, 0, 0))};
 
 						-- if pbg == nil then
 						-- 	reduction = WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Decrease armies in " .. game.Map.Territories[id].Name, {}, {decrement});
@@ -139,7 +197,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 						local terr = game.Map.Territories[tid];
 						reduction.JumpToActionSpotOpt = WL.RectangleVM.Create(terr.MiddlePointX, terr.MiddlePointY, terr.MiddlePointX, terr.MiddlePointY)
 						addNewOrder(reduction);
-						print ("[WB] ADV reduction ADDORDER");
+						-- print ("[WB] ADV reduction ADDORDER");
 						alreadyChecked[id] = true
 					end
 				end
@@ -165,7 +223,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 			for ID, cterritory in pairs(connectedTerritories) do
 				if territories[ID].OwnerPlayerID == WL.PlayerID.Neutral then		-- if neutral
 					if not alreadyChecked[ID] then-- and we haven't seen him yet
-						if (WB.appliesToMinArmies <= territories[ID].NumArmies.NumArmies) then
+						if (boolOverrideMinLimit == true or WB.appliesToMinArmies <= territories[ID].NumArmies.NumArmies) then
 							local result = thaSearch(ID, depth+1)
 							if(result == 0)then
 								return 0;
@@ -187,17 +245,18 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 		end
 	end
 
-	print ("[WB] PRE call," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
+	-- print ("[WB] PRE call," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 	if game.ServerGame.Game.TurnNumber > WB.delayFromStart then	-- just a good load of checking if the territory meets the mod's criterias
 		-- print ("[WB] PRE call2," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 		for tid, nterritory in pairs(territories) do	
 			-- print ("[WB] PRE call3," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 			if(nterritory.IsNeutral)then
-				print ("[WB] PRE call4," ..WB.appliesToMinArmies, nterritory.NumArmies.NumArmies);
-				if (WB.appliesToMinArmies <= nterritory.NumArmies.NumArmies) then
-					print ("[WB] PRE call5," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
+				-- print ("[WB] PRE call4," ..WB.appliesToMinArmies, nterritory.NumArmies.NumArmies);
+				-- print ("game " ..game.Game.ID);
+				if (boolOverrideMinLimit == true or WB.appliesToMinArmies <= nterritory.NumArmies.NumArmies) then
+					-- print ("[WB] PRE call5," ..game.ServerGame.Game.TurnNumber, WB.delayFromStart);
 					if(WB.ADVANCEDVERSION)then
-						print ("[WB] ADV call");
+						-- print ("[WB] ADV call");
 						advancedVersion(tid, nterritory)
 					else
 						baseVersion(tid, nterritory)

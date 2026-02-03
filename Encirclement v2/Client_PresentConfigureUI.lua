@@ -109,9 +109,9 @@ function Client_PresentConfigureUI(rootParent)
 
 	local atanCont = CreateVerticalLayoutGroup(mainContainer);
 	atmaCont = CreateHorizontalLayoutGroup(atanCont);
-	atmaLabel = CreateLabel(atmaCont).SetText("Applies to neutrals with minimum quantity of armies: ").SetFlexibleWidth(0.66);
-	atmaSlider = CreateNumberInputField(atmaCont).SetSliderMinValue(10).SetSliderMaxValue(100).SetValue(appliesToMinArmies).SetFlexibleWidth(0.34);
-	atmaLabel = CreateLabel(mainContainer).SetText("(use 1 to apply to all neutrals)\n");
+	atmaLabel = CreateLabel(atmaCont).SetText("Applies to neutrals with minimum quantity of armies: (use 1 to apply to all neutrals)").SetFlexibleWidth(0.66);
+	atmaSlider = CreateNumberInputField(atmaCont).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(appliesToMinArmies).SetFlexibleWidth(0.34);
+	-- atmaLabel = CreateLabel(mainContainer).SetText("(use 1 to apply to all neutrals)\n");
 
 	-- function appliesToFnt(check)
 	-- 	-- appliesToAllNeutrals = check

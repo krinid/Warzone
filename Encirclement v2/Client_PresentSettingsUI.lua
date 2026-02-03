@@ -55,10 +55,10 @@ function Client_PresentSettingsUI(rootParent)
     end
 
     if WB.ADVANCEDVERSION then
-        UI.CreateLabel(vert).SetText("• Neutral encircle mode: Advanced\n").SetColor('#FF0000');
+        UI.CreateLabel(vert).SetText("• Neutral encircle mode: Long Range Encircle\n").SetColor('#FF0000');
         UI.CreateLabel(vert).SetText("   (blocks of neutral territories up to distance of 4 territories can be surrounded and reduced)");
     else
-        UI.CreateLabel(vert).SetText("• Neutral encircle mode: \n");
+        UI.CreateLabel(vert).SetText("• Neutral encircle mode: Single Surround\n");
         UI.CreateLabel(vert).SetText("   (only 1 single neutral territory can be surrounded and reduced)");
 	end
 end
