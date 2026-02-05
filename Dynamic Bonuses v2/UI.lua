@@ -18,32 +18,38 @@ function init()
 end
 
 function getNewHorz(parent)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	horz = UI.CreateHorizontalLayoutGroup(parent);
 	table.insert(horzs, horz)
 	return horz;
 end
 
 function getNewVert(parent)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	vert = UI.CreateVerticalLayoutGroup(parent);
 	table.insert(verts, vert);
 	return vert;
 end
 
 function createLabel(parent, text, color)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	table.insert(labels, UI.CreateLabel(parent).SetText(text).SetColor(color));
 end
 
 function createButton(parent, text, color, func)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	table.insert(buttons, UI.CreateButton(parent).SetText(text).SetColor(color).SetOnClick(func));
 end
 
 function createTextInputField(parent, text)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	field = UI.CreateTextInputField(parent).SetText(text)
 	table.insert(texts, field);
 	return field;
 end
 
 function createNumberInputField(parent, value, sliderMinValue, sliderMaxValue, wholeNumbers)
+	if (UI.IsDestroyed (parent) == nil) then return; end
 	field = UI.CreateNumberInputField(parent).SetValue(value).SetSliderMinValue(sliderMinValue).SetSliderMaxValue(sliderMaxValue).SetWholeNumbers(wholeNumbers);
 	table.insert(numbers, field);
 	return field;

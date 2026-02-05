@@ -14,7 +14,7 @@ end
 
 function handleTerritoryClick(terrDetails)
     if terrDetails ~= nil then
-        print(terrDetails.Name);
+        -- print(terrDetails.Name);
         if terrDetails.ID == lastTerrClicked then
             numOfTerrClicks = numOfTerrClicks + 1;
         else

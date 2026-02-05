@@ -13,8 +13,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, Game, close
 	Close = close;
 	vert = UI.CreateVerticalLayoutGroup(rootParent);
 	local horz = UI.CreateHorizontalLayoutGroup(vert);
-	UI.CreateLabel(horz).SetText("Mod author: ").SetColor(colors.TextColor);
-	UI.CreateLabel(horz).SetText("Just_A_Dutchman_").SetColor(colors.Lime);
+	-- UI.CreateLabel(horz).SetText("Mod author: ").SetColor(colors.TextColor);
+	-- UI.CreateLabel(horz).SetText("Just_A_Dutchman_").SetColor(colors.Lime);
 	if mode == nil then
 		showMenu();
 	else
@@ -65,13 +65,27 @@ function validateBonus(bonusDetails)
 	if bonusDetails == nil then return; end
 	resetAll();
 	if bonusIsVisible(bonusDetails.ID) then
-		createLabel(vert, bonusDetails.Name, getBonusColor(bonusDetails.ID));
+		local horz = UI.CreateHorizontalLayoutGroup (vert);
+		UI.CreateLabel (horz).SetText ("Bonus: ").SetColor (colors.TextColor);
+		createLabel(horz, bonusDetails.Name, getBonusColor(bonusDetails.ID));
+		-- createLabel(vert, bonusDetails.Name, getBonusColor(bonusDetails.ID));
 		local array = {};
 		for _, v in pairs(game.Map.Bonuses[bonusDetails.ID].Territories) do
 			table.insert(array, Mod.PublicGameData.WellBeingMultiplier[v])
 		end
-		createLabel(vert, "This bonus generates " .. round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (" .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.TextColor);
-		createLabel(vert, "\n", colors.TextColor);
+		local pID = holdsBonus(game, bonusDetails.Territories);
+		local strPlayerName = getPlayerName (game, pID);
+		-- print (pID, strPlayerName);
+		if (pID == WL.PlayerID.Neutral) then createLabel(vert, "Bonus not completed by any player", colors.TextColor);
+		else createLabel(vert, "Owned by: " ..strPlayerName, colors.TextColor);
+		end
+
+		createLabel(vert, "\nBase income value: " ..getBonusValue(bonusDetails.ID), colors.TextColor);
+		if (pID == WL.PlayerID.Neutral) then createLabel(vert, "Dynamic Bonus multiplier: " ..rounding(sum(array), 2), colors.TextColor); end
+		if (pID == WL.PlayerID.Neutral) then createLabel(vert, "Total new value: " ..round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (math: " .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.Yellow); end
+		-- createLabel(vert, "This bonus generates " .. round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (" .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.TextColor);
+
+		createLabel(vert, "\nTerritories in the bonus and their multipliers:\n", colors.TextColor);
 		for _, terrID in pairs(game.Map.Bonuses[bonusDetails.ID].Territories) do
 			createButton(vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
 		end
@@ -176,4 +190,37 @@ function getPlayerColor(playerID)
 	else
 		return colors.TextColor;
 	end
+end
+
+function holdsBonus(game, terrList)
+	local pID = 0;
+	for _, terrID in pairs(terrList) do
+		if game.LatestStanding.Territories[terrID].OwnerPlayerID ~= WL.PlayerID.Neutral then
+			if pID == 0 then
+				pID = game.LatestStanding.Territories[terrID].OwnerPlayerID;
+			else
+				if pID ~= game.LatestStanding.Territories[terrID].OwnerPlayerID then
+					return WL.PlayerID.Neutral;
+				end
+			end
+		else
+			return WL.PlayerID.Neutral;
+		end
+	end
+	return pID;
+end
+
+function getPlayerName(game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (tonumber(playerid)==WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber(playerid)<0) then return ("fogged");
+	elseif (tonumber(playerid)<50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs(game.Game.Players) do
+			if(tonumber(playerid) == tonumber(playerinfo.ID))then
+				return (playerinfo.DisplayName(nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
 end

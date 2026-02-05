@@ -1,8 +1,6 @@
-Citizens of any territory do not like to have a different leader. But the longer they have the same leader, the more they will contribute to the society
+Each turn a bonus is held, its value increases. Game host can configure min and max bonus values, and the amount the value of the bonus will increase by each turn.
 
-This mod adds 3 new rules:
- - Every territory has a number (multiplier) which will affect every bonus value the territory belongs to
- - When a territory has a different owner at the end of the turn then at the start of the turn, this multiplier is reset to the lowest value
- - Every time a territory has the same owner at the end of the turn as at the start of the turn, this multiplier is increased (until the maximum value is reached)
-
-This mod is compatible with Local Deployment
+Mechanics:
+• Each territory in a bonus has an independent counter that increases each turn it is held
+• When a territory changes ownership, its multiplier is reset
+• When a bonus is complete, its value is multiplied by the average multiplier of all territories in that bonus
