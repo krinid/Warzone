@@ -56,7 +56,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		for k,v in pairs (arrFogModIDs [game.Game.TurnNumber]) do
 			-- print ("FOGMOD: "..tostring (v).. " / ".. tostring (v.ID) .." / ".. tostring (v.Priority) .." / ".. tostring (v.Message));
 			fogmod = game.ServerGame.LatestTurnStanding.FogModsOpt [v];
-			print ("FOGMOD: "..tostring (fogmod).. " / ".. tostring (fogmod.ID) .." / ".. tostring (fogmod.Priority) .." / ".. tostring (fogmod.Message));
+			-- print ("FOGMOD: "..tostring (fogmod).. " / ".. tostring (fogmod.ID) .." / ".. tostring (fogmod.Priority) .." / ".. tostring (fogmod.Message));
 			local targetTerritoryID = (split (fogmod.Message, '|'))[2]; --ge tthe territory # from the Message field to remove the Beacon Structure from the terr
 			local terr = game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID];
 			local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);

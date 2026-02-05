@@ -3,25 +3,23 @@
 function Client_PresentConfigureUI(rootParent)
 
     if (not WL.IsVersionOrHigher("5.33")) then
-		UI.Alert("You must update your app to the latest version to use the Smoke Bomb Card mod");
+		UI.Alert("You must update your app to the latest version to use the Beacon mod");
 		return;
 	end
 
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-	UI.CreateLabel(horz).SetText('Duration for smoke bomb effect\n(# of turns the fog remains)').SetPreferredWidth(290);
+	UI.CreateLabel(horz).SetText('Duration for Beacon effect\n(# of turns the territories remain revealed)').SetPreferredWidth(290);
     duration = UI.CreateNumberInputField(horz)
         .SetSliderMinValue(1)
         .SetSliderMaxValue(10)
         .SetValue(Mod.Settings.Duration or 3);
-	-- UI.CreateLabel(rootParent).SetText('(# of turns the fog remains)').SetFlexibleWidth(1);
 
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-	UI.CreateLabel(horz).SetText('Range for smoke bomb effect\n(# of territories the fog spreads; 0=targeted territory only, 1=spreads to directly bordering territories, etc)').SetPreferredWidth(290);
+	UI.CreateLabel(horz).SetText('Range for Beacon effect\n(# of territories the reveal spreads; 0=targeted territory only, 1=spreads to directly bordering territories, etc)').SetPreferredWidth(290);
     range = UI.CreateNumberInputField(horz)
         .SetSliderMinValue(1)
         .SetSliderMaxValue(10)
         .SetValue(Mod.Settings.Range or 3);
-	-- UI.CreateLabel(rootParent).SetText('(# of territories the fog spreads; 0=targeted territory only, 1=spreads to directly bordering territories, etc)').SetFlexibleWidth(1);
 
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
 	UI.CreateLabel(horz).SetText('Number of Pieces to divide the card into').SetPreferredWidth(290);
