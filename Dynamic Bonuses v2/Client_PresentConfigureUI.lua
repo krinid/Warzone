@@ -5,30 +5,21 @@ function Client_PresentConfigureUI(rootParent)
 	if minMultiplier == nil then minMultiplier = 1; end
 	if LevelMultiplierIncrement == nil then LevelMultiplierIncrement = 0.2; end
 	if MaxMultiplier == nil then MaxMultiplier = 2.0; end
-	
+
 	vert = UI.CreateVerticalLayoutGroup(rootParent);
-	UI.CreateLabel(vert)
-		.SetText("Configure the minimum multiplier (when the player just captured a territory)")
-		.SetColor("#AAAAAA");
-	setMinMultiplier = UI.CreateNumberInputField(vert)
-		.SetSliderMinValue(0)
-		.SetSliderMaxValue(1)
-		.SetWholeNumbers(false)
-		.SetValue(minMultiplier);
-	UI.CreateLabel(vert)
-		.SetText("Configure the maximum multiplier (bonus value * multiplier)")
-		.SetColor("#AAAAAA");
-	setMaxMultiplier = UI.CreateNumberInputField(vert)
-		.SetSliderMinValue(1)
-		.SetSliderMaxValue(3)
-		.SetWholeNumbers(false)
-		.SetValue(MaxMultiplier);
-	UI.CreateLabel(vert)
-		.SetText("Configure the increment of the multiplier each turn")
-		.SetColor("#AAAAAA");
-	setLevelMultiplierIncrement = UI.CreateNumberInputField(vert)
-		.SetSliderMinValue(0.1)
-		.SetSliderMaxValue(1)
-		.SetWholeNumbers(false)
-		.SetValue(LevelMultiplierIncrement);
+	UI.CreateLabel(vert).SetText("• Each territory accumulates a multiplier, which increments each turn it is held by the same player");
+	UI.CreateLabel(vert).SetText("• Resulant bonus value = (initial bonus value) * (average of all territory multipliers in the bonus)\n");
+
+	horzMinMultiplier = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth (1.0);
+	UI.CreateLabel(horzMinMultiplier).SetText("Initial multiplier (set when a player captures a territory)").SetPreferredWidth (400);
+	setMinMultiplier = UI.CreateNumberInputField(horzMinMultiplier).SetSliderMinValue(0).SetSliderMaxValue(1).SetWholeNumbers(false).SetValue(minMultiplier).SetPreferredWidth (100);
+	-- UI.CreateLabel(vert).SetText("  (set when a player captures a territory)");
+
+	horzMaxMultiplier = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth (1.0);
+	UI.CreateLabel(horzMaxMultiplier).SetText("Maximum multiplier").SetPreferredWidth (400);
+	setMaxMultiplier = UI.CreateNumberInputField (horzMaxMultiplier).SetSliderMinValue(1).SetSliderMaxValue(3).SetWholeNumbers(false).SetValue(MaxMultiplier).SetPreferredWidth (100);
+
+	horzIncrement = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth (1.0);
+	UI.CreateLabel (horzIncrement).SetText ("Increment (multiplier increases this amount each turn)").SetPreferredWidth (400);
+	setLevelMultiplierIncrement = UI.CreateNumberInputField(horzIncrement).SetSliderMinValue(0.1).SetSliderMaxValue(1).SetWholeNumbers(false).SetValue(LevelMultiplierIncrement).SetPreferredWidth (100);
 end

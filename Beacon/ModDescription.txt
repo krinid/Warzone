@@ -1,0 +1,3 @@
+Provides the Smoke Bomb card which allows players to cast fog on a given territory. The fog affects all players, but players can always see their own territories.
+
+The effect can be configured to spread to neighbouring territories and last multiple turns.
