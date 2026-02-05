@@ -33,18 +33,19 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog
             local jumpToSpot = nil;
 
             if (WL.IsVersionOrHigher("5.34.1")) then
-                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Smoke Bomb") };
+                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
                 jumpToSpot = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
             end
 
 
-            if (playCard ("Detonate a smoke bomb on " .. TargetTerritoryName, "SmokeBomb|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
+            print ('Create a Beacon on ' .. TargetTerritoryName.. "; Beacon|" .. TargetTerritoryID); -- .."/" .. getTerritoryName (TargetTerritoryID, game));
+            if (playCard ("Create a Beacon on " .. TargetTerritoryName, "Beacon|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
                 close();
             end
 
 		end);
 
-	local strDescription = "\nSmoke bomb range: " ..tostring (Mod.Settings.Range) .. "\nDuration: " ..tostring (Mod.Settings.Duration).. " turn(s)";
+	local strDescription = "\nBeacon range: " ..tostring (Mod.Settings.Range) .. "\nDuration: " ..tostring (Mod.Settings.Duration).. " turn(s)";
 	UI.CreateLabel (vert).SetText (strDescription);
 	TargetTerritoryClicked (); --automatically prompt for territory selection
     end);
@@ -54,7 +55,7 @@ end
 
 function TargetTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	TargetTerritoryInstructionLabel.SetText("Please click on the territory you wish to detonate a smoke bomb on.  If needed, you can move this dialog out of the way.");
+	TargetTerritoryInstructionLabel.SetText("Please click on the territory you wish to create a Beacon on.  If needed, you can move this dialog out of the way.");
 	TargetTerritoryBtn.SetInteractable(false);
 end
 
@@ -77,8 +78,8 @@ function TerritoryClicked(terrDetails)
 		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
-		local arrSmokeBombTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.Range); --get resultant set of territories that Smoke Bomb will impact & highlight them
-		Game.HighlightTerritories (arrSmokeBombTerrs); --highlight the impacted terrs
+		local arrBeaconTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.Range); --get resultant set of territories that Beacon will impact & highlight them
+		Game.HighlightTerritories (arrBeaconTerrs); --highlight the impacted terrs
 
 		-- print (terrDetails.ID,terrDetails.Name);
 		--compare to 71, Mauritania

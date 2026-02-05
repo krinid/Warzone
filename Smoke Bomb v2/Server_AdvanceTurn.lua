@@ -28,7 +28,6 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		if (arrFogModIDs [intTurnExpiry] == nil) then arrFogModIDs [intTurnExpiry] = {}; end
 		table.insert (arrFogModIDs [intTurnExpiry], fogMod.ID);
 		priv.FogModIDs = arrFogModIDs;
-		priv.FogModIDs = arrFogModIDs;
 		Mod.PrivateGameData = priv;
 	end
 end
