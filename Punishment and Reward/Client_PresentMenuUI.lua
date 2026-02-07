@@ -152,7 +152,13 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	if (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 3) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL1).SetColor ("#00FF00"); --green
 	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 6) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL2).SetColor ("#FFFF00"); --yellow
 	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 9) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL3).SetColor ("#FFA500"); --orange
-	else labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL4).SetColor ("#FF0000"); --red
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 10) then labelConsecutivePunishmentDetails.SetText ("    @" ..strLongTermPunishmentL4).SetColor ("#FF0000"); --red
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 11) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL5).SetColor ("#FF0000"); --red
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 12) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL6).SetColor ("#FF0000"); --red
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 13) then labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL7).SetColor ("#FF0000"); --red
+	elseif (incomeAdjustments.NumConsecutiveTurnsWithNoIncrease <= 14) then labelConsecutivePunishmentDetails.SetText ("   # " ..strLongTermPunishmentL8).SetColor ("#FF0000"); --red
+	else labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL9).SetColor ("#FF0000"); --red for 15+
+	-- else labelConsecutivePunishmentDetails.SetText ("    " ..strLongTermPunishmentL4).SetColor ("#FF0000"); --red
 	end
 
 	--incomeAdjustments.NumConsecutiveTurnsWithNoIncrease

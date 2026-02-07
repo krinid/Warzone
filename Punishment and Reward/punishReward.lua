@@ -8,16 +8,6 @@ cityAverageToleranceLevel = 0.25; --quantity of cities of a territory must be wi
 cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default tolerance% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
 --^^ this ok for both (A) and (B) or do they need separate ratios?
 
--- strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
--- strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income penalty, no card pieces";
--- strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (1*punishmentIncrement*100).. "% armies on all territories"; --", [future consideration: territories with 0 units go neutral & blockade (with added units)]";
--- strLongTermPunishmentL4 = "• 10 turns: " ..tostring (3*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (2*punishmentIncrement*100).. "% armies on all territories";
--- strLongTermPunishmentL5 = "• 11 turns: " ..tostring (4*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (3*punishmentIncrement*100).. "% armies on all territories";
--- strLongTermPunishmentL6 = "• 12 turns: " ..tostring (5*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (4*punishmentIncrement*100).. "% armies on all territories";
--- strLongTermPunishmentL7 = "• 13 turns: " ..tostring (6*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (5*punishmentIncrement*100).. "% armies on all territories";
--- strLongTermPunishmentL8 = "• 14 turns: " ..tostring (7*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (6*punishmentIncrement*100).. "% armies on all territories";
--- strLongTermPunishmentL9 = "• 15+ turns: " ..tostring (8*punishmentIncrement*100).. "% income penalty, no card pieces, " ..tostring (8*punishmentIncrement*100).. "% armies on all territories";
-
 strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
 strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income, no card pieces";
 strLongTermPunishmentL3 = "• 7-9 turns: " ..tostring (2*punishmentIncrement*100).. "% income, no card pieces, " ..tostring (1*punishmentIncrement*100).. "% armies on all territories"; --", [future consideration: territories with 0 units go neutral & blockade (with added units)]";
@@ -73,6 +63,8 @@ function assessLongTermPunishment (arrPlayerData, turnNumber)
 	for k = turnNumber, lowestIndex, -1 do
 		local prevValue = 0;
 		local currValue = 0;
+		local prevValues = {};
+		local intNumPrevValuesToAnalyze = 5; --analyze 5 turns worth of values to ascertain whether territory count is increasing or not
 
 		if (k>1) then prevValue = arrPlayerData.TerritoryCount[k-1]; end
 		if (prevValue == nil) then prevValue = 0; end
