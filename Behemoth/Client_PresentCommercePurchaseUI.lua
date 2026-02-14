@@ -168,10 +168,10 @@ function PurchaseClicked()
 	-- ref: return intNumBehemothsCurrentlyHaveSimultaneously, intNumBehemothsPurchasedTotalPerGame, intNumBehemothsAlreadyOnMap, intNumBehemothNewPurchaseOrders;
 
 	-- limit # of Behemoths to value set by host (max 5) including units already on the map and bought in orders this turn
-	if (intBehemothMaxPerPlayerPerGame > 0 and intNumBehemothsCurrentlyHaveSimultaneously >= intBehemothMaxPerPlayerPerGame) then
+	if (intBehemothMaxPerPlayerPerGame > 0 and intNumBehemothsPurchasedTotalPerGame >= intBehemothMaxPerPlayerPerGame) then
 		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
 		return;
-	elseif (intNumBehemothsPurchasedTotalPerGame >= intBehemothMaxSimultaneousPerPlayer) then
+	elseif (intNumBehemothsCurrentlyHaveSimultaneously >= intBehemothMaxSimultaneousPerPlayer) then
 		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
 		return;
 	end
