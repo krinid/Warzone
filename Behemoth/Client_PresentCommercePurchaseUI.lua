@@ -169,10 +169,14 @@ function PurchaseClicked()
 
 	-- limit # of Behemoths to value set by host (max 5) including units already on the map and bought in orders this turn
 	if (intBehemothMaxPerPlayerPerGame > 0 and intNumBehemothsPurchasedTotalPerGame >= intBehemothMaxPerPlayerPerGame) then
-		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
+		-- UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)");
+		strBehemothPurchaseErrorMsg = "Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxPerPlayerPerGame).. " units per player that can be created for the duration of this game (including ones you have purchased this turn)";
+		Game.CreateDialog (BehemothPurchaseErrorDialog);
 		return;
 	elseif (intNumBehemothsCurrentlyHaveSimultaneously >= intBehemothMaxSimultaneousPerPlayer) then
-		UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
+		-- UI.Alert("Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)");
+		strBehemothPurchaseErrorMsg = "Cannot create another Behemoth\n\nAlready at max of " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " units per player that can simultaneously be on the map (including ones you have purchased this turn)";
+		Game.CreateDialog (BehemothPurchaseErrorDialog);
 		return;
 	end
 
@@ -181,6 +185,25 @@ function PurchaseClicked()
 
 	Game.CreateDialog (PresentBehemothDialog);
 	Close1();
+end
+
+function BehemothPurchaseErrorDialog (rootParent, setMaxSize, setScrollable, game, close)
+-- function PresentBehemothDialog (rootParent, setMaxSize, setScrollable, game, close)
+	Close2 = close;
+	setMaxSize(600, 300);
+
+	local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+	local intBehemothMaxSimultaneousPerPlayer = Mod.Settings.BehemothMaxSimultaneousPerPlayer or 5; --default to 5 if not set
+	local intBehemothMaxPerPlayerPerGame = Mod.Settings.BehemothMaxTotalPerPlayer or -1; --default to -1 (no limit) if not set by host
+	local intNumBehemothsCurrentlyHaveSimultaneously, intNumBehemothsCreatedByCurrentPlayer, intNumBehemothsOnMapForCurrentPlayer, intNumBehemothPurchaseOrdersForCurrentPlayer = countBehemothsOnMapAndInOrders (game);
+	--for ref: 	return intNumBehemothsCurrentlyHaveSimultaneously, intNumBehemothsPurchasedTotalPerGame, intNumBehemothsAlreadyOnMap, intNumBehemothNewPurchaseOrders;
+
+	UI.CreateLabel(vert).SetText(strBehemothPurchaseErrorMsg).SetColor(getColourCode("error"));
+
+	UI.CreateLabel(vert).SetText ("\nBehemoth limits (per player):").SetColor (getColourCode ("subheading"));
+	UI.CreateLabel(vert).SetText ("• " ..tostring (intNumBehemothsCurrentlyHaveSimultaneously) .." of max " ..tostring (intBehemothMaxSimultaneousPerPlayer).. " currently simultaneously deployed");
+	UI.CreateLabel(vert).SetText ("• " ..tostring (intNumBehemothsCreatedByCurrentPlayer).. " of max " ..tostring (intBehemothMaxPerPlayerPerGame).. " per game already purchased");
+	UI.CreateLabel(vert).SetText ("   (**counts include current orders)");
 end
 
 --count # of Behemoths already on the map and Behemoth purchases entered into orders
