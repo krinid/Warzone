@@ -4,7 +4,7 @@ function Client_SaveConfigureUI(alert)
 		Mod.Settings.NumPortals = 1
 	end
 
-	if (Mod.Settings.NumPortals > 3) then
-		Mod.Settings.NumPortals = 3
+	if (Mod.Settings.NumPortals > 10) then
+		Mod.Settings.NumPortals = 10
 	end
 end
