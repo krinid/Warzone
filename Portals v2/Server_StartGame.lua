@@ -1,11 +1,11 @@
-function Server_StartGame(game, standing)
+function Server_StartGame (game, standing)
 	local privateGameData = Mod.PrivateGameData
-	privateGameData.portals = {}
+	privateGameData.Portals = {}
 	territoryArray = {}
 
 	local count = 1
-	for _, territory in pairs(game.Map.Territories) do
-		territoryArray[count] = territory
+	for _, territory in pairs (game.Map.Territories) do
+		territoryArray [count] = territory
 		count = count + 1
 	end
 
@@ -15,26 +15,27 @@ function Server_StartGame(game, standing)
 		NumPortals = 1
 	end
 
-	structure = {}
-	Portals = WL.StructureType.Power
-	structure[Portals] = 0
 
-	for i = 1, NumPortals * 2 do
-		privateGameData.portals[i] = getRandomTerritory(territoryArray)
-		if (i % 2 == 1) then
-			structure[Portals] = structure[Portals] + 1
-		end
-
-		standing.Territories[privateGameData.portals[i]].Structures = structure
+	for i = 1, NumPortals do
+		local structure = {};
+		local strPortalFilename = "Portal";
+		if (NumPortals > 1) then print (i, math.ceil (i / 2)); strPortalFilename = strPortalFilename .. " " .. tostring (i); end
+		local Portals = WL.StructureType.Custom (strPortalFilename);
+		structure[Portals] = 0
+		privateGameData.Portals[i] = getRandomTerritory(territoryArray) --set portal side 1
+		privateGameData.Portals[i+NumPortals] = getRandomTerritory(territoryArray) --set portal side 2
+		structure[Portals] = structure[Portals] + 1
+		standing.Territories[privateGameData.Portals[i]].Structures = structure
+		standing.Territories[privateGameData.Portals[i+NumPortals]].Structures = structure
 	end
 
 	Mod.PrivateGameData = privateGameData
 end
 
 function getRandomTerritory(territoryArray)
-	local index = math.random(#territoryArray)
+	local index = math.random (#territoryArray)
 	local territoryID = territoryArray[index].ID
-	table.remove(territoryArray, index)
+	table.remove (territoryArray, index)
 
 	return territoryID
 end

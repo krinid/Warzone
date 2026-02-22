@@ -19,7 +19,8 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
-	if (game.Game.TurnNumber >=6) then return; end --only create SUs on T1~T5
+	-- if (game.Game.TurnNumber >=6) then return; end --only create SUs on T1~T5   <--- used for 'Special Disaster Battle' (with Recruiters as only form of income)
+	if (game.Game.TurnNumber >=2) then return; end --only create SUs on T1   <--- used for 'Workers FTW' (with Workers as only form of income)
 
 	--create 1 new SU on the 1st territory found for each player
 	local modifiedTerritories = {};
@@ -28,18 +29,14 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		--create a bunch of SUs on T1 to start the action
 		if (v.OwnerPlayerID > 0 and playerReceivedSUalready [v.OwnerPlayerID] == nil) then
 			playerReceivedSUalready [v.OwnerPlayerID] = true;
-			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			-- local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			-- local SP2 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			-- local SP3 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			-- local SP4 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			-- local SP5 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter ["..v.OwnerPlayerID.."]", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+			-- local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
+			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Worker", "hammer.png", 3, 3, nil, nil, 3, 3, nil, 3417, true, true, true, true, false, "game start time auto-created Recruiter", false);
 			local terrMod = WL.TerritoryModification.Create (terrID);
-			-- terrMod.AddSpecialUnits = {SP1, SP2, SP3, SP4, SP5};
-			terrMod.AddSpecialUnits = {SP1};
+			-- terrMod.AddSpecialUnits = {SP1, SP2, SP3, SP4, SP5}; --use to create multiple SUs on a single turn
+			terrMod.AddSpecialUnits = {SP1}; --use to create just 1 SU on a single turn
 			table.insert (modifiedTerritories, terrMod);
 		end
-		--for reference:
+		--for reference - RECRUITER SU:
 			-- local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
 			-- builder.Name = 'Recruiter';
 			-- builder.IncludeABeforeName = true;
@@ -54,21 +51,25 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 			-- builder.CanBeAirliftedToSelf = true;
 			-- builder.CanBeAirliftedToTeammate = true;
 			-- builder.IsVisibleToAllPlayers = false;
+
+		--for reference - WORKER SU:
+			-- local builder = WL.CustomSpecialUnitBuilder.Create(order.PlayerID);
+			-- builder.Name = 'Worker';
+			-- builder.IncludeABeforeName = true;
+			-- builder.ImageFilename = 'hammer.png';
+			-- builder.AttackPower = 3;
+			-- builder.DefensePower = 3;
+			-- builder.CombatOrder = 3417; --defends commanders
+			-- builder.DamageToKill = 3;
+			-- builder.DamageAbsorbedWhenAttacked = 3;
+			-- builder.CanBeGiftedWithGiftCard = true;
+			-- builder.CanBeTransferredToTeammate = true;
+			-- builder.CanBeAirliftedToSelf = true;
+			-- builder.CanBeAirliftedToTeammate = true;
+			-- builder.IsVisibleToAllPlayers = false;
 	end
 
 	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "SUs created", {}, modifiedTerritories));
-end
-
-function split_table_into_blocks (data, blockSize)
-	local blocks = {};
-	for i = 1, #data, blockSize do
-		local block = {};
-		for j = i, math.min(i + blockSize - 1, #data) do
-			table.insert(block, data[j]);
-		end
-		table.insert(blocks, block);
-	end
-	return blocks;
 end
 
 --create a new special unit
