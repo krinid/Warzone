@@ -14,7 +14,12 @@ print ("@@2 " ..i, i-intNumPortals, intNumPortals);
 		end
 	end
 
-	addNewOrder(WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Portals swap units", nil, TerritoryModifications, nil))
+	local eventOrder = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Portals swap units", nil, TerritoryModifications, nil);
+	eventOrder.TerritoryAnnotationsOpt = { TerritoryModifications = WL.TerritoryAnnotation.Create ("Portal Swap", 3, getColourInteger (255, 0, 255)) }; --purple annotation for Portal Swap
+			-- table.insert (modifiedTerritories, impactedTerritory); --add territory object to the table to be passed back to WZ to modify/add the order for all impacted territories
+			-- annotations [terrID] = WL.TerritoryAnnotation.Create (".", 3, getColourInteger (255, 0, 0)); --add small sized Annotation in Red for Punishment
+			-- terrID_somewhereInThePunishment = terrID;
+	addNewOrder(eventOrder);
 end
 
 function terrModHelper(targetTerritory, sourceTerritory)
@@ -25,4 +30,9 @@ print ("::"..targetTerritory, sourceTerritory)
 	terrMod.SetOwnerOpt = Game.ServerGame.LatestTurnStanding.Territories[sourceTerritory].OwnerPlayerID
 
 	return terrMod
+end
+
+--given 0-255 RGB integers, return a single 24-bit integer
+function getColourInteger (red, green, blue)
+	return red*256^2 + green*256 + blue;
 end
