@@ -1,58 +1,88 @@
-function Server_AdvanceTurn_End_orig (game, addNewOrder)
-	Game = game
-	TerritoryModifications = {};
-	Annotations = {};
-	local intNumPortals = Mod.Settings.NumPortals;
-
-	--Swap the standing (owner, armies) of the connected portals
-	for i = 1, #Mod.PrivateGameData.Portals do
-		if (i <= intNumPortals) then -- for 3 portals: 1, 2, 3 swap with 4, 5, 6
-print ("@@1 " ..i, i+intNumPortals, intNumPortals);
-			TerritoryModifications[i] = terrModHelper (Mod.PrivateGameData.Portals[i], Mod.PrivateGameData.Portals [tonumber (i + intNumPortals)])
-		else
-print ("@@2 " ..i, i-intNumPortals, intNumPortals);
-			TerritoryModifications[i] = terrModHelper (Mod.PrivateGameData.Portals[i], Mod.PrivateGameData.Portals [tonumber (i - intNumPortals)])
-		end
-		Annotations [Mod.PrivateGameData.Portals[i]] = WL.TerritoryAnnotation.Create ("Portal Swap", 3, getColourInteger (100, 0, 100)); --purple annotation for Portal Swap
-	end
-
-	local eventOrder = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Portals swap units", nil, TerritoryModifications, nil);
-	eventOrder.TerritoryAnnotationsOpt = Annotations;
-	addNewOrder(eventOrder);
+function Server_AdvanceTurn_End (game, addNewOrder)
+	execute_Portal_Swaps (game, addNewOrder);
+	--DESIRED FUTURE STATE:
+		--nothing happens here anymore
+		--Portal Swaps are executed in ReceiveCards phase, triggered by a custom order added in Server_AdvanceTurn_Start
+		--this is done so that other mods receive the proper LastTurnStanding state after Portals swaps things (so Recruiters, Workers, etc, will correctly execute based on where the SUs currently are, not where they were when Server_AdvanceTurn_End calls to all mods began processing)
 end
 
-function Server_AdvanceTurn_End (game, addNewOrder)
-	Game = game
-	TerritoryModifications = {};
-	Annotations = {};
+function Server_AdvanceTurn_Start (game, addNewOrder)
+	-- local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+	-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Portals|Swap Prep", "Portals|Swap Prep", {}, WL.TurnPhase.SanctionCards, nil, nil)); --add order to invoke Portal Swaps (instead of processing in Server_AdvanceTurn_End)
+
+
+	--TIMING isn't working; it keeps executing @ start of turn, ignoring the appropriately used WL.TurnPhase enum phase
+end
+
+function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
+	-- if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Swap Prep") then
+	-- 	local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+	-- 	addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Portals|Swap", "Portals|Swap", {}, WL.TurnPhase.ReceiveGold, nil, nil)); --add order to invoke Portal Swaps (instead of processing in Server_AdvanceTurn_End)
+	-- 	-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Wildfire burns!", "Wildfire|Burn", {}, WL.TurnPhase.EmergencyBlockadeCards, nil, nil)); --add order to invoke wildifre burning during the EB card play phase
+
+	-- elseif (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Swap") then
+	-- 	execute_Portal_Swaps (game, addNewOrder);
+	-- 	-- skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+	-- end
+end
+
+function execute_Portal_Swaps (game, addNewOrder)
 	local intNumPortals = Mod.Settings.NumPortals;
+	TerritoryModifications = {}; --[1] = array of terrMods for all portal terrs, stores the army swaps & up to 4 SU swaps for each terr; all these to be submitted in 1 order as 'Portal swaps'; [2,3,4...] = additional SUs
+	Annotations = {}; --annotations corresponding to TerritoryModifications
+
+	--NOTE: check for 1-way vs 2-way portals
+		--for 2-way, swap contents of each terr
+		--for 1-way, movement becomes a transfer (single player or team owns both terrs) or attack (different players/teams own each terr or 1 is neutral -- neutral units attack the player? I suppose they have to; or neutral are exempt?)
 
 	--Swap the standing (owner, armies) of the connected portals
 	for i = 1, #Mod.PrivateGameData.Portals do
 		local sourceTerritoryID  = Mod.PrivateGameData.Portals[i];
-		local sourceTerritoryActual = Game.ServerGame.LatestTurnStanding.Territories [sourceTerritoryID];
+		local sourceTerritoryActual = game.ServerGame.LatestTurnStanding.Territories [sourceTerritoryID];
 		local sourceTerritory = WL.TerritoryModification.Create (sourceTerritoryID);
 		local targetTerritoryID = (i <= intNumPortals and Mod.PrivateGameData.Portals [tonumber (i + intNumPortals)] or Mod.PrivateGameData.Portals [tonumber (i - intNumPortals)]);
-		-- local targetTerritory = Game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID];
-		local targetTerritory = WL.TerritoryModification.Create (targetTerritoryID);
-		local unitsToSwap = WL.Armies.Create (sourceTerritoryActual.NumArmies.NumArmies, sourceTerritoryActual.NumArmies.SpecialUnits);
+		local targetTerritory = getTerrMod_SwapSourceTarget (game, sourceTerritoryID, targetTerritoryID);
+		if (TerritoryModifications[1] == nil) then TerritoryModifications[1] = {}; end
+		if (Annotations[1] == nil) then Annotations[1] = {}; end
+		Annotations[1][targetTerritoryID] = WL.TerritoryAnnotation.Create ("Portal Swap", 3, getColourInteger (100, 0, 100)); --purple annotation for Portal Swap
+		sourceTerritory.RemoveSpecialUnitsOpt = convert_SUobjects_to_SUguids (sourceTerritoryActual.NumArmies.SpecialUnits); --remove Specials from source territory that are moving to target territory
 
-		manual_move_units (addNewOrder, WL.PlayerID.Neutral, sourceTerritory, sourceTerritoryID, targetTerritory, targetTerritoryID, unitsToSwap);
-		-- Annotations [Mod.PrivateGameData.Portals[i]] = WL.TerritoryAnnotation.Create ("Portal Swap", 3, getColourInteger (100, 0, 100)); --purple annotation for Portal Swap
+		table.insert (TerritoryModifications[1], sourceTerritory); --removes any SUs on source territory
+		table.insert (TerritoryModifications[1], targetTerritory); --adjusts the armies/owner of the target territory to match the source territory
+
+		--move SUs on source territory
+		if (#sourceTerritoryActual.NumArmies.SpecialUnits > 0) then
+			--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
+			local specialsToAdd = split_table_into_blocks (sourceTerritoryActual.NumArmies.SpecialUnits, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
+
+			--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
+			for k,v in pairs (specialsToAdd) do
+				local targetTerritorySUs = WL.TerritoryModification.Create (targetTerritoryID);
+				targetTerritorySUs.AddSpecialUnits = v; --add Specials to target territory that are moving from source territory
+				if (TerritoryModifications[k] == nil) then TerritoryModifications[k] = {}; end
+				if (Annotations[k] == nil) then Annotations[k] = {}; end
+				table.insert (TerritoryModifications[k], targetTerritorySUs);
+				local strMessage = k == 1 and "Portal Swap" or "Portal SU Swap";
+				Annotations[k][targetTerritoryID] = WL.TerritoryAnnotation.Create (strMessage, 3, getColourInteger (100, 0, 100)); --purple annotation for Portal Swap
+			end
+		end
 	end
 
-	-- local eventOrder = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Portals swap units", nil, TerritoryModifications, nil);
-	-- eventOrder.TerritoryAnnotationsOpt = Annotations;
-	-- addNewOrder(eventOrder);
+	--submit the orders
+	for k,v in pairs (TerritoryModifications) do
+		local strMessage = k == 1 and "Portal Swap" or "Portal SU Swap";
+		-- if (k > 1) then --k==1 is for army swaps + SU removals only
+			local eventOrder = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strMessage, nil, TerritoryModifications [k], nil);
+			eventOrder.TerritoryAnnotationsOpt = Annotations [k];
+			addNewOrder(eventOrder);
+	end
 end
 
-function terrModHelper(targetTerritory, sourceTerritory)
-print ("::"..targetTerritory, sourceTerritory)
-	local terrMod = WL.TerritoryModification.Create (targetTerritory)
-
-	terrMod.SetArmiesTo = Game.ServerGame.LatestTurnStanding.Territories[sourceTerritory].NumArmies.NumArmies
-	terrMod.SetOwnerOpt = Game.ServerGame.LatestTurnStanding.Territories[sourceTerritory].OwnerPlayerID
-
+--create & return a terrMod to change the targetTerritory to match the army counts & owner of the sourceTerritory
+function getTerrMod_SwapSourceTarget (game, sourceTerritory, targetTerritory)
+	local terrMod = WL.TerritoryModification.Create (targetTerritory);
+	terrMod.SetArmiesTo = game.ServerGame.LatestTurnStanding.Territories [sourceTerritory].NumArmies.NumArmies;
+	terrMod.SetOwnerOpt = game.ServerGame.LatestTurnStanding.Territories [sourceTerritory].OwnerPlayerID;
 	return terrMod
 end
 
