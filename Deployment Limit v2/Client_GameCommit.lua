@@ -1,4 +1,4 @@
-function Client_GameOrderCreated (clientGame, gameOrder, skip)
+function Client_GameCommit (clientGame, skipCommit)
     if (clientGame.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires clicking Commit, which they can't do b/c they're not in the game)
 
 	-- skipCommit (); --while testing, always skip
@@ -18,14 +18,6 @@ function Client_GameOrderCreated (clientGame, gameOrder, skip)
 			table.insert (newOrders, WL.GameOrderDeploy.Create (order.PlayerID, intDeploymentLimit, order.DeployOn, false)); --replace existing order with one that deploys the deployment limit
 			-- table.insert (newOrders, order);
 			boolChangesMade = true;
-			--newOrders
-			-- territoryListToHighlight
-			-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[Card state snapshot]", "PunishReward|Capture card state", {}, WL.TurnPhase.ReceiveCards);
-			-- --b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
-			-- local orders = game.Orders;
-			-- table.insert(orders, newOrder);
-			-- game.Orders = orders;
-
 		else
 			--not a deployment order that exceeds mod set deployment limit, so include the order as-is
 			table.insert (newOrders, order);
@@ -44,7 +36,6 @@ function Client_GameOrderCreated (clientGame, gameOrder, skip)
 		-- UI.CreateLabel (vert).SetText ("\nYou have exceeded the limit on the following ");
 		-- UI.CreateLabel (vert).SetText ("\nDeployments have been adjusted to the limit:"); --impacted territories have been highlighted on the map)\n");
 		UI.CreateLabel (vert).SetText ("\nImpacted territories:\n(highlighted on map, deployments reduced to the limit)");
-		-- UI.CreateLabel (vert).SetText ("\nImpacted territories:  (highlighted on map)");
 		-- local horz = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth (1);
 		for _,v in pairs (territoryListToHighlight) do
 			UI.CreateButton (vert).SetText (tostring (clientGame.Map.Territories[v].Name)).SetColor ("#00FFFF").SetOnClick (function () clientGame.HighlightTerritories ({v}); end);
@@ -52,7 +43,7 @@ function Client_GameOrderCreated (clientGame, gameOrder, skip)
 		end
 		-- UI.CreateLabel (vert).SetText (strErrorMessage);
 		clientGame.HighlightTerritories (territoryListToHighlight);
-		skip ();
+		skipCommit ();
 	end
 
 	-- print ("---ORDERS---");
