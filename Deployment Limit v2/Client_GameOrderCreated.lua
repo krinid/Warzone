@@ -52,7 +52,7 @@ function Client_GameOrderCreated (clientGame, gameOrder, skip)
 		end
 		-- UI.CreateLabel (vert).SetText (strErrorMessage);
 		clientGame.HighlightTerritories (territoryListToHighlight);
-		skip ();
+		-- skip (); --don't skip the order! It may have nothing to do with the deployment overage whatsoever
 	end
 
 	-- print ("---ORDERS---");
