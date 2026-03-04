@@ -1,14 +1,13 @@
 require('Utilities');
 
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
-	--Check if we see a Build Fort event.  If we do, add it to a global list that we'll check in BuildForts() below.
+	--check for Fort Card plays
 	if (order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, 'BuildFortCard_')) then  --look for the order that we inserted in Client_PresentMenuUI
-		--Extract territory ID from the payload
-		local terrID = tonumber (string.sub (order.ModData, 15));
-		BuildFort (game, addNewOrder, order.PlayerID, terrID, order.Description)
+		local terrID = tonumber (string.sub (order.ModData, 15)); --Extract territory ID from the payload
+		BuildFort (game, addNewOrder, order.PlayerID, terrID, order.Description, skipThisOrder); --build the fort
 	end
 
-	--Check if this is an attack against a territory with a fort.
+	--check for attack against a territory with a fort, and if so destroy the fort
 	if (order.proxyType == 'GameOrderAttackTransfer' and result.IsAttack) then
 		local structureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png
 
@@ -55,61 +54,65 @@ end
 
 function Server_AdvanceTurn_End(game, addNewOrder)
 	-- BuildForts(game, addNewOrder);
+	--not needed; Fort building is triggered by custom card plays which have specific turn phases assigned to them
 end
 
-function BuildForts(game, addNewOrder)
-	--Build any forts that we queued in up Server_AdvanceTurn_Order
-	local structureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png
+-- function BuildForts(game, addNewOrder)
+-- 	--Build any forts that we queued in up Server_AdvanceTurn_Order
+-- 	local structureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png
 
-	local priv = Mod.PrivateGameData;
-	local pending = priv.PendingForts;
-	if (pending == nil) then return; end;
+-- 	local priv = Mod.PrivateGameData;
+-- 	local pending = priv.PendingForts;
+-- 	if (pending == nil) then return; end;
 
-	-- Remove any pending builds where the player lost control of the territory, so we don't build a fort for the new owner
-	removeWhere (pending, function(t) return t.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[t.TerritoryID].OwnerPlayerID; end);
+-- 	-- Remove any pending builds where the player lost control of the territory, so we don't build a fort for the new owner
+-- 	removeWhere (pending, function(t) return t.PlayerID ~= game.ServerGame.LatestTurnStanding.Territories[t.TerritoryID].OwnerPlayerID; end);
 
-	-- We will now build a fort for each pending fort.  However, we need to take care to ensure that if there are two build orders for the same territory that we build both of them, so we first group by the territory ID so we get all build orders for the same territory together.
-	for territoryID,pendingFortGroup in pairs(groupBy(pending, function(t) return t.TerritoryID; end)) do
+-- 	-- We will now build a fort for each pending fort.  However, we need to take care to ensure that if there are two build orders for the same territory that we build both of them, so we first group by the territory ID so we get all build orders for the same territory together.
+-- 	for territoryID,pendingFortGroup in pairs(groupBy(pending, function(t) return t.TerritoryID; end)) do
 
-		local numFortsToBuildHere = #pendingFortGroup;
+-- 		local numFortsToBuildHere = #pendingFortGroup;
 
-		local structures = game.ServerGame.LatestTurnStanding.Territories[territoryID].Structures;
+-- 		local structures = game.ServerGame.LatestTurnStanding.Territories[territoryID].Structures;
 
 
-		if (structures == nil) then structures = {}; end;
-		if (structures[structureID] == nil) then
-			structures[structureID] = numFortsToBuildHere;
-		else
-			structures[structureID] = structures[structureID] + numFortsToBuildHere;
-		end
+-- 		if (structures == nil) then structures = {}; end;
+-- 		if (structures[structureID] == nil) then
+-- 			structures[structureID] = numFortsToBuildHere;
+-- 		else
+-- 			structures[structureID] = structures[structureID] + numFortsToBuildHere;
+-- 		end
 
-		local terrMod = WL.TerritoryModification.Create(territoryID);
-		terrMod.SetStructuresOpt = structures;
+-- 		local terrMod = WL.TerritoryModification.Create(territoryID);
+-- 		terrMod.SetStructuresOpt = structures;
 
-		local pendingFort = first(pendingFortGroup);
+-- 		local pendingFort = first(pendingFortGroup);
 
-		local event = WL.GameOrderEvent.Create(pendingFort.PlayerID, pendingFort.Message, {}, {terrMod});
+-- 		local event = WL.GameOrderEvent.Create(pendingFort.PlayerID, pendingFort.Message, {}, {terrMod});
 
-		local td = game.Map.Territories[territoryID];
-		event.JumpToActionSpotOpt = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
-		if (WL.IsVersionOrHigher("5.34.1")) then
-			event.TerritoryAnnotationsOpt = { [territoryID] = WL.TerritoryAnnotation.Create("Build Fort") };
-		end
+-- 		local td = game.Map.Territories[territoryID];
+-- 		event.JumpToActionSpotOpt = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
+-- 		if (WL.IsVersionOrHigher("5.34.1")) then
+-- 			event.TerritoryAnnotationsOpt = { [territoryID] = WL.TerritoryAnnotation.Create("Build Fort") };
+-- 		end
 
-		addNewOrder(event);
-	end
+-- 		addNewOrder(event);
+-- 	end
 
-	priv.PendingForts = nil;
-	Mod.PrivateGameData = priv;
-end
+-- 	priv.PendingForts = nil;
+-- 	Mod.PrivateGameData = priv;
+-- end
 
-function BuildFort (game, addNewOrder, playerID, territoryID, strMessage)
+function BuildFort (game, addNewOrder, playerID, territoryID, strMessage, skipThisOrder)
 	--Build any forts that we queued in up Server_AdvanceTurn_Order
 	local structureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png
 
 	-- if player building the fort doesn't own the territory anymore, don't build the fort
 	if (game.ServerGame.LatestTurnStanding.Territories[territoryID].OwnerPlayerID ~= playerID) then
-		addNewOrder (WL.GameOrderEvent.Create (playerID, "Failed to " .. strMessage));
+		local event = WL.GameOrderEvent.Create (playerID, "Failed to " .. strMessage, {}); --make visible to only those who can see the effects on the territory
+		event.TerritoryAnnotationsOpt = { [territoryID] = WL.TerritoryAnnotation.Create("FAILED Build Fort") };
+		addNewOrder (event);
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --don't consume the card if the Fort can't be built
 	else
 		local structures = game.ServerGame.LatestTurnStanding.Territories[territoryID].Structures;
 
@@ -123,7 +126,7 @@ function BuildFort (game, addNewOrder, playerID, territoryID, strMessage)
 		local terrMod = WL.TerritoryModification.Create(territoryID);
 		terrMod.SetStructuresOpt = structures;
 
-		local event = WL.GameOrderEvent.Create(playerID, strMessage, {}, {terrMod});
+		local event = WL.GameOrderEvent.Create(playerID, strMessage, {}, {terrMod}); --make visible to only those who can see the effects on the territory
 
 		local td = game.Map.Territories[territoryID];
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
