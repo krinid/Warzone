@@ -1,5 +1,13 @@
 function Server_AdvanceTurn_End (game, addNewOrder)
-	if (boolPortalSwapExecuted == false) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; ideally they should already have been 
+	-- print ("[SATE]");
+
+	if (boolPortalSwapExecuted == false) then
+		-- addNewOrder (WL.GameOrderCustom.Create ())	order.Payload = "Portals|Portal swap"; end
+		local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k; end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+		addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Portals|Portal swap", "Portals|Portal swap", {}, nil, nil, nil)); --add order to invoke Portal Swaps (instead of processing in Server_AdvanceTurn_End)
+	end
+
+	-- if (boolPortalSwapExecuted == false) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; ideally they should already have been 
 	--swapped when the custom order "Portals|Portal swap" was processed during ReceiveGold phase; but if for some reason they haven't been swapped yet, do it here
 	--it's better to do it during ReceiveGold phase b/c that is processed as a regular turn phase order, and all mods will get the proper game state upon completion of the order, as opposed
 	--to processing here, where mods will receive a stale game state and SUs like Recruiters and Workers will apply their abilities to the pre-Portal swap territories (which may not even
@@ -15,20 +23,32 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	boolPortalSwapExecuted = false; --track whether portals have been swapped this turn or not; this is used to ensure they're only swapped once, ideally when the custom order "Portals|Portal swap"
 	--is processed during ReceiveGold phase; but if for some reason that is not received, process it in Server_AdvanceTurn_End instead to ensure that portals are swapped during the turn
 
-	-- local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
+	-- local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k; end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
 	-- addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Portals|Swap Prep", "Portals|Swap Prep", {}, WL.TurnPhase.SanctionCards, nil, nil)); --add order to invoke Portal Swaps (instead of processing in Server_AdvanceTurn_End)
 
 
 	--TIMING isn't working; it keeps executing @ start of turn, ignoring the appropriately used WL.TurnPhase enum phase
+	-- for k,v in pairs (WL.TurnPhase) do
+	-- 	if (k ~= "ToString") then
+	-- 		-- print ("TurnPhase " .. k);--,v .. " = " .. WL.TurnPhase.ToString (v));
+	-- 		-- print ("TurnPhase " .. v); -- .. " = " .. WL.TurnPhase.ToString (v));
+	-- 		print ("TurnPhase " .. k,v .. " = " .. WL.TurnPhase.ToString (v));
+	-- 	end
+	-- end
+	-- print ("ReceiveGold == " .. tostring (WL.TurnPhase.ReceiveGold));
 end
 
 function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
-	if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Portal swap") then
-		if (boolPortalSwapExecuted == false) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; every human player entering
+	--to detect actual ReceiveGold phase:  order.proxyType=="GameOrderEvent", order.ModID==nil, order.Message=="Received Gold"; it's not a real phase, just an order that gets received here as the absolute last thing that happens before the turn ends
+	--but -- don't do this b/c then it only works in Commerce games (non-Commerce games don't have "Received Gold" event @ end of orders)
+	-- if (order.proxyType == "GameOrderEvent" and order.ModID == nil and order.Message == "Received Gold") then boolPortalSwapExecuted = false; execute_Portal_Swaps (game, addNewOrder); end
+
+	if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Portal swap" and order.OccursInPhase == WL.TurnPhase.ReceiveCards) then execute_Portal_Swaps (game, addNewOrder);
+		-- if (boolPortalSwapExecuted == false and order.OccursInPhase == WL.TurnPhase.ReceiveCards) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; every human player entering
 		--turns normally from client and hitting Commit (not booting, surrendering, etc) will have this order added to their order list, but only process the Portal swaps once, not once
 		--for every iteration (every human player)
 
-		-- skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 	end
 
 	-- if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Swap Prep") then
@@ -45,6 +65,7 @@ end
 function execute_Portal_Swaps (game, addNewOrder)
 	if (boolPortalSwapExecuted == true) then return; end --if portals have already swapped this turn, don't swap them again even if this is called twice for some reason (but it shouldn't be)
 
+	-- print ("[PORTAL SWAP]");
 	boolPortalSwapExecuted = true; --set to true so it only swap portals once per turn
 	local intNumPortals = Mod.Settings.NumPortals;
 	TerritoryModifications = {}; --[1] = array of terrMods for all portal terrs, stores the army swaps & up to 4 SU swaps for each terr; all these to be submitted in 1 order as 'Portal swaps'; [2,3,4...] = additional SUs

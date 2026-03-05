@@ -1,5 +1,6 @@
 function Client_GameCommit (game, skipCommit)
 	-- skipCommit ();
+
 	local boolSameOrderExistsAlready = false; --indicates whether an order for A->B already exists in the order list; if so, assume it's legit and skip this order
 
 	--if game state isn't "Playing" then skip this; it is likely 'DistributingTerritories', in which case trying to a custom order will fail b/c only Pick orders are accepted here
@@ -15,8 +16,8 @@ function Client_GameCommit (game, skipCommit)
 	--leverage 'boolSameOrderExistsAlready' to ensure that only the 1st mod actually inserts the corrected order 
 	if (boolSameOrderExistsAlready == false) then
 		-- UI.Alert ("game state: " ..game.Game.State.."/".. tostring (WL.GameState.ToString (game.Game.State)));
-		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
-		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
+		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
+		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
 		--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
 		local orders = game.Orders;
 		table.insert(orders, newOrder);
