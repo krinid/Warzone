@@ -1,0 +1,9 @@
+Throw poison on a territory that lasts for some number of turns. Poison can cause fixed and % damage to both armies and Special Units.
+
+For Special Units with Health, their Health will be reduced by the appropriate amount.
+
+For Special Units of 'Damage to Kill' type (no Health, they must be killed in a single attack, eg: Commanders), the 'Damage to Kill' value will be reduced.
+
+If the Health or Damage to Kill values of a Special Units reaches 0, it will die.
+
+Armies or Special Units impacted by poison can leave the territory in order to end the effects.
