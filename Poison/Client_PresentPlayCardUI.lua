@@ -1,6 +1,3 @@
-require("utilities");
--- require("UI_Events");
-
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
 function Client_PresentPlayCardUI(game, cardInstance, playCard)
     --when dealing with multiple cards in a single mod, observe game.Settings.Cards[cardInstance.CardID].Name to identify which one was played
@@ -10,102 +7,61 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
 
     strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
-    PrintProxyInfo (cardInstance);
-    printObjectDetails (cardInstance, "cardInstance", "[PresentPlayCardUI]");
-
     strCardBeingPlayed = game.Settings.Cards[cardInstance.CardID].Name;
     print ("PLAY CARD="..strCardBeingPlayed.."::");
 
-    if (strCardBeingPlayed=="Poison") then
-        --cast poison
-    end
+    if (strCardBeingPlayed=="Poison") then play_Poison_card (game, cardInstance, playCard); end
 end
 
 function TargetCardClicked (strText, cards)
 	UI.PromptFromList(strText, cards);
 end
 
-function play_Shield_card(game, cardInstance, playCard)
-    print("[SHIELD] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
 
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400, 300);
-        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (vert).SetText("[SHIELD]\n\n").SetColor(getColourCode("card play heading"));
-
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory to create a Shield on.");
-
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
-            if (TargetTerritoryID == nil) then
-                UI.Alert("No territory selected. Please select a territory.");
-                return;
-            end
-            if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then 
-                UI.Alert("You must select a territory you own.");
-                return;
-            end
-            print("[SHIELD] order input::terr=" .. TargetTerritoryName .. "::Shield|" .. TargetTerritoryID .. "::");
-
-            local strShieldMessage = strPlayerName_cardPlayer .. " creates a Shield on " .. TargetTerritoryName;
-            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 8, getColourInteger(0, 0, 255))}; --blue annotation background for Shield
-                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
-               else
-                playCard(strShieldMessage, 'Shield|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
-            end
-
-            close();
-        end);
-    end);
+function createDialog (rootParent, setMaxSize, setScrollable, game, close)
+	PoisonDialog = {rootParent=rootParent, setMaxSize=setMaxSize, setScrollable=setScrollable, game=game, close=close};
+	return (PoisonDialog); --unfortunately this return value is ignored b/c it is passed back to the calling parameter of game.CreateDialog and thus need to pass the real value back as a global variable
 end
 
-function play_Phantom_card(game, cardInstance, playCard)
-    print("[PHANTOM] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+function play_Poison_card(game, cardInstance, playCard)
+    print("[POISON] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
 
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400, 300);
-        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (vert).SetText("[PHANTOM]\n\n").SetColor(getColourCode("card play heading"));
+	PoisonDialog = nil; --set global variable to nil, assign value in createDialog function
+	game.CreateDialog (createDialog);
+	PoisonDialog.setMaxSize (500, 400);
+	local vert = UI.CreateVerticalLayoutGroup (PoisonDialog.rootParent).SetFlexibleWidth (1);
+	UI.CreateLabel (vert).SetText ("[POISON]\n\n").SetColor (getColourCode ("card play heading"));
 
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory to create a Phantom on.");
+	TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("Button|Cyan"));
+	TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
+	TargetTerritoryClicked("Select the territory to throw Poison on.");
 
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
-            if (TargetTerritoryID == nil) then
-                UI.Alert("No territory selected. Please select a territory.");
-                return;
-            end
-            if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then
-                UI.Alert("You must select a territory you own.");
-                return;
-            end
-            print("[PHANTOM] order input::terr=" .. TargetTerritoryName .. "::Phantom|" .. TargetTerritoryID .. "::");
+	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
+		if (TargetTerritoryID == nil) then
+			UI.Alert("No territory selected. Please select a territory.");
+			return;
+		end
+		-- if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then
+		-- 	UI.Alert("You must select a territory you own.");
+		-- 	return;
+		-- end
+		-- print("[POISON] order input::terr=" .. TargetTerritoryName .. "::Phantom|" .. TargetTerritoryID .. "::");
 
-            local strPhantomMessage = strPlayerName_cardPlayer .. " creates a Phantom on " .. TargetTerritoryName;
-            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Phantom", 8, getColourInteger(0, 100, 0))}; --use Sickly Green for Poison
-                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
-            else
-                playCard(strPhantomMessage, 'Phantom|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
-            end
-
-            close();
-        end);
-    end);
+		local strPoisonMessage = strPlayerName_cardPlayer .. " throws Poison on " .. TargetTerritoryName;
+		local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
+		local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Poison", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison  
+		playCard (strPoisonMessage, 'Poison|' .. TargetTerritoryID, WL.TurnPhase.BombCards, territoryAnnotation, jumpToActionSpotOpt);
+		PoisonDialog.close ();
+	end);
 end
 
-function TargetPlayerClicked_Fizz(strText)
-	local options = map(filter(Game.Game.Players, IsPotentialTarget), PlayerButton);
+function TargetPlayerClicked_Fizz (strText)
+	local options = map (filter(Game.Game.Players, IsPotentialTarget), PlayerButton);
 	UI.PromptFromList(strText, options);
 end
 
 --Determines if the player is one we can propose an alliance to.
-function IsPotentialTarget(player)
+function IsPotentialTarget (player)
 	if (Game.Us.ID == player.ID) then return false end; -- can't select self
 
 	if (player.State ~= WL.GamePlayerState.Playing) then return false end; --skip players not alive anymore, or that declined the game
@@ -115,7 +71,7 @@ function IsPotentialTarget(player)
     return (player.State == WL.GamePlayerState.Playing); --return true if they are still playing, false otherwise
 end
 
-function PlayerButton(player)
+function PlayerButton (player)
 	local name = player.DisplayName(nil, false);
 	local ret = {};
 	ret["text"] = name;
@@ -126,328 +82,13 @@ function PlayerButton(player)
 	return ret;
 end
 
-function play_Earthquake_card(game, cardInstance, playCard)
-    print("[EARTHQUAKE] card play clicked, played by=" .. strPlayerName_cardPlayer);
-    EarthquakeGame = game;
-    Earthquake_SelectedBonus = nil;
-
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400,400);
-        EarthquakeUI = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (EarthquakeUI).SetText("[EARTHQUAKE]\n\n").SetColor(getColourCode("card play heading"));
-        buttonEarthquakeSelectBonus = UI.CreateButton (EarthquakeUI).SetText("Select Bonus").SetInteractable(false).SetOnClick (function () buttonEarthquakeSelectBonus.SetInteractable(false); Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected); end);
-        labelEarthquakeSelectBonus = UI.CreateLabel (EarthquakeUI).SetText("Select the bonus for the earthquake.\n");--.SetColor(getColourCode("card play heading"));
-        Earthquake_SelectedBonusID = UI.InterceptNextBonusLinkClick(EarthquakeTargetSelected);
-        Earthquake_PlayCardButton = UI.CreateButton(EarthquakeUI).SetColor(WZcolours["Dark Green"]).SetText("Play Card").SetOnClick(function()
-            if (Earthquake_SelectedBonus == nil) then
-                UI.Alert("You must select a bonus");
-                return;
-            end
-
-            --[[print(strPlayerName_cardPlayer);
-            print(Earthquake_SelectedBonus.ID);
-            print(Earthquake_SelectedBonus.Name);]]
-
-            print("[EARTHQUAKE] order input: bonus=" .. Earthquake_SelectedBonus.ID .. "/".. Earthquake_SelectedBonus.Name .." :: Earthquake|" .. Earthquake_SelectedBonus.ID);
-            local strEarthquakeMessage = strPlayerName_cardPlayer .. " invokes an Earthquake on bonus " .. Earthquake_SelectedBonus.Name;
-            local territoryAnnotation = {}; --{[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Earthquake", 10, getColourInteger(255,0,0))}; --red annotation background for Earthquake
-            --table of (array/table of territoryIDs + territory annotation) doesn't work, gives error that it found dictionary, was expecting integer (b/c it's an array of integers)
-            --neither does table of 1 element for (each territory + territory annotation) work, gives error that the record has no proxy ID (b/c it's not a single record which has the TerritoryAnnotation proxy type but instead an array, each element of which has a territory annotation proxy type)
-            --so just pick 1 territory in the bonus to show the Earthquake
-            local EQterritories = {};
-            for _, terrID in pairs(game.Map.Bonuses[Earthquake_SelectedBonus.ID].Territories) do
-                if (WL.IsVersionOrHigher("5.34.1")) then territoryAnnotation = {[terrID] = WL.TerritoryAnnotation.Create ("Earthquake", 8, getColourInteger (255, 0, 0))}; end --red annotation background for Earthquake
-            end
-            local jumpToActionSpotOpt = createJumpToLocationObject_Bonus (game, Earthquake_SelectedBonus.ID);
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation, jumpToActionSpotOpt);
-            else
-                playCard(strEarthquakeMessage, 'Earthquake|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);
-            end
-
-            --playCard(strEarthquakeMessage.."1", 'Earthquake1|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards);--, territoryAnnotation, jumpToActionSpotOpt);
-            --playCard(strEarthquakeMessage.."2", 'Earthquake2|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, territoryAnnotation);--, jumpToActionSpotOpt);
-            --playCard(strEarthquakeMessage.."2.5", 'Earthquake2|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, tAnn, jumpToActionSpotOpt);
-            --playCard(strEarthquakeMessage.."3", 'Earthquake3|' .. Earthquake_SelectedBonus.ID, WL.TurnPhase.ReceiveCards, nil, jumpToActionSpotOpt);
-            close();
-        end);
-        labelEarthquake_BonusTerrList = UI.CreateLabel (EarthquakeUI);
-    end);
-end
-
-function EarthquakeTargetSelected(bonusDetails)
-    --[[local targetPlayerName = toPlayerName(targetPlayerID, game);
-    print("[EARTHQUAKE] target player selected: " .. targetPlayerName);
-    playCard(strPlayerName_cardPlayer .. " invokes Earthquake on " .. targetPlayerName, 'Earthquake|' .. targetPlayerID, WL.TurnPhase.Gift);]]
-    local strLabelText = "";
-    if (UI.IsDestroyed(labelEarthquake_BonusTerrList)) then return; end --if the button is destroyed, the dialog is closed, so don't do anything
-    labelEarthquake_BonusTerrList.SetText ("");
-    strLabelText = "\nTerritories in bonus:\n\n";
-    Earthquake_PlayCardButton.SetInteractable(true);
-    buttonEarthquakeSelectBonus.SetInteractable(true);
-    if bonusDetails == nil then return; end
-    Earthquake_SelectedBonus = bonusDetails;
-
-    labelEarthquakeSelectBonus.SetText ("Bonus selected: "..bonusDetails.ID.."/"..bonusDetails.Name);
-    --buttonEarthquakeSelectBonus.SetText ("Bonus selected: "..bonusDetails.ID.."/"..bonusDetails.Name);
-
-    for _, terrID in pairs(EarthquakeGame.Map.Bonuses[bonusDetails.ID].Territories) do
-        strLabelText = strLabelText .. terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name.."\n";
-        --UI.CreateLabel (EarthquakeUI).SetText (terrID .."/"..EarthquakeGame.Map.Territories[terrID].Name);
-        --UI.CreateButton (vert, game.Map.Territories[terrID].Name .. ": " .. rounding(Mod.PublicGameData.WellBeingMultiplier[terrID], 2), getPlayerColor(game.LatestStanding.Territories[terrID].OwnerPlayerID), function() if WL.IsVersionOrHigher("5.21") then game.HighlightTerritories({terrID}); game.CreateLocatorCircle(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY); end validateTerritory(game.Map.Territories[terrID]); end);
-    end
-    Game.HighlightTerritories(Game.Map.Bonuses[bonusDetails.ID].Territories);
-    Earthquake_PlayCardButton.SetInteractable(true);
-    buttonEarthquakeSelectBonus.SetInteractable(true);
-    labelEarthquake_BonusTerrList.SetText (strLabelText);
-    --close();
-end
-
-function play_Tornado_card(game, cardInstance, playCard)
-    print("[TORNADO] card play clicked, played by=" .. strPlayerName_cardPlayer);
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400,300);
-        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (vert).SetText("[TORNADO]\n\nSelect a territory to target with a Tornado:").SetColor(getColourCode("card play heading"));
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory to target with Tornado");
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
-            if (TargetTerritoryID == nil) then
-                UI.Alert("You must select a territory");
-                return;
-            end
-            print("[TORNADO] order input: territory=" .. TargetTerritoryName .. " :: Tornado|" .. TargetTerritoryID);
-            local strTornadoMessage = strPlayerName_cardPlayer .. " invokes a Tornado on " .. TargetTerritoryName;
-            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --red annotation background for Tornado
-                playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            else
-                playCard(strTornadoMessage, 'Tornado|' .. TargetTerritoryID, WL.TurnPhase.Gift);
-            end
-            close();
-        end);
-    end);
-end
-
-function play_Quicksand_card(game, cardInstance, playCard)
-    print("[QUICKSAND] card play clicked, played by=" .. strPlayerName_cardPlayer);
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400,300);
-        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (vert).SetText("[QUICKSAND]\n\nSelect a territory to convert into quicksand:").SetColor(getColourCode("card play heading"));
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory to apply Quicksand to");
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
-            if (TargetTerritoryID == nil) then
-                UI.Alert("No territory selected. Please select a territory.");
-                return;
-            end
-            print("[QUICKSAND] order input: territory=" .. TargetTerritoryName .. " :: Quicksand|" .. TargetTerritoryID);
-            local strQuicksandMessage = strPlayerName_cardPlayer .. " transforms " .. TargetTerritoryName .. " into quicksand";
-            local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 8, getColourInteger (255, 0, 0))}; --red annotation background for Quicksand
-                playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-            else
-                playCard(strQuicksandMessage, 'Quicksand|' .. TargetTerritoryID, WL.TurnPhase.Gift);
-            end
-            close();
-        end);
-    end);
-end
-
-function play_Monolith_card(game, cardInstance, playCard)
-    print ("[MONOLITH] card play clicked, played by=" .. strPlayerName_cardPlayer.."::");
-    --
-    game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
-        setMaxSize(400, 300);
-        local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-        UI.CreateLabel (vert).SetText ("[MONOLITH]\n\n").SetColor (getColourCode("card play heading"));
-
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory to create a Monolith on."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-    
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function() 
-
-        --check for CANCELED request, ie: no territory selected
-        if (TargetTerritoryID == nil) then
-            UI.Alert("No territory selected. Please select a territory.");
-            return;
-        end
-        if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then 
-            -- client player does not own this territory, alert player and cancel
-            UI.Alert("You must select a territory you own.");
-            return;
-        end
-        print ("[MONOLITH] order input::terr=" .. TargetTerritoryName .."::Monolith|" .. TargetTerritoryID.."::");
-
-        local strMonolithMessage = strPlayerName_cardPlayer.." creates a Monolith on " .. TargetTerritoryName;
-        local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-        if (WL.IsVersionOrHigher("5.34.1")) then
-            local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Monolith", 8, getColourInteger (0, 0, 255))}; --blue annotation background for Shield
-            playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-        else
-            playCard(strMonolithMessage, 'Monolith|' .. TargetTerritoryID, WL.TurnPhase.Gift);
-        end
-        close();
-        end);
-    end);
-end
-
-function play_Deneutralize_card (game, cardInstance, playCard)
-	local winPlayDeneutralize = createWindow (game);
-	winPlayDeneutralize.setMaxSize (400, 500);
-	local rootParent = winPlayDeneutralize.root;
-	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-	UI.CreateLabel (vert).SetText ("[DENEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
-
-	TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked).SetColor ("#00FFFF");
-	TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-	strDeneutralize_TerritorySelectText = "   Select the territory you wish to deneutralize (convert from neutral and assign to a player)\n";
-	TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-	UI.CreateLabel (vert).SetText("_").SetColor ("#151515");
-
-	--add player selection here, default to self but allow to assign to others
-	local assignToPlayerID = nil;
-	local assignToPlayerName = nil;
-	--add config items for can/can't assign to self/others
-
-	--selected territory is  neutral, so apply the deneutralize order
-	assignToPlayerID = intPlayerID_cardPlayer;
-	assignToPlayerName = strPlayerName_cardPlayer;
-	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, Mod.Settings.DeneutralizeRange or 4000);
-	-- local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, 1);
-	game.HighlightTerritories (arrValidTerrs);
-
-	local horzTargetPlayer = UI.CreateHorizontalLayoutGroup (vert);
-
-	if (Mod.Settings.DeneutralizeCanAssignToAnotherPlayer == true) then
-		DeneutralizeSelectPlayerButton = UI.CreateButton(horzTargetPlayer).SetText("Select player").SetInteractable (Mod.Settings.DeneutralizeCanAssignToAnotherPlayer).SetColor("#00FFFF").SetOnClick(function ()
-			local winSelectPlayer = createWindow (game);
-			winSelectPlayer.setMaxSize (600, 500);
-			UI.CreateLabel (winSelectPlayer.root).SetText ("Select player to assign target territory to:\n");
-				--generate list of players for popup to select from; exclude self & eliminated (non-active) players; include AIs - game.Game.PlayingPlayers provides this list (compared to game.Game.Players which includes all players ever associated to the game, even those that declined the invite, were removed by host, etc)
-				local numUserButtonsCreated = 0;
-				for playerID,player in pairs(game.Game.PlayingPlayers) do
-					UI.CreateButton(winSelectPlayer.root).SetText("Assign to: " ..toPlayerName(playerID,game)).SetColor (player.Color.HtmlColor).SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
-					numUserButtonsCreated = numUserButtonsCreated + 1;
-				end
-				winSelectPlayer.setMaxSize (600, math.min (800, numUserButtonsCreated * 100));
-		end);
-		DeneutralizeSelectPlayerButton.SetText ("Reselect player");
-	end
-
-	TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText ("Assign to: " ..assignToPlayerName);
-	UI.CreateLabel (vert).SetText ("   Select the player to assign the target territory to");
-	UI.CreateLabel (vert).SetText("_").SetColor ("#151515");
-
-	UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
-		function ()
-
-			print ("---");
-			for k,v in pairs (arrValidTerrs) do print (k,v,getTerritoryName (k, game)); end
-			print ("SELECT: ".. TargetTerritoryID, getTerritoryName (TargetTerritoryID, game));
-
-			--check for CANCELED request, ie: no territory selected
-			if (TargetTerritoryID == nil) then
-				UI.Alert ("No territory selected. Please select a territory.");
-				return;
-			elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
-				UI.Alert ("The selected territory is not neutral. Select a different territory that is neutral.");
-				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); --bring up the territory select screen again
-				return;
-			elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
-				UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.DeneutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
-				game.HighlightTerritories (arrValidTerrs);
-				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
-				return;
-			end
-
-			-- print ("Deneutralize order input::terr=" .. TargetTerritoryName .."::Neutralize|" .. TargetTerritoryID.."::");
-			-- print ("territory="..TargetTerritoryName.."::,ID="..TargetTerritoryID.."::owner=="..game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID.."::neutralOwnerID="..WL.PlayerID.Neutral.."::assignToPlayerID="..assignToPlayerID.."::assignToPlayerName="..assignToPlayerName);
-
-			local strDeneutralizeMessage = strPlayerName_cardPlayer.." deneutralized " .. TargetTerritoryName ..", assigned to "..assignToPlayerName;
-			local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-			if (WL.IsVersionOrHigher("5.34.1")) then
-				local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Deneutralize", 8, getColourInteger (0, 255, 0))}; --green annotation background for Deneutralize
-				playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-			else
-				playCard(strDeneutralizeMessage, 'Deneutralize|' .. TargetTerritoryID .. "|" .. assignToPlayerID, Mod.Settings.DeneutralizeImplementationPhase or WL.TurnPhase.Gift);
-			end
-			--official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
-			winPlayDeneutralize.close(); --close the popup dialog
-		end
-	);
-end
-
-function play_Neutralize_card (game, cardInstance, playCard)
-    --[[-- test writing to Mod.PublicGameData, Mod.PrivateGameData, Mod.PlayerGameData
-    -- all data must be saved to a code construct, then have the code construct assigned the the Mod.Public/Private/PlayerGameData construct; can't modify variable values directly
-    local data = Mod.PublicGameData;
-    publicGameData = Mod.PublicGameData; --readable from anywhere, writeable only from Server hooks
-    --privateGameData = Mod.PrivateGameData;  --readable only from Server hooks
-    playerGameData = Mod.PlayerGameData;  --readable/writeable from both Client & Server hooks
-        --Client hooks can only access data for the user associated with the Client hook (current player), doesn't need index b/c it can only access data for current player, automatically gets assigned playerID of current player
-        --Server hooks access this using an index of playerID
-    publicGameData.someProperty = "this is some public data";
-    publicGameData.anotherProperty = "this is some public data";]]
-
-    game.CreateDialog(
-        function(rootParent, setMaxSize, setScrollable, game, close)
-            setMaxSize(400, 300);
-            local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
-            UI.CreateLabel (vert).SetText ("[NEUTRALIZE]\n\n").SetColor (getColourCode("card play heading"));
-
-            TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
-            TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-            strNeutralize_TerritorySelectText = "Select the territory you wish to neutralize (turn to neutral).";
-            TargetTerritoryClicked(strNeutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-
-            UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
-                function() 
-                    --check for CANCELED request, ie: no territory selected
-                    if (TargetTerritoryID == nil) then
-                        UI.Alert("No territory selected. Please select a territory.");
-                        return;
-                    elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then -- territory is already neutral, alert player and cancel
-                        UI.Alert("The selected territory is already neutral. Select a different territory that is owned by a player.");
-                        TargetTerritoryClicked(strNeutralize_TerritorySelectText); --bring up the territory select screen again
-                        return;
-                    end
-
-                    --selected territory is not neutral, so apply the neutralize order
-                    --print ("[!player!] Neutralize order input prep::");
-                    print ("Neutralize order input::terr=" .. TargetTerritoryName .."::Neutralize|" .. TargetTerritoryID.."::");
-                    print ("territory="..TargetTerritoryName.."::,ID="..TargetTerritoryID.."::owner=="..game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID.."::neutralOwnerID="..WL.PlayerID.Neutral);
-
-                    --implement order in ReceiveGold phase for now; doing it in BombCards phase causes error if opponents (AIs in my testing) move specials (commander) on the neutralized units; orders never reach Server_AdvanceTurn_Start or _Order
-                    local strNeutralizeMessage = strPlayerName_cardPlayer.." neutralized " .. TargetTerritoryName;
-                    local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-                    if (WL.IsVersionOrHigher("5.34.1")) then
-                        local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Neutralize", 8, getColourInteger (128, 128, 128))}; --use Light Grey colour for Neutralize
-                        playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift, territoryAnnotation, jumpToActionSpotOpt);
-                    else
-                        playCard(strNeutralizeMessage, 'Neutralize|' .. TargetTerritoryID, WL.TurnPhase.Gift);
-                    end
-                    --official playCard action; this plays the card via WZ interface, uses up a card (1 whole card), etc; can't put this in the move list at a specific spot but is required for card usage, etc
-                    close(); --close the popup dialog
-                end
-            );
-        end
-    );
-end
-
-function TargetTerritoryClicked (strLabelText) --TargetTerritoryInstructionLabel, TargetTerritoryBtn)
+function TargetTerritoryClicked (strLabelText)
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
 	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
 	TargetTerritoryBtn.SetInteractable(false);
 end
 
-function TerritoryClicked(terrDetails)
+function TerritoryClicked (terrDetails)
 	if (UI.IsDestroyed (TargetTerritoryBtn)) then return; end --if the button was destroyed, don't try to set it interactable
     TargetTerritoryBtn.SetInteractable(true);
 
@@ -458,24 +99,24 @@ function TerritoryClicked(terrDetails)
         TargetTerritoryName = nil;
 	else
 		--Territory was clicked, remember its ID
-		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
+		TargetTerritoryInstructionLabel.SetText ("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
 	end
 end
 
-function TargetPlayerClicked(strTextLabel)
-	local players = filter(Game.Game.Players, function (p) return p.ID ~= Game.Us.ID end);
-	local options = map(players, PlayerButton);
-	UI.PromptFromList(strTextLabel, options);
+function TargetPlayerClicked (strTextLabel)
+	local players = filter (Game.Game.Players, function (p) return p.ID ~= Game.Us.ID end);
+	local options = map (players, PlayerButton);
+	UI.PromptFromList (strTextLabel, options);
 end
 
-function PlayerButton(player)
-	local name = player.DisplayName(nil, false);
+function PlayerButton (player)
+	local name = player.DisplayName (nil, false);
 	local ret = {};
 	ret["text"] = name;
 	ret["selected"] = function()
-		TargetPlayerBtn.SetText(name);
+		TargetPlayerBtn.SetText (name);
 		TargetPlayerID = player.ID;
 	end
 	return ret;
@@ -507,4 +148,94 @@ function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
         intDepth = intDepth + 1;
     end
     return (arrTerrResults);
+end
+
+function getColours()
+    local colors = {};					-- Stores all the built-in colors (player colors only)
+    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+	colors.WZyellow = "#ABA500"; colors.WZgreen = "#198225"; colors["WZLight Blue"] = "#50B2E3"; colors.WZblue = "#242D9A"; colors.WZred = "#9A2929";
+    return colors;
+end
+
+function getColourCode (itemName)
+    if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
+    elseif (itemName=="error")  then return "#FF0000"; --red
+	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
+	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
+	elseif (itemName=="ok" or itemName=="Button|Green") then return getColours()["WZgreen"]; --standard green used for "Ok" buttons
+	elseif (itemName=="selection" or itemName=="Button|Cyan") then return getColours()["Cyan"]; --standard green used for "Ok" buttons
+	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
+	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
+	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
+	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Airlift") then return "#777777"; --
+	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
+	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
+	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Bomb+ Card") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
+	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
+	elseif (itemName=="Card|Isolation") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
+	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
+	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
+	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Deneutralize") then return getColours()["Green"]; --
+	elseif (itemName=="Card|Earthquake") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Tornado") then return getColours()["Charcoal"]; --
+	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
+	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
+	elseif (itemName=="Phase|Purchase") then return "#007700";
+	elseif (itemName=="Phase|CardsWearOff") then return "#964B00";
+	elseif (itemName=="Phase|Discards") then return "#654321";
+	elseif (itemName=="Phase|OrderPriorityCards") then return getColours()["Yellow"];
+	elseif (itemName=="Phase|SpyingCards") then return getColours()["Red"];
+	elseif (itemName=="Phase|ReinforcementCards") then return getColours()["Dark Green"];
+	elseif (itemName=="Phase|Deploys") then return "#00BB00";
+	elseif (itemName=="Phase|BombCards") then return getColours()["Dark Magenta"];
+	elseif (itemName=="Phase|EmergencyBlockadeCards") then return getColours()["Royal Blue"];
+	elseif (itemName=="Phase|Airlift") then return "#777777";
+	elseif (itemName=="Phase|Gift") then return getColours()["Aqua"];
+	elseif (itemName=="Phase|Attacks") then return "#FF0000";
+	elseif (itemName=="Phase|BlockadeCards") then return getColours()["Blue"];
+	elseif (itemName=="Phase|DiplomacyCards") then return getColours()["Light Blue"];
+	elseif (itemName=="Phase|SanctionCards") then return getColours()["Purple"];
+	elseif (itemName=="Phase|ReceiveCards") then return "#005500";
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+    else return "#AAAAAA"; --return light grey for everything else
+    end
+end
+
+--given 0-255 RGB integers, return a single 24-bit integer
+function getColourInteger (red, green, blue)
+	return red*256^2 + green*256 + blue;
+end
+
+function createJumpToLocationObject (game, targetTerritoryID)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create (1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
+	return (WL.RectangleVM.Create(
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY,
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY));
 end

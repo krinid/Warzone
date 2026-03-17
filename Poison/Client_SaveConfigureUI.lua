@@ -14,12 +14,17 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.PoisonDamageFixedSpecialUnits = Mod.Settings.PoisonDamageFixedSpecialUnits or 5; --default to 0
 	Mod.Settings.PoisonDamagePercentSpecialUnits = Mod.Settings.PoisonDamagePercentSpecialUnits or 10; --default to 10%
 	Mod.Settings.PoisonDamageRange = Mod.Settings.PoisonDamageRange or 1; --default to 1 (doesn't spread)
+	Mod.Settings.PoisonDamageAffectsAllAbilities = Mod.Settings.PoisonDamageAffectsAllAbilities or true; --default to true (affects all abilities, eg: Attack+DefensePower, Attack+DefensePower%, DamageAbsorption); false == only affects Health and Damage To Kill
 
 	Mod.Settings.PoisonAffectsOtherModAbilities = Mod.Settings.PoisonAffectsOtherModAbilities or true; --default to true; this setting indicates whether Poison should be implemented into other mods, eg: Pestilence, Nuke, Bomb+, etc
 	--this is achieved by XYZ (still figuring this out)
 	--maybe add additional Poison cards which other mods can check in order to apply poison
 	--maybe have them check for the Poison card, then add a 'Poison' custom order (that can be skipped) to trigger this mod to apply the poison
 
-	Mod.Settings.PoisonCardID = addCard ("Poison", strPoisonDescription, "poison_130x180.png", Mod.Settings.PoisonPiecesNeeded, Mod.Settings.PoisonPiecesPerTurn, Mod.Settings.PoisonStartPieces, Mod.Settings.PoisonCardWeight, Mod.Settings.PoisonDuration);
+	--for testing only
+	Mod.Settings.PoisonPiecesNeeded = 1;
+	Mod.Settings.PoisonStartPieces = 50;
+
+	Mod.Settings.PoisonCardID = addCard ("Poison", strPoisonDescription, "Poison_card_130x180.png", Mod.Settings.PoisonPiecesNeeded, Mod.Settings.PoisonPiecesPerTurn, Mod.Settings.PoisonStartPieces, Mod.Settings.PoisonCardWeight, Mod.Settings.PoisonDuration);
 	Mod.Settings.PoisonAffectsOtherModsCardID = addCard ("Poison Affects Other Mods", "Presence of this cards signifies to other mods to apply poison damage to their effects", "poison_130x180.png", 99999, 0, 0, 0, 0); --placeholder card to exchange data between mods, not an actual card to be played
 end
