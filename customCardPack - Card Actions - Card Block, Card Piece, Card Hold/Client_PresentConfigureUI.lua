@@ -347,7 +347,7 @@ function cardHoldCheckboxClicked()
 
 		local horzCardHoldCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzCardHoldCardWeight).SetText("Card weight: ");
-		CardHoldCardWeight = UI.CreateNumberInputField (horzCardHoldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardHoldCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		CardHoldCardWeight = UI.CreateNumberInputField (horzCardHoldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.CardHoldCardWeight).SetInteractable(true);
 	end
 end
 
@@ -381,7 +381,7 @@ function cardBlockCheckboxClicked()
 
 		local horzCardBlockCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzCardBlockCardWeight).SetText("Card weight: ");
-		CardBlockCardWeight = UI.CreateNumberInputField (horzCardBlockCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardBlockCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		CardBlockCardWeight = UI.CreateNumberInputField (horzCardBlockCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.CardBlockCardWeight).SetInteractable(true);		
 	end
 end
 
@@ -420,7 +420,7 @@ function earthquakeCheckboxClicked()
 
 		local horzEarthquakeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzEarthquakeCardWeight).SetText("Card weight: ");
-		EarthquakeCardWeight = UI.CreateNumberInputField (horzEarthquakeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.EarthquakeCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		EarthquakeCardWeight = UI.CreateNumberInputField (horzEarthquakeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.EarthquakeCardWeight).SetInteractable(true);
 	end
 end
 
@@ -460,7 +460,7 @@ function tornadoCheckboxClicked()
 
 		local horzTornadoCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzTornadoCardWeight).SetText("Card weight: ");
-		TornadoCardWeight = UI.CreateNumberInputField (horzTornadoCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.TornadoCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		TornadoCardWeight = UI.CreateNumberInputField (horzTornadoCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.TornadoCardWeight).SetInteractable(true);		
 	end
 end
 
@@ -518,7 +518,7 @@ function quicksandCheckboxClicked()
 
 		local horzQuicksandCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzQuicksandCardWeight).SetText("Card weight: ");
-		QuicksandCardWeight = UI.CreateNumberInputField (horzQuicksandCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.QuicksandCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		QuicksandCardWeight = UI.CreateNumberInputField (horzQuicksandCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.QuicksandCardWeight).SetInteractable(true);		
 	end
 end
 
@@ -570,7 +570,7 @@ function phantomCheckboxClicked()
 
 		horzPhantomCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
         UI.CreateLabel (horzPhantomCardWeight).SetText("Card weight (how common the card is): ");
-        PhantomCardWeight = UI.CreateNumberInputField (horzPhantomCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PhantomCardWeight).SetWholeNumbers(false).SetInteractable(true);
+        PhantomCardWeight = UI.CreateNumberInputField (horzPhantomCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.PhantomCardWeight).SetInteractable(true);
     end
 end
 
@@ -608,7 +608,7 @@ function shieldCheckboxClicked()
 
 		horzShieldCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
         UI.CreateLabel (horzShieldCardWeight).SetText("Card weight (how common the card is): ");
-        ShieldCardWeight = UI.CreateNumberInputField (horzShieldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ShieldCardWeight).SetWholeNumbers(false).SetInteractable(true);
+        ShieldCardWeight = UI.CreateNumberInputField (horzShieldCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.ShieldCardWeight).SetInteractable(true);
     end
 end
 
@@ -647,7 +647,7 @@ function monolithCheckboxClicked()
 
 		horzMonolithCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzMonolithCardWeight).SetText("Card weight (how common the card is): ");
-		MonolithCardWeight = UI.CreateNumberInputField (horzMonolithCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.MonolithCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		MonolithCardWeight = UI.CreateNumberInputField (horzMonolithCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.MonolithCardWeight).SetInteractable(true);
 	end
 end
 
@@ -697,7 +697,7 @@ function neutralizeCheckboxClicked()
 
 		local horzNeutralizeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzNeutralizeCardWeight).SetText("Card weight: ");
-		NeutralizeCardWeight = UI.CreateNumberInputField (horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		NeutralizeCardWeight = UI.CreateNumberInputField (horzNeutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.NeutralizeCardWeight).SetInteractable(true);		
 	end
 end
 
@@ -760,7 +760,7 @@ function deneutralizeCheckboxClicked()
 
 		local horzDeneutralizeCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzDeneutralizeCardWeight).SetText("Card weight: ");
-		DeneutralizeCardWeight = UI.CreateNumberInputField (horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.DeneutralizeCardWeight).SetWholeNumbers(false).SetInteractable(true);		
+		DeneutralizeCardWeight = UI.CreateNumberInputField (horzDeneutralizeCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.DeneutralizeCardWeight).SetInteractable(true);		
 	end
 end
 
@@ -831,7 +831,7 @@ function cardPiecesCheckboxClicked()
 
 		local horzCardPiecesCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzCardPiecesCardWeight).SetText("  Card weight: ");
-		CardPiecesCardWeight = UI.CreateNumberInputField (horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.CardPiecesCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		CardPiecesCardWeight = UI.CreateNumberInputField (horzCardPiecesCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.CardPiecesCardWeight).SetInteractable(true);
 	end
 end
 
@@ -909,7 +909,7 @@ function airstrikeCheckboxClicked()
 
 		horz = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horz).SetText("Card weight: ");
-		AirstrikeCardWeight = UI.CreateNumberInputField (horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.AirstrikeCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		AirstrikeCardWeight = UI.CreateNumberInputField (horz).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.AirstrikeCardWeight).SetInteractable(true);
 	end
 end
 
@@ -977,7 +977,7 @@ function forestFireCheckboxClicked()
 
 		local horzForestFireCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzForestFireCardWeight).SetText("Card weight: ");
-		ForestFireCardWeight = UI.CreateNumberInputField (horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.ForestFireCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		ForestFireCardWeight = UI.CreateNumberInputField (horzForestFireCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.ForestFireCardWeight).SetInteractable(true);
 
     local intSpreadRange    = Mod.Settings.ForestFireSpreadRange or 5; --get Spread Range from Mod.Settings, default to 5
     local intDamageDelta    = Mod.Settings.ForestFireDamageDeltaWithSpread or 25; --get damage reduction amount (%), default to 25
@@ -1132,7 +1132,7 @@ function isolationCheckboxClicked()
 
 		local horzIsolationCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzIsolationCardWeight).SetText("Card weight: ");
-		IsolationCardWeight = UI.CreateNumberInputField (horzIsolationCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		IsolationCardWeight = UI.CreateNumberInputField (horzIsolationCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.IsolationCardWeight).SetInteractable(true);
 	end
 end
 
@@ -1551,6 +1551,6 @@ function pestilenceCheckboxClicked()
 		horzPestilenceWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzPestilenceWeight).SetText("Card weight: ");
 		PestilenceCardWeight=1.0;Mod.Settings.PestilenceCardWeight=1.0;
-		PestilenceCardWeight = UI.CreateNumberInputField (horzPestilenceWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.PestilenceCardWeight).SetWholeNumbers(false).SetInteractable(true);
+		PestilenceCardWeight = UI.CreateNumberInputField (horzPestilenceWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.PestilenceCardWeight).SetInteractable(true);
 	end
 end

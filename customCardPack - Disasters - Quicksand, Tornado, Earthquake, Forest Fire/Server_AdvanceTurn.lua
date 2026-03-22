@@ -1353,41 +1353,6 @@ function execute_Earthquake_operation(game, gameOrder, addOrder, targetBonusID)
     Mod.PublicGameData = publicGameData;
 end
 
-function execute_Tornado_operation_OLD(game, gameOrder, addOrder, targetTerritoryID)
-    print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
-    local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
-
-	--add an Idle "power up" structure to the territory to signify a Tornado; add 1 to the Idle "power" structure on the target territory
-	--local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
-	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
-
-	print ("[TORNADO] structure Idle power=="..WL.StructureType.Power.."::");
-	--print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	--print ("[TORNADO] PRE - game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
-	if (structures == nil) then structures = {}; end;
-	print ("[TORNADO] PRE - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	if (structures[WL.StructureType.Power] == nil) then
-		structures[WL.StructureType.Power] = 1;
-	else
-		structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1;
-	end
-
-	impactedTerritory.SetStructuresOpt = structures;
-    if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
-    local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
-    event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
-	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-    addOrder(event, true);
-    local publicGameData = Mod.PublicGameData;
-    if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end
-    local turnNumber_TornadoExpires = (Mod.Settings.TornadoDuration > 0) and (game.Game.TurnNumber + Mod.Settings.TornadoDuration) or -1;
-    publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
-    Mod.PublicGameData = publicGameData;
-	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
-end
-
 function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS TORNADO] on territory " .. targetTerritoryID);
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
