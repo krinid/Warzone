@@ -9,8 +9,8 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.PoisonCardWeight = Mod.Settings.PoisonCardWeight or 1; --default to 1 if not set yet
 	Mod.Settings.PoisonDuration = Mod.Settings.PoisonDuration or 3; --default to 3 if not set yet
 
-	Mod.Settings.PoisonDamageFixedArmies = Mod.Settings.PoisonDamageFixedArmies or 1; --default to 1
-	Mod.Settings.PoisonDamagePercentArmies = Mod.Settings.PoisonDamagePercentArmies or 0; --default to 0
+	Mod.Settings.PoisonDamageFixedArmies = Mod.Settings.PoisonDamageFixedArmies or 10; --1; --default to 1
+	Mod.Settings.PoisonDamagePercentArmies = Mod.Settings.PoisonDamagePercentArmies or 0.25; --0; --default to 0
 	Mod.Settings.PoisonDamageFixedSpecialUnits = Mod.Settings.PoisonDamageFixedSpecialUnits or 5; --default to 0
 	Mod.Settings.PoisonDamagePercentSpecialUnits = Mod.Settings.PoisonDamagePercentSpecialUnits or 10; --default to 10%
 	Mod.Settings.PoisonDamageRange = Mod.Settings.PoisonDamageRange or 1; --default to 1 (doesn't spread)

@@ -64,7 +64,7 @@ function Client_PresentConfigureUI(rootParent)
 
 	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (vert);
 	UI.CreateLabel (horzBombPlusCardWeight).SetText("Card weight: ");
-	BombPlusCardWeight = UI.CreateNumberInputField(horzBombPlusCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusCardWeight or 1).SetWholeNumbers(false).SetInteractable(true);
+	BombPlusCardWeight = UI.CreateNumberInputField(horzBombPlusCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.BombPlusCardWeight or 1).SetInteractable(true);
 end
 
 function Bomb_turnPhaseButton_clicked ()
