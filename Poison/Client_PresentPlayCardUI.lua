@@ -34,7 +34,7 @@ function play_Poison_card(game, cardInstance, playCard)
 
 	TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("Button|Cyan"));
 	TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
-	TargetTerritoryClicked("Select the territory to throw Poison on.");
+	TargetTerritoryClicked("Select the territory to spew Poison on.");
 
 	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
 		if (TargetTerritoryID == nil) then
@@ -47,7 +47,7 @@ function play_Poison_card(game, cardInstance, playCard)
 		-- end
 		-- print("[POISON] order input::terr=" .. TargetTerritoryName .. "::Phantom|" .. TargetTerritoryID .. "::");
 
-		local strPoisonMessage = strPlayerName_cardPlayer .. " throws Poison on " .. TargetTerritoryName;
+		local strPoisonMessage = strPlayerName_cardPlayer .. " spews Poison on " .. TargetTerritoryName;
 		local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
 		local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Poison", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison  
 		playCard (strPoisonMessage, 'Poison|' .. TargetTerritoryID, WL.TurnPhase.BombCards, territoryAnnotation, jumpToActionSpotOpt);

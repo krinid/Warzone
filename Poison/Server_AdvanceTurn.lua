@@ -44,9 +44,14 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 			execute_Poison_operation (game, order, addNewOrder, skipThisOrder, tonumber (cardOrderContentDetails));
 		end
 	elseif (order.proxyType == 'GameOrderAttackTransfer' and (orderResult.IsAttack == true or orderResult.IsSuccessful == true)) then
+		print ("[POISON] spread to " ..order.To);
 		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 		local impactedTerritory = WL.TerritoryModification.Create (order.To);
-		apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, 0.5);
+		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, 0.5);
+		local event = WL.GameOrderEvent.Create (order.PlayerID, "Poison carried to " ..getTerritoryName (order.To, game), {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
+		event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create (strPoisonNameText.. " carried", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+		addNewOrder (event, true);
 	end
 end
 
