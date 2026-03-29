@@ -7,7 +7,7 @@ function Client_SaveConfigureUI(alert, addCard)
 	Mod.Settings.Range = range.GetValue ();
 
     if (Mod.Settings.Range < 0) then
-        alert("Duration cannot be less than 1");
+        alert("Range cannot be less than 1");
         return;
     end
 
@@ -33,7 +33,7 @@ function Client_SaveConfigureUI(alert, addCard)
         return;
     end
 
-	local strDescription = "Play this card to create a beacon that dispels fog emanating from a given territory" ..(Mod.Settings.Range >= 1 and " and spread to territories within radius of " ..tostring (Mod.Settings.Range)) .. ". The reveal lasts " ..tostring (Mod.Settings.Duration).. " turn(s) and lets all players see the revealed territories.";
+	local strDescription = "Play this card to create a beacon that dispels fog emanating from a given territory" ..(Mod.Settings.Range >= 1 and " and spread to territories within radius of " ..tostring (Mod.Settings.Range) or "") .. ". The reveal lasts " ..tostring (Mod.Settings.Duration).. " turn(s) and lets all players see the revealed territories.";
 	local cardID = addCard("Beacon", strDescription, "Beacon_Card.png", Mod.Settings.NumPieces, Mod.Settings.MinPieces, Mod.Settings.InitialPieces, Mod.Settings.CardWeight);
 end
 
