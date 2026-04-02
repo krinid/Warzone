@@ -134,7 +134,8 @@ function displayMenu (game, windowUI, close)
 			cardCountRegular = cardCountRegular + 1;
 			if (cardRecord.Price>0) then cardCountRegular_Buyable = cardCountRegular_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
 		end
-		local interactable = (cardRecord.Price >=1 and publicGameData.CardData.CardPricesFinalized==true); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
+		local interactable = (cardRecord.Price >=1 and publicGameData.CardData.CardPricesFinalized==true and localPlayerIsPlayerInGame==true); 
+		--set .SetInteractable of the buttons to this value to True (button enabled) when prices have been finalized, price>0 and local player is an active player in the game, otherwise False (button disabled/greyed out); if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI).SetFlexibleWidth(100); end
 
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
