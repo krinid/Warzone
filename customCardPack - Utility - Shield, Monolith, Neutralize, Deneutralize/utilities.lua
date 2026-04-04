@@ -1141,3 +1141,19 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
 
     return arrTerrResults;
 end
+
+--return true if player1ID and player2ID are in active diplo via standard Diplomacy card (can't attack each other), otherwise return false
+--requires parameter gamestanding.ActiveCards and the 2 player IDs to check for diplo between
+function arePlayersInDiplo (ActiveCards, player1ID, player2ID)
+    if (ActiveCards == nil) then return false; end
+
+    for _, activeCard in pairs (ActiveCards) do
+		if (activeCard.Card.proxyType == 'GameOrderPlayCardDiplomacy') then
+            local p1 = activeCard.Card.PlayerOne;
+            local p2 = activeCard.Card.PlayerTwo;
+            if (p1 == player1ID and p2 == player2ID) or (p1 == player2ID and p2 == player1ID) then return true; end
+        end
+    end
+
+    return (false);
+end

@@ -1,8 +1,8 @@
-function Server_AdvanceTurn_Start (game,addNewOrder)
-end
+-- function Server_AdvanceTurn_Start (game,addNewOrder)
+-- end
 
-function Server_AdvanceTurn_End(game,addNewOrder)
-end
+-- function Server_AdvanceTurn_End(game,addNewOrder)
+-- end
 
 function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
 	print ("!".. order.proxyType);
@@ -27,21 +27,36 @@ function PlayBombCard (game, order, addNewOrder)
 		intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the source territory ID
 	end
 
+	local intFortStructureID = territoryHasFort (game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID]);
+	local boolTerritoryHasShield = territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID]);
 	local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
 	local armies;
 	local strBombMsg = getPlayerName (game, order.PlayerID).. " bombs " ..game.Map.Territories[intTargetTerritoryID].Name;
 	local terr = game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID]; --target territory
 
-	--if a territory with an active Shield is being Bombed, nullify the damage
-	--also only process if Shield module is active (or if current game predates ActiveModule)
-	-- if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[order.TargetTerritoryID])) then
-
 	--if a shield is on the target territory, do not apply any damage
-	if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[intTargetTerritoryID])) then
-		--don't need to do anything
-		-- print ("SHIELD yes");
+	if (boolTerritoryHasShield == true or boolTerritoryHasFort == true) then
+		--terr protected by Shield or Fort, no damage is applied, no cities destroyed
+		--if terr is protected by Shield, no Forts are destroyed; if terr is not protected by Shield but has Forts, 1 Fort is destroyed
+
+		--destroy 1 fort on the territory iff there are any forts on the territory and no Shield is active
+		if (boolTerritoryHasShield == false and boolTerritoryHasFort == true) then
+			-- local fortStructureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png  <--- this only works if this structure was created by the current mod (else StructureImages/Fort.png doesn't exist)
+			local structures = game.ServerGame.LatestTurnStanding.Territories[order.To].Structures;
+			local intNumForts = structures[fortStructureID] ~= nil and structures [fortStructureID] or 0;
+
+			if (intNumForts >= 1) then
+				structures [fortStructureID] = structures [fortStructureID] - 1;
+				local terrMod = WL.TerritoryModification.Create (order.To);
+				terrMod.SetStructuresOpt = structures;
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Destroyed fort", {}, {terrMod});
+				event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
+				event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create("Destroy Fort")};
+				addNewOrder (event, true); --The second argument makes sure this order isn't processed when the initial attack is skipped
+			end
+		end
 	else
-		-- print ("SHIELD no");
+		--terr not protected by Shield or Fort
 		armies = terr.NumArmies.NumArmies;
 		armies = math.floor (armies * Mod.Settings.killPercentage / 100 + Mod.Settings.armiesKilled + 0.5);
 
@@ -107,6 +122,37 @@ function territoryHasActiveShield (territory)
 	end
 
 	return (false);
+end
+
+function territoryHasFort (territory)
+	local structures = territory.Structures or {};
+
+	for k,v in pairs (structures) do
+		print (k,v);
+	end
+
+
+	local intNumForts = structures[fortStructureID] ~= nil and structures [fortStructureID] or 0;
+
+	if (intNumForts >= 1) then
+		structures [fortStructureID] = structures [fortStructureID] - 1;
+		local terrMod = WL.TerritoryModification.Create (order.To);
+		terrMod.SetStructuresOpt = structures;
+		local event = WL.GameOrderEvent.Create (order.PlayerID, "Destroyed fort", {}, {terrMod});
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
+		event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create("Destroy Fort")};
+		addNewOrder (event, true); --The second argument makes sure this order isn't processed when the initial attack is skipped
+	end
+
+	if not territory then return false; end
+
+	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
+		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Fort') then
+			return (true);
+		end
+	end
+
+	return 0, 0; --return fortID as 0 (indicates DNE) and 0 forts present
 end
 
 function split(inputstr, sep)

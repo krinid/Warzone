@@ -628,13 +628,15 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif (strCardTypeBeingPlayed == "Isolation" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Isolation == true)) then
 			execute_Isolation_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Pestilence" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true)) then
+			execute_Pestilence_preparation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+		elseif (strCardTypeBeingPlayed == "Pestilence_ExecuteOrder" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true)) then
 			execute_Pestilence_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Shield" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true)) then
-			execute_Shield_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Shield_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Monolith" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Monolith == true)) then
 			execute_Monolith_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails))
 		elseif (strCardTypeBeingPlayed == "Phantom" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Phantom == true)) then
-			execute_Phantom_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Phantom_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Neutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Neutralize == true)) then
 			execute_Neutralize_operation (game,gameOrder,result,skip,addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Deneutralize" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Deneutralize == true)) then
@@ -642,20 +644,33 @@ function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
 		elseif (strCardTypeBeingPlayed == "Airstrike" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Airstrike == true)) then
 			execute_Airstrike_operation (game, gameOrder, result, skip, addOrder, cardOrderContentDetails);
 		elseif (strCardTypeBeingPlayed == "Card Piece" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardPieces == true)) then
-			execute_CardPiece_operation(game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
+			execute_CardPiece_operation (game, gameOrder, skip, addOrder, tonumber(cardOrderContentDetails));
 		elseif ((strCardTypeBeingPlayed == "Wildfire" or strCardTypeBeingPlayed == "Forest Fire") and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.ForestFire == true)) then
 			execute_Wildfire_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Card Block" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.CardBlock == true)) then
 			execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Earthquake" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Earthquake == true)) then
-			execute_Earthquake_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Earthquake_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Tornado" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Tornado == true)) then
-			execute_Tornado_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Tornado_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Quicksand" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Quicksand == true)) then
-			execute_Quicksand_operation(game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Quicksand_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		else
 			--custom card play not handled by this mod; could be an error, or a card from another mod
 			--do nothing
+		end
+	elseif (gameOrder.proxyType == 'GameOrderCustom') then
+		print ("[GameOrderCustom] modData=="..gameOrder.Payload.."::");
+		local modDataContent = split(gameOrder.Payload, "|");
+		print ("[GameOrderPlayCardCustom] Payload=="..gameOrder.Payload.."::");
+		strCardTypeBeingPlayed = nil;  --global variable referenced in other functions in this Server Hook
+		cardOrderContentDetails = nil; --global variable referenced in other functions in this Server Hook
+		strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
+		cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
+
+		print ("[S_AT_O] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
+		if (strCardTypeBeingPlayed == "Pestilence_ExecuteOrder" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true)) then
+			execute_Pestilence_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		end
 	end
 end
@@ -703,6 +718,7 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	if (sourceOwner ~= WL.PlayerID.Neutral) then sourceOwnerTeam = game.ServerGame.Game.Players[sourceOwner].Team; end
 	if (targetOwner ~= WL.PlayerID.Neutral) then targetOwnerTeam = game.ServerGame.Game.Players[targetOwner].Team; end
+	local boolPlayersAreInDiplo = arePlayersInDiplo (game.ServerGame.LatestTurnStanding.ActiveCards, sourceOwner, targetOwner);
 
 	if (sourceOwner ~= gameOrder.PlayerID) then
 		printDebug ("[AIRSTRIKE] sourceOwner ~= orderPlayer, cancel Airstrike");
@@ -711,7 +727,14 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		return; --don't process anything more; the order is invalid, skip it entirely
 	end
 
-		--check if the order player is attacking an enemy territory; if not, then it's a transfer
+	if (boolPlayersAreInDiplo == true) then
+		printDebug ("[AIRSTRIKE] sourceOwner & orderPlayer are in Diplo, cancel Airstrike");
+		addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike from "..getTerritoryName(sourceTerritoryID, game) .." to ".. getTerritoryName(targetTerritoryID, game) .." skipped; source & target players are in active Diplomacy", {}, {}, {}), false);
+		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+		return; --don't process anything more; the order is invalid, skip it entirely
+	end
+
+	--check if the order player is attacking an enemy territory; if not, then it's a transfer
 	if ((targetOwner == gameOrder.PlayerID) or (targetOwnerTeam >= 0 and targetOwnerTeam == orderPlayerTeam)) then
 		boolIsAttack = false; --if TO is owned by order player or member of same team, then it's a transfer
 		intDeploymentYield = 1.0; --if it's a transfer, then the yield is 100% (ie: all units are sent to TO territory)
@@ -1802,6 +1825,18 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	printObjectDetails (IsolationDataRecord, "[POST Isolation data record]");
 	print ("POST Isolation#items="..tablelength(publicGameData.IsolationData));
 	print ("[PROCESS ISOLATION END] playerID="..gameOrder.PlayerID.."::terr="..targetTerritoryID.."::".."description="..gameOrder.Description.."::");
+end
+
+--when a Pestilence card is played, the prep function is called which creates a new custom order that is dependent on the card play order not being skipped
+--the new custom order starts the actual Pestilence operation
+--this is necessary in case the original card play order is skipped (eg: via Card Block, etc), b/c the Pestilence operation is initiated by modifying game storage
+--which isn't tied to a game order and thus occurs whether the card play order is skipped or not; by making it dependent on the follow up custom order, the Pestilence order only executes if the card play order isn't skipped
+--without this, if the Pestilence operation were executed directly from the card play, skipping the card play would still kick off the Pestilence operation while appearing to skip the actual card play
+function execute_Pestilence_preparation (game, gameOrder, addOrder, pestilenceTarget_playerID)
+	local strPayload = string.gsub (gameOrder.ModData, "Pestilence|", "Pestilence_ExecuteOrder|"); --replace the 1st element of the order
+	--"Pestilence_ExecuteOrder|" ..tostring (pestilenceTarget_playerID).. "|" ..tostring (intPlayerID_cardPlayer) .. "|" .. tostring (PestilenceWarningTurn) .. "|" .. tostring (PestilenceStartTurn) .. "|" .. tostring (PestilenceEndTurn);
+	local event = WL.GameOrderCustom.Create (gameOrder.PlayerID, gameOrder.Description, strPayload, nil); --create custom order to trigger the actual Pestilence operation
+	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 end
 
 --set game data here, actual Pestilence application is done in Server_TurnAdvance_End

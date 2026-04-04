@@ -1,5 +1,10 @@
 function Server_StartGame (game, standing)
 	local privateGameData = Mod.PrivateGameData
+
+	--if manual distribution is used, this ran in Server_StartDistribution so the Portals were shown before picks were made, so don't regen the Portals
+	--if auto-distribution is in play, then the Portals weren't created previously and need to be created now
+	if (privateGameData.Portals ~= nil) then return; end
+
 	privateGameData.Portals = {}
 	territoryArray = {}
 

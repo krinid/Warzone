@@ -244,7 +244,7 @@ end
 
 --Determines if the player is one we can propose an alliance to.
 function IsPotentialTarget(player)
-	if (Game.Us.ID == player.ID) then return false end; -- can't select self
+	-- if (Game.Us.ID == player.ID) then return false end; -- can't select self
 
 	if (player.State ~= WL.GamePlayerState.Playing) then return false end; --skip players not alive anymore, or that declined the game
 
@@ -707,7 +707,7 @@ function play_Pestilence_card(game, cardInstance, playCard)
     end);
 end
 
-function Pestilence(playerID,game,playCard,rootParent,close)
+function Pestilence (playerID, game, playCard, rootParent, close)
     strTargetPlayerName=toPlayerName(playerID,game);
     print ("game.us.player="..game.Us.ID.."::Play a pestilence card on " .. strTargetPlayerName.. '::Pestilence|'..tostring(playerID).."::");
     orders=game.Orders;

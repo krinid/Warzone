@@ -52,10 +52,10 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 	end
 end
 
-function Server_AdvanceTurn_End(game, addNewOrder)
+-- function Server_AdvanceTurn_End(game, addNewOrder)
 	-- BuildForts(game, addNewOrder);
 	--not needed; Fort building is triggered by custom card plays which have specific turn phases assigned to them
-end
+-- end
 
 -- function BuildForts(game, addNewOrder)
 -- 	--Build any forts that we queued in up Server_AdvanceTurn_Order

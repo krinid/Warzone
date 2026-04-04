@@ -176,6 +176,11 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	end
 
 	showDefinedCards (game);
+
+	-- print ("DIPLO k 1 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 1058239, 1)));
+	-- print ("DIPLO 1 k " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 1, 1058239)));
+	-- print ("DIPLO 2 1 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 1)));
+	-- print ("DIPLO 2 3 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 3)));
 end
 
 --send message to Server hook to toggle debug mode and save result in Mod.PublicGameData

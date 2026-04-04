@@ -227,7 +227,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 		--Poison was blocked by Shield, so no damage is down; enter an order indicating what happened
 		local event = WL.GameOrderEvent.Create (order.PlayerID, order.Description .. " (blocked by Shield)", {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText .. " (blocked by Shield)", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText .. " spew (blocked by Shield)", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
 	end
 end
