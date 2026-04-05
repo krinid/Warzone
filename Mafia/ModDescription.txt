@@ -1,0 +1,5 @@
+The game creator configures a mathematical equation, the minimum income threshold.
+Players that are below this income threshold at the end of the turn are eliminated. 
+If every player is below the income threshold, then the player(s) with the most income are left alive.
+
+Compatible with sanctions and army cap
