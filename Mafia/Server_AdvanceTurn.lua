@@ -1,17 +1,18 @@
--- require("util");
--- function Server_AdvanceTurn_Start(game, addNewOrder)
--- 	print(getIncomeThreshold(game.ServerGame.Game.TurnNumber));
+-- function Server_AdvanceTurn_Start (game, addNewOrder)
 -- end
 
-function Server_AdvanceTurn_End(game, addNewOrder)
-	-- local intHighestIncomeAmount = 0;
-	local intLowestIncomeAmount = nil;
-	-- local incomeThreshold = getIncomeThreshold(game.ServerGame.Game.TurnNumber);
-	local playersWithLowestIncome = {};
-	-- local someoneAboveThreshold = false;
+function Server_AdvanceTurn_End (game, addNewOrder)
+	local publicGameData = Mod.PublicGameData;
+	local intEliminationStartTurn = Mod.Settings.EliminationStartTurn or 2;
+	local intEliminationTurnFrequency = Mod.Settings.EliminationTurnFrequency or 5;
+	local intNumEliminationsExecuted = publicGameData.NumEliminationsExecuted or 0;
+	local intNumEliminationsRequired = math.floor ((game.Game.TurnNumber - intEliminationStartTurn) / intEliminationTurnFrequency) + (game.Game.TurnNumber >= intEliminationStartTurn and 1 or 0);
 
-	for _, player in pairs(game.ServerGame.Game.PlayingPlayers) do
-		local intPlayerIncome = player.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total;
+	local intLowestIncomeAmount = nil;
+	local playersWithLowestIncome = {};
+
+	for _, player in pairs (game.ServerGame.Game.PlayingPlayers) do
+		local intPlayerIncome = player.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total; --get income ignoring reinf cards, army cap and sanctions
 		if (intLowestIncomeAmount == nil) then intLowestIncomeAmount = intPlayerIncome; end
 		if (intPlayerIncome < intLowestIncomeAmount) then playersWithLowestIncome = {}; end
 		if (intPlayerIncome <= intLowestIncomeAmount) then
@@ -20,26 +21,26 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 		end
 	end
 
-	print ("Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome);
+	print ("[START] ELIMs done " ..tostring (intNumEliminationsExecuted).. ", ELIMs todo " ..tostring (intNumEliminationsRequired).. ", Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome);
 
-	if (#playersWithLowestIncome == 1) then
-		print ("ELIM " ..tostring (player.ID).. "/" ..getPlayerName (game, player.ID));
-	else
+	--if an elimination is due, find the lowest income player & elim them; if tied for lowest income, don't elim anyone & reevaluate next turn
+	if (intNumEliminationsRequired > intNumEliminationsExecuted) then
 		for _, player in pairs (playersWithLowestIncome) do
-			-- if someoneAboveThreshold or player.Income(0, game.ServerGame.LatestTurnStanding, true, true).Total ~= highestIncome then
-			print ("TIE - don't ELIM " ..tostring (player.ID).. "/" ..getPlayerName (game, player.ID));
-				-- local mods = {};
-				-- for _, terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
-				-- 	if terr.OwnerPlayerID == player.ID then
-				-- 		local mod = WL.TerritoryModification.Create (terr.ID);
-				-- 		mod.SetOwnerOpt = WL.PlayerID.Neutral;
-				-- 		table.insert(mods, mod);
-				-- 	end
-				-- end
-				-- addNewOrder(WL.GameOrderEvent.Create(player.ID, player.DisplayName(nil, false) .. " was with " .. player.Income(0, game.ServerGame.LatestTurnStanding, true, true).Total .. " income below the income threshold", nil, mods));
-			-- end
+			if (#playersWithLowestIncome == 1) then
+				--a single player is @ lowest income, eliminate that player
+				print ("ELIM " ..tostring (playersWithLowestIncome[1].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[1].ID));
+				intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
+				eliminatePlayer (game, addNewOrder, playersWithLowestIncome[1]);
+			else
+				--multiple players are tied, don't eliminate anyone, advance turn and eliminate when 1 player drops to lowest spot with no ties
+				print ("TIE - don't ELIM " ..tostring (player.ID).. "/" ..getPlayerName (game, player.ID));
+			end
 		end
 	end
+
+	publicGameData.NumEliminationsExecuted = intNumEliminationsExecuted;
+	Mod.PublicGameData = publicGameData;
+	print ("[END] ELIMs done " ..tostring (intNumEliminationsExecuted).. ", ELIMs todo " ..tostring (intNumEliminationsRequired).. ", Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome);
 end
 
 function getPlayerName (game, playerid)
@@ -55,4 +56,17 @@ function getPlayerName (game, playerid)
 		end
 	end
 	return "[Error - Player ID not found,playerid==]" ..tostring (playerid); --only reaches here if no player name was found but playerID >50 was provided
+end
+
+function eliminatePlayer (game, addNewOrder, player)
+	local territoryModifications = {};
+
+	for _, terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		if (terr.OwnerPlayerID == player.ID) then
+			local terrMod = WL.TerritoryModification.Create (terr.ID);
+			terrMod.SetOwnerOpt = WL.PlayerID.Neutral;
+			table.insert(territoryModifications, terrMod);
+		end
+	end
+	addNewOrder (WL.GameOrderEvent.Create (player.ID, "Mafia elimination of ".. player.DisplayName (nil, false), nil, territoryModifications));
 end

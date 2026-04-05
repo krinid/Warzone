@@ -1,5 +1,7 @@
-The game creator configures a mathematical equation, the minimum income threshold.
-Players that are below this income threshold at the end of the turn are eliminated. 
-If every player is below the income threshold, then the player(s) with the most income are left alive.
+The player with the lowest income is eliminated at the end of select turn.
 
-Compatible with sanctions and army cap
+The game host sets which turn to start eliminated players on, and the frequency for eliminations after that turn.
+
+If 2 players are tied for lowest income, no eliminations will be made, and the elimination decision is postponed until the next turn.
+
+Effects of reinforcement cards, army cap & sanctions are ignored.

@@ -1,12 +1,6 @@
 
 
 function Client_PresentConfigureUI(rootParent)
-
-    if (not WL.IsVersionOrHigher("5.33")) then
-		UI.Alert("You must update your app to the latest version to use the Beacon mod");
-		return;
-	end
-
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
 	UI.CreateLabel(horz).SetText('Duration for Beacon effect\n(# of turns the territories remain revealed)').SetPreferredWidth(290);
     duration = UI.CreateNumberInputField(horz)
