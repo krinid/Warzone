@@ -26,6 +26,7 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 	--if an elimination is due, find the lowest income player & elim them; if tied for lowest income, don't elim anyone & reevaluate next turn
 	if (intNumEliminationsRequired > intNumEliminationsExecuted) then
 		for _, player in pairs (playersWithLowestIncome) do
+			local boolEliminationDeferred = false;
 			if (#playersWithLowestIncome == 1) then
 				--a single player is @ lowest income, eliminate that player
 				print ("ELIM " ..tostring (playersWithLowestIncome[1].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[1].ID));
@@ -34,12 +35,19 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 			else
 				--multiple players are tied, don't eliminate anyone, advance turn and eliminate when 1 player drops to lowest spot with no ties
 				print ("TIE - don't ELIM " ..tostring (player.ID).. "/" ..getPlayerName (game, player.ID));
+				boolEliminationDeferred = true;
+			end
+			if (boolEliminationDeferred) then
+				addNewOrder (WL.GameOrderEvent.Create (player.ID, "Mafia elimination deferred to next turn (multiple players tied for lowest income)"));
 			end
 		end
 	end
 
 	publicGameData.NumEliminationsExecuted = intNumEliminationsExecuted;
 	Mod.PublicGameData = publicGameData;
+	-- if (intNumEliminationsRequired > intNumEliminationsExecuted) then
+	-- 	addNewOrder (WL.GameOrderEvent.Create (WL.Player.Neutral, "Mafia elimination pending next "));
+	-- end
 	print ("[END] ELIMs done " ..tostring (intNumEliminationsExecuted).. ", ELIMs todo " ..tostring (intNumEliminationsRequired).. ", Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome);
 end
 
