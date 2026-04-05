@@ -38,7 +38,9 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 				boolEliminationDeferred = true;
 			end
 		end
-		if (boolEliminationDeferred) then
+
+		--if after processing elims for this round, if there are still elims pending for future turns, add a game message to notify players
+		if (intNumEliminationsRequired > intNumEliminationsExecuted) then
 			local intNumPendingEliminations = intNumEliminationsRequired - intNumEliminationsExecuted;
 			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending (" ..tonumber (#playersWithLowestIncome).. " players tied for lowest income)";
 			addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strMessage));
