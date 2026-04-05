@@ -39,7 +39,10 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 			end
 		end
 		if (boolEliminationDeferred) then
-			addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Mafia elimination deferred to next turn (multiple players tied for lowest income)"));
+			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending next turn (multiple players tied for lowest income)";
+			local intNumPendingEliminations = intNumEliminationsRequired - intNumEliminationsExecuted;
+
+			addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strMessage));
 		end
 	end
 
