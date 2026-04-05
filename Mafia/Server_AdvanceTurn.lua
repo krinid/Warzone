@@ -39,9 +39,8 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 			end
 		end
 		if (boolEliminationDeferred) then
-			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending next turn (multiple players tied for lowest income)";
 			local intNumPendingEliminations = intNumEliminationsRequired - intNumEliminationsExecuted;
-
+			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending next turn (multiple players tied for lowest income)";
 			addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strMessage));
 		end
 	end
