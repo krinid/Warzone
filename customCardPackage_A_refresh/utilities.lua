@@ -139,7 +139,7 @@ end
 --- END of Dutch's functions
 
 --- START of dabo's functions
-function tablelength(T)
+function tablelength (T)
 	local count = 0;
 	if (T==nil) then return 0; end
 	if (type(T) ~= "table") then return 0; end
@@ -147,7 +147,7 @@ function tablelength(T)
 	return count
 end
 
-function split(inputstr, sep)
+function split (inputstr, sep)
 	if inputstr == nil then return {}; end
 	if sep == nil then
 			sep = "%s"
@@ -1156,4 +1156,28 @@ function arePlayersInDiplo (ActiveCards, player1ID, player2ID)
     end
 
     return (false);
+end
+
+function territoryHasActiveShield (territory)
+	if not territory then return false; end
+
+	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
+		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
+			return (true);
+		end
+	end
+
+	return (false);
+end
+
+function territoryHasCustomStructure (territory, strStructureName)
+	if not territory then return false; end
+	for _, structure in pairs (territory.Structures) do
+		local strArrayStructureData = split (structure.ID, '|');
+
+		if (strArrayStructureData[1] == "c|" and strArrayStructureData[2] == strStructureName) then
+			return (structure.ID);
+		end
+	end
+	return (false);
 end

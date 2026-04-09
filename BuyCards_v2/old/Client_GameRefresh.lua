@@ -1,7 +1,9 @@
 require ("Buy_Cards_dialog");
 
 function Client_GameRefresh(clientGame)
-	print ("[CLIENT REFRESH]");
+	gameRefresh_Game = clientGame;
+	gameRefresh_Mod = Mod;
+
 	if (clientGame == nil) then print ("[CLIENTGAME is nil]"); return; end
     if (clientGame.Us == nil) then print ("[CLIENTGAME.Us is nil]"); return; end --player is probably a spectator, do nothing, just return
 

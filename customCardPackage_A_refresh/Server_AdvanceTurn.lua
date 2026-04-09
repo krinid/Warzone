@@ -8,7 +8,7 @@ local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
-function Server_AdvanceTurn_End(game, addOrder)
+function Server_AdvanceTurn_End (game, addOrder)
 	print ("[S_AT_E]::func start");
 
 	--&&& Shield/Monolith Fix
