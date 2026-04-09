@@ -21,17 +21,17 @@ function Client_PresentSettingsUI(rootParent)
 		-- gameRefresh_Mod = Mod;
 
 		-- UI.CreateLabel (rootParent).SetText ("• See Buy Cards panel in Commerce menu for current card prices");
-		UI.CreateButton (rootParent).SetInteractable (true).SetText ("View card prices").SetOnClick (viewCardPrices);
+		UI.CreateButton (rootParent).SetInteractable (true).SetText ("View card prices").SetOnClick (viewCardPrices).SetColor ("#00FFFF");
 	end
 
 	--debugging stuff; comment me out later
-	UI.CreateLabel (rootParent).SetText ("\nDEBUG: ");
-	UI.CreateLabel (rootParent).SetText ("Data check pgd: " ..tostring (publicGameData));
-	UI.CreateLabel (rootParent).SetText ("Data check pgd.CD: " ..tostring (publicGameData.CardData));
+	-- UI.CreateLabel (rootParent).SetText ("\nDEBUG: ");
+	-- UI.CreateLabel (rootParent).SetText ("Data check pgd: " ..tostring (publicGameData));
+	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD: " ..tostring (publicGameData.CardData));
 	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.DC: " ..tostring (publicGameData.CardData.DefinedCards));
 	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.CPF: " ..tostring (publicGameData.CardData.CardPricesFinalized));
 	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.HHAP: " ..tostring (publicGameData.CardData.HostHasAdjustedPricing));
-	UI.CreateLabel (rootParent).SetText ("CPSUI gameRefresh_Game==nil " ..tostring (gameRefresh_Game==nil));
+	-- UI.CreateLabel (rootParent).SetText ("CPSUI gameRefresh_Game==nil " ..tostring (gameRefresh_Game==nil));
 end
 
 function viewCardPrices ()
@@ -44,8 +44,8 @@ function viewCardPrices ()
 		local arrIntNumCardsPurchased = gameRefresh_Mod.PublicGameData.NumCardsPurchased or {}; --running count of total cards of each type purchased by all players
 		-- local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
 		-- local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.0; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card; default to 0.0 for purpose of ongoing games where this value isn't set (so card prices in ongoing games doesn't increase)
-		local strDescription = "\ncard price increases ".. tostring (tablelength(arrIntNumCardPriceIncreases)) .. "\n# cards purchased " .. tostring (tablelength(arrIntNumCardsPurchased));
-		UI.CreateLabel (rootParent).SetText (strDescription);
+		-- local strDescription = "\ncard price increases ".. tostring (tablelength(arrIntNumCardPriceIncreases)) .. "\n# cards purchased " .. tostring (tablelength(arrIntNumCardsPurchased));
+		-- UI.CreateLabel (rootParent).SetText (strDescription);
 		-- UI.CreateLabel (rootParent).SetText ("xyz");
 		-- UI.Alert (strDescription);
 		displayMenu (gameRefresh_Game, rootParent, nil);
