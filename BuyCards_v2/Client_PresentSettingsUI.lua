@@ -19,6 +19,22 @@ function Client_PresentSettingsUI(rootParent)
 
 		-- gameRefresh_Game = clientGame;
 		-- gameRefresh_Mod = Mod;
+
+		-- UI.CreateLabel (rootParent).SetText ("• See Buy Cards panel in Commerce menu for current card prices");
+		UI.CreateButton (rootParent).SetInteractable (true).SetText ("View card prices").SetOnClick (viewCardPrices);
+	end
+
+	--debugging stuff; comment me out later
+	UI.CreateLabel (rootParent).SetText ("\nDEBUG: ");
+	UI.CreateLabel (rootParent).SetText ("Data check pgd: " ..tostring (publicGameData));
+	UI.CreateLabel (rootParent).SetText ("Data check pgd.CD: " ..tostring (publicGameData.CardData));
+	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.DC: " ..tostring (publicGameData.CardData.DefinedCards));
+	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.CPF: " ..tostring (publicGameData.CardData.CardPricesFinalized));
+	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.HHAP: " ..tostring (publicGameData.CardData.HostHasAdjustedPricing));
+	UI.CreateLabel (rootParent).SetText ("CPSUI gameRefresh_Game==nil " ..tostring (gameRefresh_Game==nil));
+end
+
+function viewCardPrices ()
 		local winPlayDeneutralize = createWindow (gameRefresh_Game);
 		winPlayDeneutralize.setMaxSize (400, 500);
 		local rootParent = winPlayDeneutralize.root;
@@ -33,16 +49,6 @@ function Client_PresentSettingsUI(rootParent)
 		-- UI.CreateLabel (rootParent).SetText ("xyz");
 		-- UI.Alert (strDescription);
 		displayMenu (gameRefresh_Game, rootParent, nil);
-	end
-
-	--debugging stuff; comment me out later
-	UI.CreateLabel (rootParent).SetText ("\nDEBUG: ");
-	UI.CreateLabel (rootParent).SetText ("Data check pgd: " ..tostring (publicGameData));
-	UI.CreateLabel (rootParent).SetText ("Data check pgd.CD: " ..tostring (publicGameData.CardData));
-	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.DC: " ..tostring (publicGameData.CardData.DefinedCards));
-	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.CPF: " ..tostring (publicGameData.CardData.CardPricesFinalized));
-	-- UI.CreateLabel (rootParent).SetText ("Data check pgd.CD.HHAP: " ..tostring (publicGameData.CardData.HostHasAdjustedPricing));
-	UI.CreateLabel (rootParent).SetText ("CPSUI gameRefresh_Game==nil " ..tostring (gameRefresh_Game==nil));
 end
 
 function tablelength(T)
