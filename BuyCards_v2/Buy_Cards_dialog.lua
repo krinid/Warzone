@@ -91,8 +91,9 @@ function displayMenu (game, windowUI, close)
 				UpdateButton.SetText ("Prices have been updated");
 
 				--destroy the existing window & recreate it to refresh the content
-				close (); --close the entire Client_PresentMenuUI window; originally just destroyed the vert container and refreshed it, but the server call to refresh public data took longer than the refresh did, so it didn't recognize the price update operation and nagged the host again
+				if (close ~= nil) then close (); end --close the entire Client_PresentMenuUI window; originally just destroyed the vert container and refreshed it, but the server call to refresh public data took longer than the refresh did, so it didn't recognize the price update operation and nagged the host again
 				--so just close the window and let the player re-open it if they want to go back in
+				--but only attempt to close the window if the 'close()' function is defined; if this is called from Client_PresentSettings, close() isn't received by WZ as a pass-in argument, so it can't be closed using this technique
 			end);
 		else --client player is not host, so display a message indicating that the host has not finalized the prices
 			UI.CreateLabel (vertHeader).SetText ("The game host (".. toPlayerName(game.Settings.StartedBy, game) ..") has not finalized card prices yet. If they are finalized by end of this turn, you can buy cards starting next turn.").SetColor ("#FF0000");
