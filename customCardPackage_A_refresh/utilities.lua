@@ -1175,20 +1175,12 @@ function territoryHasCustomStructure (territory, strStructureName)
 	local structures = territory.Structures;
 	if not structures then return false, nil; end --if territory is nil, there's are no structures (and thus no forts) so return false/nil
 
-	print ("Terr " ..territory.ID.. ", #armies " ..tostring (territory.NumArmies.NumArmies));
-	print ("Structures " ..tostring (territory.Structures));
-	print ("Structures " ..tostring (structures));
 	if (territory.Structures ~= nil) then print ("# Structure types " ..tostring (#territory.Structures)); end
 	if (structures ~= nil) then print ("# Structure types " ..tostring (structures)); end
 
-	-- printObjectDetails (territory.Structures, "Structures", "Structures details");
-
-	-- for k, structure in pairs (territory.Structures) do
 	for structureID, structureCount in pairs (structures) do
-		print ("CS #" ..tostring (structureID).. ": " ..tostring (structure));
 		local strArrayStructureData = split (structureID, '|');
 
-		print ("structure name: " ..tostring (strArrayStructureData[3]), ", matches " ..tostring (strArrayStructureData[3] == strStructureName));
 		--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
 		--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
 		if (strArrayStructureData[1] == "c" and strArrayStructureData[3] == strStructureName and structureCount > 0) then
