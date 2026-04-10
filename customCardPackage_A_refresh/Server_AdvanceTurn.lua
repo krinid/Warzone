@@ -1159,18 +1159,6 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	return specialUnit;
 end
 
-function territoryHasActiveShield (territory)
-	if not territory then return false; end
-
-	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
-		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
-			return (true);
-		end
-	end
-
-	return (false);
-end
-
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then

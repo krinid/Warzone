@@ -416,7 +416,7 @@ function isPlayerActive (playerID, game)
 end
 
 function createJumpToLocationObject (game, targetTerritoryID)
-	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create(1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create (1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
 	return (WL.RectangleVM.Create(
 		game.Map.Territories[targetTerritoryID].MiddlePointX,
 		game.Map.Territories[targetTerritoryID].MiddlePointY,
@@ -1171,13 +1171,29 @@ function territoryHasActiveShield (territory)
 end
 
 function territoryHasCustomStructure (territory, strStructureName)
-	if not territory then return false; end
-	for _, structure in pairs (territory.Structures) do
-		local strArrayStructureData = split (structure.ID, '|');
+	if not territory then return false, nil; end --if territory is nil, just return false/nil
+	local structures = territory.Structures;
+	if not structures then return false, nil; end --if territory is nil, there's are no structures (and thus no forts) so return false/nil
 
-		if (strArrayStructureData[1] == "c|" and strArrayStructureData[2] == strStructureName) then
-			return (structure.ID);
+	print ("Terr " ..territory.ID.. ", #armies " ..tostring (territory.NumArmies.NumArmies));
+	print ("Structures " ..tostring (territory.Structures));
+	print ("Structures " ..tostring (structures));
+	if (territory.Structures ~= nil) then print ("# Structure types " ..tostring (#territory.Structures)); end
+	if (structures ~= nil) then print ("# Structure types " ..tostring (structures)); end
+
+	-- printObjectDetails (territory.Structures, "Structures", "Structures details");
+
+	-- for k, structure in pairs (territory.Structures) do
+	for structureID, structureCount in pairs (structures) do
+		print ("CS #" ..tostring (structureID).. ": " ..tostring (structure));
+		local strArrayStructureData = split (structureID, '|');
+
+		print ("structure name: " ..tostring (strArrayStructureData[3]), ", matches " ..tostring (strArrayStructureData[3] == strStructureName));
+		--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
+		--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
+		if (strArrayStructureData[1] == "c" and strArrayStructureData[3] == strStructureName and structureCount > 0) then
+			return true, structureID;
 		end
 	end
-	return (false);
+	return false, nil;
 end
