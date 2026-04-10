@@ -21,7 +21,7 @@ require ('utilities'); --CardPack
 function process_manual_attack (game, AttackingArmies, DefendingTerritory, result, addNewOrder, boolWZattackTransferOrder)
 	--note armies have combat order of 0, Commanders 10,000, need to get the combat order of Specials from their properties
 	local DefendingArmies = DefendingTerritory.NumArmies;
-	local DefendingTerritory_Onwer = DefendingTerritory.OwnerPlayerID;
+	local DefendingTerritory_Owner = DefendingTerritory.OwnerPlayerID;
 
 	local sortedAttackerSpecialUnits = {};
 	local sortedDefenderSpecialUnits = {};
@@ -70,11 +70,35 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	--if the target territory has an active shield, nullify all damage by zeroing out AttackDamage & DefenseDamage; this is required b/c WZ engine applies the damage nullifying property of the Shield SU only to accompanying allied armies involved in attack but not other SUs
 	--thus, other SUs in the territory with the shield will still give out defense damage to attack units, which shouldn't be the case for a Shield; so nullify that damage here
 	local boolTOterritoryHasActiveShield = territoryHasActiveShield (DefendingTerritory);
+	local boolTOterritoryHasFort = false;
+	local strFortStructureID = nil;
+	boolTOterritoryHasFort, strFortStructureID = territoryHasCustomStructure (DefendingTerritory, "Fort");
+	print ("hasFort " ..tostring (boolTOterritoryHasFort) ..", " .. tostring (strFortStructureID));
+
+
+	--check if target territory has a Shield active or a Fort on it; Shields nullifies all damage to both attacker and defender
+	--Forts nullify damage to the defender, attacker still takes normal damage, the fort is destroyed, remaining attackers return to original territory
 	if (boolTOterritoryHasActiveShield == true) then
+		--target terr has Shield, nullify all damage to both attacker and defender
 		AttackDamage = 0;
 		DefenseDamage = 0;
-		print ("[ATTACK/TRANSFER] [SHIELD on TARGET TERRITORY] nullify all damage");
+		print ("[MANUAL ATTACK] [SHIELD on TARGET TERRITORY] nullify all damage");
+	elseif (boolTOterritoryHasFort == true) then
+		--target terr has a Fort, reduce Fort structure count by 1, attacker takes regular damage, defender takes no damage
+		AttackDamage = 0;
+		local structures = DefendingTerritory.Structures;
+		structures [strFortStructureID] = structures [strFortStructureID] - 1;
+
+		local terrMod = WL.TerritoryModification.Create (DefendingTerritory.ID);
+		terrMod.SetStructuresOpt = structures;
+
+		local event = WL.GameOrderEvent.Create (DefendingTerritory_Owner, "Destroyed fort", {}, {terrMod}); --'Fort Destroyed' is Fort/Fort Card mods enters on the attackers order but that isn't passed into process_manual_attack() function so use defender's ID instead
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, DefendingTerritory.ID);
+		event.TerritoryAnnotationsOpt = { [DefendingTerritory.ID] = WL.TerritoryAnnotation.Create("Destroy Fort") };
+		addNewOrder (event, true); -- The second argument makes sure this order isn't processed when the initial attack is skipped
+		print ("[MANUAL ATTACK] [FORT on TARGET TERRITORY] nullify all defender damage, destroy fort");
 	end
+	-- crashHereNow ();
 
 	--process Defender damage 1st; if both players are eliminated by this order & they are the last 2 active players in the game, then Defender is eliminated 1st, Attacker wins
 	printDebug ("[DEFENDER TAKES DAMAGE] "..AttackDamage..", AttackPower "..AttackPower..", AttackerAttackPower% ".. totalAttackerAttackPowerPercentage..", Off kill rate "..game.Settings.OffenseKillRate.." _________________");
@@ -91,8 +115,8 @@ function process_manual_attack (game, AttackingArmies, DefendingTerritory, resul
 	for k,v in pairs (damageToAllSpecialUnits) do print ("[SU Both damage] SU "..k..", damage "..v); end
 
 	--if all of defender's armies & SUs are killed & attacker still has at least 1 army or SU surviving, attack is successful, transfer the armies
-	--note that both sides reduced to 0 means attack is unsuccessful, territory not captured
-	if (defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0 and (attackerResult.RemainingArmies >0 or #attackerResult.SurvivingSpecials >0)) then
+	--note that attack is unsuccessful &  territory is not captured when (A) both sides reduced to 0, or (B) target territory has a Fort (regardless of how many armies/SUs are on it)
+	if (boolTOterritoryHasFort == false and defenderResult.RemainingArmies == 0 and #defenderResult.SurvivingSpecials == 0 and (attackerResult.RemainingArmies >0 or #attackerResult.SurvivingSpecials >0)) then
 		--defender is eliminated, attacker wins
 		boolAttackSuccessful = true;
 		printDebug ("[ATTACK SUCCESSFUL] attacker wins, defender is wiped out from target territory");
@@ -447,4 +471,13 @@ function initialize_CardData (game)
     publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
 	publicGameData.CardData.Resurrection = tostring(getCardID ("Resurrection"));
     Mod.PublicGameData = publicGameData;
+end
+
+function createJumpToLocationObject (game, targetTerritoryID)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create (1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
+	return (WL.RectangleVM.Create(
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY,
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY));
 end

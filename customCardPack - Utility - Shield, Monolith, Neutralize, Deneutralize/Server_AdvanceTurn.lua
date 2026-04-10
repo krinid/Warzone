@@ -8,7 +8,7 @@ local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
-function Server_AdvanceTurn_End(game, addOrder)
+function Server_AdvanceTurn_End (game, addOrder)
 	print ("[S_AT_E]::func start");
 
 	--&&& Shield/Monolith Fix
@@ -1157,18 +1157,6 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	terrMod.AddSpecialUnits = {specialUnit}
 	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
 	return specialUnit;
-end
-
-function territoryHasActiveShield (territory)
-	if not territory then return false; end
-
-	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
-		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
-			return (true);
-		end
-	end
-
-	return (false);
 end
 
 function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
