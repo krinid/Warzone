@@ -19,21 +19,56 @@ end
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
+
+	local intGameStyle = 1; --default to game style 1
+	--game styles:
+	--1: create 1 new Worker SU on the 1st territory found for each player on T1 (used for 'Workers FTW' mod where Workers are only form of income)
+	--2: create 1 new Recruiter SU on the 1st territory found for each player on T1~T5 (used for 'Special Disaster Battle' mod where Recruiters are only form of income)
+	--3: tbd
+
+	--game ID 44004985 is Special Disaster Battle v2, set it to use game style 2; game ID 3004 is an SP test game
+	--anything else uses default of game style 1 at this point (used in the mod tourney framework)
+	if (game.Game.GameID == 44004985 or game.Game.GameID == 3004) then intGameStyle = 2;
+	--other checks for other games to manually set here until the game style can be set by the user in the UI and saved in Mod.Settings
+	end
+
+	--configure these variables to set up how Mod Helper will the specified game
+	local intNumTurnsToHelp = 1; --number of turns that Mod Helper shouild perform some action for
+	local intNumWorkersToCreateEachTurn = 0; --# of Worker SUs to create each turn
+	local intNumRecruitersToCreateEachTurn = 0; --# of Recruiter SUs to create each turn
+
+	if (intGameStyle == 1) then
+		intNumTurnsToHelp = 1;
+		intNumWorkersToCreateEachTurn = 1;
+	elseif (intGameStyle == 2) then
+		intNumTurnsToHelp = 5;
+		intNumRecruitersToCreateEachTurn = 1;
+	end
+
 	-- if (game.Game.TurnNumber >=6) then return; end --only create SUs on T1~T5   <--- used for 'Special Disaster Battle' (with Recruiters as only form of income)
-	if (game.Game.TurnNumber >=2) then return; end --only create SUs on T1   <--- used for 'Workers FTW' (with Workers as only form of income)
+	-- if (game.Game.TurnNumber >= 2) then return; end --only create SUs on T1   <--- used for 'Workers FTW' (with Workers as only form of income)
+	if (game.Game.TurnNumber > intNumTurnsToHelp) then return; end --Mod Helper only helps for as many turns as specified
 
 	--create 1 new SU on the 1st territory found for each player
 	local modifiedTerritories = {};
 	local playerReceivedSUalready = {};
 	for terrID,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
-		--create a bunch of SUs on T1 to start the action
+		--create the appropriate SUs (types and quantities) as specified by the config variables
+		--target territory is the 1st territory found for each player on the map
+		local SPsToAdd = {}; --list of SUs to be added to the territory; this can't exceed 4 else the add operation will fail -- for now just assume it will be <4
+
 		if (v.OwnerPlayerID > 0 and playerReceivedSUalready [v.OwnerPlayerID] == nil) then
 			playerReceivedSUalready [v.OwnerPlayerID] = true;
-			-- local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false);
-			local SP1 = build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Worker", "hammer.png", 3, 3, nil, nil, 3, 3, nil, 3417, true, true, true, true, false, "game start time auto-created Recruiter", false);
+
+			for i=1, intNumWorkersToCreateEachTurn do
+				table.insert (SPsToAdd, build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Worker", "hammer.png", 3, 3, nil, nil, 3, 3, nil, 3417, true, true, true, true, false, "game start time auto-created Worker", false));
+			end
+			for i=1, intNumRecruitersToCreateEachTurn do
+				table.insert (SPsToAdd, build_specialUnit (game, addNewOrder, terrID, v.OwnerPlayerID, "Recruiter", "drum.png", 3, 3, nil, nil, 3, 3, nil, 3416, true, true, true, true, false, "game start time auto-created Recruiter", false));
+			end
 			local terrMod = WL.TerritoryModification.Create (terrID);
 			-- terrMod.AddSpecialUnits = {SP1, SP2, SP3, SP4, SP5}; --use to create multiple SUs on a single turn
-			terrMod.AddSpecialUnits = {SP1}; --use to create just 1 SU on a single turn
+			terrMod.AddSpecialUnits = SPsToAdd; --use to create just 1 SU on a single turn
 			table.insert (modifiedTerritories, terrMod);
 		end
 		--for reference - RECRUITER SU:
