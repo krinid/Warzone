@@ -28,7 +28,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 
 	--game ID 44004985 is Special Disaster Battle v2, set it to use game style 2; game ID 3004 is an SP test game
 	--anything else uses default of game style 1 at this point (used in the mod tourney framework)
-	if (game.Game.GameID == 44004985 or game.Game.GameID == 3004) then intGameStyle = 2;
+	if (game.Game.ID == 44004985 or game.Game.ID == 3004) then intGameStyle = 2;
 	--other checks for other games to manually set here until the game style can be set by the user in the UI and saved in Mod.Settings
 	end
 
