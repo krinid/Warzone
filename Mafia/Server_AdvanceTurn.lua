@@ -21,21 +21,33 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 		end
 	end
 
-	print ("[START] ELIMs done " ..tostring (intNumEliminationsExecuted).. ", ELIMs todo " ..tostring (intNumEliminationsRequired).. ", Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome);
+	local intNumPendingEliminationsForThisTurn = intNumEliminationsRequired - intNumEliminationsExecuted;
+	print ("[START] ELIMs done " ..tostring (intNumEliminationsExecuted).. ", ELIMs todo TOTAL " ..tostring (intNumEliminationsRequired).. ", ELIMs todo THIS TURN " ..tostring (intNumPendingEliminationsForThisTurn).. ", Lowest income " ..intLowestIncomeAmount..", # players " ..#playersWithLowestIncome ..", # playing players " ..#game.ServerGame.Game.PlayingPlayers);
 
 	--if an elimination is due, find the lowest income player & elim them; if tied for lowest income, don't elim anyone & reevaluate next turn
-	if (intNumEliminationsRequired > intNumEliminationsExecuted) then
-		local boolEliminationDeferred = false;
-		for _, player in pairs (playersWithLowestIncome) do
-			if (#playersWithLowestIncome == 1) then
-				--a single player is @ lowest income, eliminate that player
-				print ("ELIM " ..tostring (playersWithLowestIncome[1].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[1].ID));
-				intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
-				eliminatePlayer (game, addNewOrder, playersWithLowestIncome[1]);
+	if (intNumPendingEliminationsForThisTurn > 0) then
+		-- local boolEliminationDeferred = false;
+
+		for k, player in pairs (playersWithLowestIncome) do
+			-- if (#playersWithLowestIncome == 1) then
+			-- 	--a single player is @ lowest income, eliminate that player
+			-- 	print ("ELIM [SINGLE] " ..tostring (playersWithLowestIncome[1].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[1].ID));
+			-- 	intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
+			-- 	eliminatePlayer (game, addNewOrder, playersWithLowestIncome[1]);
+			if (#playersWithLowestIncome <= intNumPendingEliminationsForThisTurn and #playersWithLowestIncome < #game.ServerGame.Game.PlayingPlayers) then
+				--eliminate all the players with the lowest income, unless that would eliminate all remaining players, in which case don't eliminate anyone and proceed until the tie is broken
+				-- for _, playerToEliminate in pairs (playersWithLowestIncome) do
+					-- print ("ELIM [MULTIPLE] " ..tostring (playerToEliminate.ID).. "/" ..getPlayerName (game, playerToEliminate.ID));
+					print ("ELIM " ..tostring (playersWithLowestIncome[k].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[k].ID));
+					intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
+					eliminatePlayer (game, addNewOrder, playersWithLowestIncome[k]);
+					-- intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
+					-- eliminatePlayer (game, addNewOrder, playerToEliminate);
+				-- end
 			else
 				--multiple players are tied, don't eliminate anyone, advance turn and eliminate when 1 player drops to lowest spot with no ties
 				print ("TIE - don't ELIM " ..tostring (player.ID).. "/" ..getPlayerName (game, player.ID));
-				boolEliminationDeferred = true;
+				-- boolEliminationDeferred = true;
 			end
 		end
 
