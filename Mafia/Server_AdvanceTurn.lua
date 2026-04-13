@@ -10,6 +10,7 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 
 	local intLowestIncomeAmount = nil;
 	local playersWithLowestIncome = {};
+	local boolEliminationExecutedThisTurn = false;
 
 	for _, player in pairs (game.ServerGame.Game.PlayingPlayers) do
 		local intPlayerIncome = player.Income (0, game.ServerGame.LatestTurnStanding, true, true).Total; --get income ignoring reinf cards, army cap and sanctions
@@ -40,6 +41,7 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 					-- print ("ELIM [MULTIPLE] " ..tostring (playerToEliminate.ID).. "/" ..getPlayerName (game, playerToEliminate.ID));
 					print ("ELIM " ..tostring (playersWithLowestIncome[k].ID).. "/" ..getPlayerName (game, playersWithLowestIncome[k].ID));
 					intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
+					boolEliminationExecutedThisTurn = true;
 					eliminatePlayer (game, addNewOrder, playersWithLowestIncome[k]);
 					-- intNumEliminationsExecuted = intNumEliminationsExecuted + 1;
 					-- eliminatePlayer (game, addNewOrder, playerToEliminate);
@@ -54,7 +56,7 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 		--if after processing elims for this round, if there are still elims pending for future turns, add a game message to notify players
 		if (intNumEliminationsRequired > intNumEliminationsExecuted) then
 			local intNumPendingEliminations = intNumEliminationsRequired - intNumEliminationsExecuted;
-			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending (" ..tonumber (#playersWithLowestIncome).. " players tied for lowest income)";
+			local strMessage = tostring (intNumPendingEliminations > 1 and intNumPendingEliminations or "") .. tostring (intNumPendingEliminations > 1 and " " or "") .. "Mafia elimination" ..tostring (intNumPendingEliminations > 1 and "s" or "").. " pending" ..  tostring (boolEliminationExecutedThisTurn == false and " (" ..tonumber (#playersWithLowestIncome).. " players tied for lowest income)" or "");
 			addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, strMessage));
 		end
 	end
