@@ -28,7 +28,20 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 
 	--game ID 44004985 is Special Disaster Battle v2, set it to use game style 2; game ID 3004 is an SP test game
 	--anything else uses default of game style 1 at this point (used in the mod tourney framework)
-	if (game.Game.ID == 44004985 or game.Game.ID == 3007) then intGameStyle = 2;
+	if (game.Game.ID == 44004985 or game.Game.ID == 3007 or game.Game.ID == 3009) then
+		intGameStyle = 2;
+
+		-- local intPestilenceCardID = getCardID ("Pestilence", game);
+		--discard any Pestilence cards b/c they were accidentally given out each turn! oof ... and they're super strong
+		for playerID, playerCards in pairs (game.ServerGame.LatestTurnStanding.Cards) do
+			for cardInstanceID, cardInstance in pairs (playerCards.WholeCards) do
+				print ("player " ..playerID.. ", cardInstanceID ".. tostring (cardInstanceID) ..", cardID ".. tostring (cardInstance.CardID) ..", name: " .. getCardName_fromID (cardInstance.CardID, game));
+				if (getCardName_fromID (cardInstance.CardID, game) == "Pestilence") then
+					addNewOrder (WL.GameOrderDiscard.Create (playerID, cardInstanceID));
+				end
+			end
+		end
+
 	--other checks for other games to manually set here until the game style can be set by the user in the UI and saved in Mod.Settings
 	end
 
@@ -136,4 +149,51 @@ function build_specialUnit (game, addOrder, targetTerritoryID, playerID, Name, I
 		addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
 	end
 	return (specialUnit);
+end
+
+function getCardName_fromID(cardID, game);
+    print ("cardID=="..cardID);
+    local cardConfig = game.Settings.Cards[tonumber(cardID)];
+    return getCardName_fromObject (cardConfig);
+end
+
+function getCardName_fromObject(cardConfig)
+	if (cardConfig==nil) then print ("cardConfig==nil"); return nil; end
+    if cardConfig.proxyType == 'CardGameCustom' then
+        return cardConfig.Name;
+    end
+
+    if cardConfig.proxyType == 'CardGameAbandon' then
+        -- Abandon card was the original name of the Emergency Blockade card
+        return 'Emergency Blockade card';
+    end
+    return cardConfig.proxyType:match("^CardGame(.*)");
+end
+
+--return card instance for a given card type by name that belongs to a given player
+function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
+	local cardID = tonumber (getCardID (strCardNameToMatch, game));
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	return getCardInstanceID (playerID, cardID, game);
+end
+
+--given a card name, return it's cardID (not card instance ID), ie: represents the card type, not the instance of the card
+function getCardID (strCardNameToMatch, game)
+	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
+	local cards={};
+	if (Mod.PublicGameData.CardData == nil or Mod.PublicGameData.CardData.DefinedCards == nil) then
+		print ("run function");
+		cards = getDefinedCardList (game);
+	else
+		cards = Mod.PublicGameData.CardData.DefinedCards;
+	end
+
+	for cardID, strCardName in pairs(cards) do
+		if (strCardName == strCardNameToMatch) then
+			return cardID;
+		end
+	end
+	return nil; --cardName not found
 end
