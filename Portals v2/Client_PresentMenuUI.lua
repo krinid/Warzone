@@ -6,6 +6,9 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
     if (setMaxSize ~= nil) then setMaxSize(600, 600); end --sometimes this crashes b/c setMaxSize is nil (why?); is it only in SP on the first execution of the game?
 	if (game == nil or setMaxSize == nil) then UI.Alert ("Warzone client is taking a short break, pls reopen the mod menu and it should be able to continue\n"); return; end
 
+	if (game == nil) then print ("[CLIENTGAME is nil]"); return; end
+    if (game.Us == nil) then print ("[CLIENTGAME.Us is nil]"); return; end --player is probably a spectator, do nothing, just return
+
 	if (Portals == nil) then
 		game.SendGameCustomMessage ("[acquiring portal locations]", {action="getportals"}, function(PortalData) Portals = PortalData[1]; end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	end
