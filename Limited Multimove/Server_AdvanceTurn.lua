@@ -457,12 +457,12 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 			--when NoSplit is in play, set ActualArmies to 0 armies/0 SUs b/c while there are units on the FROM terr that haven't moved since start of turn, other units have since transferred into the FROM terr and those have expended their movement allocation
 			--thus, since NoSplit is in play, either all units on the terr move together or do not move at all
 			--these values are never input at all, so just ignore them and use the ActualArmies values as-is
-			if (boolNoSplit == false) then
+			-- if (boolNoSplit == false) then
 				result.ActualArmies = WL.Armies.Create (newNumArmies, newSpecials);
-			else
-				result.ActualArmies = WL.Armies.Create (0, {}); --send no armies b/c No Split is active and units that have expended their movement allocation have transferred into the FROM terr
-				print ("[NO SPLIT] ActualArmies " ..result.ActualArmies.NumArmies.. ", #SUs " ..#result.ActualArmies.SpecialUnits);
-			end
+			-- else
+				-- result.ActualArmies = WL.Armies.Create (0, {}); --send no armies b/c No Split is active and units that have expended their movement allocation have transferred into the FROM terr
+				-- print ("[NO SPLIT] ActualArmies " ..result.ActualArmies.NumArmies.. ", #SUs " ..#result.ActualArmies.SpecialUnits);
+			-- end
 
 			--add an order indicating that the #armies/SUs participating has decreased due to exceeding move allocations, but the order is still valid, some units will still be able to move
 			local strReduceArmiesMessage = "[units that transferred in have exceeded their move allocations and were excluded from the order; only units present on the territory at start of turn or via deployments could execute the order] (specified: #armies "
