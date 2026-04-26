@@ -718,7 +718,6 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 
 	if (sourceOwner ~= WL.PlayerID.Neutral) then sourceOwnerTeam = game.ServerGame.Game.Players[sourceOwner].Team; end
 	if (targetOwner ~= WL.PlayerID.Neutral) then targetOwnerTeam = game.ServerGame.Game.Players[targetOwner].Team; end
-	local boolPlayersAreInDiplo = arePlayersInDiplo (game.ServerGame.LatestTurnStanding.ActiveCards, sourceOwner, targetOwner);
 
 	if (sourceOwner ~= gameOrder.PlayerID) then
 		printDebug ("[AIRSTRIKE] sourceOwner ~= orderPlayer, cancel Airstrike");
@@ -727,9 +726,10 @@ function execute_Airstrike_operation (game, gameOrder, result, skipOrder, addOrd
 		return; --don't process anything more; the order is invalid, skip it entirely
 	end
 
+	local boolPlayersAreInDiplo = arePlayersInDiplo (game.ServerGame.LatestTurnStanding.ActiveCards, sourceOwner, targetOwner);
 	if (boolPlayersAreInDiplo == true) then
 		printDebug ("[AIRSTRIKE] sourceOwner & orderPlayer are in Diplo, cancel Airstrike");
-		addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, "Airstrike from "..getTerritoryName(sourceTerritoryID, game) .." to ".. getTerritoryName(targetTerritoryID, game) .." skipped; source & target players are in active Diplomacy", {}, {}, {}), false);
+		addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, "Airstrike from "..getTerritoryName(sourceTerritoryID, game) .." to ".. getTerritoryName(targetTerritoryID, game) .." skipped; source & target players are in active Diplomacy", {}, {}, {}), false);
 		skipOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		return; --don't process anything more; the order is invalid, skip it entirely
 	end
@@ -2643,7 +2643,7 @@ function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlaye
 	if (canIgniteTerritory (game, targetTerritoryID, intCastingPlayer, cfg)) then
 		-- Distance for epicenter is 0
 		local intDamage = calcWildfireDamage (game, targetTerritoryID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intCycleNumber);
-		print ("    [IGNITE - BURN DAMAGE] distance " ..tostring(intDistance) .. ", damage " ..tostring(intDamage));
+		print ("    [IGNITE - BURN DAMAGE] distance " ..tostring (intDistance) .. ", damage " ..tostring(intDamage));
 
 		if (intDamage > 0) then
 			-- Start burning
@@ -2677,29 +2677,29 @@ end
 
 -- Call this once per turn (e.g., in Server_AdvanceTurn_End or suitable place) to advance all active wildfires.
 function process_Wildfires_for_turn(game, addOrder)
-    local cfg = loadWildfireConfig ();
+	local cfg = loadWildfireConfig ();
 
-    local publicGameData = Mod.PublicGameData;
-    local tblWildfireData = publicGameData.WildfireData or {};
+	local publicGameData = Mod.PublicGameData;
+	local tblWildfireData = publicGameData.WildfireData or {};
 	tblWildfireCountsForTerrs = {}; --used to count the # of wildfires present on territories w/extinguishing or spreading fires; needed b/c the #Structures count is a fixed point reference from LatestTurnStanding received at start of turn
 
-    local idsToRemove = {};
+	local idsToRemove = {};
 
-    for wildfireID, wildfireRecord in pairs(tblWildfireData) do
-        local shouldRemove = processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, addOrder);
-        if (shouldRemove) then
-            table.insert(idsToRemove, wildfireID);
-        end
-    end
+	for wildfireID, wildfireRecord in pairs(tblWildfireData) do
+		local shouldRemove = processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, addOrder);
+		if (shouldRemove) then
+			table.insert(idsToRemove, wildfireID);
+		end
+	end
 
-    -- Remove completed wildfires
-    for _, wid in ipairs (idsToRemove) do
-        tblWildfireData[wid] = nil;
-    end
+	-- Remove completed wildfires
+	for _, wid in ipairs (idsToRemove) do
+		tblWildfireData[wid] = nil;
+	end
 
-    --save public game data
-    publicGameData.WildfireData = tblWildfireData;
-    Mod.PublicGameData = publicGameData;
+	--save public game data
+	publicGameData.WildfireData = tblWildfireData;
+	Mod.PublicGameData = publicGameData;
 end
 
 function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)

@@ -265,6 +265,7 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		strSkipOrderDueToAttackTransfer = "Order skipped, reason: ".. strSkipOrderDueToAttackTransfer .. "; Original order: " ..generateSkipMessage (order, game);
 		addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, strSkipOrderDueToAttackTransfer, {}, {},{}));
+		result.ActualArmies = WL.Armies.Create (0, {}); --set armies to 0, SUs to 0 so the "0" attack arrow still shows
 		return; --don't process any further, just skip the order and return in order to process the next order
 	end
 
@@ -349,6 +350,16 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 		if boolMoveUnitsTransferredIn == true then
 			--if units have transferred into the FROM territory, then the map1 value for the FROM territory is irrelevant, it's only important when groups of armies mix that we use the lowest of the two map1 values
 			boolProcessOrder = true;
+
+			--check if players are in diplo and if so, cancel any attacks; if order is a transfer then players aren't in diplo (can't diplo with self or a teammate [actually maybe you can but either way it shouldn't block a transfer])
+			local boolPlayersAreInDiplo = result.IsAttack == true and arePlayersInDiplo (game.ServerGame.LatestTurnStanding.ActiveCards, FROMowner, TOowner);
+			if (boolPlayersAreInDiplo == true) then
+				print ("[ATTACK] Owner of FROM and TO territories are in diplo, cancel Attack");
+				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Attack from "..getTerritoryName(order.From, game) .." on ".. getTerritoryName(order.To, game) .." skipped; source player ["..getPlayerName (game, FROMowner).."] & target player ["..getPlayerName (game, TOowner).."] are in active Diplomacy", {}, {}, {}), false);
+				result.ActualArmies = WL.Armies.Create (0, {}); --set armies to 0, SUs to 0 so the "0" attack arrow still shows
+				-- skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+				return; --don't process anything more; the order is invalid, skip it entirely
+			end
 
 			--when NoSplit is in play, set ActualArmies to the actual quantity of Armnies & SUs on the territory; usally order.NumArmies.NumArmies & order.NumArmies.SpecialUnits is the quantity of armies/SUs specified by the player in the order but in case of NoSplit,
 			--these values are never input at all and all units must move together, so take the value from the actual turn standing
@@ -451,6 +462,17 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 		elseif boolMoveUnitsOnTerritoryAtStartOfTurn == true then --units that were present on the territory haven't moved yet, so don't stop them from moving during this order
 			print ("[ATTACK/TRANSFER TYPE 2 -- boolMoveUnitsTransferredIn == false, use map2 values]");
 			boolProcessOrder = true;
+
+			--check if players are in diplo and if so, cancel any attacks; if order is a transfer then players aren't in diplo (can't diplo with self or a teammate [actually maybe you can but either way it shouldn't block a transfer])
+			local boolPlayersAreInDiplo = result.IsAttack == true and arePlayersInDiplo (game.ServerGame.LatestTurnStanding.ActiveCards, FROMowner, TOowner);
+			if (boolPlayersAreInDiplo == true) then
+				print ("[ATTACK] Owner of FROM and TO territories are in diplo, cancel Attack");
+				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Attack from "..getTerritoryName(order.From, game) .." on ".. getTerritoryName(order.To, game) .." skipped; source player ["..getPlayerName (game, FROMowner).."] & target player ["..getPlayerName (game, TOowner).."] are in active Diplomacy", {}, {}, {}), false);
+				result.ActualArmies = WL.Armies.Create (0, {}); --set armies to 0, SUs to 0 so the "0" attack arrow still shows
+				-- skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+				return; --don't process anything more; the order is invalid, skip it entirely
+			end
+
 			local newNumArmies = math.min (numArmies, map2[order.From].NumArmies); --use the lesser of the # of armies the player entered or the quantity present at start of turn (b/c all other units have no movement allocations left)
 			local newSpecials = resultantSetOfSpecials (map2[order.From].SpecialUnits, order.NumArmies.SpecialUnits); --create new list of Specials that is the intersection of what's included in the list of Specials originally on the territory & what's included in the order (anything else was either killed or not included in the order)
 
@@ -475,7 +497,6 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 
 			--similar to the same block for the case where TransferringUnits also participate in the Attack/Transfer, calc the true kill counts for Defend/Offense armies; technically don't need to do this, WZ will calc it correctly in this case, however in order to get the true 
 			--success/failure result of an Attack, need to calc the # of Attackers and Defenders that die & assign boolactualIsSuccessful to true when all defenders die (attacker captures territory) & update TO map1 values appropriately based on success of attack
-			--
 			--&&& manually modify the # of attackers and defenders killed until Fizzer fixes WZ engine to account for this (requires exposing 'Used Armies' counter structure to mods); internal WZ engine used marks moved armies as 'Used Armies' once they have transferred and prevents them from making further moves
 			--rather than relying on WZ to calculate the damage to defender & attacker based on Attack/Defense power of # of quantity of armies & specials that haven't been 'used', manually calc the damage and apply it to the .AttackingArmiesKilled & .DefendingArmiesKilled fields
 			if (result.IsAttack == true) then
@@ -541,7 +562,9 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 			boolSkipOrder = true;
 			local strSkipOrderMessage = "Order skipped, units have no movement allocations remaining; Original order: " ..generateSkipMessage (order, game);
 			addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
-			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
+			result.ActualArmies = WL.Armies.Create (0, {}); --set armies to 0, SUs to 0 so the "0" attack arrow still shows
+			-- skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
+			-- return;
 		end
 	else
 		--skip the order, order player does not own the FROM territory or Mod.Settings.MoveLimit == 0 which means no Attack/Transfer orders are possible (captures/etc must be done by other means, cards/mods/etc)
@@ -553,7 +576,9 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 		if (Mod.Settings.MoveLimit == 0) then strSkipOrderMessage = "Order skipped, Move Limit is set to 0, standard Attack/Transfers are disabled; Original order: "; end
 		strSkipOrderMessage = strSkipOrderMessage .. generateSkipMessage (order, game);
 		addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, strSkipOrderMessage, {}, {},{}));
-		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
+		result.ActualArmies = WL.Armies.Create (0, {}); --set armies to 0, SUs to 0 so the "0" attack arrow still shows
+		-- return;
+		-- skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 	end
 
 	local map2message = "map2FROM Armies (nil)/SU# (nil)";
