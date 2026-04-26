@@ -2643,6 +2643,7 @@ function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlaye
 	if (canIgniteTerritory (game, targetTerritoryID, intCastingPlayer, cfg)) then
 		-- Distance for epicenter is 0
 		local intDamage = calcWildfireDamage (game, targetTerritoryID, cfg.intDamagePercent, cfg.intDamageFixed, cfg.intDamageDelta, intCycleNumber);
+		print ("    [IGNITE - BURN DAMAGE] distance " ..tostring(intDistance) .. ", damage " ..tostring(intDamage));
 
 		if (intDamage > 0) then
 			-- Start burning
