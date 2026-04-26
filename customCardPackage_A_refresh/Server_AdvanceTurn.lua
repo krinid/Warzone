@@ -2396,8 +2396,8 @@ local function calcWildfireDamage (game, terrID, intDamagePercent, intDamageFixe
     local reductionFactor = math.max (0.0, (1.0 - intDamageDelta / 100.0) ^ intDistance);
     local raw = baseDamage * reductionFactor;
 
-    local rounded = math.floor(raw + 0.5);
-    if (rounded < 0) then rounded = 0; end
+    local rounded = math.floor (raw + 0.5);
+    if (rounded <= 0) then rounded = 1; end --always do at least 1 damage
     return rounded; -- positive integer damage amount (0 means no damage)
 end
 

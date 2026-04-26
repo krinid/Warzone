@@ -456,7 +456,8 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 
 			--when NoSplit is in play, set ActualArmies to 0 armies/0 SUs b/c while there are units on the FROM terr that haven't moved since start of turn, other units have since transferred into the FROM terr and those have expended their movement allocation
 			--thus, since NoSplit is in play, either all units on the terr move together or do not move at all
-			--these values are never input at all, so just ignore them and use the ActualArmies values as-is
+			--^^ACTUALLY ignore that -- regular non-MA NoSplit lets you move the units that were on the terr beforehand, so replicate that and permit only the units that were on the terr @ start of turn including deployments move even if the units that transferred in have
+			--expended their move allocations
 			-- if (boolNoSplit == false) then
 				result.ActualArmies = WL.Armies.Create (newNumArmies, newSpecials);
 			-- else
