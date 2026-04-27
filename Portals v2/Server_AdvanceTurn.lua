@@ -43,7 +43,8 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--but -- don't do this b/c then it only works in Commerce games (non-Commerce games don't have "Received Gold" event @ end of orders)
 	-- if (order.proxyType == "GameOrderEvent" and order.ModID == nil and order.Message == "Received Gold") then boolPortalSwapExecuted = false; execute_Portal_Swaps (game, addNewOrder); end
 
-	if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Portal swap" and order.OccursInPhase == WL.TurnPhase.ReceiveCards) then execute_Portal_Swaps (game, addNewOrder);
+	if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Portal swap" --[[ and order.OccursInPhase == WL.TurnPhase.ReceiveCards ]]) then
+		execute_Portal_Swaps (game, addNewOrder);
 		-- if (boolPortalSwapExecuted == false and order.OccursInPhase == WL.TurnPhase.ReceiveCards) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; every human player entering
 		--turns normally from client and hitting Commit (not booting, surrendering, etc) will have this order added to their order list, but only process the Portal swaps once, not once
 		--for every iteration (every human player)

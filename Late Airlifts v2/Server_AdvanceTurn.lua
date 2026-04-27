@@ -4,7 +4,7 @@ function Server_AdvanceTurn_Start (game,addNewOrder)
 	boolPermitNextAirlift = false; --used to coordinate with other mods like Airstrike that use Airlifts that should not be deferred to end of turn
 end
 
-function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)	
+function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
 	--Server_AdvanceTurn_Order is called:
 		-- (1) for each regular order submitted by players, (2) for each order added by mods during execution of , (3) by various WZ core engine items, but also importantly:
 		-- (4) by orders added via 'addNewOrder' during execution of Server_AdvanceTurn_End; so while executing _End (after all normaly orders are processed), execution is sent back to _Order when new orders are added during _End for consistent order processing
@@ -17,65 +17,76 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		--all that's required to permit it is to not enter the next condition in this IF structure (which will skip the order and defer it to end of turn)
 		boolPermitNextAirlift = false; --reset this flag; only permit 1 airlift, and still defer the rest until end of turn as per usual with Late Airlifts
 	elseif (order.proxyType == 'GameOrderPlayCardAirlift' and executed == false and boolPermitNextAirlift == false) then
-		SkippedAirlifts[tablelength(SkippedAirlifts)] = order;
-		skipThisOrder(WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		SkippedAirlifts [tablelength (SkippedAirlifts)] = order;
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 	elseif (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "Late Airlifts|Permit mid-turn Airlift")) then
 		--order is a custom order from another mod to permit airlifts mid-turn
 		--eg: "Late Airlifts|Permit mid-turn Airlift" from the Airstrike mod; the first part "Late Airlifts|Permit" is the same, and the last part "|Airstrike" indicates the mod invoking the mid-turn airlift
 		boolPermitNextAirlift = true; --permit the next airlift to occur mid-turn
+	elseif (order.proxyType=='GameOrderCustom' and order.Payload == "Late Airlifts|Execute airlifts") then
+		--this custom order triggers execution of Late Airlifts during the ReceiveCards phase instead of during Server_AdvanceTurn_End
+		--the advantage of this is that all other mods executing orders after this will see the terrs with the results of the Late Airlifts instead of getting the stale game state
+		--as would happen if Late Airlits occurred during _End
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		execute_Late_Airfifts (game, addNewOrder);
 	end
 end
 
-function Server_AdvanceTurn_End(game,addNewOrder)
-	if(executed == false) then
-		executed = true;
-		for _,order in pairs(SkippedAirlifts)do
-			local toowner = game.ServerGame.LatestTurnStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
-			local fromowner = game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID;
-			local orderplayerTeam = game.ServerGame.Game.Players[order.PlayerID].Team;
-			local toownerTeam = -1; --indicates player doesn't belong to a team
-			local fromownerTeam = -1; --indicates player doesn't belong to a team
+function Server_AdvanceTurn_End (game, addNewOrder)
+	--if Late Airlifts haven't been exeucted yet, execute them now
+	--this will be the case for any games that advanced before the update that added the custom order "Late Airlifts|Execute airlifts" to execute in WL.TurnPhase.ReceiveCards instead of during Server_AdvanceTurn_End
+	if (executed == false) then execute_Late_Airfifts (game, addNewOrder); end
+end
 
-			--weed odd all scenarios where the airlift would fail and cancel the airlift in those cases (and don't consume the card)
-			local boolExecuteAirlift = true;
+function execute_Late_Airfifts (game, addNewOrder)
+	executed = true;
+	for _,order in pairs (SkippedAirlifts) do
+		local toowner = game.ServerGame.LatestTurnStanding.Territories[order.ToTerritoryID].OwnerPlayerID;
+		local fromowner = game.ServerGame.LatestTurnStanding.Territories[order.FromTerritoryID].OwnerPlayerID;
+		local orderplayerTeam = game.ServerGame.Game.Players[order.PlayerID].Team;
+		local toownerTeam = -1; --indicates player doesn't belong to a team
+		local fromownerTeam = -1; --indicates player doesn't belong to a team
 
-			--cancel order if TO territory is neutral
-			if (toowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false;
-			else toownerTeam = game.ServerGame.Game.Players[toowner].Team;
-			end
+		--weed odd all scenarios where the airlift would fail and cancel the airlift in those cases (and don't consume the card)
+		local boolExecuteAirlift = true;
 
-			--cancel order if FROM territory is neutral
-			if (fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift=false;
-			else fromownerTeam = game.ServerGame.Game.Players[fromowner].Team;
-			end
+		--cancel order if TO territory is neutral
+		if (toowner == WL.PlayerID.Neutral) then boolExecuteAirlift = false;
+		else toownerTeam = game.ServerGame.Game.Players[toowner].Team;
+		end
 
-			print ("toownerTeam=="..toownerTeam..", fromownerTeam=="..fromownerTeam);
+		--cancel order if FROM territory is neutral
+		if (fromowner == WL.PlayerID.Neutral) then boolExecuteAirlift = false;
+		else fromownerTeam = game.ServerGame.Game.Players[fromowner].Team;
+		end
 
-			--if player is on a team, check if TO and FROM territories belong to the same team, if so allow airlift, if not cancel it
-			if (orderplayerTeam >=0) then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
-				print ("[TEAMS]");
-				if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift=false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
-				if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift=false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
-			else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
-				print ("[SOLO / NO TEAMS]");
-				if(order.PlayerID ~= fromowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
-				if(order.PlayerID ~= toowner) then boolExecuteAirlift=false; end --cancel order if player sending airlift no longer owns the FROM territory
-			end
+		print ("toownerTeam=="..toownerTeam..", fromownerTeam=="..fromownerTeam);
 
-			print ("[SA_TE]---------------");
-			print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
-			print ("toowner      ID=="..toowner..", team=="..toownerTeam);
-			print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
+		--if player is on a team, check if TO and FROM territories belong to the same team, if so allow airlift, if not cancel it
+		if (orderplayerTeam >=0) then --player has a team, check TO/FROM territory ownership for team alignment (not just solo alignment) and permit it
+			print ("[TEAMS]");
+			if(orderplayerTeam ~= toownerTeam) then boolExecuteAirlift = false; end --cancel order if TO territory is not owned by team member that order player sending airlift belongs to
+			if(orderplayerTeam ~= fromownerTeam) then boolExecuteAirlift = false; end --cancel order if FROM territory is not owned by team member that order player sending airlift belongs to
+		else --order player has no team alignment so do solo ownership checks on TO/FROM territory ownership
+			print ("[SOLO / NO TEAMS]");
+			if(order.PlayerID ~= fromowner) then boolExecuteAirlift = false; end --cancel order if player sending airlift no longer owns the FROM territory
+			if(order.PlayerID ~= toowner) then boolExecuteAirlift = false; end --cancel order if player sending airlift no longer owns the FROM territory
+		end
 
-			--if operation hasn't been canceled, execute the airlift & consume the card
-			if(boolExecuteAirlift==true) then
-				print ("AIRLIFT PERMIT");
-				addNewOrder(order);
-			else
-			--airlift has been canceled; add a message in game history to inform user why; don't consume the airlift card
-				print ("airlift SKIP");
-				addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, "Airlift from "..game.Map.Territories[order.FromTerritoryID].Name.." to "..game.Map.Territories[order.ToTerritoryID].Name.." has been canceled as you no longer controlling both territories", {}, {},{}));
-			end
+		print ("[SA_TE]---------------");
+		print ("order player ID=="..order.PlayerID..", team=="..orderplayerTeam);
+		print ("toowner      ID=="..toowner..", team=="..toownerTeam);
+		print ("fromowner    ID=="..fromowner..", team=="..fromownerTeam);
+
+		--if operation hasn't been canceled, execute the airlift & consume the card
+		if(boolExecuteAirlift==true) then
+			print ("AIRLIFT PERMIT");
+			addNewOrder(order);
+			-- addNewOrder (WL.GameOrderPlayCardAirlift.Create (airliftCardInstanceID, PlayerID, sourceTerritoryID, targetTerritoryID, actualAttackingArmies), true); --actual airlift operation, to draw the airlift arrow from source to target territory
+		else
+		--airlift has been canceled; add a message in game history to inform user why; don't consume the airlift card
+			print ("airlift SKIP");
+			addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Airlift from "..game.Map.Territories[order.FromTerritoryID].Name.." to "..game.Map.Territories[order.ToTerritoryID].Name.." has been canceled as you no longer controlling both territories", {}, {},{}));
 		end
 	end
 end

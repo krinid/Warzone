@@ -1189,3 +1189,19 @@ function territoryHasCustomStructure (territory, strStructureName)
 	end
 	return false, nil;
 end
+
+--find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
+--if orders are written back the game.Orders out of sequence according to the OccursInPhase property, a runtime error is thrown
+function insertOrder (Game, newOrder, orderList)
+	local intNewOrderPhase = newOrder.OccursInPhase or -1;
+	for i, existingOrder in pairs (orderList) do
+		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
+		if (intNewOrderPhase < intExistingOrderPhase) then
+			table.insert (orderList, i, newOrder);
+			return orderList;
+		end
+	end
+	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
+	-- Game.Orders = orderList;
+	return orderList;
+end
