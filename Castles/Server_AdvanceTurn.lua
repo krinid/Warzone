@@ -2,16 +2,19 @@ require ("castles");
 
 function Server_AdvanceTurn_End(game, addOrder)
 	local arrCastleMaintenanceIncomeMods = {};
+	print ("[CASTLE MAINTENANCE] Turn Advance T" ..tostring (game.Game.TurnNumber));
 	for ID,_ in pairs (game.ServerGame.Game.PlayingPlayers) do
-		local intCastleMaintenanceCost = math.floor (countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false) * intCastleMaintenanceCost * -1 + 0.5);
-		print ("END: "..intCastleMaintenanceCost, ID, intCastleMaintenanceCost);
+		local intNumCastles = countSUinstancesOnWholeMapFor1Player_Server (game, ID, "Castle", false);
+		local intCastleMaintenanceCost = math.floor (intNumCastles * intCastleMaintenanceCost * -1 + 0.5);
+		print ("INCOME MOD: player "..ID.. ", cost " ..intCastleMaintenanceCost);
 
 		--if castle maintenance for current player in loop is > 0, add income mod to table to deduct cost from next turn's income; if ==0, don't add it so it doesn't clutter up the order with "Adds 0 to the income of [player]" messages
-		if (intCastleMaintenanceCost > 0) then table.insert (arrCastleMaintenanceIncomeMods, WL.IncomeMod.Create (ID, intCastleMaintenanceCost), "Castle maintenance"); end
+		if (intCastleMaintenanceCost ~= 0) then table.insert (arrCastleMaintenanceIncomeMods, WL.IncomeMod.Create (ID, intCastleMaintenanceCost, "Castle maintenance (" .. intNumCastles .. " castles)")); end
 	end
 
 	--add even if no orders are included, so there isn't a give away to other players that castles have been built (in the fog, etc) when the order suddenly appears on a given turn
 	--but since all castle maintenance is being processed as a single order, do players see the content of the order anyhow and thus know how many castles each player have even they can't see the castles themselves on the map?
+	-- print ("Castle maintenance mods to be added this turn: " ..tostring (#arrCastleMaintenanceIncomeMods));
 	addOrder (WL.GameOrderEvent.Create (0, "Castle maintenance", {}, {}, {}, arrCastleMaintenanceIncomeMods));
 
 	--FOR TESTING ONLY:: set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
