@@ -101,9 +101,12 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		--if any armies died, any SUs died or any SUs took any damage, continue the continuous attacks
 		local intDamageTakenIndicator = result.AttackingArmiesKilled.NumArmies + result.DefendingArmiesKilled.NumArmies + #result.AttackingArmiesKilled.SpecialUnits + #result.DefendingArmiesKilled.SpecialUnits + #result.DamageToSpecialUnits;
 
-		--if damage was done AND there are remaing attackers (armies or SUs) AND there are remaining defenders (armies or SUs), continue the continuous attack
+		--if target territory has a Fort and there is an attacking force (ie: not 0 armies & 0 SUs) then 1 Fort will be destroyed, and make sure the continous attack cycle continues
+		local boolTerritoryHasCustomStructure, strStructureID = territoryHasCustomStructure (order.To, "Fort");
+
+		--if (target terr has a Fort or damage was done) AND there are remaing attackers (armies or SUs) AND there are remaining defenders (armies or SUs), continue the continuous attack
 		--if no damage was done -- stalemate, don't loop infinitely; if no attacks remain -- attack failed, can't continue attacking; if no defenders remain -- attack succeeded, territory is captured
-		if ((intDamageTakenIndicator > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and (intRemainingDefendingArmies + intRemainingDefendingSUs > 0)) then
+		if ((boolTerritoryHasCustomStructure == true or intDamageTakenIndicator > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and (intRemainingDefendingArmies + intRemainingDefendingSUs > 0)) then
 		-- if ((result.AttackingArmiesKilled.NumArmies + result.DefendingArmiesKilled.NumArmies + #result.AttackingArmiesKilled.SpecialUnits + #result.DefendingArmiesKilled.SpecialUnits > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and (intRemainingDefendingArmies + intRemainingDefendingSUs > 0)) then
 			print ("---> !! CONTINUE THE ATTACK ---> ---> ---> ---> ---> armies " ..newArmies.NumArmies.. ", #SUs " ..#newArmies.SpecialUnits);
 			-- addNewOrder (WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, newArmies, order.AttackTeammates));
@@ -248,4 +251,24 @@ function findSpecialUnitOnTerritory (specialUnitID, game, terrID)
 		end
 	end
 	return nil;
+end
+
+function territoryHasCustomStructure (territory, strStructureName)
+	if not territory then return false, nil; end --if territory is nil, just return false/nil
+	local structures = territory.Structures;
+	if not structures then return false, nil; end --if territory is nil, there's are no structures (and thus no forts) so return false/nil
+
+	if (territory.Structures ~= nil) then print ("# Structure types " ..tostring (#territory.Structures)); end
+	if (structures ~= nil) then print ("# Structure types " ..tostring (structures)); end
+
+	for structureID, structureCount in pairs (structures) do
+		local strArrayStructureData = split (structureID, '|');
+
+		--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
+		--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
+		if (strArrayStructureData[1] == "c" and strArrayStructureData[3] == strStructureName and structureCount > 0) then
+			return true, structureID;
+		end
+	end
+	return false, nil;
 end
