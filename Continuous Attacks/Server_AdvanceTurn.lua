@@ -84,6 +84,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		local intRemainingDefendingArmies = game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.NumArmies - result.DefendingArmiesKilled.NumArmies;
 		local intRemainingAttackingSUs = #result.ActualArmies.SpecialUnits - #result.AttackingArmiesKilled.SpecialUnits;
 		local intRemainingDefendingSUs = #game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.SpecialUnits - #result.DefendingArmiesKilled.SpecialUnits;
+		local boolTerritoryHasCustomStructure, strStructureID = territoryHasCustomStructure (game.ServerGame.LatestTurnStanding.Territories [order.To], "Fort"); --if target territory has a Fort and there is an attacking force (ie: not 0 armies & 0 SUs) then 1 Fort will be destroyed, and make sure the continous attack cycle continues
 
 		print ("\n[[  ATTACK // TRANSFER ]] PRE  player " ..order.PlayerID.. "/" ..getPlayerName (game, order.PlayerID).. ", FROM "..order.From.."/"..getTerritoryName (order.From, game)..", TO "..order.To.."/"..getTerritoryName (order.To, game) ..
 			", numArmies " ..order.NumArmies.NumArmies.. ", actualArmies " ..result.ActualArmies.NumArmies.. ", ByPercent " ..tostring (order.ByPercent).. ", isAttack " ..tostring(result.IsAttack).. ", isSuccessful " ..tostring(result.IsSuccessful)..
@@ -94,19 +95,16 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			", AttackingArmiesKilled " ..result.AttackingArmiesKilled.NumArmies..", DefendingArmiesKilled "..result.DefendingArmiesKilled.NumArmies..
 			", AttackingSpecialsKilled " ..#result.AttackingArmiesKilled.SpecialUnits..", DefendingSpecialsKilled "..#result.DefendingArmiesKilled.SpecialUnits..
 			", Remaining attacking armies " ..intRemainingAttackingArmies.. ", Remaining defending armies " ..intRemainingDefendingArmies.. 
-			", Remaining attacking SUs " ..intRemainingAttackingSUs.. ", Remaining defending SUs " ..intRemainingDefendingSUs);
+			", Remaining attacking SUs " ..intRemainingAttackingSUs.. ", Remaining defending SUs " ..intRemainingDefendingSUs.. ", terrHasFort " ..tostring(boolTerritoryHasCustomStructure).. ", structureID " ..tostring(strStructureID));
 		local newArmies = WL.Armies.Create (intRemainingAttackingArmies, result.ActualArmies.SpecialUnits);
 
 		--this value being >0 determines whether any damage was done during the attack to attackers defenders or both; value ==0 indicates no damage was sustained by either side
 		--if any armies died, any SUs died or any SUs took any damage, continue the continuous attacks
 		local intDamageTakenIndicator = result.AttackingArmiesKilled.NumArmies + result.DefendingArmiesKilled.NumArmies + #result.AttackingArmiesKilled.SpecialUnits + #result.DefendingArmiesKilled.SpecialUnits + #result.DamageToSpecialUnits;
 
-		--if target territory has a Fort and there is an attacking force (ie: not 0 armies & 0 SUs) then 1 Fort will be destroyed, and make sure the continous attack cycle continues
-		local boolTerritoryHasCustomStructure, strStructureID = territoryHasCustomStructure (game.ServerGame.LatestTurnStanding.Territories [order.To], "Fort");
-
 		--if (target terr has a Fort or damage was done) AND there are remaing attackers (armies or SUs) AND there are remaining defenders (armies or SUs), continue the continuous attack
 		--if no damage was done -- stalemate, don't loop infinitely; if no attacks remain -- attack failed, can't continue attacking; if no defenders remain -- attack succeeded, territory is captured
-		if ((boolTerritoryHasCustomStructure == true or intDamageTakenIndicator > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and (intRemainingDefendingArmies + intRemainingDefendingSUs > 0)) then
+		if ((boolTerritoryHasCustomStructure == true or intDamageTakenIndicator > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and ((intRemainingDefendingArmies + intRemainingDefendingSUs > 0) or boolTerritoryHasCustomStructure == true)) then
 		-- if ((result.AttackingArmiesKilled.NumArmies + result.DefendingArmiesKilled.NumArmies + #result.AttackingArmiesKilled.SpecialUnits + #result.DefendingArmiesKilled.SpecialUnits > 0) and (intRemainingAttackingArmies + intRemainingAttackingSUs > 0) and (intRemainingDefendingArmies + intRemainingDefendingSUs > 0)) then
 			print ("---> !! CONTINUE THE ATTACK ---> ---> ---> ---> ---> armies " ..newArmies.NumArmies.. ", #SUs " ..#newArmies.SpecialUnits);
 			-- addNewOrder (WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, newArmies, order.AttackTeammates));
@@ -124,7 +122,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 				return; --don't process this continuous attack stream any further
 			else
 				--if not in an infinite loop, continue the continuous attack cycle
-				addNewOrder (WL.GameOrderCustom.Create (order.PlayerID, "Continuous Attacks placeholder", "Continuous Attacks placeholder")); --insert dummy order to trigger processing of the actual next iteration of the continous attack order
+				addNewOrder (WL.GameOrderCustom.Create (order.PlayerID, "Continuous Attacks placeholder", "Continuous Attacks placeholder"), false); --insert dummy order to trigger processing of the actual next iteration of the continous attack order
 				boolProcessingContinuousAttackOrders = true;
 			end
 		else
