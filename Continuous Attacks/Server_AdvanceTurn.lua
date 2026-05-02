@@ -102,7 +102,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		local intDamageTakenIndicator = result.AttackingArmiesKilled.NumArmies + result.DefendingArmiesKilled.NumArmies + #result.AttackingArmiesKilled.SpecialUnits + #result.DefendingArmiesKilled.SpecialUnits + #result.DamageToSpecialUnits;
 
 		--if target territory has a Fort and there is an attacking force (ie: not 0 armies & 0 SUs) then 1 Fort will be destroyed, and make sure the continous attack cycle continues
-		local boolTerritoryHasCustomStructure, strStructureID = territoryHasCustomStructure (order.To, "Fort");
+		local boolTerritoryHasCustomStructure, strStructureID = territoryHasCustomStructure (game.ServerGame.LatestTurnStanding.Territories [order.To], "Fort");
 
 		--if (target terr has a Fort or damage was done) AND there are remaing attackers (armies or SUs) AND there are remaining defenders (armies or SUs), continue the continuous attack
 		--if no damage was done -- stalemate, don't loop infinitely; if no attacks remain -- attack failed, can't continue attacking; if no defenders remain -- attack succeeded, territory is captured
