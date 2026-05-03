@@ -30,10 +30,10 @@ function Server_AdvanceTurn_End(game, addOrder)
 		if (intTaxAmount_Income > 0 or intTaxAmount_GoldInHand > 0) then
 			print ("  player " ..tostring (playerID).. ", gold in hand " ..intGoldInHand.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount (full) " ..intTaxAmount.. ", tax amount (income) " ..intTaxAmount_Income.. ", tax amount (gold in hand) " ..intTaxAmount_GoldInHand);
 			-- if (intTaxAmount_Income > 0) then
-			local arrTaxAmoung_GoldInHand = {};
-			if (intTaxAmount_GoldInHand > 0) then arrTaxAmoung_GoldInHand[playerID] = {}; arrTaxAmoung_GoldInHand[playerID][WL.ResourceType.Gold] = intGoldInHand - intTaxAmount_GoldInHand; end
+			local arrTaxAmount_GoldInHand = {};
+			if (intTaxAmount_GoldInHand > 0) then arrTaxAmount_GoldInHand[playerID] = {}; arrTaxAmount_GoldInHand[playerID][WL.ResourceType.Gold] = intGoldInHand - intTaxAmount_GoldInHand; end
 			-- addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount_Income) .. " gold", {}, {}, {}, {WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax (" .. tostring (intTaxAmount_Income) .. ")")}));
-			addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmoung_GoldInHand, {WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax (" .. tostring (intTaxAmount_Income) .. ")")}));
+			addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmount_GoldInHand, {WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax (" .. tostring (intTaxAmount_Income) .. ")")}));
 			-- end
 		end
 	end
