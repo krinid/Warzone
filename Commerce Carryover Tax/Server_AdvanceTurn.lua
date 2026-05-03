@@ -1,3 +1,9 @@
+function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
+	if (order.proxyType == "GameOrderEvent" and order.Message == "Received Gold") then
+		addOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "[gold mods here]"));
+	end
+end
+
 function Server_AdvanceTurn_End(game, addOrder)
 	print ("[S_AT_E] START");
 
@@ -15,10 +21,20 @@ function Server_AdvanceTurn_End(game, addOrder)
 		if (intGoldInHand > intIncome * intTaxStartAmount) then intTaxableAmount = math.max (1, math.floor (intGoldInHand - (intIncome * intTaxStartAmount) + 0.5)); end --minimum 1 gold if above non-taxable amount
 
 		local intTaxAmount = math.floor (intTaxableAmount * intTaxRate + 0.5); --round to nearest whole gold
-		if (intTaxableAmount > 0) then intTaxAmount = math.max (1, intTaxAmount); end --if player is carrying over gold in excess of Non-taxable amount, minimum tax is 1 gold
-		print ("  gold in hand " ..intGoldInHand.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount " ..intTaxAmount);
-		if (intTaxAmount > 0) then
-				addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, {}, {WL.IncomeMod.Create (playerID, -intTaxAmount, "Carryover tax (" .. tostring (intTaxAmount) .. ")")}));
+		local intTaxAmount_Income = math.min (intIncome, intTaxAmount); --math.ceil (intIncome, math.floor (intTaxableAmount * intTaxRate + 0.5)); --round to nearest whole gold, max value is player's full income; if income not enough to pay whole tax, deduct from gold in hand
+		local intTaxAmount_GoldInHand = math.min (intTaxAmount - intTaxAmount_Income, intGoldInHand); -- and math.floor (intTaxableAmount * intTaxRate + 0.5) - intIncome or 0; --take the remainder of pending gold not collectible from income from gold inhand; round to nearest whole gold
+		if (intTaxAmount > 0 and intIncome > 0) then intTaxAmount_Income = math.max (1, intTaxAmount_Income); --if player is carrying over gold in excess of Non-taxable amount, minimum tax is 1 gold
+		elseif (intTaxAmount > 0 and intTaxAmount_Income == 0 and intGoldInHand > 0) then intTaxAmount_GoldInHand = math.max (1, intTaxAmount_GoldInHand); --if player has no income but is carrying over gold, minimum tax is 1 gold from gold in hand
+		end
+
+		if (intTaxAmount_Income > 0 or intTaxAmount_GoldInHand > 0) then
+			print ("  player " ..tostring (playerID).. ", gold in hand " ..intGoldInHand.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount (full) " ..intTaxAmount.. ", tax amount (income) " ..intTaxAmount_Income.. ", tax amount (gold in hand) " ..intTaxAmount_GoldInHand);
+			-- if (intTaxAmount_Income > 0) then
+			local arrTaxAmoung_GoldInHand = {};
+			if (intTaxAmount_GoldInHand > 0) then arrTaxAmoung_GoldInHand[playerID] = {}; arrTaxAmoung_GoldInHand[playerID][WL.ResourceType.Gold] = intGoldInHand - intTaxAmount_GoldInHand; end
+			-- addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount_Income) .. " gold", {}, {}, {}, {WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax (" .. tostring (intTaxAmount_Income) .. ")")}));
+			addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmoung_GoldInHand, {WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax (" .. tostring (intTaxAmount_Income) .. ")")}));
+			-- end
 		end
 	end
 	--crashNow ();
