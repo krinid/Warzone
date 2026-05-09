@@ -206,7 +206,7 @@ function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
 	-- builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = "This unit's power scales with the amount of gold used to spawn it. [Cost: " ..tostring (goldSpent).. " gold, Health " ..tostring (behemothPower).. ", Power " ..tostring (behemothPower).. "]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	builder.ModData = "This unit's power scales with the amount of gold used to spawn it. [Cost: " ..tostring (goldSpent).. " gold, Health " ..tostring (behemothPower).. ", Power " ..tostring (behemothPower).. ", Strength vs neutrals: " ..tostring (intStrengthAgainstNeutrals_default).. "x, Invulnerable vs neutrals: " ..tostring (boolBehemothInvulnerableToNeutrals_default).. "]";
 
-	local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
+	local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
 	terrMod.AddSpecialUnits = {builder.Build()};
 
 	addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod}));
@@ -245,4 +245,13 @@ end
 
 function startsWith(str, sub)
 	return string.sub(str, 1, string.len(sub)) == sub;
+end
+
+function getSUonTerritory (territory, strSUname)
+	for _,su in pairs (territory.NumArmies.SpecialUnits) do
+		if (su.proxyType == 'CustomSpecialUnit' and su.Name == strSUname) then
+			return (su);
+		end
+	end
+	return (nil);
 end

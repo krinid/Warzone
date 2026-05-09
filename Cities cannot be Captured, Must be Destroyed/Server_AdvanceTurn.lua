@@ -82,16 +82,17 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 
 		if (territoryHasActiveShield (terr) == true) then return; end --if target terr has active Shield SU, exit (shield protects the cities from damage)
 
-		local intDamageAppliedToCities = math.max (0, math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5) - result.DefendingArmiesKilled.NumArmies); --factor in SUs here too; --how much damage to apply to cities on the target terr; this is the amount of damage left over from the AttackPower of the source terr after killing all the defending armies and SUs on the target terr
+		local intDamageAppliedToCities = math.max (0, math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5) - math.min (terr.NumArmies.NumArmies, result.DefendingArmiesKilled.NumArmies)); --factor in SUs here too; --how much damage to apply to cities on the target terr; this is the amount of damage left over from the AttackPower of the source terr after killing all the defending armies and SUs on the target terr
 		local intCurrentCityCount = (terr.Structures and terr.Structures [WL.StructureType.City]) or 0;
 		if (intCurrentCityCount <= 0) then return; end --if not cities on target terr, this mod has nothing to do, so just exit
+		-- local intNumCities = 0;
 		local intNewCityCount = math.max (0, intCurrentCityCount - intDamageAppliedToCities);
 		local intAttackerDamageTakenFromCities = math.floor (intCurrentCityCount * game.Settings.DefenseKillRate + 0.5);
 		-- result.AttackingArmiesKilled = WL.Armies.Create (result.AttackingArmiesKilled.NumArmies + intAttackerDamageTakenFromCities, result.AttackingArmiesKilled.SpecialUnits); --
 
-		if (terr.Structures and terr.Structures[WL.StructureType.City] and terr.Structures[WL.StructureType.City] > 0) then intNumCities = terr.Structures[WL.StructureType.City]; end --get #cities on target terr
-		print ("SOURCE " ..order.From.. "/" ..game.Map.Territories [order.From].Name.. ", attackPower " ..tostring (result.ActualArmies.AttackPower).. ", cityDamage " ..intDamageAppliedToCities.. ", TARGET " ..order.To.. "/" ..game.Map.Territories [order.To].Name.." , defensePower ..., #armies/[killed] " ..tostring (terr.NumArmies.NumArmies).. "/" ..tostring (result.DefendingArmiesKilled.NumArmies).. ", #SUs/[killed] " ..tostring (#terr.NumArmies.SpecialUnits).. "/" ..tostring (#result.DefendingArmiesKilled.SpecialUnits).. ", #cities " ..intNumCities.. ", newCityCount " ..intNewCityCount);
-
+		-- if (terr.Structures and terr.Structures[WL.StructureType.City] and terr.Structures[WL.StructureType.City] > 0) then intNumCities = terr.Structures[WL.StructureType.City]; end --get #cities on target terr
+		print ("SOURCE " ..order.From.. "/" ..game.Map.Territories [order.From].Name.. ", attackPower " ..tostring (result.ActualArmies.AttackPower).. ", cityDamage " ..intDamageAppliedToCities.. ", TARGET " ..order.To.. "/" ..game.Map.Territories [order.To].Name.." , defensePower ..., #armies/[killed] " ..tostring (terr.NumArmies.NumArmies).. "/" ..tostring (result.DefendingArmiesKilled.NumArmies).. ", #SUs/[killed] " ..tostring (#terr.NumArmies.SpecialUnits).. "/" ..tostring (#result.DefendingArmiesKilled.SpecialUnits).. ", #cities " ..intCurrentCityCount.. ", newCityCount " ..intNewCityCount);
+		print ("--> DEF #armies/kill " ..tostring (terr.NumArmies.NumArmies).. "/" ..tostring (result.DefendingArmiesKilled.NumArmies).. " ==> #armies < #killed== " ..tostring (terr.NumArmies.NumArmies < result.DefendingArmiesKilled.NumArmies));
 		--if cities have been damaged, update the city structures to reflect new city count
 		if (intNewCityCount ~= intCurrentCityCount) then
 			local structures = terr.Structures or {};
