@@ -48,7 +48,7 @@ function Client_PresentSettingsUI(rootParent)
 
     UI.CreateLabel(vert).SetText("• Effect starts on turn #" ..tostring (WB.delayFromStart +1)); --.SetColor('#FFFF4E');
 
-	if (WB.appliesToMinArmies == 0) then
+	if (WB.appliesToMinArmies <= 1) then
         UI.CreateLabel(vert).SetText("• Applies to all neutral territories").SetColor('#FFFF4E');
     else
         UI.CreateLabel(vert).SetText("• Only applies to neutral territories with at least " .. WB.appliesToMinArmies .. " armies").SetColor('#FFFF4E');
