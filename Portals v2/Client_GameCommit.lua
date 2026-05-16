@@ -15,8 +15,8 @@ function Client_GameCommit (game, skipCommit)
 	--only do this if the order doesn't exist in the queue already, leverage 'boolSameOrderExistsAlready' to facilitate
 	if (boolSameOrderExistsAlready == false) then
 		-- UI.Alert ("game state: " ..game.Game.State.."/".. tostring (WL.GameState.ToString (game.Game.State)));
-		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
-		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
+		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
+		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
 		--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
 		local orders = game.Orders;
 		table.insert (orders, newOrder);

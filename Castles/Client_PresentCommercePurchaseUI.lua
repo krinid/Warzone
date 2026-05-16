@@ -132,7 +132,7 @@ function ScuttleCastleButtonClicked ()
 	customOrder_Scuttle.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Scuttle.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Scuttle Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Scuttle);
-	Game.Orders = insertOrder (Game,customOrder_Scuttle, orders);
+	Game.Orders = insertOrder (Game, customOrder_Scuttle, orders);
 	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 	displayCastleStats (vertCastleStats);
@@ -338,8 +338,8 @@ function CompletePurchaseClicked()
 	local msg = 'Buy Castle for '..intCastleCost..' gold, spawn to ' .. SelectedTerritory.Name ..", " ..tostring (math.max (0, NumArmiesToMoveIntoCastle.GetValue())).. " armies move inside";
 	local payload = 'Castle|Purchase|' ..SelectedTerritory.ID.. "|" ..math.max (0, NumArmiesToMoveIntoCastle.GetValue()).. "|" ..intCastleCost;
 	local orders = Game.Orders;
-	local customOrder_Purchase = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.ReceiveCards);
-	-- local customOrder_Purchase = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.SanctionCards);
+	-- local customOrder_Purchase = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.ReceiveCards);
+	local customOrder_Purchase = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.SanctionCards);
 	customOrder_Purchase.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Purchase.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
 	-- table.insert(orders, customOrder_Purchase);
