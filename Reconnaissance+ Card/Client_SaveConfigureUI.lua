@@ -36,6 +36,6 @@ function Client_SaveConfigureUI(alert, addCard)
     end
 
 	local strDescription = "Play this card to create a beacon that dispels fog emanating from a given territory" ..(Mod.Settings.Range >= 1 and " and spread to territories within radius of " ..tostring (Mod.Settings.Range) or "") .. ". The reveal lasts " ..tostring (Mod.Settings.Duration).. " turn(s) and lets all players see the revealed territories.";
-	local cardID = addCard("Beacon", strDescription, "Beacon_Card.png", Mod.Settings.NumPieces, Mod.Settings.MinPieces, Mod.Settings.InitialPieces, Mod.Settings.CardWeight);
+	local cardID = addCard("Beacon", strDescription, "Recon+ card_130x180.png", Mod.Settings.NumPieces, Mod.Settings.MinPieces, Mod.Settings.InitialPieces, Mod.Settings.CardWeight);
 end
 
