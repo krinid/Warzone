@@ -1,13 +1,13 @@
 function Client_PresentConfigureUI(rootParent)
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-	UI.CreateLabel(horz).SetText('Duration for Beacon effect\n(# of turns the territories remain revealed)').SetPreferredWidth(290);
+	UI.CreateLabel(horz).SetText('Duration for Recon+ effect\n(# of turns the territories remain revealed)').SetPreferredWidth(290);
     duration = UI.CreateNumberInputField(horz)
         .SetSliderMinValue(1)
         .SetSliderMaxValue(10)
         .SetValue(Mod.Settings.Duration or 3);
 
     local horz = UI.CreateHorizontalLayoutGroup(rootParent);
-	UI.CreateLabel(horz).SetText('Range for Beacon effect\n(# of territories the reveal spreads; 0=targeted territory only, 1=spreads to directly bordering territories, etc)').SetPreferredWidth(290);
+	UI.CreateLabel(horz).SetText('Range for Recon+ effect\n(# of territories the reveal spreads; 0=targeted territory only, 1=spreads to directly bordering territories, etc)').SetPreferredWidth(290);
     range = UI.CreateNumberInputField(horz)
         .SetSliderMinValue(1)
         .SetSliderMaxValue(10)

@@ -1,33 +1,29 @@
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
-    if (order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Beacon|")) then
+    if (order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Recon+|")) then
         local targetTerritoryID = tonumber(string.sub (order.ModData, 8));
 		local td = game.Map.Territories[targetTerritoryID];
 		local terr = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
-		local structures = terr.Structures;
-		if (structures == nil) then structures = {}; end;
-	    local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
+		-- local structures = terr.Structures;
+		-- if (structures == nil) then structures = {}; end;
+	    -- local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 		local terrs = {targetTerritoryID};
-		local intBeaconRange = Mod.Settings.Range; --distance Beacon spreads to; 0=targeted territory only; 1=spreads to directly bordering terrs, etc
+		local intReconRange = Mod.Settings.Range; --distance Recon+ spreads to; 0=targeted territory only; 1=spreads to directly bordering terrs, etc
 		local intDuration = Mod.Settings.Duration; --duration in # of turns
 		local intTurnExpiry = game.Game.TurnNumber + intDuration;
 		local priority = 7500; -- Smoke Bomb uses 7000, Phantom uses 8000 (default), so this reveals with priority over their fog; between 6000 and 8999 means it won't obscure a player's own territories
 
-		terrs = getTerritoriesWithinDistance (game, targetTerritoryID, intBeaconRange);
-		local fogMod = WL.FogMod.Create ('Revealed by Beacon|'..tostring (targetTerritoryID), WL.StandingFogLevel.Visible, priority, terrs, nil);
+		terrs = getTerritoriesWithinDistance (game, targetTerritoryID, intReconRange);
+		local fogMod = WL.FogMod.Create ('Revealed by Recon+|'..tostring (targetTerritoryID), WL.StandingFogLevel.Visible, priority, terrs, nil);
 
-		if (structures [WL.StructureType.Custom("Beacon")] == nil) then structures [WL.StructureType.Custom("Beacon")] = 1;
-		else structures [WL.StructureType.Custom("Beacon")] = structures [WL.StructureType.Custom("Beacon")] + 1;
-		end
-		impactedTerritory.SetStructuresOpt = structures;
+		-- if (structures [WL.StructureType.Custom("Recon+")] == nil) then structures [WL.StructureType.Custom("Recon+")] = 1;
+		-- else structures [WL.StructureType.Custom("Recon+")] = structures [WL.StructureType.Custom("Recon+")] + 1;
+		-- end
+		-- impactedTerritory.SetStructuresOpt = structures;
 
-		local event = WL.GameOrderEvent.Create (order.PlayerID, 'Placed a beacon', {}, {impactedTerritory});
+		local event = WL.GameOrderEvent.Create (order.PlayerID, 'Cast a Recon+', {}, {});
 		event.FogModsOpt = {fogMod};
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
-
-		if (WL.IsVersionOrHigher("5.34.1")) then
-			event.TerritoryAnnotationsOpt = { [targetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
-		end
-
+		event.TerritoryAnnotationsOpt = { [targetTerritoryID] = WL.TerritoryAnnotation.Create("Recon+") };
 		addNewOrder(event);
 
 		--Store the FogMod IDs so they can be removed on the appropriate turn
@@ -44,35 +40,32 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	--If we have any existing fog mods, remove them
 	local priv = Mod.PrivateGameData;
 	local arrFogModIDs = priv.FogModIDs or {};
-	local modifiedTerritories = {};
+	-- local modifiedTerritories = {};
 
 	if (arrFogModIDs [game.Game.TurnNumber] == nil) then print ("nope"); return; end
 
 	--if there are FogMods expiring this turn, remove them
 	if (arrFogModIDs [game.Game.TurnNumber] ~= nil) then
-		local arrintBeaconStructureCount = {};
-		for k,v in pairs (arrFogModIDs [game.Game.TurnNumber]) do
-			-- print ("FOGMOD: "..tostring (v).. " / ".. tostring (v.ID) .." / ".. tostring (v.Priority) .." / ".. tostring (v.Message));
-			fogmod = game.ServerGame.LatestTurnStanding.FogModsOpt [v];
-			-- print ("FOGMOD: "..tostring (fogmod).. " / ".. tostring (fogmod.ID) .." / ".. tostring (fogmod.Priority) .." / ".. tostring (fogmod.Message));
-			local targetTerritoryID = (split (fogmod.Message, '|'))[2]; --ge tthe territory # from the Message field to remove the Beacon Structure from the terr
-			local terr = game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID];
-			local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);
-			local structures = terr.Structures;
+		-- local arrintReconStructureCount = {};
+		-- for k,v in pairs (arrFogModIDs [game.Game.TurnNumber]) do
+		-- 	-- print ("FOGMOD: "..tostring (v).. " / ".. tostring (v.ID) .." / ".. tostring (v.Priority) .." / ".. tostring (v.Message));
+		-- 	fogmod = game.ServerGame.LatestTurnStanding.FogModsOpt [v];
+		-- 	-- print ("FOGMOD: "..tostring (fogmod).. " / ".. tostring (fogmod.ID) .." / ".. tostring (fogmod.Priority) .." / ".. tostring (fogmod.Message));
+		-- 	local targetTerritoryID = (split (fogmod.Message, '|'))[2]; --don't actually need this
+		-- 	local terr = game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID];
+		-- 	local impactedTerritory = WL.TerritoryModification.Create (targetTerritoryID);
+		-- 	local structures = terr.Structures;
 
-			-- if (structures == nil or structures [WL.StructureType.Custom("Beacon")] == nil) then structures = {}; --arrintBeaconStructureCount [targetTerritoryID] = 0;
-			-- elseif (structures [WL.StructureType.Custom("Beacon")] == nil) then structures [WL.StructureType.Custom("Beacon")] = 0; arrintBeaconStructureCount [targetTerritoryID] = 0;
-			-- else
-			if (structures ~= nil and structures [WL.StructureType.Custom("Beacon")] ~= nil) then
-				if (arrintBeaconStructureCount [targetTerritoryID] == nil) then arrintBeaconStructureCount [targetTerritoryID] = structures [WL.StructureType.Custom("Beacon")]; end
-				arrintBeaconStructureCount [targetTerritoryID] = math.max (0, arrintBeaconStructureCount [targetTerritoryID] -1);
-				structures [WL.StructureType.Custom("Beacon")] = arrintBeaconStructureCount [targetTerritoryID];
-			end
-			impactedTerritory.SetStructuresOpt = structures;
-			table.insert (modifiedTerritories, impactedTerritory);
-		end
+		-- 	if (structures ~= nil and structures [WL.StructureType.Custom("Recon+")] ~= nil) then
+		-- 		if (arrintReconStructureCount [targetTerritoryID] == nil) then arrintReconStructureCount [targetTerritoryID] = structures [WL.StructureType.Custom("Recon+")]; end
+		-- 		arrintReconStructureCount [targetTerritoryID] = math.max (0, arrintReconStructureCount [targetTerritoryID] -1);
+		-- 		structures [WL.StructureType.Custom("Recon+")] = arrintReconStructureCount [targetTerritoryID];
+		-- 	end
+		-- 	impactedTerritory.SetStructuresOpt = structures;
+		-- 	table.insert (modifiedTerritories, impactedTerritory);
+		-- end
 
-		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'Beacon effect dissipates', {}, modifiedTerritories);
+		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'Recon+ effect dissipates', {}, modifiedTerritories);
 		event.RemoveFogModsOpt = priv.FogModIDs [game.Game.TurnNumber];
 		addNewOrder(event);
 		priv.FogModIDs [game.Game.TurnNumber] = nil;

@@ -1,0 +1,3 @@
+Provides vision through fog for the card player from a selected territory.
+
+The effect can be configured to spread to strings of neighbouring territories and last multiple turns.

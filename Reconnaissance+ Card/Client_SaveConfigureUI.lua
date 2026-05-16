@@ -6,7 +6,7 @@ function Client_SaveConfigureUI(alert, addCard)
 	Mod.Settings.Duration = duration.GetValue ();
 	Mod.Settings.Range = range.GetValue ();
 
-	local strCardName = "Beacon";
+	local strCardName = "Recon+";
 
 	if (Mod.Settings.Range < 0) then
         alert("[" ..strCardName.. "] Range cannot be less than 1");

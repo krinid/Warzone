@@ -1,3 +1,5 @@
+require('Utilities')
+
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
 function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog)
     Game = game;
@@ -31,19 +33,19 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog
             local jumpToSpot = nil;
 
             if (WL.IsVersionOrHigher("5.34.1")) then
-                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
+                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Recon+") };
                 jumpToSpot = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
             end
 
 
-            print ('Create a Beacon on ' .. TargetTerritoryName.. "; Beacon|" .. TargetTerritoryID); -- .."/" .. getTerritoryName (TargetTerritoryID, game));
-            if (playCard ("Create a Beacon on " .. TargetTerritoryName, "Beacon|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
+            print ('Cast a Recon+ on ' .. TargetTerritoryName.. "; Recon+|" .. TargetTerritoryID); -- .."/" .. getTerritoryName (TargetTerritoryID, game));
+            if (playCard ("Cast a Recon+ on " .. TargetTerritoryName, "Recon+|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
                 close();
             end
 
 		end);
 
-	local strDescription = "\nBeacon range: " ..tostring (Mod.Settings.Range) .. "\nDuration: " ..tostring (Mod.Settings.Duration).. " turn(s)";
+	local strDescription = "\nRecon+ range: " ..tostring (Mod.Settings.Range) .. "\nDuration: " ..tostring (Mod.Settings.Duration).. " turn(s)";
 	UI.CreateLabel (vert).SetText (strDescription);
 	TargetTerritoryClicked (); --automatically prompt for territory selection
     end);
@@ -53,7 +55,7 @@ end
 
 function TargetTerritoryClicked()
 	UI.InterceptNextTerritoryClick(TerritoryClicked);
-	TargetTerritoryInstructionLabel.SetText("Please click on the territory you wish to create a Beacon on.  If needed, you can move this dialog out of the way.");
+	TargetTerritoryInstructionLabel.SetText("Please click on the territory you wish to cast a Recon+ on.  If needed, you can move this dialog out of the way.");
 	TargetTerritoryBtn.SetInteractable(false);
 end
 
@@ -76,8 +78,8 @@ function TerritoryClicked(terrDetails)
 		TargetTerritoryInstructionLabel.SetText("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
-		local arrBeaconTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.Range); --get resultant set of territories that Beacon will impact & highlight them
-		Game.HighlightTerritories (arrBeaconTerrs); --highlight the impacted terrs
+		local arrReconTerrs = getTerritoriesWithinDistance (Game, terrDetails.ID, Mod.Settings.Range); --get resultant set of territories that Recon+ will impact & highlight them
+		Game.HighlightTerritories (arrReconTerrs); --highlight the impacted terrs
 
 		-- print (terrDetails.ID,terrDetails.Name);
 		--compare to 71, Mauritania
