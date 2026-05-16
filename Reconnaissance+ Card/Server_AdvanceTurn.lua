@@ -21,7 +21,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		-- end
 		-- impactedTerritory.SetStructuresOpt = structures;
 
-		local event = WL.GameOrderEvent.Create (order.PlayerID, 'Cast a Recon+', {}, {});
+		local event = WL.GameOrderEvent.Create (order.PlayerID, 'Cast a Recon+', arrPlayerIDsToMakeVisible, {});
 		event.FogModsOpt = {fogMod};
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
 		event.TerritoryAnnotationsOpt = { [targetTerritoryID] = WL.TerritoryAnnotation.Create("Recon+") };
