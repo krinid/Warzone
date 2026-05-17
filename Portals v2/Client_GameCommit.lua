@@ -15,16 +15,16 @@ function Client_GameCommit (game, skipCommit)
 	--only do this if the order doesn't exist in the queue already, leverage 'boolSameOrderExistsAlready' to facilitate
 	if (boolSameOrderExistsAlready == false) then
 		-- UI.Alert ("game state: " ..game.Game.State.."/".. tostring (WL.GameState.ToString (game.Game.State)));
-		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
+		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
 		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.SanctionCards);
-		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.SanctionCards);
-		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
+		local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveCards);
 		--b/c this function has no addOrder callback parameter, need to manually add the order into the clientgame parameter 'game'
 		local orders = game.Orders;
-		table.insert (orders, newOrder);
+		-- table.insert (orders, newOrder);
 		-- game.Orders = orders;
 		game.Orders = insertOrder (game, newOrder, orders);
 	end
+	displayOrders (game.Orders);
 end
 
 --find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
@@ -41,4 +41,24 @@ function insertOrder (Game, newOrder, orderList)
 	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
 	-- Game.Orders = orderList;
 	return orderList;
+end
+
+function displayOrders (orders)
+	print ("ORDERS:");
+	for x, order in pairs (orders) do
+		-- if (order.OccursInPhase)
+		local intPhase = order.OccursInPhase or "--";
+		local intPhaseName = intPhase ~= "--" and WL.TurnPhase.ToString (intPhase) or "--";
+		local strPayload = order.proxyType == "GameOrderCustom" and order.Payload or "--";
+		print (x, order.proxyType, tostring (intPhase).. "/" ..tostring (intPhaseName), tostring (strPayload));
+		-- print (x, order.proxyType, order.OccursInPhase, order.Payload);
+	end
+
+	-- for i, v in ipairs(orders) do
+	-- 	print(i, v.OccursInPhase);
+	-- end
+
+	-- for i = 1, #orders do
+    -- 	assert(orders[i] ~= nil, "table is not contiguous")
+	-- end
 end

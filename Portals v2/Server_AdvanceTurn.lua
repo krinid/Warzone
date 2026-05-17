@@ -45,6 +45,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	-- if (order.proxyType == "GameOrderEvent" and order.ModID == nil and order.Message == "Received Gold") then boolPortalSwapExecuted = false; execute_Portal_Swaps (game, addNewOrder); end
 
 	if (order.proxyType=='GameOrderCustom' and order.Payload == "Portals|Portal swap" --[[ and order.OccursInPhase == WL.TurnPhase.ReceiveCards ]]) then
+		print ("Order occurs in phase: " ..tostring (order.OccursInPhase));
 		execute_Portal_Swaps (game, addNewOrder);
 		-- if (boolPortalSwapExecuted == false and order.OccursInPhase == WL.TurnPhase.ReceiveCards) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; every human player entering
 		--turns normally from client and hitting Commit (not booting, surrendering, etc) will have this order added to their order list, but only process the Portal swaps once, not once
