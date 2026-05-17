@@ -5,6 +5,7 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 		-- addNewOrder (WL.GameOrderCustom.Create ())	order.Payload = "Portals|Portal swap"; end
 		local intSomePlayerID = (function(t) for k,_ in pairs(t) do return k; end end)(game.ServerGame.Game.Players); --get playerID of 1st player in the list game.ServerGame.Game.Players; this is needed b/c GameOrderCustom required the playerID of an actual player in the game and doesn't accept 0 or WL.PlayerID.Neutral
 		addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "Portals|Portal swap", "Portals|Portal swap", {}, nil, nil, nil)); --add order to invoke Portal Swaps (instead of processing in Server_AdvanceTurn_End)
+		-- local newOrder = WL.GameOrderCustom.Create (game.Us.ID, "[End of orders]", "Portals|Portal swap", {}, WL.TurnPhase.ReceiveGold);
 	end
 
 	-- if (boolPortalSwapExecuted == false) then execute_Portal_Swaps (game, addNewOrder); end --swap portals only if they haven't been swapped already; ideally they should already have been 
