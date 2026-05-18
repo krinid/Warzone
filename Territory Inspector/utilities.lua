@@ -1,0 +1,1207 @@
+--- START of Dutch's functions
+function count(t, func)
+	local c = 0;
+	for _, v in pairs(t) do
+		if func ~= nil then
+			c = c + func(v);
+		else
+			c = c + 1;
+		end
+	end
+	return c;
+end
+
+function concatArrays(t1, t2)
+	for _, v in pairs(t2) do
+		table.insert(t1, v);
+	end
+	return t1;
+end
+
+function filterDeadPlayers(game, array)
+	if array == nil then return nil; end
+	local toBeRemoved = {};
+	for i = 1, #array do
+		if game.ServerGame.Game.PlayingPlayers[array[i]] == nil then
+			table.insert(toBeRemoved, i);
+		end
+	end
+	for _, index in pairs(toBeRemoved) do
+		table.remove(array, index);
+	end
+	return array;
+end
+
+function valueInTable(t, v)
+	for _, v2 in pairs(t) do
+		if v == v2 then return true; end
+	end
+	return false;
+end
+
+function getKeyFromValue(t, v)
+	for i, v2 in pairs(t) do
+		if v == v2 then return i; end
+	end
+end
+
+function getArrayOfAllPlayers(game)
+	local t = {};
+	for p, _ in pairs(game.ServerGame.Game.PlayingPlayers) do
+		table.insert(t, p);
+	end
+	return t;
+end
+
+function createEvent(m, p, h);
+	local t = {Message=m, PlayerID=p};
+	if not Mod.Settings.GlobalSettings.VisibleHistory then
+		t.VisibleTo = h;
+	end
+	return t;
+end
+
+function dateIsEarlier(date1, date2)
+	local list = getDateIndexList();
+	for _, v in pairs(list) do
+		if v == "MiliSeconds" then return false; end
+		if date1[v] ~= date2[v] then
+			if date1[v] < date2[v] then
+				return true;
+			else
+				return false;
+			end
+		end
+	end
+	return false;
+end
+
+function getDateIndexList() return {"Year", "Month", "Day", "Hours", "Minutes", "Seconds", "MiliSeconds"}; end
+
+function getDateRestraints() return {99999999, 12, 30, 24, 60, 60, 1000} end;
+
+function dateToTable(s)
+	local list = getDateIndexList();
+	local r = {};
+	local i = 1;
+	local buffer = "";
+	local index = 1;
+	while i <= string.len(s) do
+		local c = string.sub(s, i, i);
+		if c == "-" or c == " " or c == ":" then
+			r[list[index]] = tonumber(buffer);
+			buffer = "";
+			index = index + 1;
+		else
+			buffer = buffer .. c;
+		end
+		i = i + 1;
+	end
+	r[list[index]] = tonumber(buffer);
+	return r;
+end
+
+function tableToDate(t)
+	return t.Year .. "-" .. addZeros("Month", t.Month) .. "-" .. addZeros("Day", t.Day) .. " " .. addZeros("Hours", t.Hours) .. ":" .. addZeros("Minutes", t.Minutes) .. ":" .. addZeros("Seconds", t.Seconds) .. ":" .. addZeros("MiliSeconds", t.MiliSeconds);
+end
+
+function addTime(t, field, i)
+	local dateIndex = getDateIndexList();
+	local restraint = getDateRestraints()[getTableKey(dateIndex, field)];
+	t[field] = t[field] + i;
+	if t[field] > restraint then
+		t[field] = t[field] - restraint;
+		addTime(t, dateIndex[getTableKey(dateIndex, field) - 1], 1);
+	end
+	return t;
+end
+
+function getTableKey(t, value)
+	for i, v in pairs(t) do
+		if value == v then return i; end
+	end
+end
+
+function addZeros(field, i)
+	if field == "MiliSeconds" then
+		if i < 10 then
+			return "00" .. i;
+		elseif i < 100 then
+			return "0" .. i;
+		end
+	else
+		if i < 10 then
+			return "0" .. i;
+		end
+	end
+	return i;
+end
+--- END of Dutch's functions
+
+--- START of dabo's functions
+function tablelength (T)
+	local count = 0;
+	if (T==nil) then return 0; end
+	if (type(T) ~= "table") then return 0; end
+	for _ in pairs(T) do count = count + 1 end
+	return count
+end
+
+function split (inputstr, sep)
+	if inputstr == nil then return {}; end
+	if sep == nil then
+			sep = "%s"
+	end
+	local t={} ; i=1
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			t[i] = str
+			i = i + 1
+	end
+	return t
+end
+
+function toPlayerName(playerid, game)
+	if (playerid ~= nil) then
+		if (playerid==WL.PlayerID.Neutral) then
+			return ("Neutral");
+		elseif (playerid<50) then
+				return ("AI"..playerid);
+		else
+			for _,playerinfo in pairs(game.Game.Players) do
+				if(playerid == playerinfo.ID)then
+					return (playerinfo.DisplayName(nil, false));
+				end
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found
+end
+--- END of dabo's functions
+
+--- START of Fizzer's functions
+function map(array, func)
+	local new_array = {}
+	local i = 1;
+	for _,v in pairs(array) do
+		new_array[i] = func(v);
+		i = i + 1;
+	end
+	return new_array
+end
+
+function filter(array, func)
+	local new_array = {}
+	local i = 1;
+	for _,v in pairs(array) do
+		if (func(v)) then
+			new_array[i] = v;
+			i = i + 1;
+		end
+	end
+	return new_array
+end
+--- END of Fizzer's functions
+
+--- START of DanWL's functions
+--heavily modified version of DanWL's eliminate function; reduced to only eliminate a single specified playerID
+--change all territories for the specified player to neutral to eliminate the player
+--remove all Special Units owned by that player even if they are on territories not owned by that player
+function eliminatePlayer (playerID, territories, removeSpecialUnits, isSinglePlayer)
+	local modifiedTerritories = {};
+	local canRemoveSpecialUnits = removeSpecialUnits and ((not isSinglePlayer) or (isSinglePlayer and WL and WL.IsVersionOrHigher and WL.IsVersionOrHigher('5.22')));
+	if (playerID == nil or playerID <= 0) then return nil; end
+
+	for _, territory in pairs(territories) do
+		local specialUnitsToRemove = {};
+		local terrMod = nil;
+
+		--if territory is owned by specified player, make it neutral
+		if (territory.OwnerPlayerID == playerID) then
+			terrMod = WL.TerritoryModification.Create (territory.ID);
+			terrMod.SetOwnerOpt = WL.PlayerID.Neutral;
+		end
+
+		--if territory has SUs owned by specified player, remove them, even if the territory is owned by another player
+		if (canRemoveSpecialUnits) then
+			for _, SU in pairs(territory.NumArmies.SpecialUnits) do
+				if (SU.OwnerID == playerID) then
+					if (terrMod == nil) then terrMod = WL.TerritoryModification.Create (territory.ID); end
+					table.insert(specialUnitsToRemove, SU.ID);
+				end
+			end
+		end
+
+		--if any changes were made (territory owner set to neutral and/or any SUs removed)
+		if (terrMod ~= nil) then
+			if (#specialUnitsToRemove > 0) then terrMod.RemoveSpecialUnitsOpt = specialUnitsToRemove; end
+			table.insert(modifiedTerritories, terrMod);
+		end
+	end
+
+	return (modifiedTerritories);
+end
+--- END of DanWL's functions
+
+--- START of Derfellios's functions
+function NotTableEmpty(List)
+	for a,b in pairs(List) do
+		return true
+	end
+	return false
+end
+
+function NotinTable(tbl, item)
+    for key, value in pairs(tbl) do
+        if value == item then 
+			return false 
+		end
+    end
+    return true
+end
+--- END of Derfellios's functions
+
+--- START of krinid's functions
+-- Helper function to convert a table to a string representation
+local function tableToString(tbl, indent)
+	if type(tbl) ~= "table" then
+		return tostring(tbl)  -- Return the value as-is if it's not a table
+	end
+	indent = indent or ""  -- Indentation for nested tables
+	indent = "";
+	local result = "{" --"{\n"
+	for k, v in pairs(tbl) do
+		result = result .. indent .. "  " .. tostring(k) .. " = " .. tableToString(v, indent .. "  ") .. ","; --\n"
+	end
+	result = result .. indent .. "}"
+	return result
+end
+
+-- Main function to print object details
+function printObjectDetails(object, strObjectName, strLocationHeader)
+	strObjectName = strObjectName or ""  -- Default blank value if not provided
+	strLocationHeader = strLocationHeader or ""  -- Default blank value if not provided
+	print("[" .. strLocationHeader .. "] object=" .. strObjectName .. ", tablelength==".. tablelength (object).."::");
+	print("[proactive display attempt] value==" .. tostring(object));
+
+	-- Early return if object is nil or an empty table
+	if object == nil then
+		print("[invalid/empty object] object==nil")
+		return
+	elseif type(object) == "table" and next(object) == nil then
+		print("[invalid/empty object] object=={}  [empty table]")
+		return
+	end
+
+	-- Handle tables
+	if type(object) == "table" then
+		-- Check and display readableKeys
+		if object.readableKeys then
+			for key, value in pairs(object.readableKeys) do
+				local propertyValue = object[value]
+				if type(propertyValue) == "table" then
+					print("  [readablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue))
+				else
+					print("  [readablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+				end
+			end
+		else
+			print("[R]**readableKeys DNE")
+		end
+
+		-- Check and display writableKeys
+		if object.writableKeys then
+			for key, value in pairs(object.writableKeys) do
+				local propertyValue = object[value]
+				if type(propertyValue) == "table" then
+					print("  [writablekeys_table] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tableToString(propertyValue)) -- *** this is the last line of output that successfully executes
+				else
+					print("  [writablekeys_value] key#==" .. key .. ":: key==" .. tostring(value) .. ":: value==" .. tostring(propertyValue))
+				end
+			end
+		else
+			print("[W]**writableKeys DNE")
+		end
+
+		-- Display all base properties of the table
+		for key, value in pairs(object) do
+			if key ~= "readableKeys" and key ~= "writableKeys" then  -- Skip already processed keys
+				if type(value) == "table" then
+					print("[base_table] key==" .. tostring(key) .. ":: value==" .. tableToString(value))
+				else
+					print("[base_value] key==" .. tostring(key) .. ":: value==" .. tostring(value))
+				end
+			end
+		end
+	else
+		-- Handle non-table objects
+		print("[not table] value==" .. tostring(object))
+	end
+end
+
+function startsWith(str, sub)
+	return string.sub(str, 1, string.len(sub)) == sub;
+end
+
+function PrintProxyInfo(obj)
+    print('type=' .. obj.proxyType .. ' readOnly=' .. tostring(obj.readonly) .. ' readableKeys=' .. table.concat(obj.readableKeys, ',') .. ' writableKeys=' .. table.concat(obj.writableKeys, ','));
+end
+
+function WLturnPhases ()
+	--WLturnPhases = {'CardsWearOff', 'Purchase', 'Discards', 'OrderPriorityCards', 'SpyingCards', 'ReinforcementCards', 'Deploys', 'BombCards', 'EmergencyBlockadeCards', 'Airlift', 'Gift', 'Attacks', 'BlockadeCards', 'DiplomacyCards', 'SanctionCards', 'ReceiveCards', 'ReceiveGold'};
+	local WLturnPhasesTable = {
+		['CardsWearOff'] = WL.TurnPhase.CardsWearOff,
+		['Purchase'] = WL.TurnPhase.Purchase,
+		['Discards'] = WL.TurnPhase.Discards,
+		['OrderPriorityCards'] = WL.TurnPhase.OrderPriorityCards,
+		['SpyingCards'] = WL.TurnPhase.SpyingCards,
+		['ReinforcementCards'] = WL.TurnPhase.ReinforcementCards,
+		['Deploys'] = WL.TurnPhase.Deploys,
+		['BombCards'] = WL.TurnPhase.BombCards,
+		['EmergencyBlockadeCards'] = WL.TurnPhase.EmergencyBlockadeCards,
+		['Airlift'] = WL.TurnPhase.Airlift,
+		['Gift'] = WL.TurnPhase.Gift,
+		['Attacks'] = WL.TurnPhase.Attacks,
+		['BlockadeCards'] = WL.TurnPhase.BlockadeCards,
+		['DiplomacyCards'] = WL.TurnPhase.DiplomacyCards,
+		['SanctionCards'] = WL.TurnPhase.SanctionCards,
+		['ReceiveCards'] = WL.TurnPhase.ReceiveCards,
+		['ReceiveGold'] = WL.TurnPhase.ReceiveGold
+	};
+	return WLturnPhasesTable;
+end
+
+function WLplayerStates ()
+	local WLplayerStatesTable = {
+		[WL.GamePlayerState.Invited] = 'Invited',
+		[WL.GamePlayerState.Playing] = 'Playing',
+		[WL.GamePlayerState.Eliminated] = 'Eliminated',
+		[WL.GamePlayerState.Won] = 'Won',
+		[WL.GamePlayerState.Declined] = 'Declined',
+		[WL.GamePlayerState.RemovedByHost] = 'RemovedByHost',
+		[WL.GamePlayerState.SurrenderAccepted] = 'SurrenderAccepted',
+		[WL.GamePlayerState.Booted] = 'Booted',
+		[WL.GamePlayerState.EndedByVote] = 'EndedByVote'
+	};
+	return WLplayerStatesTable;
+end
+
+--given input parameter of the text friendly name value of the turn phase, return the WZ internal numeric value that represents that turn phase; this # is what must be assigned to orders to properly associate the turn phase of the order
+function WLturnPhases_getNumericValue (strWLturnPhaseName)
+	return WLturnPhases()[strWLturnPhaseName];
+end
+
+--create a few Horz objects to add a bit of invisible spacing (indenting)
+function addHorizontalBufferSpacing (parent)
+	--return CreateHorz(CreateHorz(CreateHorz(CreateHorz(CreateHorz(parent)))));
+	return CreateHorz(CreateHorz(CreateHorz(parent)));
+end
+
+--accept player object, return result true is player active in game; false is player is eliminated, booted, surrendered, etc
+function isPlayerActive (playerID, game)
+	--if (playerid<=50) then
+
+	local player = game.Game.Players[playerID];
+
+	--if VTE, player was removed by host or decline the game, then player is not Active
+	if player.State ~= WL.GamePlayerState.EndedByVote and player.State ~= WL.GamePlayerState.RemovedByHost and player.State ~= WL.GamePlayerState.Declined then
+		return (false);
+	--if eliminated or booted (and not AI), then player is not active
+	elseif ((player.State == WL.GamePlayerState.Eliminated) or (player.State == WL.GamePlayerState.Booted and not game.Settings.BootedPlayersTurnIntoAIs) or (player.State == WL.GamePlayerState.SurrenderAccepted and not game.Settings.SurrenderedPlayersTurnIntoAIs)) then
+	--elseif ((player.State == WL.GamePlayerState.Eliminated) or (player.State == WL.GamePlayerState.Booted and not game.Settings.BootedPlayersTurnIntoAIs) or (player.State == WL.GamePlayerState.SurrenderAccepted and not game.Settings.SurrenderedPlayersTurnIntoAIs)) then
+		return (false);
+	else
+		-- all other cases, user is active
+		return (true);
+	end
+end
+
+function createJumpToLocationObject (game, targetTerritoryID)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create (1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
+	return (WL.RectangleVM.Create(
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY,
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY));
+end
+
+function createJumpToLocationObject_Bonus (game, bonusID)
+	--get XY coordinates of the bonus; note this is estimated since it's based on the midpoints of the territories in the bonus (that's all WZ provides)
+	local XYbonusCoords = getXYcoordsForBonus (bonusID, game);
+	--# of map units to add as buffer to min/max X values to zoom/pan on the bonus; do this to increase chance of territories being on screen, since the X/Y calcs WZ provides are midpoints of the territories (and thus the bonuses), not the actual left/right/top/bottom coordiantes
+	local X_buffer = 25;
+	local Y_buffer = 25;
+
+	--add/subtract buffer (25) on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
+	return (WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer));
+end
+
+--return table with keys X=xvalue, Y=yvalue for a bonus which is the average of its territories' X,Y coords as a best estimate for where the bonus resides on the map
+function getXYcoordsForBonus (bonusID, game)
+	local average_X = 0;
+	local average_Y = 0;
+	local min_X = 0;
+	local max_X = 0;
+	local min_Y = 0;
+	local max_Y = 0;
+	local sum_X = 0;
+	local sum_Y = 0;
+	local count = 0;
+
+	if (game==nil) then print ("@@game is nil"); end
+	if (game.Map==nil) then print ("@@game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("@@game.Map.Bonuses is nil"); end
+	--print ("@@bonusID==".. bonusID);
+	--print ("@@bonusName==".. getBonusName (bonusID, game));
+
+	for _,terrID in pairs (game.Map.Bonuses[bonusID].Territories) do
+		count = count + 1;
+		sum_X = sum_X + game.Map.Territories[terrID].MiddlePointX;
+		sum_Y = sum_Y + game.Map.Territories[terrID].MiddlePointY;
+		if (game.Map.Territories[terrID].MiddlePointX < min_X) then min_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointX > max_X) then max_X = game.Map.Territories[terrID].MiddlePointX; end
+		if (game.Map.Territories[terrID].MiddlePointY < min_Y) then min_Y = game.Map.Territories[terrID].MiddlePointY; end
+		if (game.Map.Territories[terrID].MiddlePointY > max_Y) then max_Y = game.Map.Territories[terrID].MiddlePointY; end
+	end
+	--take average of all the X/Y coords
+	average_X = sum_X / count;
+	average_Y = sum_Y / count;
+
+	return ({average_X=average_X, average_Y=average_Y, min_X=min_X, max_X=max_X, min_Y=min_Y, max_Y=max_Y});
+end
+
+function getColours()
+    local colors = {};					-- Stores all the built-in colors (player colors only)
+    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+	colors.WZyellow = "#ABA500"; colors.WZgreen = "#198225"; colors["WZLight Blue"] = "#50B2E3"; colors.WZblue = "#242D9A"; colors.WZred = "#9A2929";
+    return colors;
+end
+
+function showPopUpTurnPhaseDescriptions_StylishDialog (game)
+	local winPlayDeneutralize = createWindow (game);
+	winPlayDeneutralize.setMaxSize (400, 500);
+	local rootParent = winPlayDeneutralize.root;
+
+	local winPlayDeneutralize2 = createWindow (game);
+	winPlayDeneutralize2.setMaxSize (400, 500);
+	local rootParent2 = winPlayDeneutralize2.root;
+
+	UI.CreateLabel (rootParent).SetText ("1 turn in Warzone consists of the following phases:\n");
+	UI.CreateLabel (rootParent2).SetText ("1 turn in Warzone consists of the following phases:\n");
+
+	local numUserButtonsCreated = 0;
+	for k,v in pairs(WL.TurnPhase) do
+		if (tostring (k) ~= "ToString") then UI.CreateButton (rootParent2).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		if (tostring (k) ~= "ToString") then UI.CreateLabel (rootParent).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		numUserButtonsCreated = numUserButtonsCreated + 1;
+	end
+end
+
+function showPopUpTurnPhaseDescriptions_UIalert ()
+	local strDescription = ("1 turn in Warzone consists of the following phases in this order:\n");
+
+	local numUserButtonsCreated = 0;
+	for k,v in pairs(WL.TurnPhase) do
+		if (tostring (k) ~= "ToString") then strDescription = strDescription .. tostring (k).."\n"; end
+		--"/"..tostring (v);  --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		numUserButtonsCreated = numUserButtonsCreated + 1;
+	end
+	local arrIntNumCardPriceIncreases = Mod.PublicGameData.NumCardPriceIncreases or {}; --# of card increases for each card = # of turns where a player has bought that card type; don't update this mid-turn else prices will increase for all users which gets hard to predict, orders may fail, etc
+	local arrIntNumCardsPurchased = Mod.PublicGameData.NumCardsPurchased or {}; --running count of total cards of each type purchased by all players
+	-- local intMaxBuyableCards = Mod.Settings.MaxBuyableCards or -1; --# of each card that can be bought; -1 = unlimited; default is -1
+	-- local intCostIncreaseRate = Mod.Settings.CostIncreaseRate or 0.0; --the ratio that the price of each card increases after a turn passes where a card was purchased, or within the same turn when 1 player buys >1 of the same type of card; default to 0.0 for purpose of ongoing games where this value isn't set (so card prices in ongoing games doesn't increase)
+	strDescription = strDescription .. "\ncard price increases ".. tostring (tablelength(arrIntNumCardPriceIncreases)) .. "\n# cards purchased " .. tostring (tablelength(intCostIncreaseRate));
+
+	UI.Alert (strDescription);
+
+end
+
+function createWindow (game)
+    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
+
+	game.CreateDialog (function(rootParent, setMaxSize, setScrollable, game2, close)
+		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game2, close = close};
+    end);
+
+    return window;
+end
+
+function getColourCode (itemName)
+    if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
+    elseif (itemName=="error")  then return "#FF0000"; --red
+	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
+	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
+	elseif (itemName=="ok") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
+	elseif (itemName=="Card|Reinforcement") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
+	elseif (itemName=="Card|Spy") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Emergency Blockade card") then return getColours()["Royal Blue"]; --
+	elseif (itemName=="Card|OrderPriority") then return getColours()["Yellow"]; --
+	elseif (itemName=="Card|OrderDelay") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Airlift") then return "#777777"; --
+	elseif (itemName=="Card|Gift") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Diplomacy") then return getColours()["Light Blue"]; --
+	-- elseif (itemName=="Card|") then return getColours()["Medium Blue"]; --
+	elseif (itemName=="Card|Sanctions") then return getColours()["Purple"]; --
+	elseif (itemName=="Card|Reconnaissance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Surveillance") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Blockade") then return getColours()["Blue"]; --
+	elseif (itemName=="Card|Bomb") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Bomb+ Card") then return getColours()["Dark Magenta"]; --
+	elseif (itemName=="Card|Nuke") then return getColours()["Tyrian Purple"]; --
+	elseif (itemName=="Card|Airstrike") then return getColours()["Ivory"]; --
+	elseif (itemName=="Card|Pestilence") then return getColours()["Lime"]; --
+	elseif (itemName=="Card|Isolation") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Shield") then return getColours()["Aqua"]; --
+	elseif (itemName=="Card|Monolith") then return getColours()["Hot Pink"]; --
+	elseif (itemName=="Card|Card Block") then return getColours()["Light Blue"]; --
+	elseif (itemName=="Card|Card Pieces") then return getColours()["Sea Green"]; --
+	elseif (itemName=="Card|Card Hold") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Phantom") then return getColours()["Smoky Black"]; --
+	elseif (itemName=="Card|Neutralize") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Deneutralize") then return getColours()["Green"]; --
+	elseif (itemName=="Card|Earthquake") then return getColours()["Brown"]; --
+	elseif (itemName=="Card|Tornado") then return getColours()["Charcoal"]; --
+	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
+	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
+	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
+	elseif (itemName=="Phase|Purchase") then return "#007700";
+	elseif (itemName=="Phase|CardsWearOff") then return "#964B00";
+	elseif (itemName=="Phase|Discards") then return "#654321";
+	elseif (itemName=="Phase|OrderPriorityCards") then return getColours()["Yellow"];
+	elseif (itemName=="Phase|SpyingCards") then return getColours()["Red"];
+	elseif (itemName=="Phase|ReinforcementCards") then return getColours()["Dark Green"];
+	elseif (itemName=="Phase|Deploys") then return "#00BB00";
+	elseif (itemName=="Phase|BombCards") then return getColours()["Dark Magenta"];
+	elseif (itemName=="Phase|EmergencyBlockadeCards") then return getColours()["Royal Blue"];
+	elseif (itemName=="Phase|Airlift") then return "#777777";
+	elseif (itemName=="Phase|Gift") then return getColours()["Aqua"];
+	elseif (itemName=="Phase|Attacks") then return "#FF0000";
+	elseif (itemName=="Phase|BlockadeCards") then return getColours()["Blue"];
+	elseif (itemName=="Phase|DiplomacyCards") then return getColours()["Light Blue"];
+	elseif (itemName=="Phase|SanctionCards") then return getColours()["Purple"];
+	elseif (itemName=="Phase|ReceiveCards") then return "#005500";
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+    else return "#AAAAAA"; --return light grey for everything else
+    end
+end
+
+--given 0-255 RGB integers, return a single 24-bit integer
+function getColourInteger (red, green, blue)
+	return red*256^2 + green*256 + blue;
+end
+
+--adds an "s" for plural items
+--if parameter is 1, return "s", else return ""; eg: in order correctly write: 1 turn, 5 turns
+function plural (intInputNumber)
+	if (intInputNumber==nil or intInputNumber == 1) then return "";
+	else return "s"; end
+end
+
+--keep numDecimalsToKeep quantity of decimal points for 'number', truncate the remainder
+function truncateDecimals (number, numDecimalsToKeep)
+    local multiplier = 10 ^ numDecimalsToKeep;
+    return (math.floor (number * multiplier) / multiplier);
+end
+
+--return list of all cards defined in this game; includes custom cards
+--generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
+function getDefinedCardList (game)
+    local count = 0;
+    local cards = {};
+	local publicGameData = Mod.PublicGameData;
+
+	--if CardData structure isn't defined (eg: from an ongoing game before this was done this way), then initialize the variable and populate the list here
+	if (publicGameData.CardData==nil) then publicGameData.CardData = {}; publicGameData.CardData.DefinedCards = nil; end
+
+	--if (false) then --publicGameData.CardData.DefinedCards ~= nil) then
+	if (publicGameData.CardData.DefinedCards ~= nil) then
+		return publicGameData.CardData.DefinedCards; --if the card data is already stored in publicGameData.CardData.definedCards, just return the list that has already been processed, don't regenerate it (it takes ~3.5 secs on standalone app so likely a longer, noticeable delay on web client)
+	else
+		if (game==nil) then print ("game is nil"); return nil; end
+		if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+		if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+
+		for cardID, cardConfig in pairs(game.Settings.Cards) do
+			local strCardName = getCardName_fromObject(cardConfig);
+			cards[cardID] = strCardName;
+			count = count +1
+		end
+		return cards;
+	end
+end
+
+--given a card name, return it's cardID (not card instance ID), ie: represents the card type, not the instance of the card
+function getCardID (strCardNameToMatch, game)
+	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
+	local cards={};
+	if (Mod.PublicGameData.CardData == nil or Mod.PublicGameData.CardData.DefinedCards == nil) then
+		print ("run function");
+		cards = getDefinedCardList (game);
+	else
+		cards = Mod.PublicGameData.CardData.DefinedCards;
+	end
+
+	for cardID, strCardName in pairs(cards) do
+		if (strCardName == strCardNameToMatch) then
+			return cardID;
+		end
+	end
+	return nil; --cardName not found
+end
+
+--return cardInstace if playerID possesses card of type cardID, otherwise return nil
+function playerHasCard (playerID, cardID, game)
+	if (playerID<=0) then print ("playerID is neutral (has no cards)"); return nil; end
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
+		if (v.CardID == tonumber(cardID)) then print (k); return k; end
+	end
+	return nil;
+end
+
+--return card instance for a given card type by name that belongs to a given player
+function getCardInstanceID_fromName (playerID, strCardNameToMatch, game)
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch);
+	local cardID = tonumber (getCardID (strCardNameToMatch, game));
+	print ("[GCII_fn] player "..playerID..", cardName "..strCardNameToMatch..", cardID "..tostring(cardID));
+	if (cardID==nil) then print ("cardID is nil"); return nil; end
+	return getCardInstanceID (playerID, cardID, game);
+end
+
+--return card instance if playerID possesses card of type cardID, otherwise return nil; note this is not the same as getCardID, which returns the cardID of the card type
+function getCardInstanceID (playerID, cardID, game)
+	print ("[GCII] player "..playerID..", cardID "..cardID);
+	if (playerID==0) then print ("playerID is neutral (has no cards)"); return nil; end
+
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
+		if (v.CardID == cardID) then return k; end
+	end
+	return nil;
+end
+
+function getCardName_fromID(cardID, game);
+    print ("cardID=="..cardID);
+    local cardConfig = game.Settings.Cards[tonumber(cardID)];
+    return getCardName_fromObject (cardConfig);
+end
+
+function getCardName_fromObject(cardConfig)
+	if (cardConfig==nil) then print ("cardConfig==nil"); return nil; end
+    if cardConfig.proxyType == 'CardGameCustom' then
+        return cardConfig.Name;
+    end
+
+    if cardConfig.proxyType == 'CardGameAbandon' then
+        -- Abandon card was the original name of the Emergency Blockade card
+        return 'Emergency Blockade card';
+    end
+    return cardConfig.proxyType:match("^CardGame(.*)");
+end
+
+function getBonusName (intBonusID, game)
+	if (intBonusID) == nil then return nil; end
+	if (game==nil) then print ("##game is nil"); end
+	if (game.Map==nil) then print ("##game.Map is nil"); end
+	if (game.Map.Bonuses==nil) then print ("##game.Map.Bonuses is nil"); end
+	return (game.Map.Bonuses[intBonusID].Name);
+end
+
+function getTerritoryName (intTerrID, game)
+	if (intTerrID) == nil then return nil; end
+	if (game.Map.Territories[intTerrID] == nil) then return nil; end --territory ID does not exist for this game/template/map
+	return (game.Map.Territories[intTerrID].Name);
+end
+
+function getPlayerName (game, playerid)
+	if (playerid == nil) then return "Player DNE (nil)";
+	elseif (tonumber (playerid) == WL.PlayerID.Neutral) then return ("Neutral");
+	elseif (tonumber (playerid) < 0) then return ("fogged");
+	elseif (tonumber (playerid) < 50) then return ("AI "..playerid);
+	else
+		for _,playerinfo in pairs (game.Game.Players) do
+			if (tonumber (playerid) == tonumber (playerinfo.ID))then
+				return (playerinfo.DisplayName (nil, false));
+			end
+		end
+	end
+	return "[Error - Player ID not found,playerid==]" ..tostring (playerid); --only reaches here if no player name was found but playerID >50 was provided
+end
+
+--return the # of armies deployed to territory terrID so far this turn
+function getArmiesDeployedThisTurnSoFar (game, terrID)
+	for k,existingGameOrder in pairs (game.Orders) do
+		--print (k,existingGameOrder.proxyType);
+		if (existingGameOrder.proxyType == "GameOrderDeploy") then
+			print ("[DEPLOY] player "..existingGameOrder.PlayerID..", DeployOn "..existingGameOrder.DeployOn..", NumArmies "..existingGameOrder.NumArmies.. ", free "..tostring(existingGameOrder.Free));
+			if (existingGameOrder.DeployOn == terrID) then return existingGameOrder.NumArmies; end --this is actual integer # of army deployments, not the usual NumArmies structure containing NumArmies+SpecialUnits
+		end
+	end
+	return (0); --if no matching deployment orders were found, there were no deployments, so return 0
+end
+
+function initialize_CardData (game)
+    local publicGameData = Mod.PublicGameData;
+
+    publicGameData.CardData = {};
+    publicGameData.CardData.DefinedCards = nil;
+    publicGameData.CardData.CardPiecesCardID = nil;
+	publicGameData.CardData.ResurrectionCardID = nil;
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
+    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+    publicGameData = Mod.PublicGameData;
+
+    if (game==nil) then print ("game is nil"); return nil; end
+    if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+    if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+
+    publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
+	publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection"));
+    Mod.PublicGameData = publicGameData;
+end
+
+--initialize the Mod.PublicGameData.Debug structure and all member properties
+function initialize_debug_data ()
+	local publicGameData = Mod.PublicGameData;
+	publicGameData.Debug = {};
+	publicGameData.Debug.DebugMode = false;
+	publicGameData.Debug.DebugUser = 1058239; --only output data for this user, to prevent other users from displaying & erasing the data so it's not available for me & disable abuse of this coding/debugging feature
+	publicGameData.Debug.TrimData = true; --indicates whether to trim data (erase) it after viewing it or leave it in PublicGameData.Debug.OutputData for future perusal
+    publicGameData.Debug.OutputData = {};
+    publicGameData.Debug.OutputDataCounter = 0;  --the highest key# created so far
+    publicGameData.Debug.OutputDataLastRead = 0; --the highest key# retrieved by client side
+    Mod.PublicGameData = publicGameData;
+end
+
+--call from server hooks to write data to be retrieved by client hooks later
+--if optional parameter boolClientMessage==true then prefix [C] to indicate the message was appended by a client hook; otherwise prefix [S] to indicate message was from a server hook
+function printDebug (strOutputText, boolClientMessage)
+	print (strOutputText); --in addition to storing for retrieval from client hook (see below), also output to Mod Log window (this will display normally when playing SP on standalone client)
+	local strPrefix = "[S]";
+	if (boolClientMessage == true) then strPrefix = "[C]"; end
+
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.Debug == nil) then publicGameData.Debug = {}; end
+	if (publicGameData.Debug.DebugMode == nil) then publicGameData.Debug.DebugMode = false; end
+	if (publicGameData.Debug.TrimData == nil) then publicGameData.Debug.TrimData = true; end --if not configured, default to trim data (so it doesn't get unnecessarily/unknowingly huge)
+
+	-- local debugMode = true;
+	if (publicGameData.Debug.DebugMode == true) then
+		if (publicGameData.Debug.OutputData == nil) then publicGameData.Debug.OutputData = {}; end
+		if (publicGameData.Debug.OutputDataCounter == nil) then publicGameData.Debug.OutputDataCounter = 0; end
+		if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+		publicGameData.Debug.OutputDataCounter = publicGameData.Debug.OutputDataCounter + 1;
+		publicGameData.Debug.OutputData [publicGameData.Debug.OutputDataCounter] = strPrefix.. strOutputText;
+		Mod.PublicGameData = publicGameData;
+	end
+end
+
+--given an SU 'unit', return true/false indicating whether it is an Immovable Special Unit (ie: should be excluded from any Attack/Transfer/Airlift operations)
+function isSpecialUnitAnImmovableUnit (unit)
+	if (unit.proxyType ~= "CustomSpecialUnit") then return false; end --non-custom special units (Commanders & Bosses) are not Immovables
+
+	--identify all of the following SU types as Immovables; some of these like Nuke, Pestilence
+	if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralized territory") or (unit.Name == "Quicksand impacted territory") or (unit.Name == "Isolated territory") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
+		return true;
+	end
+end
+
+--given WL.Armies structure 'armies', return true/false indicating whether SU of type strSUtype is present in it; if boolPatternMatch is true then search for partial match (figuratively appending * to the end of strSUtype); if false then only do exact match; eg: Behemoth needs pattern matching b/c the name contains Power indicator; other SUs are okay with exact matches
+function isSpecialUnitInArmies (armies, strSUtype, boolPatternMatch)
+	if (armies == nil) then return false; end
+	if (#armies.SpecialUnits == 0) then return false; end
+
+	for _,specialUnit in pairs (armies.SpecialUnits) do
+		if (specialUnit.Name == strSUtype or (boolPatternMatch==true and left(specialUnit.Name, len(strSUtype)) == strSUtype)) then
+			return true;
+		end
+	end
+	return false;
+end
+
+--find & return the territory ID where a given special unit is
+function findSpecialUnit (specialUnitID, game)
+	print ("fsu, find=="..specialUnitID);
+	for _,terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		--print ("terr.ID=="..terr.ID..", #specials==".. (#terr.NumArmies.SpecialUnits));
+		if (#terr.NumArmies.SpecialUnits >= 1) then
+			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
+				--print ("1 special on "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
+				--printObjectDetails (specialUnit, "[FSU]", "specialUnit details");
+				if (specialUnitID == specialUnit.ID) then
+					print ("FOUND @ "..terr.ID.. "/"..	game.Map.Territories[terr.ID].Name);
+					return terr.ID;
+				end
+			end
+		end
+	end
+	return nil;
+end
+
+--called from Server_GameCustomMessage which is in turn called by client hooks, in order to clear data elements retrieved by the client hook (so they aren't continually redisplayed on client side)
+function trimDebug (intLastReadKey)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.Debug == nil) then return; end --debug data is empty, nothing to trim
+	if (publicGameData.Debug.OutputData == nil) then return; end --debug data is empty, nothing to trim
+
+	if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+	if (intLastReadKey <= publicGameData.Debug.OutputDataLastRead) then return; end --new intLastReadKey is lower than the already stored previous debugOutputDataLastRead, which makes no sense, so just do nothing
+
+	for k=publicGameData.Debug.OutputDataLastRead+1, intLastReadKey do
+		publicGameData.Debug.OutputData [k] = nil;
+	end
+	publicGameData.Debug.OutputDataLastRead = intLastReadKey;
+	Mod.PublicGameData = publicGameData;
+end
+
+--called from client hooks to display data stored by server hooks
+function displayDebugInfoFromServer (game)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.Debug == nil) then return; end --debug data is empty, nothing to display
+	if (publicGameData.Debug.OutputData == nil) then return; end --debug data is empty, nothing to display
+
+	if (publicGameData.Debug.OutputDataCounter == nil) then publicGameData.Debug.OutputDataCounter = 0; end
+	if (publicGameData.Debug.OutputDataLastRead == nil) then publicGameData.Debug.OutputDataLastRead = 0; end
+
+	--check if there are any undisplayed debug messages; if LastRead > Counter then there is an error, that should never happen; when LastRead == Counter, all messages have been displayed already
+	if (publicGameData.Debug.OutputDataLastRead >= publicGameData.Debug.OutputDataCounter) then debugOutputPrint ("[No new server debug output]"); end
+	for k=publicGameData.Debug.OutputDataLastRead+1, publicGameData.Debug.OutputDataCounter do
+		debugOutputPrint (publicGameData.Debug.OutputData [k]); --output stored debug statement to local client Mod Log console
+	end
+	--trim (clear) the statements that were just displayed so they aren't reoutputted next time & we free up space in PublicGameData
+	-- game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=publicGameData.Debug.OutputDataCounter}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
+	--for reference: function Server_GameCustomMessage(game,playerID,payload,setReturn)
+end
+
+--output to standalone app client Mod Log (print), and also the in-game debug window (UIdebugWindow)
+function debugOutputPrint (strOutputData)
+	print (strOutputData);
+	if (UIdebugWindow ~= nil) then UI.CreateLabel (UIdebugWindow).SetText (strOutputData); end
+end
+
+--concatenate elements of 2 arrays, return resulting array; elements do not need to be consecutive or numeric; if both arrays use the same keys, array2 will overwrite the values of array1 where the keys overlap
+function concatenateArrays (array1, array2)
+	local result = array1; --start with the first array, then add the elements of the 2nd array to it
+	for k,v in pairs (array2) do
+		result[k] = array2[i];
+	end
+	return result
+end
+
+function getModName (modID)
+	local modName = "unknown";
+	local allModNames = { [594] = "Dragons", [638] = "Army Recruiter", [639] = "Construction Worker", [999] = "CardPack - Disasters (Quicksand, Tornado, Earthquake, Forest Fire)", [1024] = "Behemoth", [1025] = "Behemoth", [1035] = "Special Units Captured not Killed", [1036] = "Mod Helper" }
+	if (allModNames[modID] ~= nil) then modName = allModNames[modID]; end
+	return modName;
+end
+--- END of krinid's functions
+
+--return an array of all playerIDs for the team that the parameter playerID belongs to, including playerID itself
+--if playerID is not on a team or teams aren't in use, return just the playerID itself (single element array)
+function getTeamPlayers (game, playerID)
+	local teamPlayerIDs = {};
+	--if playerID is nil, neutral or <1, return empty array and exit function; (technically Neutral is 0 so <1 so not requried, but include it here in case WL.PlayerID.Neutral changes someday)
+	if (playerID == nil or playerID == WL.PlayerID.Neutral or playerID <1) then return (teamPlayerIDs); end
+
+	print ("[GETTEAMPLAYERS] player " ..playerID.. "/" ..getPlayerName (game, playerID).. ", team " ..game.ServerGame.Game.Players[playerID].Team);
+
+	--playerID is not on a team, so return just playerID)
+	if (game.ServerGame.Game.Players[playerID].Team == -1) then
+		table.insert(teamPlayerIDs, playerID);
+		print ("[GETTEAMPLAYERS] no team - add single element only");
+	else
+		--playerID is on a team; looping through all players will inherently include playerID itself iff playerID is on a team (b/c -1==no team is specifically weeded out in the comparison in the loop), so no need to explicitly add playerID
+		for _,v in pairs (game.ServerGame.Game.Players) do
+			if (v.Team ~= -1 and v.Team == game.ServerGame.Game.Players[playerID].Team) then
+				table.insert(teamPlayerIDs, v.ID);
+			end
+		end
+	end
+	print ("\n\n\n\nTEAM player count ".. #teamPlayerIDs);
+	for k,v in pairs (teamPlayerIDs) do print ("team playerID #"..k..", "..v.."/"..getPlayerName (game, v)); end
+	return (teamPlayerIDs);
+end
+
+-- return integer distance between two territories
+-- returns:
+--   0  = same territory
+--   n  = number of hops between territories
+--   -1 = not reachable (shouldn't happen on valid maps, but safe)
+function getTerritoryDistance (game, sourceTerritoryID, targetTerritoryID)
+	if (sourceTerritoryID == targetTerritoryID) then return 0; end --same territory, distance is 0
+
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert (arrTerrListToProcess, sourceTerritoryID);
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if (neighbourTerrID == targetTerritoryID) then
+					return (intDepth); -- shortest path found
+				end
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+	return (-1); -- target is not reached from source
+end
+
+-- return distance from specific territory to the nearest territory owned by specified player
+-- returns:
+--   intDistance, intClosestTerritoryID
+--   -1, nil  --> if no territory found (player has no territories / unreachable)
+function getDistanceToPlayersNearestTerritory (game, sourceTerritoryID, targetPlayerID)
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert(arrTerrListToProcess, sourceTerritoryID);
+
+	-- check depth 0 case (source itself)
+	if (game.LatestStanding.Territories[sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					-- ownership check
+					if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+						return intDepth, neighbourTerrID; -- nearest match (guaranteed shortest)
+					end
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+
+	return -1, nil; -- player has no reachable territories
+end
+
+-- return shortest distance between two players
+-- returns:
+--   intDistance, intPlayerATerritoryID, intPlayerBTerritoryID
+--   -1, nil, nil  --> if no path exists (disconnected graph / invalid state)
+
+function getShortestDistanceBetweenPlayers (game, playerAID, playerBID)
+    local arrTerrProcessed = {};        -- terrs already processed
+    local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+    local arrTerrOrigin = {};           -- map: terrID -> originating Player A territory
+    local intDepth = 0;
+
+    -- initialize BFS frontier with all Player A territories
+    for terrID, terrObj in pairs(game.LatestStanding.Territories) do
+        if (terrObj.OwnerPlayerID == playerAID) then
+            arrTerrProcessed[terrID] = true;
+            arrTerrOrigin[terrID] = terrID; -- origin is itself
+            table.insert (arrTerrListToProcess, terrID);
+        end
+    end
+
+    -- edge case: no territories for one of the players
+    if (#arrTerrListToProcess == 0) then
+        return -1, nil, nil;
+    end
+
+    -- check depth 0 overlap (same territory ownership impossible, but safe)
+    for _, terrID in ipairs(arrTerrListToProcess) do
+        if (game.LatestStanding.Territories[terrID].OwnerPlayerID == playerBID) then
+            return 0, terrID, terrID;
+        end
+    end
+
+    while (#arrTerrListToProcess > 0) do
+        local arrNextTerrList = {};
+        intDepth = intDepth + 1;
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            local intOriginTerrID = arrTerrOrigin[terrID];
+            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+                if not arrTerrProcessed[neighbourTerrID] then
+                    arrTerrProcessed[neighbourTerrID] = true;
+                    arrTerrOrigin[neighbourTerrID] = intOriginTerrID;
+
+                    -- check if this neighbour belongs to Player B
+                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == playerBID) then
+                        return intDepth, intOriginTerrID, neighbourTerrID;
+                    end
+
+                    table.insert(arrNextTerrList, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = arrNextTerrList;
+    end
+
+    return -1, nil, nil; -- players not connected
+end
+
+--return array list of territory IDs within specified distance from the target territory
+function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
+    local arrTerrProcessed = {}; --list of terrs already processed
+    local arrTerrResults = {}; --resultant list of terrs within specified distance
+    local arrTerrListToProcess = {}; --terrs remaining to be processed
+
+	local intDepth = 0;
+    arrTerrProcessed [targetTerritoryID] = true;
+    table.insert (arrTerrResults, targetTerritoryID);
+    table.insert (arrTerrListToProcess, targetTerritoryID);
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local intNextTerrID = {};
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+                if not arrTerrProcessed [neighbourTerrID] then
+                    arrTerrProcessed [neighbourTerrID] = true;
+                    table.insert(arrTerrResults, neighbourTerrID);
+                    table.insert(intNextTerrID, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = intNextTerrID;
+        intDepth = intDepth + 1;
+    end
+    return (arrTerrResults);
+end
+
+-- returns array of territory IDs belonging to targetPlayerID (0=neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
+  local arrTerrProcessed = {};        -- list of terrs already processed
+    local arrTerrResults = {};          -- resultant list of matching terrs
+    local arrTerrListToProcess = {};    -- terrs remaining to be processed
+
+    local intDepth = 0;
+
+    -- initialize BFS with all territories owned by mainPlayerID
+    for terrID, terrObj in pairs (game.LatestStanding.Territories) do
+        if (terrObj.OwnerPlayerID == mainPlayerID) then
+            arrTerrProcessed[terrID] = true;
+            table.insert(arrTerrListToProcess, terrID);
+        end
+    end
+
+    -- if main player owns no territories, return empty result
+    if (#arrTerrListToProcess == 0) then
+        return arrTerrResults;
+    end
+
+    -- -- depth 0 check (only matters if mainPlayerID == targetPlayerID)
+    -- if (mainPlayerID == targetPlayerID) then
+    --     for _, terrID in ipairs(arrTerrListToProcess) do
+    --         table.insert(arrTerrResults, terrID);
+    --     end
+    -- end
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local arrNextTerrList = {};
+        intDepth = intDepth + 1;
+
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+                if not arrTerrProcessed[neighbourTerrID] then
+                    arrTerrProcessed[neighbourTerrID] = true;
+
+                    -- ownership filter
+                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+                        table.insert(arrTerrResults, neighbourTerrID);
+                    end
+
+                    table.insert(arrNextTerrList, neighbourTerrID);
+                end
+            end
+        end
+
+        arrTerrListToProcess = arrNextTerrList;
+    end
+
+    return arrTerrResults;
+end
+
+--return true if player1ID and player2ID are in active diplo via standard Diplomacy card (can't attack each other), otherwise return false
+--requires parameter gamestanding.ActiveCards and the 2 player IDs to check for diplo between
+function arePlayersInDiplo (ActiveCards, player1ID, player2ID)
+    if (ActiveCards == nil) then return false; end
+
+    for _, activeCard in pairs (ActiveCards) do
+		if (activeCard.Card.proxyType == 'GameOrderPlayCardDiplomacy') then
+            local p1 = activeCard.Card.PlayerOne;
+            local p2 = activeCard.Card.PlayerTwo;
+            if (p1 == player1ID and p2 == player2ID) or (p1 == player2ID and p2 == player1ID) then return true; end
+        end
+    end
+
+    return (false);
+end
+
+function territoryHasActiveShield (territory)
+	if not territory then return false; end
+
+	for _, specialUnit in pairs (territory.NumArmies.SpecialUnits) do
+		if (specialUnit.proxyType == 'CustomSpecialUnit' and specialUnit.Name == 'Shield') then
+			return (true);
+		end
+	end
+
+	return (false);
+end
+
+function territoryHasCustomStructure (territory, strStructureName)
+	if not territory then return false, nil; end --if territory is nil, just return false/nil
+	local structures = territory.Structures;
+	if not structures then return false, nil; end --if territory is nil, there's are no structures (and thus no forts) so return false/nil
+
+	if (territory.Structures ~= nil) then print ("# Structure types " ..tostring (#territory.Structures)); end
+	if (structures ~= nil) then print ("# Structure types " ..tostring (structures)); end
+
+	for structureID, structureCount in pairs (structures) do
+		local strArrayStructureData = split (structureID, '|');
+
+		--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
+		--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
+		if (strArrayStructureData[1] == "c" and strArrayStructureData[3] == strStructureName and structureCount > 0) then
+			return true, structureID;
+		end
+	end
+	return false, nil;
+end
+
+--find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
+--if orders are written back the game.Orders out of sequence according to the OccursInPhase property, a runtime error is thrown
+function insertOrder (Game, newOrder, orderList)
+	local intNewOrderPhase = newOrder.OccursInPhase or -1;
+	for i, existingOrder in pairs (orderList) do
+		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
+		if (intNewOrderPhase < intExistingOrderPhase) then
+			table.insert (orderList, i, newOrder);
+			return orderList;
+		end
+	end
+	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
+	-- Game.Orders = orderList;
+	return orderList;
+end

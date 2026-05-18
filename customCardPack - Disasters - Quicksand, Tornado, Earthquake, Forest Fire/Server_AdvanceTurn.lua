@@ -448,7 +448,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 					print ("[CARD PLAY BLOCKED] regular card==" .. strCardName);
 				end
 
-				strCardBlockSkipOrder_Message = "Skipping order to play ".. strCardName.. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
+				strCardBlockSkipOrder_Message = "Skipping order to play " ..tostring (strCardName).. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
 				print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
 				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}));
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
@@ -1964,6 +1964,7 @@ function convert_SUs (game, orderPlayerID, otherPlayerID, SpecialUnits, targetTe
 	print ("\n\n\n[pkSUs] START");
 	local clonedSUs = {};
 	local removeSUs = {};
+	local NeutralOwnershipSUtypes = {"Shield", "Monolith", "CityFort", "Castle"};
 	for k,sp in pairs (SpecialUnits) do
 		--don't capture Commanders/Bosses/other built-in SUs - just let them die normally, only capture Custom SUs (CustomSpecialUnits)
 		if (sp.proxyType == "CustomSpecialUnit") then
@@ -1972,7 +1973,7 @@ function convert_SUs (game, orderPlayerID, otherPlayerID, SpecialUnits, targetTe
 			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
 
 			--this code is to clone an SU & change the owner -- a much nicer solution, don't need to recreate the SU, don't need to worry about PNG image files, works with all custom SUs
-			local builder = WL.CustomSpecialUnitBuilder.CreateCopy(sp);
+			local builder = WL.CustomSpecialUnitBuilder.CreateCopy (sp);
 			builder.OwnerID = otherPlayerID;
 			local newSP = builder.Build();
 			print ("SP killed: "..k, sp.proxyType.."; , SP owner "..sp_OwnerID.. "/".. getPlayerName (game, sp_OwnerID)..", clone to " ..newSP.OwnerID.. "/".. getPlayerName (game, newSP.OwnerID));
