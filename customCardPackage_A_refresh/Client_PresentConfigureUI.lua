@@ -1461,6 +1461,7 @@ function updateModSettingsFromUI()
 		Mod.Settings.IsolationDuration = IsolationDuration.GetValue();
 		Mod.Settings.IsolationPiecesNeeded = IsolationNumPiecesNeeded.GetValue();
 		Mod.Settings.IsolationStartPieces = IsolationStartingCardPieceQty.GetValue();
+		Mod.Settings.IsolationPiecesPerTurn = IsolationPiecesPerTurn.GetValue();
 		Mod.Settings.IsolationCardWeight = IsolationCardWeight.GetValue();
 	end
 
