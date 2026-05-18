@@ -1,0 +1,6 @@
+Rewards are allocated to players who complete the following each turn, and Punishments to players who don't:
+(A) make an attack
+(B) capture 1+ territories
+(C) increase total territory count
+
+Additional Punishments are assigned to players who continue to not achieve (C) over 4+ turns, progressively increasing in severity.
