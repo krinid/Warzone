@@ -1175,20 +1175,12 @@ function territoryHasCustomStructure (territory, strStructureName)
 	local structures = territory.Structures;
 	if not structures then return false, nil; end --if territory is nil, there's are no structures (and thus no forts) so return false/nil
 
-	print ("Terr " ..territory.ID.. ", #armies " ..tostring (territory.NumArmies.NumArmies));
-	print ("Structures " ..tostring (territory.Structures));
-	print ("Structures " ..tostring (structures));
 	if (territory.Structures ~= nil) then print ("# Structure types " ..tostring (#territory.Structures)); end
 	if (structures ~= nil) then print ("# Structure types " ..tostring (structures)); end
 
-	-- printObjectDetails (territory.Structures, "Structures", "Structures details");
-
-	-- for k, structure in pairs (territory.Structures) do
 	for structureID, structureCount in pairs (structures) do
-		print ("CS #" ..tostring (structureID).. ": " ..tostring (structure));
 		local strArrayStructureData = split (structureID, '|');
 
-		print ("structure name: " ..tostring (strArrayStructureData[3]), ", matches " ..tostring (strArrayStructureData[3] == strStructureName));
 		--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
 		--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
 		if (strArrayStructureData[1] == "c" and strArrayStructureData[3] == strStructureName and structureCount > 0) then
@@ -1196,4 +1188,20 @@ function territoryHasCustomStructure (territory, strStructureName)
 		end
 	end
 	return false, nil;
+end
+
+--find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
+--if orders are written back the game.Orders out of sequence according to the OccursInPhase property, a runtime error is thrown
+function insertOrder (Game, newOrder, orderList)
+	local intNewOrderPhase = newOrder.OccursInPhase or -1;
+	for i, existingOrder in pairs (orderList) do
+		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
+		if (intNewOrderPhase < intExistingOrderPhase) then
+			table.insert (orderList, i, newOrder);
+			return orderList;
+		end
+	end
+	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
+	-- Game.Orders = orderList;
+	return orderList;
 end

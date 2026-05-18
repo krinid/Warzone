@@ -1130,6 +1130,11 @@ function isolationCheckboxClicked()
 		UI.CreateLabel (horzIsolationStartingCardPieceQty).SetText("Pieces given to each player at the start: ");
 		IsolationStartingCardPieceQty = UI.CreateNumberInputField (horzIsolationStartingCardPieceQty).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationStartPieces).SetWholeNumbers(true).SetInteractable(true);
 
+		local horzIsolationPiecesPerTurn = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzIsolationPiecesPerTurn).SetText ("  Minimum pieces awarded per turn: ");
+		Mod.Settings.IsolationPiecesPerTurn = Mod.Settings.IsolationPiecesPerTurn or 1; --default to 1 if not configured
+		IsolationPiecesPerTurn = UI.CreateNumberInputField (horzIsolationPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.IsolationPiecesPerTurn).SetWholeNumbers(true).SetInteractable(true);
+
 		local horzIsolationCardWeight = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzIsolationCardWeight).SetText("Card weight: ");
 		IsolationCardWeight = UI.CreateNumberInputField (horzIsolationCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.IsolationCardWeight).SetInteractable(true);
@@ -1147,7 +1152,8 @@ function setDefaultValues()
 		Mod.Settings.IsolationDuration = 1;      --default isolation duration is 1
 		Mod.Settings.IsolationPiecesNeeded = 10; --default isolation pieces needed is 4
 		Mod.Settings.IsolationStartPieces = 1;   --default isolation start pieces is 1
-        Mod.Settings.IsolationCardWeight = 1.0;  --default isolation card weight is 1
+		Mod.Settings.IsolationPiecesPerTurn = 1; --default isolation pieces per turn is 1
+		Mod.Settings.IsolationCardWeight = 1.0;  --default isolation card weight is 1
 	end
 
 	if (Mod.Settings.NukeEnabled == nil) then -- Nuke has not been enabled yet, so no values in Mod.Settings for Pestilence, thus set to defaults

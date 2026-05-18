@@ -59,7 +59,7 @@ function createCards_newCards(alert, addCard);
 		else
 			strShieldDesc = strShieldDesc .. "Shields last " .. Mod.Settings.ShieldDuration .. " turn"..plural(Mod.Settings.ShieldDuration) .." before expiring.";
 		end
-		Mod.Settings.ShieldCardID = addCard("Shield", strShieldDesc, "shield_130x180.png", Mod.Settings.ShieldPiecesNeeded, Mod.Settings.ShieldPiecesPerTurn, Mod.Settings.ShieldStartPieces, Mod.Settings.ShieldCardWeight, Mod.Settings.ShieldDuration);
+		Mod.Settings.ShieldCardID = addCard ("Shield", strShieldDesc, "shield_130x180.png", Mod.Settings.ShieldPiecesNeeded, Mod.Settings.ShieldPiecesPerTurn, Mod.Settings.ShieldStartPieces, Mod.Settings.ShieldCardWeight, Mod.Settings.ShieldDuration);
 		Mod.Settings.ShieldDescription = strShieldDesc;
 	end
 
@@ -78,7 +78,7 @@ function createCards_newCards(alert, addCard);
 		else
 				strMonolithDesc = strMonolithDesc .. "Monoliths last " ..Mod.Settings.MonolithDuration .." turn"..plural(Mod.Settings.MonolithDuration) .." before expiring.";
 		end
-		Mod.Settings.MonolithCardID = addCard("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
+		Mod.Settings.MonolithCardID = addCard ("Monolith", strMonolithDesc, "monolith v2 130x180.png", Mod.Settings.MonolithPiecesNeeded, Mod.Settings.MonolithPiecesPerTurn, Mod.Settings.MonolithStartPieces, Mod.Settings.MonolithWeight, Mod.Settings.MonolithDuration);
 		Mod.Settings.MonolithDescription = strMonolithDesc;
 	end
 
@@ -105,7 +105,7 @@ function createCards_newCards(alert, addCard);
 		else
 				strPhantomDesc = strPhantomDesc .. "Phantoms last " ..Mod.Settings.PhantomDuration .." turn"..plural(Mod.Settings.PhantomDuration) .." before expiring.";
 		end
-		Mod.Settings.PhantomCardID = addCard("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomCardWeight, Mod.Settings.PhantomDuration);
+		Mod.Settings.PhantomCardID = addCard ("Phantom", strPhantomDesc, "phantom_130x180.png", Mod.Settings.PhantomPiecesNeeded, Mod.Settings.PhantomPiecesPerTurn, Mod.Settings.PhantomStartPieces, Mod.Settings.PhantomCardWeight, Mod.Settings.PhantomDuration);
 		Mod.Settings.PhantomDescription = strPhantomDesc;
 	end
 
@@ -124,7 +124,7 @@ function createCards_newCards(alert, addCard);
 				strCardBlockDesc = strCardBlockDesc .. "for " .. Mod.Settings.CardBlockDuration .. " turn"..plural(Mod.Settings.CardBlockDuration)..".";
 		end
 
-		Mod.Settings.CardBlockCardID = addCard("Card Block", strCardBlockDesc, "Card Block_blueback_130x180.png", Mod.Settings.CardBlockPiecesNeeded, Mod.Settings.CardBlockPiecesPerTurn, Mod.Settings.CardBlockStartPieces, Mod.Settings.CardBlockCardWeight, Mod.Settings.CardBlockDuration);
+		Mod.Settings.CardBlockCardID = addCard ("Card Block", strCardBlockDesc, "Card Block_blueback_130x180.png", Mod.Settings.CardBlockPiecesNeeded, Mod.Settings.CardBlockPiecesPerTurn, Mod.Settings.CardBlockStartPieces, Mod.Settings.CardBlockCardWeight, Mod.Settings.CardBlockDuration);
 		Mod.Settings.CardBlockDescription = strCardBlockDesc;
 	end
 
@@ -138,7 +138,7 @@ function createCards_newCards(alert, addCard);
 		print("CardPiecesPerTurn="..tostring(Mod.Settings.CardPiecesPerTurn))
 
 		local strCardPiecesDesc = "Receive "..Mod.Settings.CardPiecesNumWholeCardsToGrant.." whole card".. plural(Mod.Settings.CardPiecesNumWholeCardsToGrant).." and "..Mod.Settings.CardPiecesNumCardPiecesToGrant.." card piece"..plural(Mod.Settings.CardPiecesNumCardPiecesToGrant).." of a card of your choice.\n\nCard Pieces cards cannot be used to redeem pieces of Card Piece cards or pieces.";
-		Mod.Settings.CardPiecesCardID = addCard("Card Piece", strCardPiecesDesc, "Card Pieces_greenback_130x180.png", Mod.Settings.CardPiecesPiecesNeeded, Mod.Settings.CardPiecesPiecesPerTurn, Mod.Settings.CardPiecesStartPieces, Mod.Settings.CardPiecesCardWeight);
+		Mod.Settings.CardPiecesCardID = addCard ("Card Piece", strCardPiecesDesc, "Card Pieces_greenback_130x180.png", Mod.Settings.CardPiecesPiecesNeeded, Mod.Settings.CardPiecesPiecesPerTurn, Mod.Settings.CardPiecesStartPieces, Mod.Settings.CardPiecesCardWeight);
 		Mod.Settings.CardPiecesDescription = strCardPiecesDesc;
 	end
 
@@ -170,7 +170,7 @@ function createCards_newCards(alert, addCard);
 				strNeutralizeDesc = strNeutralizeDesc .. "Territories with special units of any type including commanders can't be targeted.";
 		end
 
-		Mod.Settings.NeutralizeCardID = addCard("Neutralize", strNeutralizeDesc, "neutralize_greyback2_130x180.png", Mod.Settings.NeutralizePiecesNeeded, Mod.Settings.NeutralizePiecesPerTurn, Mod.Settings.NeutralizeStartPieces, Mod.Settings.NeutralizeCardWeight, Mod.Settings.NeutralizeDuration);
+		Mod.Settings.NeutralizeCardID = addCard ("Neutralize", strNeutralizeDesc, "neutralize_greyback2_130x180.png", Mod.Settings.NeutralizePiecesNeeded, Mod.Settings.NeutralizePiecesPerTurn, Mod.Settings.NeutralizeStartPieces, Mod.Settings.NeutralizeCardWeight, Mod.Settings.NeutralizeDuration);
 		Mod.Settings.NeutralizeDescription = strNeutralizeDesc;
 	end
 
@@ -199,7 +199,7 @@ function createCards_newCards(alert, addCard);
 				alert('Deneutralize cards must apply to natural neutral territories, Neutralized territories by use of a Neutralize card, or both options.');
 		end
 		strDeneutralizeDesc = strDeneutralizeDesc .. "\n\nDeneutralize executes in turn phase '" ..WL.TurnPhase.ToString (Mod.Settings.DeneutralizeImplementationPhase).. "'. ";
-		Mod.Settings.DeneutralizeCardID = addCard("Deneutralize", strDeneutralizeDesc, "deneutralize_greenback2_130x180.png", Mod.Settings.DeneutralizePiecesNeeded, Mod.Settings.DeneutralizePiecesPerTurn, Mod.Settings.DeneutralizeStartPieces, Mod.Settings.DeneutralizeCardWeight);
+		Mod.Settings.DeneutralizeCardID = addCard ("Deneutralize", strDeneutralizeDesc, "deneutralize_greenback2_130x180.png", Mod.Settings.DeneutralizePiecesNeeded, Mod.Settings.DeneutralizePiecesPerTurn, Mod.Settings.DeneutralizeStartPieces, Mod.Settings.DeneutralizeCardWeight);
 		Mod.Settings.DeneutralizeDescription = strDeneutralizeDesc;
 	end
 
@@ -218,7 +218,7 @@ function createCards_newCards(alert, addCard);
 		if (Mod.Settings.EarthquakeDuration <= -1) then
 		strEarthquakeDesc = strEarthquakeDesc .. "The effect is permanent.";
 		end
-		Mod.Settings.EarthquakeCardID = addCard("Earthquake", strEarthquakeDesc, "earthquake_130x180.png", Mod.Settings.EarthquakePiecesNeeded, Mod.Settings.EarthquakePiecesPerTurn, Mod.Settings.EarthquakeStartPieces, Mod.Settings.EarthquakeCardWeight, Mod.Settings.EarthquakeDuration);
+		Mod.Settings.EarthquakeCardID = addCard ("Earthquake", strEarthquakeDesc, "earthquake_130x180.png", Mod.Settings.EarthquakePiecesNeeded, Mod.Settings.EarthquakePiecesPerTurn, Mod.Settings.EarthquakeStartPieces, Mod.Settings.EarthquakeCardWeight, Mod.Settings.EarthquakeDuration);
 		Mod.Settings.EarthquakeDescription = strEarthquakeDesc;
 	end
 
@@ -238,7 +238,7 @@ function createCards_newCards(alert, addCard);
 				strTornadoDesc = strTornadoDesc .. "for " .. Mod.Settings.TornadoDuration .. " turn" .. plural(Mod.Settings.TornadoDuration) .. ".";
 		end
 		strTornadoDesc = strTornadoDesc .. " The first turn of tornado will do double damage.";
-		Mod.Settings.TornadoCardID = addCard("Tornado", strTornadoDesc, "tornado_130x180.png", Mod.Settings.TornadoPiecesNeeded, Mod.Settings.TornadoPiecesPerTurn, Mod.Settings.TornadoStartPieces, Mod.Settings.TornadoCardWeight, Mod.Settings.TornadoDuration);
+		Mod.Settings.TornadoCardID = addCard ("Tornado", strTornadoDesc, "tornado_130x180.png", Mod.Settings.TornadoPiecesNeeded, Mod.Settings.TornadoPiecesPerTurn, Mod.Settings.TornadoStartPieces, Mod.Settings.TornadoCardWeight, Mod.Settings.TornadoDuration);
 		Mod.Settings.TornadoDescription = strTornadoDesc;
 	end
 
@@ -263,7 +263,7 @@ function createCards_newCards(alert, addCard);
 				strQuicksandDesc = strQuicksandDesc .. "for " .. Mod.Settings.QuicksandDuration .. " turn" .. plural(Mod.Settings.QuicksandDuration) .. ".";
 		end
 		strQuicksandDesc = strQuicksandDesc .. "\n\nAttacks and transfers into the territory can still occur, but none can be executed from the territory while quicksand remains active. Units caught in quicksand do "..Mod.Settings.QuicksandAttackerDamageTakenModifier.."x less damage to attackers, and defending armies sustain "..Mod.Settings.QuicksandDefenderDamageTakenModifier.."x more damage when attacked.";
-		Mod.Settings.QuicksandCardID = addCard("Quicksand", strQuicksandDesc, "quicksand_v3_130x180.png", Mod.Settings.QuicksandPiecesNeeded, Mod.Settings.QuicksandPiecesPerTurn, Mod.Settings.QuicksandStartPieces, Mod.Settings.QuicksandCardWeight, Mod.Settings.QuicksandDuration);
+		Mod.Settings.QuicksandCardID = addCard ("Quicksand", strQuicksandDesc, "quicksand_v3_130x180.png", Mod.Settings.QuicksandPiecesNeeded, Mod.Settings.QuicksandPiecesPerTurn, Mod.Settings.QuicksandStartPieces, Mod.Settings.QuicksandCardWeight, Mod.Settings.QuicksandDuration);
 		Mod.Settings.QuicksandDescription = strQuicksandDesc;
 	end
 
@@ -285,7 +285,7 @@ function createCards_newCards(alert, addCard);
 		print("AirstrikePiecesPerTurn="..tostring(Mod.Settings.AirstrikePiecesPerTurn))
 
 		local strAirstrikeDesc = "Use an airlift to attack an enemy. Send armies from one of your territories to anywhere on the map";
-		Mod.Settings.AirstrikeCardID = addCard("Airstrike", strAirstrikeDesc, "airstrike_130x180.png", Mod.Settings.AirstrikePiecesNeeded, Mod.Settings.AirstrikePiecesPerTurn, Mod.Settings.AirstrikeStartPieces, Mod.Settings.AirstrikeCardWeight);
+		Mod.Settings.AirstrikeCardID = addCard ("Airstrike", strAirstrikeDesc, "airstrike_130x180.png", Mod.Settings.AirstrikePiecesNeeded, Mod.Settings.AirstrikePiecesPerTurn, Mod.Settings.AirstrikeStartPieces, Mod.Settings.AirstrikeCardWeight);
 		Mod.Settings.AirstrikeDescription = strAirstrikeDesc;
 	end
 
@@ -308,7 +308,7 @@ function createCards_newCards(alert, addCard);
 		if (Mod.Settings.ForestFireAllowFriendlyFire == true) then strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is enabled, so your own Wildfires will burn your territories.";
 		else strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is disabled, so you are immune to damage from your own Wildfires."; end
 
-		Mod.Settings.ForestFireCardID = addCard("Wildfire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
+		Mod.Settings.ForestFireCardID = addCard ("Wildfire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
 		Mod.Settings.ForestFireDescription = strForestFireDesc;
 	end
 	--print ("END   create new cards");
@@ -364,7 +364,7 @@ function createCards_originalCCP_cards (alert, addCard)
 				strNukeDesc = strNukeDesc .. "\n\nNegative damage has been configured, which transforms the result into a Healing Nuke. This will increase army counts on territories instead of reducing them.";
 		end
 
-		Mod.Settings.NukeCardID = addCard("Nuke", strNukeDesc, "nuke_card_image_130x180.png", Mod.Settings.NukeCardPiecesNeeded, Mod.Settings.NukePiecesPerTurn, Mod.Settings.NukeCardStartPieces, Mod.Settings.NukeCardWeight);
+		Mod.Settings.NukeCardID = addCard ("Nuke", strNukeDesc, "nuke_card_image_130x180.png", Mod.Settings.NukeCardPiecesNeeded, Mod.Settings.NukePiecesPerTurn, Mod.Settings.NukeCardStartPieces, Mod.Settings.NukeCardWeight);
 
 		Mod.Settings.NukeDescription = strNukeDesc;
 		if Mod.Settings.NukeCardID == nil then
@@ -400,7 +400,7 @@ function createCards_originalCCP_cards (alert, addCard)
 		print("Mod.Settings.PestilenceStartPieces:", Mod.Settings.PestilenceStartPieces)
 		print("strPestilenceDesc:", strPestilenceDesc)]]
 		--Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct, Duration+1 b/c WZ counts from time of play which actually includes the Warning turn, so add 1 to get the full duration (so it shows up in Active Cards with accurate end turn data)
-		Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, 1.0, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
+		Mod.Settings.PestilenceCardID = addCard ("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
 		--NOTE: use PestilenceDuration+1 to submit to WZ card creation interface b/c this will make WZ engine keep the card in "Active Cards" for the full duration of the Pestilence effect starting from casting turn and including the warning turn and the effects as specified in 'PestilenceDuration'
 
 		Mod.Settings.PestilenceDescription = strPestilenceDesc;
@@ -419,6 +419,7 @@ function createCards_originalCCP_cards (alert, addCard)
 		print ("IsolationDuration="..tostring(Mod.Settings.IsolationDuration));
 		print ("IsolationPiecesNeeded="..tostring(Mod.Settings.IsolationPiecesNeeded));
 		print ("IsolationStartPieces="..tostring(Mod.Settings.IsolationStartPieces));
+		print ("IsolationCardWeight="..tostring(Mod.Settings.IsolationCardWeight));
 		print ("IsolationPiecesPerTurn="..tostring(Mod.Settings.IsolationPiecesPerTurn));
 
 		local strIsolationDesc = "Isolate a territory ";
@@ -429,7 +430,7 @@ function createCards_originalCCP_cards (alert, addCard)
 				strIsolationDesc = strIsolationDesc .. "permanently.\n\nNo units can attack or transfer to or from the territory after Isolation is invoked.";
 		end
 
-		Mod.Settings.IsolationCardID = addCard("Isolation", strIsolationDesc, "isolation_130x180.png", Mod.Settings.IsolationPiecesNeeded, 1, Mod.Settings.IsolationStartPieces, 1.0, Mod.Settings.IsolationDuration);
+		Mod.Settings.IsolationCardID = addCard ("Isolation", strIsolationDesc, "isolation_130x180.png", Mod.Settings.IsolationPiecesNeeded, Mod.Settings.IsolationPiecesPerTurn, Mod.Settings.IsolationStartPieces, Mod.Settings.IsolationCardWeight, Mod.Settings.IsolationDuration);
 		Mod.Settings.IsolationDescription = strIsolationDesc;
 	end
 end
