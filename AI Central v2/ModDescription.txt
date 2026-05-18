@@ -1,0 +1,1 @@
+This mod allows game creators to place restrictions on AI's. Deployment, cards, city building and attacking. this mod also makes a desitnction between AIs from game start and players turned AI
