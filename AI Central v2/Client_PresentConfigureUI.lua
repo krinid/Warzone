@@ -1,87 +1,92 @@
+function Client_PresentConfigureUI (rootParent)
+	root = rootParent;
+	showControls ();
+end
 
-function Client_PresentConfigureUI(rootParent)
-	-- PURE AI settings
-	local p_attack = Mod.Settings.P_attack or true; --can make attacks
-	local p_deploy = Mod.Settings.P_deploy or true; --can make deployments
-	local p_city = Mod.Settings.P_city or true; --can build cities
-	local p_diplo = Mod.Settings.P_diplo or true; --can play diplo cards
-	local p_block = Mod.Settings.P_block or true; --can play blockade cards
-	local p_emergency = Mod.Settings.P_emergency or true; --can play EMB cards
-	local p_rein = Mod.Settings.P_rein or true; --can play Reinf cards
-	local p_bomb = Mod.Settings.P_bomb or true; --can play Bomb cards
+function showControls ()
+	if (UI.IsDestroyed (UImain) == false) then UI.Destroy (UImain); end
+	UImain = UI.CreateVerticalLayoutGroup (root);
+	horzDistinguishPureHumanAI = UI.CreateHorizontalLayoutGroup (UImain);
+	cbox_DistinguishPureHumanAI = UI.CreateCheckBox (horzDistinguishPureHumanAI).SetText ("Distinguish between Pure AI and Players that have gone AI").SetIsChecked (Mod.Settings.DistinguishPureHumanAI or false).SetOnValueChanged(function() cbox_DistinguishPureHumanAIclicked() end).SetInteractable (true);
+	UI.CreateButton (horzDistinguishPureHumanAI).SetText ("[?]").SetColor ('#00FFFF').SetOnClick (function() UI.Alert ("• Pure AI: host configured AI, plays entire game as an AI\n\n• Human AI: starts game as a player but becomes AI due to player surrender or boot") end);
 
-	-- Human AI settings
-	local h_attack = Mod.Settings.H_attack or true; --human AI can make attacks
-	local h_deploy = Mod.Settings.H_deploy or true; --human AI can make deployments
-	local h_city = Mod.Settings.H_city or true; --human AI can build cities
-	local h_diplo = Mod.Settings.H_diplo or true; --human AI can play diplo cards
-	local h_block = Mod.Settings.H_block or true; --human AI can play blockade cards
-	local h_emergency = Mod.Settings.H_emergency or true; --human AI can play emergency cards
-	local h_rein = Mod.Settings.H_rein or true; --human AI can play reinforcement cards
-	local h_bomb = Mod.Settings.H_bomb or true; --human AI can play bomb cards
+	local horzAIdelayBeforeOrders = UI.CreateHorizontalLayoutGroup(UImain);
+    nif_AIdelayBeforeOrders = UI.CreateNumberInputField (horzAIdelayBeforeOrders).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue (Mod.Settings.AIdelayBeforeOrders or 2); --default to 2 turns if not set already
+	UI.CreateLabel (horzAIdelayBeforeOrders).SetText ("# turns before a player that has gone AI can enter orders");
+	UI.CreateLabel (UImain).SetText ("  (0 = no delay, can attack immediately; 1+ = # of turns that newly turned AIs cannot enter orders)");
+	local horzAIdelayActions = UI.CreateHorizontalLayoutGroup (UImain);
+	UI.CreateLabel (horzAIdelayActions).SetText ("Suppress ");
+	cbox_AIdelay_Attacks = UI.CreateCheckBox (horzAIdelayActions).SetText ("Attacks").SetIsChecked (Mod.Settings.AIdelay_Attacks ~= nil and Mod.Settings.AIdelay_Attacks or Mod.Settings.AIdelay_Attacks == nil and true); --default to true if not set already
+	cbox_AIdelay_Deploys = UI.CreateCheckBox (horzAIdelayActions).SetText ("Deploys").SetIsChecked (Mod.Settings.AIdelay_Deploys ~= nil and Mod.Settings.AIdelay_Deploys or Mod.Settings.AIdelay_Deploys == nil and true); --default to true if not set already
+	cbox_AIdelay_CardPlays = UI.CreateCheckBox (horzAIdelayActions).SetText ("Card plays").SetIsChecked (Mod.Settings.AIdelay_CardPlays ~= nil and Mod.Settings.AIdelay_CardPlays or Mod.Settings.AIdelay_CardPlays == nil and true); --default to true if not set already
 
-	local vert = UI.CreateVerticalLayoutGroup (rootParent)
-	local row0 = UI.CreateHorizontalLayoutGroup (vert) -- Pure / Human ai
-	-- UI.CreateLabel(row0).SetText("What is Pure/Human AI").SetColor('#00FFFF')
+	vertHumanAI = UI.CreateVerticalLayoutGroup (UImain);
+	labelHumanAItitle = UI.CreateLabel (vertHumanAI); --leave blank for now
+	labelHumanAIPermittedActions = UI.CreateLabel (vertHumanAI).SetText ("\nPermitted actions:").SetColor ("#00FFFF");
+	local horzActions = UI.CreateHorizontalLayoutGroup (vertHumanAI);
+	cbox_AttackPlayers = UI.CreateCheckBox (horzActions).SetText ("Attack players").SetIsChecked (Mod.Settings.AttackPlayers or false);
+	cbox_AttackAIs = UI.CreateCheckBox (horzActions).SetText ("Attack AIs").SetIsChecked (Mod.Settings.AttackAIs or false);
+	cbox_AttackNeutrals = UI.CreateCheckBox (horzActions).SetText ("Attack neutrals").SetIsChecked (Mod.Settings.AttackNeutrals or Mod.Settings.AttackNeutrals == nil and true);
+	-- print ("read AP ".. tostring (cbox_AttackPlayers.GetIsChecked()), tostring (Mod.Settings.AttackPlayers));
+	-- print ("read AAIs ".. tostring (cbox_AttackAIs.GetIsChecked()), tostring (Mod.Settings.AttackAIs));
+	local horzActions = UI.CreateHorizontalLayoutGroup (vertHumanAI);
+	cbox_Transfers = UI.CreateCheckBox (horzActions).SetText ("Transfers").SetIsChecked (Mod.Settings.Transfers or Mod.Settings.Transfer == nil and true); --default to true
+	cbox_Deployments = UI.CreateCheckBox (horzActions).SetText ("Deploys").SetIsChecked (Mod.Settings.Deployments or Mod.Settings.Deployments == nil and true); --default to true
+	cbox_Cities = UI.CreateCheckBox (horzActions).SetText ("Build cities").SetIsChecked (Mod.Settings.BuildCities or false);
 
-	local row00 = UI.CreateHorizontalLayoutGroup (vert) -- Pure AI Text
-	UI.CreateLabel (row00).SetText ("[Pure AI]").SetColor ('#FFFF00');
-	UI.CreateButton (row00).SetText ("?").SetColor ('#00FFFF').SetOnClick (function() UI.Alert ("• Pure AI: starts the game as an AI\n\n• Human AI: a player that has become AI due to surrender or boot") end)
-	UI.CreateLabel(vert).SetText ("Check the items below that Pure AI shall be  permitted to execute:");
+	UI.CreateLabel (vertHumanAI).SetText ("\nPermitted card plays:").SetColor ("#00FFFF");
+	local horzCardPlays = UI.CreateHorizontalLayoutGroup (vertHumanAI);
+	cbox_Diplomacy = UI.CreateCheckBox (horzCardPlays).SetText("Diplomacy").SetIsChecked (Mod.Settings.Diplomacy or false);
+	cbox_Blockade = UI.CreateCheckBox (horzCardPlays).SetText("Blockade").SetIsChecked (Mod.Settings.Blockade or false);
+	cbox_EMB = UI.CreateCheckBox (horzCardPlays).SetText("Emergency Blockade").SetIsChecked (Mod.Settings.EmergencyBlockade or false);
+	local horzCardPlays = UI.CreateHorizontalLayoutGroup (vertHumanAI);
+	cbox_Reinforcements = UI.CreateCheckBox (horzCardPlays).SetText("Reinforcements").SetIsChecked (Mod.Settings.Reinforcements or false);
+	cbox_Bomb = UI.CreateCheckBox (horzCardPlays).SetText("Bomb").SetIsChecked (Mod.Settings.Bomb or false);
+	cbox_Sanction = UI.CreateCheckBox (horzCardPlays).SetText("Sanction").SetIsChecked (Mod.Settings.Sanction or false);
 
-	local row1 = UI.CreateHorizontalLayoutGroup(vert); -- Pure Attack
-	PP_attack = UI.CreateCheckBox(row1).SetText("Attack").SetIsChecked (p_attack);
-	PP_deploy = UI.CreateCheckBox(row1).SetText("Deploy").SetIsChecked (p_deploy);
-	PP_city = UI.CreateCheckBox(row1).SetText("Build cities").SetIsChecked(p_city);
+	if (cbox_DistinguishPureHumanAI.GetIsChecked () == true) then
+		--distinguish between Pure & Human AI is true, so show the list of controls for Pure AI
+		-- saveValues ();
+		labelHumanAItitle.SetText ("\n[Human AI]").SetColor ("#FFFF00");
+		labelHumanAIPermittedActions.SetText ("Permitted actions:").SetColor ("#00FFFF");
 
-	UI.CreateLabel (vert).SetText ("Permitted card plays:").SetColor ("#FFFFFF");
-	local row2 = UI.CreateHorizontalLayoutGroup(vert); -- Pure diplo
-	PP_rein = UI.CreateCheckBox(row2).SetText("  Reinforcements").SetIsChecked(p_rein)
-	PP_diplo = UI.CreateCheckBox(row2).SetText("  Diplomacy").SetIsChecked(p_diplo)
-	PP_block = UI.CreateCheckBox(row2).SetText("  Blockade").SetIsChecked(p_block)
-	PP_emger = UI.CreateCheckBox(row2).SetText("  Emergency Blockade").SetIsChecked(p_emergency)
-	PP_bomb = UI.CreateCheckBox(row2).SetText("  Bombs").SetIsChecked(p_bomb)
+		vertPureAI = UI.CreateVerticalLayoutGroup (UImain); --leave empty if Distinguish Pure/Human AI isn't checked, and populate with appropriate controls if checked
+		UI.CreateLabel (vertPureAI).SetText ("\n[Pure AI]").SetColor ("#FFFF00");
+		UI.CreateLabel (vertPureAI).SetText ("Permitted actions:").SetColor ("#00FFFF");
+		local horzActions = UI.CreateHorizontalLayoutGroup (vertPureAI);
+		cbox_AttackPlayers_PureAI = UI.CreateCheckBox (horzActions).SetText ("Attack players").SetIsChecked (Mod.Settings.AttackPlayers_PureAI or false);
+		cbox_AttackAIs_PureAI = UI.CreateCheckBox (horzActions).SetText ("Attack AIs").SetIsChecked (Mod.Settings.AttackAIs_PureAI or false);
+		cbox_AttackNeutrals_PureAI = UI.CreateCheckBox (horzActions).SetText ("Attack neutrals").SetIsChecked (Mod.Settings.AttackNeutrals_PureAI or Mod.Settings.AttackNeutrals_PureAI == nil and true); --default to true
+		local horzActions = UI.CreateHorizontalLayoutGroup (vertPureAI);
+		cbox_Transfers_PureAI = UI.CreateCheckBox (horzActions).SetText ("Transfers").SetIsChecked (Mod.Settings.Transfers_PureAI or Mod.Settings.Transfers_PureAI == nil and true);
+		cbox_Deployments_PureAI = UI.CreateCheckBox (horzActions).SetText ("Deploys").SetIsChecked (Mod.Settings.Deployments_PureAI or Mod.Settings.Deployments_PureAI == nil and true);
+		cbox_Cities_PureAI = UI.CreateCheckBox (horzActions).SetText ("Build cities").SetIsChecked (Mod.Settings.BuildCities_PureAI or false);
 
-	-- local row3 = UI.CreateHorizontalLayoutGroup(vert) -- Pure bomb
-	-- PP_bomb = UI.CreateCheckBox(row3).SetText("Play Bombs cards").SetIsChecked(p_bomb)
+		UI.CreateLabel (vertPureAI).SetText ("\nPermitted card plays:").SetColor ("#00FFFF");
+		local horzCardPlays = UI.CreateHorizontalLayoutGroup (vertPureAI);
+		cbox_Diplomacy_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Diplomacy").SetIsChecked (Mod.Settings.Diplomacy_PureAI or false);
+		cbox_Blockade_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Blockade").SetIsChecked (Mod.Settings.Blockade_PureAI or false);
+		cbox_EMB_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Emergency Blockade").SetIsChecked (Mod.Settings.EmergencyBlockade_PureAI or false);
+		local horzCardPlays = UI.CreateHorizontalLayoutGroup (vertPureAI);
+		cbox_Reinforcements_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Reinforcements").SetIsChecked (Mod.Settings.Reinforcements_PureAI or false);
+		cbox_Bomb_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Bomb").SetIsChecked (Mod.Settings.Bomb_PureAI or false);
+		cbox_Sanction_PureAI = UI.CreateCheckBox (horzCardPlays).SetText ("Sanction").SetIsChecked (Mod.Settings.Sanction_PureAI or false);
+	end
+end
 
--------------- Human AI
-
-
-	local row00 = UI.CreateHorizontalLayoutGroup(vert) -- Human Text
-	UI.CreateLabel(row00).SetText("Human AI").SetColor('#0000FF')
-
-
-	local rowH1 = UI.CreateHorizontalLayoutGroup(vert) -- Human Attack
-	UI.CreateLabel(rowH1).SetText('Can Human AI attack')
-	HH_attack = UI.CreateCheckBox(rowH1).SetText("").SetIsChecked(h_attack)
-
-	local rowH2 = UI.CreateHorizontalLayoutGroup(vert) -- Human deploy
-	UI.CreateLabel(rowH2).SetText('Can Human AI Deploy')
-	HH_deploy = UI.CreateCheckBox(rowH2).SetText("").SetIsChecked(h_deploy)
-
-	local rowH3 = UI.CreateHorizontalLayoutGroup(vert) -- Human city
-	UI.CreateLabel(rowH3).SetText('Can Human AI build cities')
-	HH_city = UI.CreateCheckBox(rowH3).SetText("").SetIsChecked(h_city)
-
-	local rowH4 = UI.CreateHorizontalLayoutGroup(vert) -- Human diplo
-	UI.CreateLabel(rowH4).SetText('Can Human AI place diplomacy cards')
-	HH_diplo = UI.CreateCheckBox(rowH4).SetText("").SetIsChecked(h_diplo)
-
-	local rowH5 = UI.CreateHorizontalLayoutGroup(vert) -- Human block
-	UI.CreateLabel(rowH5).SetText('Can Human AI place Blockad cards')
-	HH_block = UI.CreateCheckBox(rowH5).SetText("").SetIsChecked(h_block)
-
-	local rowH6 = UI.CreateHorizontalLayoutGroup(vert) -- Human Emergency
-	UI.CreateLabel(rowH6).SetText('Can Human AI play Emergency cards')
-	HH_emger = UI.CreateCheckBox(rowH6).SetText("").SetIsChecked(h_emergency)
-
-	local rowH7 = UI.CreateHorizontalLayoutGroup(vert) -- Human Reinforcement
-	UI.CreateLabel(rowH7).SetText('Can Human AI play Reinforcement cards')
-	HH_rein = UI.CreateCheckBox(rowH7).SetText("").SetIsChecked(h_rein)
-
-	local rowH8 = UI.CreateHorizontalLayoutGroup(vert) -- Human bomb
-	UI.CreateLabel(rowH8).SetText('Can Human AI play Bomb cards')
-	HH_bomb = UI.CreateCheckBox(rowH8).SetText("").SetIsChecked(h_bomb)
-
+function cbox_DistinguishPureHumanAIclicked ()
+	-- print (tostring (cbox_DistinguishPureHumanAI.GetIsChecked ()));
+	if (cbox_DistinguishPureHumanAI.GetIsChecked () == true) then
+		--if Distinguish Pure/Human AI is checked, show the separate controls for Pure AI and Human AI
+		saveValues ();
+		labelHumanAItitle.SetText ("\n[Human AI]").SetColor ("#FFFF00");
+		labelHumanAIPermittedActions.SetText ("Permitted actions:").SetColor ("#00FFFF");
+		showControls (); --re-show controls to update with Pure AI controls
+	else
+		--if Distinguish Pure/Human AI is unchecked, hide the Pure AI controls and just show 1 set of controls for all AIs
+		saveValues ();
+		if UI.IsDestroyed (vertPureAI) == false then UI.Destroy (vertPureAI); end
+		labelHumanAItitle.SetText ("").SetColor ("#FFFF00");
+		labelHumanAIPermittedActions.SetText ("\nPermitted actions:").SetColor ("#00FFFF");
+	end
 end
