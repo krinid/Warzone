@@ -33,7 +33,8 @@ function Server_AdvanceTurn_Order (game, order, result, skip, addNewOrder)
 end
 
 function isPermissableAction (game, order, result)
-	print ("...order player ID " .. tostring (order.PlayerID).. ", type " .. tostring (order.proxyType));
+	local arrPlayersGoneAI = Mod.PublicGameData.PlayersGoneAIdata or {};
+	print ("...order player ID " .. tostring (order.PlayerID).. ", type " .. tostring (order.proxyType).. ", arrPlayersGoneAI " ..tostring (arrPlayersGoneAI [order.PlayerID]));
 	if (order.PlayerID == 0) then return true; end --if order player is Neutral, just return true; it's likely an Event order (not an AI order)
 
 	local boolOrderIsPureAI = game.Game.Players [order.PlayerID].IsAI and not game.Game.Players [order.PlayerID].HumanTurnedIntoAI;
@@ -42,18 +43,22 @@ function isPermissableAction (game, order, result)
 	local boolOrderAttackTOisPlayer = false; --if an attack, populate with true if target player is human (ie: not AI including Human AI as result of boot or surrender)
 	local boolPermissableAction = false;
 
+	if (boolOrderIsPureAI == false and boolOrderIsHumanAI == false) then return true; end --order belongs to a non-AI fully human player, so permit the order
+
 	if (order.proxyType == "GameOrderAttackTransfer" and result.IsAttack == true) then
 		boolOrderAttackTOplayerID = game.ServerGame.LatestTurnStanding.Territories[order.To].OwnerPlayerID;
 		boolOrderAttackTOisPlayer = boolOrderAttackTOplayerID > 0 and game.Game.Players[boolOrderAttackTOplayerID].IsAI == false or false;
 	end
 
 	--check if order belongs to Human AI and the appropriate duration hasn't passed yet
-	if (boolOrderIsHumanAI == true and Mod.Settings.DelayAIdelayBeforeOrders > 0 and arrPlayersGoneAI [order.PlayerID] ~= nil and (game.Game.TurnNumber - arrPlayersGoneAI [order.PlayerID] <= Mod.Settings.AIdelayBeforeOrders)) then
+	if (boolOrderIsHumanAI == true and Mod.Settings.AIdelayBeforeOrders > 0 and arrPlayersGoneAI [order.PlayerID] ~= nil and (game.Game.TurnNumber - arrPlayersGoneAI [order.PlayerID] < Mod.Settings.AIdelayBeforeOrders)) then
 		--player went AI and the required # of turns hasn't passed yet, check if order is permissable
+		print ("[HUMAN AI WITHIN DELAY DURATION] Suppress Attacks " .. tostring (Mod.Settings.AIdelay_Attacks).. ", Suppress Deploys " .. tostring (Mod.Settings.AIdelay_Deploys).. ", Suppress Card Plays " .. tostring (Mod.Settings.AIdelay_CardPlays));
 		if (order.proxyType == "GameOrderAttackTransfer" and result.IsAttack == true and Mod.Settings.AIdelay_Attacks == false) then return true;
 		elseif (order.proxyType == "GameOrderDeploy" and Mod.Settings.AIdelay_Deploys == false) then return true;
 		elseif (startsWith (order.proxyType, "GameOrderPlayCard") == true and Mod.Settings.AIdelay_CardPlays == false) then return true;
 		end
+		print ("[HUMAN AI WITHIN DELAY DURATION] Suppressed!");
 		return false; --if Human AI & appropriate duration hasn't passed and the order wasn't permissable via the above, cancel it
 	end
 
