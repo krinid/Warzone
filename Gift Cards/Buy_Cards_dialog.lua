@@ -91,8 +91,9 @@ function displayMenu (game, windowUI, close)
 				UpdateButton.SetText ("Prices have been updated");
 
 				--destroy the existing window & recreate it to refresh the content
-				close (); --close the entire Client_PresentMenuUI window; originally just destroyed the vert container and refreshed it, but the server call to refresh public data took longer than the refresh did, so it didn't recognize the price update operation and nagged the host again
+				if (close ~= nil) then close (); end --close the entire Client_PresentMenuUI window; originally just destroyed the vert container and refreshed it, but the server call to refresh public data took longer than the refresh did, so it didn't recognize the price update operation and nagged the host again
 				--so just close the window and let the player re-open it if they want to go back in
+				--but only attempt to close the window if the 'close()' function is defined; if this is called from Client_PresentSettings, close() isn't received by WZ as a pass-in argument, so it can't be closed using this technique
 			end);
 		else --client player is not host, so display a message indicating that the host has not finalized the prices
 			UI.CreateLabel (vertHeader).SetText ("The game host (".. toPlayerName(game.Settings.StartedBy, game) ..") has not finalized card prices yet. If they are finalized by end of this turn, you can buy cards starting next turn.").SetColor ("#FF0000");
@@ -134,19 +135,18 @@ function displayMenu (game, windowUI, close)
 			cardCountRegular = cardCountRegular + 1;
 			if (cardRecord.Price>0) then cardCountRegular_Buyable = cardCountRegular_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
 		end
-		local interactable = (cardRecord.Price >=1 and publicGameData.CardData.CardPricesFinalized==true and localPlayerIsPlayerInGame==true);
-		--set .SetInteractable of the buttons to this value to True (button enabled) when prices have been finalized, price>0 and local player is an active player in the game, otherwise False (button disabled/greyed out); if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
+		local interactable = (cardRecord.Price >=1 and publicGameData.CardData.CardPricesFinalized==true); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
 		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI).SetFlexibleWidth(100); end
 
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
 			--only show Buy button if player is active in the game (but still show the prices to everyone regardless)
 			-- if (localPlayerIsPlayerInGame == true) then UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText("Buy "..cardRecord.Name .." for " .. cardRecord.Price).SetOnClick(function() purchaseCard (game, cardRecord, intActualCardPrice); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name))); end
-			-- if (localPlayerIsPlayerInGame == true) then
-			local strButtonMsg = "Buy "..cardRecord.Name.. " for " ..intActualCardPrice.. tostring ((intMaxBuyableCards==-1 and "") or (" [" ..intRemainingPurchaseForCardType.. " left]"));
-			UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText(strButtonMsg).SetOnClick(function() purchaseCard (game, cardRecord, intActualCardPrice); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name)));
-			print ("[BUY CARD] card=="..cardID.."/"..cardRecord.Name.. ", base price=="..cardRecord.Price..", actual price=="..intActualCardPrice..", numCardsPurchased=="..intNumCardsPurchased..", maxBuyableCards=="..intMaxBuyableCards);
-			-- end
+			if (localPlayerIsPlayerInGame == true) then
+				local strButtonMsg = "Buy "..cardRecord.Name.. " for " ..intActualCardPrice.. tostring ((intMaxBuyableCards==-1 and "") or (" [" ..intRemainingPurchaseForCardType.. " left]"));
+				UI.CreateButton(targetUI).SetFlexibleWidth (75).SetInteractable(interactable).SetText(strButtonMsg).SetOnClick(function() purchaseCard (game, cardRecord, intActualCardPrice); end).SetColor (getColourCode ("Card|"..tostring (cardRecord.Name)));
+				print ("[BUY CARD] card=="..cardID.."/"..cardRecord.Name.. ", base price=="..cardRecord.Price..", actual price=="..intActualCardPrice..", numCardsPurchased=="..intNumCardsPurchased..", maxBuyableCards=="..intMaxBuyableCards);
+			end
 			-- UI.Alert ("Card|"..tostring (cardRecord.Name).."/"..cardRecord.Name.."/"..getColourCode ("Card|"..tostring (cardRecord.Name)));
 		end
 
