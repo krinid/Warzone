@@ -7,6 +7,6 @@ function Client_PresentConfigureUI (rootParent)
 	local boolCanGiftCardPieces = Mod.Settings.CanGiftCardPieces ~= nil and Mod.Settings.CanGiftCardPieces or Mod.Settings.CanGiftCardPieces == nil and true; --default to true if not set
 
 	-- local rowMaxBuyableCards = UI.CreateHorizontalLayoutGroup(vert);
-    disallowDeploymentsInput = CreateCheckBox (mainUI).SetText ("Can gift whole cards").SetIsChecked (boolCanGiftWholeCards);
-    disallowDeploymentsInput = CreateCheckBox (mainUI).SetText ("Can gift card pieces").SetIsChecked (boolCanGiftCardPieces);
+    cboxCanGiftWholeCards = UI.CreateCheckBox (mainUI).SetText ("Can gift whole cards").SetIsChecked (boolCanGiftWholeCards);
+    cboxCanGiftCardPieces = UI.CreateCheckBox (mainUI).SetText ("Can gift card pieces").SetIsChecked (boolCanGiftCardPieces);
 end
