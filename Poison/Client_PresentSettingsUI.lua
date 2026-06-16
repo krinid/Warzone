@@ -11,6 +11,6 @@ function Client_PresentSettingsUI (rootParent)
 	UI.CreateLabel (UImain).SetText("Damage - Special Units - Fixed amount: " .. Mod.Settings.PoisonDamageFixedSpecialUnits);
 	UI.CreateLabel (UImain).SetText("Damage - Special Units - Percentage: " .. Mod.Settings.PoisonDamagePercentSpecialUnits);
 	UI.CreateLabel (UImain).SetText("Range: " .. Mod.Settings.PoisonDamageRange);
-	UI.CreateLabel (UImain).SetText("Affects all abilities: " .. tostring (Mod.Settings.PoisonDamageAffectsAllAbilities));
+	UI.CreateLabel (UImain).SetText("Affects all abilities: " .. tostring (Mod.Settings.PoisonDamageAffectsAllAbilities) or false);
 	UI.CreateLabel (UImain).SetText("Poison affects other mods: " .. tostring (Mod.Settings.PoisonAffectsOtherModAbilities));
 end

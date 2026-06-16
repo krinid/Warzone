@@ -1,4 +1,4 @@
-require ("Buy_Cards_dialog");
+-- require ("Buy_Cards_dialog");
 
 function Client_GameRefresh(clientGame)
 	print ("[CLIENT REFRESH]");

@@ -112,7 +112,9 @@ function displayMenu (game, windowUI, close)
 	tboxNumCardPieces = {};
 	-- intCardIDs = {}; --store card IDs; the 3 arrays are parallel, using same indexes to align to a single card ID
 
-	for cardID, cardRecord in pairs (publicGameData.CardData.DefinedCards) do
+	-- for cardID, cardRecord in pairs (publicGameData.CardData.DefinedCards) do
+	for cardID, cardConfig in pairs (game.Settings.Cards) do
+		local strCardName = getCardName_fromObject (cardConfig);
 		cardCountTotal = cardCountTotal + 1;
 		-- intCardIDs [cardCountTotal] = cardID;
 
@@ -122,25 +124,25 @@ function displayMenu (game, windowUI, close)
 		local targetUI = vertRegularCards;
 
 		-- this is a custom card; custom cards are >=1000000
-		if (cardRecord.ID >= 1000000) then
+		if (cardConfig.ID >= 1000000) then
 			targetUI = vertCustomCards;
 			cardCountCustom = cardCountCustom + 1;
-			-- if (cardRecord.Price>0) then cardCountCustom_Buyable = cardCountCustom_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
+			-- if (cardConfig.Price>0) then cardCountCustom_Buyable = cardCountCustom_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
 		else --this is a regular card; regular cards are <1000000
 			cardCountRegular = cardCountRegular + 1;
-			-- if (cardRecord.Price>0) then cardCountRegular_Buyable = cardCountRegular_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
+			-- if (cardConfig.Price>0) then cardCountRegular_Buyable = cardCountRegular_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
 		end
 
 		local interactable = true; --set .SetInteractable of buttons to this value; set to True when WholeCards/CardPieces can be gifted
 
-		local strColourCode = getColourCode ("Card|"..tostring (cardRecord.Name));
+		local strColourCode = getColourCode ("Card|"..tostring (strCardName));
 		-- local intIndex = cardCountTotal;
-		local intNumWholeCards = getWholeCardCount (game, game.Us.ID, cardRecord.ID);
-		print ("[GET WC/CP] card Name " ..tostring (cardRecord.Name) .. ", card ID " ..tostring (cardRecord.ID) ..", #WC " ..tostring (intNumWholeCards));
-		-- if (game.LatestStanding.Cards [game.Us.ID] ~= nil and game.LatestStanding.Cards [game.Us.ID].WholeCards [tonumber(cardRecord.ID)] ~= nil) then intNumWholeCards = game.LatestStanding.Cards [game.Us.ID].WholeCards [tonumber(cardRecord.ID)] or 0; end
-		local intNumCardPieces = getCardPieceCount (game, game.Us.ID, cardRecord.ID);
-		-- if (game.LatestStanding.Cards [game.Us.ID] ~= nil and game.LatestStanding.Cards [game.Us.ID].Pieces [cardRecord.ID] ~= nil) then intNumCardPieces = game.LatestStanding.Cards [game.Us.ID].Pieces [cardRecord.ID] or 0; end
-		local strButtonMsg = cardRecord.Name .. " [" .. tostring (intNumWholeCards) .. "//" .. tostring (intNumCardPieces) .. "]";
+		local intNumWholeCards = getWholeCardCount (game, game.Us.ID, cardConfig.ID);
+		print ("[GET WC/CP] card Name " ..tostring (strCardName) .. ", card ID " ..tostring (cardConfig.ID) ..", #WC " ..tostring (intNumWholeCards));
+		-- if (game.LatestStanding.Cards [game.Us.ID] ~= nil and game.LatestStanding.Cards [game.Us.ID].WholeCards [tonumber(cardConfig.ID)] ~= nil) then intNumWholeCards = game.LatestStanding.Cards [game.Us.ID].WholeCards [tonumber(cardConfig.ID)] or 0; end
+		local intNumCardPieces = getCardPieceCount (game, game.Us.ID, cardConfig.ID);
+		-- if (game.LatestStanding.Cards [game.Us.ID] ~= nil and game.LatestStanding.Cards [game.Us.ID].Pieces [cardConfig.ID] ~= nil) then intNumCardPieces = game.LatestStanding.Cards [game.Us.ID].Pieces [cardConfig.ID] or 0; end
+		local strButtonMsg = strCardName .. " [" .. tostring (intNumWholeCards) .. "//" .. tostring (intNumCardPieces) .. "]";
 
 		if (intNumWholeCards == 0 and intNumCardPieces == 0) then
 			interactable = false;
@@ -284,13 +286,13 @@ function executeGiftAction (game, targetPlayerID)
 	for k,v in pairs (Mod.Settings.CanGiftWholeCards == true and tboxNumWholeCards or tboxNumCardPieces) do
 		local intNumWholeCards = Mod.Settings.CanGiftWholeCards == true and math.min (tonumber (tboxNumWholeCards [k].GetText ()), getWholeCardCount (game, localPlayerID, k)) or 0;
 		local intNumCardPieces = Mod.Settings.CanGiftCardPieces == true and math.min (tonumber (tboxNumCardPieces [k].GetText ()), getCardPieceCount (game, localPlayerID, k)) or 0;
-		print("Card " ..k.. "/" ..Mod.PublicGameData.CardData.DefinedCards[k].Name.. ", WC " ..intNumWholeCards.. ", CP " ..intNumCardPieces);
+		print("Card " ..k.. "/" ..getCardName_fromObject (game.Settings.Cards[k]).. ", WC " ..intNumWholeCards.. ", CP " ..intNumCardPieces);
 
 		if (intNumWholeCards + intNumCardPieces > 0) then
 
 			strOrderContent = strOrderContent .. "|" ..tostring (k) .. ":" ..intNumWholeCards .. "," .. intNumCardPieces;
 			if (strOrderMessageCardInfo ~= "") then strOrderMessageCardInfo = strOrderMessageCardInfo .. ", "; end
-			strOrderMessageCardInfo = strOrderMessageCardInfo .. Mod.PublicGameData.CardData.DefinedCards[k].Name.. " (";
+			strOrderMessageCardInfo = strOrderMessageCardInfo .. getCardName_fromObject (game.Settings.Cards[k]).. " (";
 
 			if (intNumWholeCards > 0 and intNumCardPieces > 0) then
 				strOrderMessageCardInfo = strOrderMessageCardInfo .. tostring (intNumWholeCards).. " card" ..pluralForm (intNumWholeCards).. " & " ..tostring (intNumCardPieces).. " piece" ..pluralForm (intNumCardPieces);
@@ -462,8 +464,8 @@ function getDefinedCardList (game)
 	--print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
 	--print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
 
-	for cardID, cardConfig in pairs(game.Settings.Cards) do
-		local strCardName = getCardName_fromObject(cardConfig);
+	for cardID, cardConfig in pairs (game.Settings.Cards) do
+		local strCardName = getCardName_fromObject (cardConfig);
 		--print ("cardID=="..cardID..", cardName=="..strCardName..", #piecesRequired=="..cardConfig.NumPieces.."::");
 		cards[cardID] = strCardName;
 		count = count +1
@@ -476,22 +478,23 @@ end
 --given a card name, return it's cardID
 function getCardID (strCardNameToMatch, game)
 	--must have run getDefinedCardList first in order to populate Mod.PublicGameData.CardData
-	local cards={};
-	print ("[getCardID] match name=="..strCardNameToMatch.."::");
-	print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
-	print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
-	print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
-	print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
-	if (Mod.PublicGameData.CardData.DefinedCards == nil) then
-		print ("run function");
-		cards = getDefinedCardList (game);
-	else
-		print ("get from pgd");
-		cards = Mod.PublicGameData.CardData.DefinedCards;
-	end
+	-- local cards={};
+	-- print ("[getCardID] match name=="..strCardNameToMatch.."::");
+	-- print ("Mod.PublicGameData == nil --> "..tostring (Mod.PublicGameData == nil));
+	-- print ("Mod.PublicGameData.CardData == nil --> "..tostring (Mod.PublicGameData.CardData == nil));
+	-- print ("Mod.PublicGameData.CardData.DefinedCards == nil --> "..tostring (Mod.PublicGameData.CardData.DefinedCards == nil));
+	-- print ("Mod.PublicGameData.CardData.CardPieceCardID == nil --> "..tostring (Mod.PublicGameData.CardData.CardPieceCardID == nil));
+	-- if (Mod.PublicGameData.CardData.DefinedCards == nil) then
+	-- 	print ("run function");
+	-- 	cards = getDefinedCardList (game);
+	-- else
+	-- 	print ("get from pgd");
+	-- 	cards = Mod.PublicGameData.CardData.DefinedCards;
+	-- end
 
-	--print ("[getCardID] tablelength=="..tablelength (cards));
-	for cardID, strCardName in pairs(cards) do
+	for cardID, cardConfig in pairs(game.Settings.Cards) do
+		local strCardName = getCardName_fromObject (cardConfig);
+	-- for cardID, strCardName in pairs (game.Settings.Cards) do
 		--print ("[getCardID] cardID=="..cardID..", cardName=="..strCardName.."::");
 		if (strCardName == strCardNameToMatch) then
 			--print ("[getCardID] matching card cardID=="..cardID.."::");
@@ -501,13 +504,13 @@ function getCardID (strCardNameToMatch, game)
 	return nil; --cardName not found
 end
 
-function getCardName_fromID(cardID, game);
+function getCardName_fromID (cardID, game);
 	print ("cardID=="..cardID);
-	local cardConfig = game.Settings.Cards[tonumber(cardID)];
+	local cardConfig = game.Settings.Cards [tonumber(cardID)];
 	return getCardName_fromObject (cardConfig);
 end
 
-function getCardName_fromObject(cardConfig)
+function getCardName_fromObject (cardConfig)
 	if (cardConfig==nil) then print ("cardConfig==nil"); return nil; end
 	if cardConfig.proxyType == 'CardGameCustom' then
 		return cardConfig.Name;

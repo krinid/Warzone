@@ -151,6 +151,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 		if (SU.proxyType == "Commander" or SU.proxyType == "Boss" or SU.proxyType == "Boss1" or SU.proxyType == "Boss2" or SU.proxyType == "Boss3" or SU.proxyType == "Boss4") then
 			--handle Commander/Boss SUs here
 			--but don't do anything for now; how should these special Built-In units be handled? They have fixed properties and can't be "weakened"; would have to recreate as a Custom SU which make break other aspects of the game related to those units
+			--so just do nothing until I can come up with a good idea for this case
 		elseif (SU.proxyType == "CustomSpecialUnit") then
 			local builder = WL.CustomSpecialUnitBuilder.CreateCopy (SU);
 			-- print ("[PRE]  Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
@@ -170,9 +171,10 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 
 			local newSU = nil;
 			--if SU.Health is defined, SU.DamageToKill is ignored even if defined
-			if (builder.Health == nil and builder.DamageToKill ~= nil and builder.DamageToKill > 0 or builder.Health ~= nil and builder.Health > 0) then
+			-- if (builder.Health == nil and builder.DamageToKill ~= nil and builder.DamageToKill >= 0 or builder.Health ~= nil and builder.Health >= 0) then --this version of the IF creates SUs with 0 Health or 0 DTK when they have been reduced to 0 instead of killing them
+			if (builder.Health == nil and builder.DamageToKill ~= nil and builder.DamageToKill > 0 or builder.Health ~= nil and builder.Health > 0) then --this version of the IF kills SUs that have been reduced to 0 Health or 0 DTK
 				--SU is still alive, either DTK>0 or Health>0, so remove existing SU + add cloned/reduced SU to territory
-				newSU = builder.Build(); --create newSU
+				newSU = builder.Build (); --create newSU
 				table.insert (SUsNewList, newSU);
 				-- print ("[SU survives - reduce & replace it]")
 			else
@@ -184,8 +186,16 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 	end
 
 	--if SUs were modified by Poison, add the SU Removals/Additions to the event order
-	if (#SUsNewList == 0) then
+	print ("[SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", " ..Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength.. ", SU count before " ..tablelength (targetTerritory.NumArmies.SpecialUnits).. ", SU count after " ..tablelength (SUsNewList));
+	if (#SUsNewList == 0 and #SUsToRemove == 0) then
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strOrderDescription, {}, {impactedTerritory});
+		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 8, getColourInteger (50, 175, 0))}; --use Sickly Green for Poison
+		addNewOrder (event, true);
+	elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison)
+		local strPoisonMsg = strOrderDescription;
+		impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
+		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
@@ -204,7 +214,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 				impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
 				-- event = WL.GameOrderEvent.Create (order.PlayerID, order.Description, {}, {impactedTerritory});
 			else
-				strPoisonMsg = "[Special Unit poison]";
+				strPoisonMsg = "[Special Unit poison damage]";
 			end
 			event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
@@ -224,7 +234,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --add Poison custom structure to target terr
 		apply_Poison_Damage_to_Territory (game, order.PlayerID, order.Description, addNewOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --apply damage to armies & SUs on the target terr, with strength 1.0 (full strength)
 	else
-		--Poison was blocked by Shield, so no damage is down; enter an order indicating what happened
+		--Poison was blocked by Shield, so no damage is done; enter an order indicating what happened
 		local event = WL.GameOrderEvent.Create (order.PlayerID, order.Description .. " (blocked by Shield)", {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText .. " spew (blocked by Shield)", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
