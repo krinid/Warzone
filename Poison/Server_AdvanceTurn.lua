@@ -15,7 +15,7 @@
 -- - add a "Strong Poison" card? Which is just a 2nd poison card for host to modify the properties (1 could affect armies more, the other SUs more; or just 1 is stronger version of the other)
 -- - add a "Poison Affects Other Mods" card that other mods can check for in order to apply poison damage to their own mod effects (eg: Pestilence, Nuke, Bomb+, etc); this is needed in order to have the Poison damage apply to the Special Units added by these other mods; this card would just be a placeholder card that isn't actually played but just exists so that other mods can check for its existence
 
-strPoisonNameText = "Poison"; --use this to display "Poison" in annotations, etc
+local strPoisonNameText = "Poison"; --use this to display "Poison" in annotations, etc
 
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
@@ -38,17 +38,17 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		local strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name
 		local cardOrderContentDetails = modDataContent[2]; --2nd component of ModData after "|" is the territory ID or player ID depending on the card type
 
-		if (strCardTypeBeingPlayed == "Poison") then
+		if (strCardTypeBeingPlayed == strPoisonNameText) then
 			execute_Poison_operation (game, order, addNewOrder, skipThisOrder, tonumber (cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Strong Poison") then
 			execute_Poison_operation (game, order, addNewOrder, skipThisOrder, tonumber (cardOrderContentDetails));
 		end
-	elseif (order.proxyType == 'GameOrderAttackTransfer' and (orderResult.IsAttack == true or orderResult.IsSuccessful == true)) then
+	elseif (order.proxyType == 'GameOrderAttackTransfer' and ((orderResult.IsAttack == true or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
 		print ("[POISON] spread to " ..order.To);
 		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 		local impactedTerritory = WL.TerritoryModification.Create (order.To);
 		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, 0.5);
-		local event = WL.GameOrderEvent.Create (order.PlayerID, "Poison carried to " ..getTerritoryName (order.To, game), {}, {impactedTerritory});
+		local event = WL.GameOrderEvent.Create (order.PlayerID, strPoisonNameText.. " carried to " ..getTerritoryName (order.To, game), {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
 		event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create (strPoisonNameText.. " carried", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
@@ -60,6 +60,13 @@ end
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
 	execute_Recurring_Poison_Damage (game, addNewOrder, false);
+end
+
+--return count of structure of type strStructureName on targetTerritory
+function countStructures (targetTerritory, strStructureName)
+	local structures = targetTerritory.Structures or {};
+	if (structures [WL.StructureType.Custom (strStructureName)] == nil) then return 0; end
+	return structures [WL.StructureType.Custom (strStructureName)];
 end
 
 --expire poison if appropriate duration has passed
@@ -104,7 +111,7 @@ function execute_Recurring_Poison_Damage (game, addNewOrder, boolExpirePoison)
 	for _,poisonRecord in pairs (poisonData) do
 		local impactedTerritory = WL.TerritoryModification.Create (poisonRecord.targetTerritoryID);
 		print ("0, Poison impact,terr " ..poisonRecord.targetTerritoryID.. ", 0.5, expires T" ..poisonRecord.expiresOnTurn.. ", currTurn T".. game.Game.TurnNumber);
-		apply_Poison_Damage_to_Territory (game, 0, "Poison impact", addNewOrder, game.ServerGame.LatestTurnStanding.Territories [poisonRecord.targetTerritoryID], impactedTerritory, poisonRecord.strength/0.5); --apply 50% damage at start of turn, 50% at end of turn (in addition to the 100% when the poison hits)
+		apply_Poison_Damage_to_Territory (game, 0, strPoisonNameText.. " impact", addNewOrder, game.ServerGame.LatestTurnStanding.Territories [poisonRecord.targetTerritoryID], impactedTerritory, poisonRecord.strength/0.5); --apply 50% damage at start of turn, 50% at end of turn (in addition to the 100% when the poison hits)
 	end
 end
 
