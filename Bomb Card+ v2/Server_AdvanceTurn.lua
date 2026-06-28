@@ -83,7 +83,7 @@ function PlayBombCard (game, order, addNewOrder)
 	--2nd param indicates whether to skip this order if the original order is skipped (by this or any other mod)
 	--if using regular bomb card, original order will be skipped (elsewhere in code) so it doesn't apply default damage of 50%, so must use 'false' when calling addNewOrder
 	--but if using the new custom Bomb+ card, use 'true' here so it is correctly tied to orig order and if that is skipped (via Card Block, etc), then this order is also skipped
-	addNewOrder (event, Mod.Settings.UseCustomCard ~= false);
+	addNewOrder (event, Mod.Settings.UseCustomCard == true);
 end
 
 function tablelength(T)
