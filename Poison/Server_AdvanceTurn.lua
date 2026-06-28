@@ -43,7 +43,8 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		elseif (strCardTypeBeingPlayed == "Strong Poison") then
 			execute_Poison_operation (game, order, addNewOrder, skipThisOrder, tonumber (cardOrderContentDetails));
 		end
-	elseif (order.proxyType == 'GameOrderAttackTransfer' and ((orderResult.IsAttack == true or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
+	--check if order is a transfer or an attack of at least 1 army from a territory that has Poison on it, and if so, spread Poison to the target territory
+	elseif (order.proxyType == 'GameOrderAttackTransfer' and (((orderResult.IsAttack == true and orderResult.DefendingArmiesKilled.IsEmpty == false) or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
 		print ("[POISON] spread to " ..order.To);
 		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 		local impactedTerritory = WL.TerritoryModification.Create (order.To);
