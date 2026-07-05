@@ -29,9 +29,8 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 		local targetPlayerID = tonumber(arrayPayload[2]);
 
 		print ("[Gift Card] customOrderType=="..tostring(customOrderType)..", targetPlayerID=="..tostring(targetPlayerID).."::");
-		local cardPiecesToRemove = {};
+		local cardPiecesToRemoveOrAdd = {};
 		local wholeCardsToRemove = {};
-		local cardPiecesToGift = {};
 		local cardRetractionOrder = WL.GameOrderEvent.Create (order.PlayerID, "cards/pieces removed", {});
 		for i = 3, #arrayPayload do
 			local arrGiftCardData = split (arrayPayload[i], ":");
@@ -48,36 +47,38 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 
 			--if there are card pieces to be removed for the current card, add the removal to the retraction order
 			if (intNumCardPiecesToGift > 0) then
-				if (cardPiecesToRemove [order.PlayerID] == nil) then cardPiecesToRemove [order.PlayerID] = {}; end
-				if (cardPiecesToRemove [order.PlayerID][cardID] == nil) then cardPiecesToRemove [order.PlayerID][cardID] = 0; end
-				cardPiecesToRemove [order.PlayerID][cardID] = -intNumCardPiecesToGift;
-				cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
+				if (cardPiecesToRemoveOrAdd [order.PlayerID] == nil) then cardPiecesToRemoveOrAdd [order.PlayerID] = {}; end
+				if (cardPiecesToRemoveOrAdd [order.PlayerID][cardID] == nil) then cardPiecesToRemoveOrAdd [order.PlayerID][cardID] = 0; end
+				cardPiecesToRemoveOrAdd [order.PlayerID][cardID] = -intNumCardPiecesToGift;
+				cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
 
-				if (cardPiecesToRemove [targetPlayerID] == nil) then cardPiecesToRemove [targetPlayerID] = {}; end
-				if (cardPiecesToRemove [targetPlayerID][cardID] == nil) then cardPiecesToRemove [targetPlayerID][cardID] = 0; end
-				cardPiecesToRemove [targetPlayerID][cardID] = cardPiecesToRemove [targetPlayerID][cardID] + intNumCardPiecesToGift;
-				cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
-
-				-- if (cardPiecesToGift [targetPlayerID] == nil) then cardPiecesToGift [targetPlayerID] = {}; end
-				-- if (cardPiecesToGift [targetPlayerID][cardID] == nil) then cardPiecesToGift [targetPlayerID][cardID] = 0; end
-				-- cardPiecesToGift [targetPlayerID][cardID] = cardPiecesToGift [targetPlayerID][cardID] + intNumCardPiecesToGift;
-				-- cardRetractionOrder.AddCardPiecesOpt = cardPiecesToGift;
+				if (cardPiecesToRemoveOrAdd [targetPlayerID] == nil) then cardPiecesToRemoveOrAdd [targetPlayerID] = {}; end
+				if (cardPiecesToRemoveOrAdd [targetPlayerID][cardID] == nil) then cardPiecesToRemoveOrAdd [targetPlayerID][cardID] = 0; end
+				cardPiecesToRemoveOrAdd [targetPlayerID][cardID] = cardPiecesToRemoveOrAdd [targetPlayerID][cardID] + intNumCardPiecesToGift;
+				cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
 			end
 
 			--if there are wholecards to be removed for the current card type, add it to the whole card removal table to be processed later
 			--&&&change this to a loop to add 1 element per whole card being gifted (multiple entries for each card, since each removal from gifting player must be a separate order)
 			if (intNumWholeCardsToGift > 0) then
-				for i = 1, intNumWholeCardsToGift do
-					--&&& fix this -- this would just get the same instance each time through the loop and never discard the 2nd iteration and beyond
-					local wholeCardCardInstanceID = getCardInstance (game, order.PlayerID, cardID);
+				-- for i = 1, intNumWholeCardsToGift do
+				--&&& fix this -- this would just get the same instance of a given card type each time through the loop and never discard the 2nd iteration and beyond
+				local wholeCardCardInstanceIDs = getCardInstances (game, order.PlayerID, cardID, intNumWholeCardsToGift);
+				for k,wholeCardCardInstanceID in pairs (wholeCardCardInstanceIDs) do
 					table.insert (wholeCardsToRemove, {[order.PlayerID] = wholeCardCardInstanceID});
+					print ("[ORDER - CARD REMOVAL - PREP] playerID=="..order.PlayerID..", cardID=="..cardID..", cardInstanceID=="..tostring (wholeCardCardInstanceID)); --..", cardName==" ..getCardName_fromInstanceID (game, wholeCardCardInstanceID).."::");
+					print ("[ORDER - CARD REMOVAL - PREP] playerID=="..order.PlayerID..", cardID=="..cardID..", cardInstanceID=="..wholeCardCardInstanceID); --..", cardName==" ..getCardName_fromInstanceID (game, wholeCardCardInstanceID).."::");
+
 					--add card pieces here
-					-- if (cardPiecesToGift [targetPlayerID] == nil) then cardPiecesToGift [targetPlayerID] = {[cardID] = 0}; end
-					cardPiecesToGift[targetPlayerID] = cardPiecesToGift[targetPlayerID] or {};
-					cardPiecesToGift[targetPlayerID][cardID] = (cardPiecesToGift[targetPlayerID][cardID] or 0) + intNumCardPiecesToGift;
-					-- if (cardPiecesToGift [targetPlayerID] == nil) then cardPiecesToGift [targetPlayerID] = {[cardID] = 0}; end
-					cardPiecesToGift [targetPlayerID][cardID] = cardPiecesToGift [targetPlayerID][cardID] + intNumCardPiecesToGift;
-					-- cardPiecesToGift [targetPlayerID].cardID = cardPiecesToGift [targetPlayerID].cardID + intNumCardPiecesToGift;
+					-- if (cardPiecesToRemoveOrAdd [targetPlayerID] == nil) then cardPiecesToRemoveOrAdd [targetPlayerID] = {}; end
+					-- if (cardPiecesToRemoveOrAdd [targetPlayerID][cardID] == nil) then cardPiecesToRemoveOrAdd [targetPlayerID][cardID] = 0; end
+					-- cardPiecesToRemoveOrAdd [targetPlayerID][cardID] = cardPiecesToRemoveOrAdd [targetPlayerID][cardID] + intNumCardPiecesToGift;
+					-- cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
+					local intNumPiecesInCard = game.Settings.Cards[cardID].NumPieces;
+					cardPiecesToRemoveOrAdd [targetPlayerID] = cardPiecesToRemoveOrAdd [targetPlayerID] or {};
+					cardPiecesToRemoveOrAdd [targetPlayerID][cardID] = (cardPiecesToRemoveOrAdd [targetPlayerID][cardID] or 0) + intNumPiecesInCard;
+					-- if (cardPiecesToRemoveOrAdd ~= nil) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd; end
+					cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
 				end
 			end
 		end
@@ -93,11 +94,23 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 		else
 			for k,v in pairs (wholeCardsToRemove) do
 				if (cardRetractionOrder == nil) then cardRetractionOrder = WL.GameOrderEvent.Create (order.PlayerID, "whole card removed", {}); end
-				-- print ("[ORDER - CARD REMOVAL] playerID=="..k..", cardInstanceID=="..v[k]..", cardName==" ..getCardName_fromInstanceID (game, v[k]).."::");
+				for k2,v2 in pairs (v) do print ("[ORDER - CARD REMOVAL] "..k..", playerID=="..k2..", cardInstanceID=="..v2); end --..", cardName==" ..getCardName_fromInstanceID (game, v[k]).."::");
+
+-- function getCardName_fromID(cardID, game);
+--     print ("cardID=="..cardID);
+--     local cardConfig = game.Settings.Cards[tonumber(cardID)];
+--     return getCardName_fromObject (cardConfig);
+-- end
+
 				-- print ("[ORDER - CARD REMOVAL] playerID=="..k..", cardInstanceID=="..v[k]..", cardName==" ..getCardName_fromInstanceID (game, v[k]).."::");
 				cardRetractionOrder.RemoveWholeCardsOpt = v;
+				cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
+				-- cardRetractionOrder.RemoveWholeCardsOpt = {[k] = v};
+				-- cardRetractionOrder.RemoveWholeCardsOpt = {[playerID] = vc.ID};
+
 				addOrder (cardRetractionOrder, true);
 				cardRetractionOrder = nil;
+				cardPiecesToRemoveOrAdd = {};
 			end
 		end
 
@@ -250,14 +263,14 @@ function processCardRetractions (game, addOrder, playerID)
 	local playerCards = game.ServerGame.LatestTurnStanding.Cards [playerID];
 
 	--identify all card pieces required to be removed/added in order to revert to prior counts
-	local cardPiecesToRemove = {};
+	local cardPiecesToRemoveOrAdd = {};
 	for cardPieceCardID,cardPieceCount in pairs (playerCards.Pieces) do
 		if (Cards[playerID].Pieces[cardPieceCardID] == nil) then Cards[playerID].Pieces[cardPieceCardID] = 0; end;
 		-- print ("@@@@@ "..playerID,tostring (Cards[playerID].Pieces[cardPieceCardID]), tostring (cardPieceCount));
 		if (Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount ~= 0) then
-			if (cardPiecesToRemove [playerID] == nil) then cardPiecesToRemove [playerID] = {}; end
-			if (cardPiecesToRemove [playerID][cardPieceCardID] == nil) then cardPiecesToRemove [playerID][cardPieceCardID] = {}; end
-			cardPiecesToRemove [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
+			if (cardPiecesToRemoveOrAdd [playerID] == nil) then cardPiecesToRemoveOrAdd [playerID] = {}; end
+			if (cardPiecesToRemoveOrAdd [playerID][cardPieceCardID] == nil) then cardPiecesToRemoveOrAdd [playerID][cardPieceCardID] = {}; end
+			cardPiecesToRemoveOrAdd [playerID][cardPieceCardID] = Cards[playerID].Pieces[cardPieceCardID] - cardPieceCount;
 		end
 		-- print ("[^^PIECES] "..playerID,cardPieceCardID,cardPieceCount,Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount, tostring (Cards[playerID].Pieces[cardPieceCardID]-cardPieceCount~=0));
 	end
@@ -287,33 +300,56 @@ function processCardRetractions (game, addOrder, playerID)
 			local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Punishment: card pieces retracted", {});
 
 			--if card pieces need to be removed, configure the AddCardPiecesOpt property
-			if (tablelength (cardPiecesToRemove) > 0) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove; end
+			if (tablelength (cardPiecesToRemoveOrAdd) > 0) then cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd; end
 
 			--configure the RemoveWholeCardsOpt parameter for the Event order, then add the order to remove card pieces (if any) & the current whole card
 			cardRetractionOrder.RemoveWholeCardsOpt = {[playerID] = vc.ID};
 			addOrder (cardRetractionOrder, false);
-			cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
+			cardPiecesToRemoveOrAdd = {}; --clear cardPiecesToRemoveOrAdd so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
 		end
 	end
 
 	--it's possible at this point that there are card pieces to remove still b/c there were no whole cards, and removal orders were submitted; if so, remove them here
-	if (tablelength (cardPiecesToRemove) > 0) then
+	if (tablelength (cardPiecesToRemoveOrAdd) > 0) then
 		local cardRetractionOrder = WL.GameOrderEvent.Create (playerID, "Card retract!", {});
-		cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemove;
+		cardRetractionOrder.AddCardPiecesOpt = cardPiecesToRemoveOrAdd;
 		addOrder (cardRetractionOrder, false);
-		cardPiecesToRemove = {}; --clear cardPiecesToRemove so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
+		cardPiecesToRemoveOrAdd = {}; --clear cardPiecesToRemoveOrAdd so it doesn't keep adding/removing them with each iteration through the loop to process whole cards
 	end
 end
 
 --return cardInstace if playerID possesses card of type cardID, otherwise return nil
 function getCardInstance (game, playerID, cardID)
 	-- print ("player "..playerID);
+	print ("check 1 :: player " ..playerID..", cardID=="..cardID);
 	if (playerID==0) then --[[ print ("playerID is neutral (has no cards)"); ]] return nil; end
-	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then --[[ print ("WHOLE CARDS nil"); ]] return nil; end
+	print ("check 2");
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards == nil) then --[[ print ("WHOLE CARDS nil"); ]] return nil; end
+	print ("check 5");
 	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards [playerID].WholeCards) do
-		if (v.CardID == cardID) then return k; end
+		print ("CHECK 10 ",k,v.CardID,tostring (cardID==tostring(v.CardID)),tostring (tostring (cardID)==tostring (v.CardID)));
+		if (tostring (v.CardID) == cardID) then print ("CHECK 40"); return k; end
 	end
+	print ("CHECK 50");
 	return nil;
+end
+
+--same as getCardInstance but returns an array of matching cardInstances matching type cardID up to max quantity of intNumInstances
+function getCardInstances (game, playerID, cardID, intNumInstances)
+	local arrCardInstances = {}; --default value indicates 0 matching instances
+	-- print ("player "..playerID);
+	print ("check 1 :: player " ..playerID..", cardID=="..cardID);
+	if (playerID==0) then --[[ print ("playerID is neutral (has no cards)"); ]] return arrCardInstances; end
+	print ("check 2");
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards == nil) then --[[ print ("WHOLE CARDS nil"); ]] return arrCardInstances; end
+	print ("check 5");
+	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards [playerID].WholeCards) do
+		print ("CHECK 10 ",k,v.CardID,tostring (cardID==tostring(v.CardID)),tostring (tostring (cardID)==tostring (v.CardID)));
+		if (tostring (v.CardID) == cardID) then print ("CHECK 40"); table.insert (arrCardInstances, k); end
+		if (arrCardInstances ~= nil and #arrCardInstances >= intNumInstances) then break; end
+	end
+	print ("CHECK 50");
+	return arrCardInstances;
 end
 
 function getWholeCardCount (game, playerID, cardID)
