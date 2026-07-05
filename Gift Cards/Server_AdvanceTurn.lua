@@ -31,7 +31,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 		print ("[Gift Card] customOrderType=="..tostring(customOrderType)..", targetPlayerID=="..tostring(targetPlayerID).."::");
 		local cardPiecesToRemoveOrAdd = {};
 		local wholeCardsToRemove = {};
-		local cardRetractionOrder = WL.GameOrderEvent.Create (order.PlayerID, "cards/pieces removed", {});
+		local cardRetractionOrder = WL.GameOrderEvent.Create (order.PlayerID, "[cards/pieces gifted]", {});
 		for i = 3, #arrayPayload do
 			local arrGiftCardData = split (arrayPayload[i], ":");
 			local cardID = arrGiftCardData[1];
