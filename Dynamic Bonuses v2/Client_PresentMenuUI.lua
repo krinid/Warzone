@@ -81,9 +81,10 @@ function validateBonus(bonusDetails)
 		end
 
 		createLabel(vert, "\nBase income value: " ..getBonusValue(bonusDetails.ID), colors.TextColor);
-		if (pID == WL.PlayerID.Neutral) then createLabel(vert, "Dynamic Bonus multiplier: " ..rounding(sum(array), 2), colors.TextColor); end
-		if (pID == WL.PlayerID.Neutral) then createLabel(vert, "Total new value: " ..round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (math: " .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.Yellow); end
-		-- createLabel(vert, "This bonus generates " .. round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (" .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.TextColor);
+		if (pID ~= WL.PlayerID.Neutral) then
+			createLabel(vert, "Dynamic Bonus multiplier: " ..rounding(sum(array), 2), colors.TextColor);
+			createLabel(vert, "Total new value: " ..round(sum(array) * getBonusValue(bonusDetails.ID)) .. " (math: " .. rounding(sum(array), 2) .. " * " .. getBonusValue(bonusDetails.ID) .. ")", colors.Yellow);
+		end
 
 		createLabel(vert, "\nTerritories in the bonus and their multipliers:\n", colors.TextColor);
 		for _, terrID in pairs(game.Map.Bonuses[bonusDetails.ID].Territories) do
