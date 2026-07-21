@@ -50,13 +50,14 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		local poisonData = Mod.PublicGameData.PoisonData or {};
 		local poisonRecord = poisonData [order.From];
 		local floatPoisonStrength = 0.5; --default to 50% strength if not found in the poisonData table
-		if (poisonRecord ~= nil) then floatPoisonStrength = poisonRecord.strength / 0.5; end --assign actual 50% of poison strength value from source terr
+		if (poisonRecord ~= nil) then floatPoisonStrength = poisonRecord.strength * 0.5; end --assign actual 50% of poison strength value from source terr
 
 		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 		local impactedTerritory = WL.TerritoryModification.Create (order.To);
-		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, 0.5);
+		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, floatPoisonStrength);
 		local event = WL.GameOrderEvent.Create (order.PlayerID, strPoisonNameText.. " carried to " ..getTerritoryName (order.To, game), {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
+		print ("[POISON] carried to " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", strength " ..tostring (floatPoisonStrength));
 		event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create (strPoisonNameText.. " carried", 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
 	end
@@ -118,7 +119,7 @@ function execute_Recurring_Poison_Damage (game, addNewOrder, boolExpirePoison)
 	for _,poisonRecord in pairs (poisonData) do
 		local impactedTerritory = WL.TerritoryModification.Create (poisonRecord.targetTerritoryID);
 		print ("0, Poison impact,terr " ..poisonRecord.targetTerritoryID.. ", 0.5, expires T" ..poisonRecord.expiresOnTurn.. ", currTurn T".. game.Game.TurnNumber);
-		apply_Poison_Damage_to_Territory (game, 0, strPoisonNameText.. " impact", addNewOrder, game.ServerGame.LatestTurnStanding.Territories [poisonRecord.targetTerritoryID], impactedTerritory, poisonRecord.strength/0.5); --apply 50% damage at start of turn, 50% at end of turn (in addition to the 100% when the poison hits)
+		apply_Poison_Damage_to_Territory (game, 0, strPoisonNameText.. " impact", addNewOrder, game.ServerGame.LatestTurnStanding.Territories [poisonRecord.targetTerritoryID], impactedTerritory, poisonRecord.strength * 0.5); --apply 50% damage at start of turn, 50% at end of turn (in addition to the 100% when the poison hits)
 	end
 end
 
@@ -139,8 +140,9 @@ function apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, tar
 		--territory is not currently impacted by poison, create a new record
 		poisonRecord = {targetTerritoryID = targetTerritory.ID, turnApplied = game.Game.TurnNumber, expiresOnTurn = tonumber (game.Game.TurnNumber) + tonumber (Mod.Settings.PoisonDuration), cardPlayerID = order.PlayerID, strength = floatPoisonStrength};
 	else
-		--territory is already impacted by poison, overwrite existing record, extend duration of poison,
-		poisonRecord = {targetTerritoryID = targetTerritory.ID, turnApplied = poisonData [targetTerritory.ID].turnAplied, expiresOnTurn = poisonData [targetTerritory.ID].expiresOnTurn + tonumber (Mod.Settings.PoisonDuration), cardPlayerID = order.PlayerID, strength = math.max (floatPoisonStrength, poisonData [targetTerritory.ID].strength)};
+		--NEW: territory is already impacted by poison, do nothing, old poison takes precedence, doesn't get overwritten by new poison
+		--OLD: territory is already impacted by poison, overwrite existing record, extend duration of poison,
+		-- poisonRecord = {targetTerritoryID = targetTerritory.ID, turnApplied = poisonData [targetTerritory.ID].turnAplied, expiresOnTurn = poisonData [targetTerritory.ID].expiresOnTurn + tonumber (Mod.Settings.PoisonDuration), cardPlayerID = order.PlayerID, strength = math.max (floatPoisonStrength, poisonData [targetTerritory.ID].strength)};
 	end
 
 	poisonData [targetTerritory.ID] = poisonRecord;
