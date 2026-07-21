@@ -450,7 +450,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 
 				strCardBlockSkipOrder_Message = "Skipping order to play " ..tostring (strCardName).. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
 				print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
-				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}));
+				addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}), true);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
 				return true;
 			end
@@ -459,7 +459,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 	return false; --if it wasn't flagged by anything above, then it's either not a card play or the player this order is for isn't affected by a CardBlock operation
 end
 
-function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,addOrder);
+function process_game_orders_ImmovableSpecialUnits (game, gameOrder, result, skip, addOrder);
 	--check if an AttackTransfer or an Airlift contains an immovable piece (ie: Special Units for Isolation, Quicksand, Shield, Monolith, any others?) and if so, remove the special but leave the rest of the order as-is
 	if (gameOrder.proxyType=='GameOrderAttackTransfer' or gameOrder.proxyType == 'GameOrderPlayCardAirlift') then
 		--check any Special Units in the armies include in the AttackTransfer or Airlift operation
@@ -490,7 +490,7 @@ function process_game_orders_ImmovableSpecialUnits (game,gameOrder,result,skip,a
 
 				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, newNumArmies, gameOrder.AttackTeammates); end
 				if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then replacementOrder = WL.GameOrderPlayCardAirlift.Create(gameOrder.CardInstanceID, gameOrder.PlayerID, gameOrder.FromTerritoryID, gameOrder.ToTerritoryID, newNumArmies); end
-				addOrder (replacementOrder);
+				addOrder (replacementOrder, false);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the order is being replaced with a proper order (minus the Immovable Specials)
 				boolSkipOrder = true;
 				return false;
@@ -518,7 +518,7 @@ function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOr
 end
 
 --process regular card plays that have special defined behaviour in this mod
-function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
+function process_game_orders_RegularCards (game, gameOrder, result, skip, addOrder)
 	local FROMterritoryID, TOterritoryID, intNumArmies, intNumSUs, playerID, strCardType;
 
 	--if a territory with an active Shield is being Bombed, nullify the damage
@@ -580,7 +580,7 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 			if (boolQuicksandAirliftViolation==true) then
 				strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an ".. strCardType .." from "..getTerritoryName (FROMterritoryID, game).." to "..getTerritoryName(TOterritoryID, game);
 				print ("[".. strCardType .."/QUICKSAND] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..FROMterritoryID .."/"..getTerritoryName (FROMterritoryID, game).."::, to="..TOterritoryID .."/"..getTerritoryName(TOterritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
-				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
+				addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}), false);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 			end
 		end
@@ -603,13 +603,13 @@ function process_game_orders_RegularCards (game,gameOrder,result,skip,addOrder)
 			end
 			strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an ".. strCardType .." from "..getTerritoryName (FROMterritoryID, game).." to "..getTerritoryName(TOterritoryID, game);
 			print ("[".. strCardType .."/ISOLATION] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..FROMterritoryID .."/"..getTerritoryName (FROMterritoryID, game).."::, to="..TOterritoryID .."/"..getTerritoryName(TOterritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
-			addOrder(WL.GameOrderEvent.Create (gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}));
+			addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}), false);
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
 	end
 end
 
-function process_game_orders_CustomCards (game,gameOrder,result,skip,addOrder)
+function process_game_orders_CustomCards (game, gameOrder, result, skip, addOrder)
 	--check for Custom Card plays
 	--NOTE: proxyType=='GameOrderPlayCardCustom' indicates that a custom card played; but these can't be placed in the order list at a specific point, it just applies in the position according to regular move order
 	--so for now, ignore this; re-implement this when Fizz updates so these can placed at the proper execution point, eg: start of turn, after deployments, after attacks, etc
@@ -935,15 +935,15 @@ function checkForSpecialConditions (airstrikeResult, game, attackerID, addOrder)
 				local currentIncome = game.Game.PlayingPlayers[attackerID].Income (0, game.ServerGame.LatestTurnStanding, false, false);
 				local IncomeAmount = currentIncome.Total;
 				IncomeAmount = IncomeAmount * (0.33); --&&& update so this currently hardcoded value comes from a mod setting; make mod store this in ModData, and get this from killedSU.ModData
-				addOrder (WL.GameOrderEvent.Create (attackerID, getPlayerName (game, attackerID).. " killed a Capitalist; income reduced by 33%", {}, {}, {}, {WL.IncomeMod.Create (attackerID, -IncomeAmount, "You have killed a Capitalist and have been sanctioned")}));
+				addOrder (WL.GameOrderEvent.Create (attackerID, getPlayerName (game, attackerID).. " killed a Capitalist; income reduced by 33%", {}, {}, {}, {WL.IncomeMod.Create (attackerID, -IncomeAmount, "You have killed a Capitalist and have been sanctioned")}), true);
 				printDebug ("[AIRSTRIKE] Capitalist killed, reducing income by 33%"); --&&& see note above RE: hardcoded value
 			elseif (killedSU.Name == "Diplomat") then
 				--if attacker==defender, skip the Diplo operation
 				--also if no Diplo card is enabled in game, can't do anything so just skip it -- but this shouldn't ever happen as Diplo card is enabled in Server_Created
 				if (game.Settings.Cards ~= nil and game.Settings.Cards [WL.CardID.Diplomacy] ~= nil and attackerID ~= defenderID) then
 					local instance = WL.NoParameterCardInstance.Create (WL.CardID.Diplomacy);
-					addOrder (WL.GameOrderReceiveCard.Create (attackerID, {instance}));
-					addOrder (WL.GameOrderPlayCardDiplomacy.Create (instance.ID, attackerID, attackerID, defenderID));
+					addOrder (WL.GameOrderReceiveCard.Create (attackerID, {instance}), true);
+					addOrder (WL.GameOrderPlayCardDiplomacy.Create (instance.ID, attackerID, attackerID, defenderID), true);
 				end
 				printDebug ("[AIRSTRIKE] Diplomat killed, apply diplomacy between attacker " ..tostring (attackerID.."/"..getPlayerName (game, attackerID)).. " and defender " ..tostring (defenderID.."/"..getPlayerName (game, defenderID)));
 			end
@@ -1155,11 +1155,11 @@ function build_specialUnit (game, addOrder, targetTerritoryID, Name, ImageFilena
 	local specialUnit = builder.Build();
 	local terrMod = WL.TerritoryModification.Create(targetTerritoryID)
 	terrMod.AddSpecialUnits = {specialUnit}
-	addOrder(WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
+	addOrder (WL.GameOrderEvent.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID, Name.." special unit created", {}, {terrMod}), false);
 	return specialUnit;
 end
 
-function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrder)
+function process_game_orders_AttackTransfers (game, gameOrder, result, skip, addOrder)
 	--check ATTACK/TRANSFER orders to see if any rules are broken and need intervention, eg: moving TO/FROM an Isolated territory or OUT of Quicksanded territory
 	if (gameOrder.proxyType=='GameOrderAttackTransfer') then
 		print ("[[  ATTACK // TRANSFER ]] PRE  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
@@ -1214,7 +1214,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			if (boolQuicksandMovementViolation==true) then
 				strQuicksandSkipOrder_Message=strQuicksandSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
 				print ("QUICKSAND - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strQuicksandSkipOrder_Message.."::");
-				addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strQuicksandSkipOrder_Message, {}, {},{}));
+				addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, strQuicksandSkipOrder_Message, {}, {},{}), false);
 				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 			else
 				--order is not a quicksand violation; it may not have anything to do with quicksand; check if order is a legit attack on a quicksanded territory
@@ -1296,7 +1296,7 @@ function process_game_orders_AttackTransfers (game,gameOrder,result,skip,addOrde
 			end
 			strIsolationSkipOrder_Message=strIsolationSkipOrder_Message..". Original order was an Attack/Transfer from "..game.Map.Territories[gameOrder.From].Name.." to "..game.Map.Territories[gameOrder.To].Name;
 			print ("ISOLATION - skipOrder - playerID="..gameOrder.PlayerID.. "::from="..gameOrder.From .."/"..game.Map.Territories[gameOrder.From].Name.."::,to="..gameOrder.To .."/"..game.Map.Territories[gameOrder.To].Name.."::"..strIsolationSkipOrder_Message.."::");
-			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strIsolationSkipOrder_Message, {}, {},{}));
+			addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, strIsolationSkipOrder_Message, {}, {},{}), false);
 			skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
 		end
 		print ("[[  ATTACK // TRANSFER ]] POST  player "..gameOrder.PlayerID..", FROM "..gameOrder.From.."/"..getTerritoryName (gameOrder.From, game)..", TO "..gameOrder.To.."/"..getTerritoryName (gameOrder.To, game) ..
@@ -1325,7 +1325,7 @@ function execute_CardPiece_operation(game, gameOrder, skip, addOrder, targetCard
 	--disallow using Card Pieces card to get more Card Pieces cards/pieces
 	if (Mod.PublicGameData.CardData.CardPiecesCardID == targetCardID) then
 		print ("[CARD PIECE] SKIP ORDER, tried to use Card Piece to get Card Piece cards/pieces");
-		addOrder(WL.GameOrderEvent.Create(gameOrder.PlayerID, "Skipped order to play Card Pieces card to get more cards/pieces of Card Pieces card", {}, {},{}));
+		addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, "Skipped order to play Card Pieces card to get more cards/pieces of Card Pieces card", {}, {},{}), true);
 		skip (WL.ModOrderControl.Skip); --skip this order
 	else
 		--assign new cards/pieces of the selected card type
@@ -1342,7 +1342,7 @@ function execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, add
     print("[PROCESS CARD BLOCK] playerID="..gameOrder.PlayerID.." :: playerID="..targetPlayerID);
 	--get player
 	local event = WL.GameOrderEvent.Create (targetPlayerID, gameOrder.Description, {gameOrder.PlayerID, targetPlayerID});
-    addOrder(event, true);
+    addOrder (event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.CardBlockData == nil) then publicGameData.CardBlockData = {}; end
     local turnNumber_CardBlockExpires = (Mod.Settings.CardBlockDuration > 0) and (game.Game.TurnNumber + Mod.Settings.CardBlockDuration) or -1;
@@ -1391,7 +1391,7 @@ function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-    addOrder(event, true);
+    addOrder (event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end
     local turnNumber_TornadoExpires = (Mod.Settings.TornadoDuration > 0) and (game.Game.TurnNumber + Mod.Settings.TornadoDuration) or -1;
@@ -2414,13 +2414,13 @@ local function canIgniteTerritory (game, terrID, intCastingPlayer, cfg)
 	end
 end
 
-local function applyWildfireStructureDelta(game, terrID, delta, tblModifiedTerritories)
+local function applyWildfireStructureDelta (game, terrID, delta, tblModifiedTerritories)
 	local impactedTerritory = WL.TerritoryModification.Create (terrID);
 
 	local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 	if (structures == nil) then structures = {}; end
 
-	local key = WL.StructureType.Custom("wildfire");
+	local key = WL.StructureType.Custom ("wildfire");
 	local cur = structures[key];
 
 	if (cur == nil) then cur = 0; end
@@ -2439,7 +2439,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 	wildfireRecord.cycleNumber = wildfireRecord.cycleNumber + 1;
 	local intCurrentCycle   = wildfireRecord.cycleNumber;
     local tblTerritoryState = wildfireRecord.territoryState; --non-contiguous array: [terrID] = intTurnsLeftToBurn (0=extinguished)
-	local cfg = loadWildfireConfig();
+	local cfg = loadWildfireConfig ();
 		-- territory = targetTerritoryID,
 		-- castingPlayer = intCastingPlayer,
 		-- turnNumberWildfireStarts = intStartTurn,
@@ -3328,7 +3328,7 @@ function Phantom_processEndOfTurn(game, addOrder)
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
-	if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+	-- if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
 	--check for expired Phantoms and remove them + any fog they created
     print("[PHANTOM EOT] START");
