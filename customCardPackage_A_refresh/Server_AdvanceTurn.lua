@@ -2414,13 +2414,13 @@ local function canIgniteTerritory (game, terrID, intCastingPlayer, cfg)
 	end
 end
 
-local function applyWildfireStructureDelta(game, terrID, delta, tblModifiedTerritories)
+local function applyWildfireStructureDelta (game, terrID, delta, tblModifiedTerritories)
 	local impactedTerritory = WL.TerritoryModification.Create (terrID);
 
 	local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
 	if (structures == nil) then structures = {}; end
 
-	local key = WL.StructureType.Custom("wildfire");
+	local key = WL.StructureType.Custom ("wildfire");
 	local cur = structures[key];
 
 	if (cur == nil) then cur = 0; end
@@ -2439,7 +2439,7 @@ local function processOneWildfireCycle (game, wildfireID, wildfireRecord, cfg, a
 	wildfireRecord.cycleNumber = wildfireRecord.cycleNumber + 1;
 	local intCurrentCycle   = wildfireRecord.cycleNumber;
     local tblTerritoryState = wildfireRecord.territoryState; --non-contiguous array: [terrID] = intTurnsLeftToBurn (0=extinguished)
-	local cfg = loadWildfireConfig();
+	local cfg = loadWildfireConfig ();
 		-- territory = targetTerritoryID,
 		-- castingPlayer = intCastingPlayer,
 		-- turnNumberWildfireStarts = intStartTurn,
@@ -3328,7 +3328,7 @@ function Phantom_processEndOfTurn(game, addOrder)
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Phantom ~= true) then return; end --if module is not active, skip everything, just return
 	if (Mod.Settings.PhantomEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
-	if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+	-- if (Mod.Settings.PhantomDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
 
 	--check for expired Phantoms and remove them + any fog they created
     print("[PHANTOM EOT] START");

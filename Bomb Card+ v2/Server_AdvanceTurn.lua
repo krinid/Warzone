@@ -5,7 +5,7 @@
 -- end
 
 function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
-	print ("!".. order.proxyType);
+	-- print ("!".. order.proxyType);
 	if ((Mod.Settings.UseCustomCard == nil and order.proxyType == 'GameOrderPlayCardBomb') or (Mod.Settings.UseCustomCard == true and order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Bomb+|")==true)) then
 		PlayBombCard(game, order, addNewOrder);
 		if (Mod.Settings.UseCustomCard == nil) then skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); end --skip original order if using standard Bomb Card
@@ -43,7 +43,7 @@ function PlayBombCard (game, order, addNewOrder)
 		if (boolTerritoryHasShield == false and boolTerritoryHasFort == true) then
 			-- local fortStructureID = WL.StructureType.Custom ("Fort"); --matches to StructureImages/Fort.png  <--- this only works if this structure was created by the current mod (else StructureImages/Fort.png doesn't exist)
 			local structures = game.ServerGame.LatestTurnStanding.Territories[order.To].Structures;
-			local intNumForts = structures[fortStructureID] ~= nil and structures [fortStructureID] or 0;
+			local intNumForts = structures [fortStructureID] ~= nil and structures [fortStructureID] or 0;
 
 			if (intNumForts >= 1) then
 				structures [fortStructureID] = structures [fortStructureID] - 1;

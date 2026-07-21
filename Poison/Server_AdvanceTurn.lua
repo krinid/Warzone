@@ -44,8 +44,14 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 			execute_Poison_operation (game, order, addNewOrder, skipThisOrder, tonumber (cardOrderContentDetails));
 		end
 	--check if order is a transfer or an attack of at least 1 army from a territory that has Poison on it, and if so, spread Poison to the target territory
-	elseif (order.proxyType == 'GameOrderAttackTransfer' and (((orderResult.IsAttack == true and orderResult.DefendingArmiesKilled.IsEmpty == false) or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
+	-- elseif (order.proxyType == 'GameOrderAttackTransfer' and (((orderResult.IsAttack == true and orderResult.DefendingArmiesKilled.IsEmpty == false) or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
+	elseif (order.proxyType == 'GameOrderAttackTransfer' and orderResult.IsAttack == true and orderResult.IsSuccessful == true and orderResult.ActualArmies.IsEmpty == false and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0) then
 		print ("[POISON] spread to " ..order.To);
+		local poisonData = Mod.PublicGameData.PoisonData or {};
+		local poisonRecord = poisonData [order.From];
+		local floatPoisonStrength = 0.5; --default to 50% strength if not found in the poisonData table
+		if (poisonRecord ~= nil) then floatPoisonStrength = poisonRecord.strength / 0.5; end --assign actual 50% of poison strength value from source terr
+
 		local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 		local impactedTerritory = WL.TerritoryModification.Create (order.To);
 		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, 0.5);
@@ -146,14 +152,15 @@ end
 --apply Poison damage to targetTerritory (get armies/SUs from here), add apply the effects to impactedTerritory (used to create the custom event order)
 function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDescription, addNewOrder, targetTerritory, impactedTerritory, floatPoisonStrength)
 	local targetTerritoryID = targetTerritory.ID;
-	impactedTerritory.AddArmies = -1 * Mod.Settings.PoisonDamagePercentArmies - Mod.Settings.PoisonDamageFixedArmies; --apply damage %'s -- gets weaker for poison spread away from actual hit location (ground zero/epicenter)
+	local intPoisonArmyDamage = math.ceil ((-1 * Mod.Settings.PoisonDamagePercentArmies - Mod.Settings.PoisonDamageFixedArmies) * floatPoisonStrength - 0.5); --apply damage %'s -- gets weaker for poison spread away from actual hit location (ground zero/epicenter)
+	if (intPoisonArmyDamage ~= 0) then impactedTerritory.AddArmies = intPoisonArmyDamage; end
 
 	-- SU damage defined by: Mod.Settings.PoisonDamageFixedSpecialUnits & Mod.Settings.PoisonDamagePercentSpecialUnits
 	-- Spread to bordering territories quantity Mod.Settings.PoisonDamageRange
 	local SUsNewList = {}; --new list of SUs after applying Poison damage
 	local SUsToRemove = {}; --list of SUs to remove after applying Poison damage (b/c they are replaced by the ones in SUsNewList)
 	for _,SU in pairs (targetTerritory.NumArmies.SpecialUnits) do
-		--if SU is Commander or Boss, handle it separately  (must create a Custom SU to mimic these built-in SUs)
+		--if SU is Commander or Boss, handle it separately  (must create a Custom SU to mimic these built-in SUs) --> actually just ignore these for now, need to figure out how to handle these special SUs
 		--if SU has Health, reduce the Health by the appropriate amount (must clone the SU and remove the current one)
 		--if SU is DamageToKill type, reduce the DamageToKill value by the appropriate amount (must clone the SU and remove the current one)
 		if (SU.proxyType == "Commander" or SU.proxyType == "Boss" or SU.proxyType == "Boss1" or SU.proxyType == "Boss2" or SU.proxyType == "Boss3" or SU.proxyType == "Boss4") then
@@ -194,13 +201,15 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 	end
 
 	--if SUs were modified by Poison, add the SU Removals/Additions to the event order
+	--if no SUs were modified and no army damage was done, don't add an event order
 	print ("[SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", " ..Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength.. ", SU count before " ..tablelength (targetTerritory.NumArmies.SpecialUnits).. ", SU count after " ..tablelength (SUsNewList));
-	if (#SUsNewList == 0 and #SUsToRemove == 0) then
+	if (#SUsNewList == 0 and #SUsToRemove == 0 and intPoisonArmyDamage ~= 0) then
+		--no SUs to add or remove, just apply army damage
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strOrderDescription, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 8, getColourInteger (50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
-	elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison)
+	elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison), potentially army reductions as well
 		local strPoisonMsg = strOrderDescription;
 		impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
@@ -208,6 +217,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
 	else
+		--SUs to add/remove and potentially army reductions as well
 		--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
 		local specialsToAdd = split_table_into_blocks (SUsNewList, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
 
