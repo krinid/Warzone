@@ -17,11 +17,20 @@
 
 local strPoisonNameText = "Poison"; --use this to display "Poison" in annotations, etc
 
+---Server_AdvanceTurn_Start hook
+---@param game GameServerHook
+---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
+function Server_AdvanceTurn_Start (game, addNewOrder)
+	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Poison|ApplyRecurringPoisonDamage|TurnStart"));
+	-- execute_Recurring_Poison_Damage (game, addNewOrder);
+end
+
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
 ---@param addOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_End(game, addNewOrder)
-	execute_Recurring_Poison_Damage (game, addNewOrder);
+	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Poison|ApplyRecurringPoisonDamage|TurnEnd"));
+	-- execute_Recurring_Poison_Damage (game, addNewOrder);
 	expire_Poison (game, addNewOrder);
 end
 
@@ -60,14 +69,15 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		print ("[POISON] carried to " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", strength " ..tostring (floatPoisonStrength));
 		event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create (strPoisonNameText.. " carried", 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
 		addNewOrder (event, true);
+	elseif (order.proxyType == 'GameOrderEvent') then
+		--check if this is a Poison recurring damage event order, and if so, apply the damage accordingly, 50% @ start of turn, 50% @ end of turn (in addition to the 100% when the poison hits)
+		local modDataContent = split (order.Message, "|");
+		if (modDataContent [1] == strPoisonNameText and modDataContent [2] == "ApplyRecurringPoisonDamage") then
+			execute_Recurring_Poison_Damage (game, addNewOrder);
+			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --don't display this trigger custom order to players
+			-- if (Mod.Settings.PoisonDuration ~= -1) then expire_Poison (game, addNewOrder); end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
+		end
 	end
-end
-
----Server_AdvanceTurn_Start hook
----@param game GameServerHook
----@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
-function Server_AdvanceTurn_Start (game, addNewOrder)
-	execute_Recurring_Poison_Damage (game, addNewOrder, false);
 end
 
 --return count of structure of type strStructureName on targetTerritory
@@ -98,7 +108,7 @@ function expire_Poison (game, addNewOrder)
 			local event = WL.GameOrderEvent.Create (poisonRecord.cardPlayerID, strPoisonNameText.. " expires on " ..getTerritoryName (poisonRecord.targetTerritoryID, game), {}, {impactedTerritory_RemoveStructure});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, poisonRecord.targetTerritoryID);
 			-- event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
-			addNewOrder (event, true);
+			addNewOrder (event, false);
 		else
 			poisonDataNew [k] = poisonRecord;
 		end
@@ -109,12 +119,12 @@ function expire_Poison (game, addNewOrder)
 end
 
 --apply Poison to all territories that are currently impacted by Poison
-function execute_Recurring_Poison_Damage (game, addNewOrder, boolExpirePoison)
+function execute_Recurring_Poison_Damage (game, addNewOrder)
 	--read Poison data, apply poison damage
 	local publicGameData = Mod.PublicGameData or {};
 	local poisonData = publicGameData.PoisonData or {};
 
-	print ("[POISON] Recurring damage; expire==" ..tostring (boolExpirePoison).. ", table length " ..tonumber (tablelength (poisonData)));
+	print ("[POISON] Recurring damage; table length " ..tonumber (tablelength (poisonData)));
 
 	for _,poisonRecord in pairs (poisonData) do
 		local impactedTerritory = WL.TerritoryModification.Create (poisonRecord.targetTerritoryID);
@@ -156,6 +166,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 	local targetTerritoryID = targetTerritory.ID;
 	local intPoisonArmyDamage = math.ceil (-1 * (Mod.Settings.PoisonDamagePercentArmies/100) * floatPoisonStrength * targetTerritory.NumArmies.NumArmies - Mod.Settings.PoisonDamageFixedArmies * floatPoisonStrength - 0.5); --apply damage %'s -- gets weaker for poison spread away from actual hit location (ground zero/epicenter)
 	if (intPoisonArmyDamage ~= 0) then impactedTerritory.AddArmies = intPoisonArmyDamage; end
+	print ("[POISON impact - Army damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", damage " ..tostring (intPoisonArmyDamage) ..", ".. Mod.Settings.PoisonDamagePercentArmies*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedArmies*floatPoisonStrength);
 
 	-- SU damage defined by: Mod.Settings.PoisonDamageFixedSpecialUnits & Mod.Settings.PoisonDamagePercentSpecialUnits
 	-- Spread to bordering territories quantity Mod.Settings.PoisonDamageRange
@@ -172,8 +183,14 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 		elseif (SU.proxyType == "CustomSpecialUnit") then
 			local builder = WL.CustomSpecialUnitBuilder.CreateCopy (SU);
 			-- print ("[PRE]  Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
-			if (builder.Health ~= nil) then builder.Health = math.max (0, SU.Health * (1-Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength/100) - Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength); end
-			if (builder.DamageToKill ~= nil) then builder.DamageToKill = math.max (0, SU.DamageToKill * (1-Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength/100) - Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength); end
+			local intDamageToSU = 0;
+			if (builder.Health ~= nil) then
+				intDamageToSU = math.max (0, SU.Health * (1-Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength/100) - Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength); builder.Health = intDamageToSU;
+				print ("[POISON impact - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", damage " ..tostring (intDamageToSU) ..", ".. Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength);
+			elseif (builder.DamageToKill ~= nil) then
+				intDamageToSU = math.max (0, SU.DamageToKill * (1-Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength/100) - Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength); builder.DamageToKill = intDamageToSU;
+				print ("[POISON impact - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", damage " ..tostring (intDamageToSU) ..", ".. Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength);
+			end
 
 			--if setting to apply to all abilities is true, modify AttackPower, DefensePower, AttackPowerPercent, DefensePowerPercent, DamageAbsorption; ignores the SU Fixed Damage amount, reduce using only SU Percent Damage modifier
 			if (Mod.Settings.PoisonDamageAffectsAllAbilities == true) then
@@ -204,20 +221,19 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 
 	--if SUs were modified by Poison, add the SU Removals/Additions to the event order
 	--if no SUs were modified and no army damage was done, don't add an event order
-	print ("[SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", " ..Mod.Settings.PoisonDamagePercentSpecialUnits*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedSpecialUnits*floatPoisonStrength.. ", SU count before " ..tablelength (targetTerritory.NumArmies.SpecialUnits).. ", SU count after " ..tablelength (SUsNewList));
 	if (#SUsNewList == 0 and #SUsToRemove == 0 and intPoisonArmyDamage ~= 0) then
 		--no SUs to add or remove, just apply army damage
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strOrderDescription, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger (50, 175, 0))}; --use Sickly Green for Poison
-		addNewOrder (event, true);
+		addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 	elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison), potentially army reductions as well
 		local strPoisonMsg = strOrderDescription;
 		impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
-		addNewOrder (event, true);
+		addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 	else
 		--SUs to add/remove and potentially army reductions as well
 		--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
@@ -239,7 +255,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 			event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
-			addNewOrder (event, true);
+			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 		end
 	end
 end
@@ -262,13 +278,13 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 	end
 end
 
-function split(inputstr, sep)
+function split (inputstr, sep)
 	if inputstr == nil then return {}; end
 	if sep == nil then
 			sep = "%s"
 	end
 	local t={} ; i=1
-	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+	for str in string.gmatch (inputstr, "([^"..sep.."]+)") do
 			t[i] = str
 			i = i + 1
 	end

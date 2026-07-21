@@ -66,7 +66,7 @@ end
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 	local publicGameData = Mod.PublicGameData;
 
-	if (order.proxyType == "GameOrderCustom" and startsWith(order.Payload, 'Buy Cards|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
+	if (order.proxyType == "GameOrderCustom" and startsWith (order.Payload, 'Buy Cards|')) then  --look for the order that we inserted in Client_PresentCommercePurchaseUI
 		--if order is GameOrderCustom & Payload indicates "Buy Cards", then process the buy card order, else do nothing (it's some other custom order by some other mod)
 		print ("payload=="..order.Payload..", message=="..order.Message.."::");
 
