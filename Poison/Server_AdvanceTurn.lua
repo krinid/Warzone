@@ -154,7 +154,7 @@ end
 --apply Poison damage to targetTerritory (get armies/SUs from here), add apply the effects to impactedTerritory (used to create the custom event order)
 function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDescription, addNewOrder, targetTerritory, impactedTerritory, floatPoisonStrength)
 	local targetTerritoryID = targetTerritory.ID;
-	local intPoisonArmyDamage = math.ceil (-1 * (Mod.Settings.PoisonDamagePercentArmies/100) * floatPoisonStrength - Mod.Settings.PoisonDamageFixedArmies * floatPoisonStrength - 0.5); --apply damage %'s -- gets weaker for poison spread away from actual hit location (ground zero/epicenter)
+	local intPoisonArmyDamage = math.ceil (-1 * (Mod.Settings.PoisonDamagePercentArmies/100) * floatPoisonStrength * targetTerritory.NumArmies.NumArmies - Mod.Settings.PoisonDamageFixedArmies * floatPoisonStrength - 0.5); --apply damage %'s -- gets weaker for poison spread away from actual hit location (ground zero/epicenter)
 	if (intPoisonArmyDamage ~= 0) then impactedTerritory.AddArmies = intPoisonArmyDamage; end
 
 	-- SU damage defined by: Mod.Settings.PoisonDamageFixedSpecialUnits & Mod.Settings.PoisonDamagePercentSpecialUnits
