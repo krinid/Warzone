@@ -25,7 +25,7 @@ function Client_PresentSettingsUI (rootParent)
 	else UI.CreateLabel (UImain).SetText ("  • Poison effects will only impact units directly resulting from playing of Poison cards");
 	end
 
-	UI.CreateLabel (UImain).SetText ("\n# cities destroyed by Poison: ".. Mod.Settings.NumCitiesDestroyedByPoison);
+	UI.CreateLabel (UImain).SetText ("\n# cities destroyed by Poison: ".. (Mod.Settings.NumCitiesDestroyedByPoison ~= nil and tostring (Mod.Settings.NumCitiesDestroyedByPoison or 0)));
 	if (Mod.Settings.NumCitiesDestroyedByPoison > 0) then UI.CreateLabel (UImain).SetText ("Cities are destroyed: " .. tostring (Mod.Settings.CitiesAreDestroyedEachTurn and "Each turn Poison is active" or "On first Poison impact turn only")); end
 
 	UI.CreateLabel (UImain).SetText("\nNumber of pieces to divide the card into: " .. Mod.Settings.PoisonPiecesNeeded);
