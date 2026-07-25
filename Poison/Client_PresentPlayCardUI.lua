@@ -25,6 +25,7 @@ end
 
 function play_Poison_card (game, cardInstance, playCard)
     print("[POISON] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+	local intCastRange = Mod.Settings.PoisonCastRange or 4000; --default to 4000 if not set in the mod settings (cast anywhere on map)
 
 	PoisonDialog = nil; --set global variable to nil, assign value in createDialog function
 	game.CreateDialog (createDialog);
@@ -42,6 +43,12 @@ function play_Poison_card (game, cardInstance, playCard)
 	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
 		if (TargetTerritoryID == nil) then
 			UI.Alert("No territory selected. Please select a territory.");
+			return;
+		end
+
+		local intDistanceToTargetTerritory = getDistanceBetweenTwoTerritories (game, TargetTerritoryID, intPlayerID_cardPlayer);
+		if (intDistanceToTargetTerritory == -1 or intDistanceToTargetTerritory > intCastRange) then
+			UI.Alert ("Selected territory must be within distance of " ..tostring (intCastRange).. " from a territory you own.");
 			return;
 		end
 		-- if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then
@@ -213,8 +220,8 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
     -- initialize BFS with all territories owned by mainPlayerID
     for terrID, terrObj in pairs (game.LatestStanding.Territories) do
         if (terrObj.OwnerPlayerID == mainPlayerID) then
-            arrTerrProcessed[terrID] = true;
-            table.insert(arrTerrListToProcess, terrID);
+            arrTerrProcessed [terrID] = true;
+            table.insert (arrTerrListToProcess, terrID);
         end
     end
 
@@ -253,4 +260,38 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
     end
 
     return arrTerrResults;
+end
+
+-- return integer distance between two territories
+-- returns:
+--   0  = same territory
+--   n  = number of hops between territories
+--   -1 = not reachable (shouldn't happen on valid maps, but safe)
+function getTerritoryDistance (game, sourceTerritoryID, targetTerritoryID)
+	if (sourceTerritoryID == targetTerritoryID) then return 0; end --same territory, distance is 0
+
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert (arrTerrListToProcess, sourceTerritoryID);
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if (neighbourTerrID == targetTerritoryID) then
+					return (intDepth); -- shortest path found
+				end
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+	return (-1); -- target is not reached from source
 end
