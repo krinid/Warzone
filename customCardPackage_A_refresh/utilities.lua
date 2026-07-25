@@ -1089,7 +1089,7 @@ function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
     return (arrTerrResults);
 end
 
--- returns array of territory IDs belonging to targetPlayerID (0=neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+-- returns array of territory IDs belonging to targetPlayerID (0=neutral, -1=all territories within distance regardless of which player or neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
 function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
   local arrTerrProcessed = {};        -- list of terrs already processed
     local arrTerrResults = {};          -- resultant list of matching terrs

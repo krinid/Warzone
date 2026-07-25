@@ -37,7 +37,8 @@ function play_Poison_card (game, cardInstance, playCard)
 	TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
 	TargetTerritoryClicked("Select the territory to spew Poison on.");
 
-	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, Mod.Settings.PoisonCastRange or 4000);
+	-- local arrValidTerrs = getTerritoriesWithinDistance (game, intPlayerID_cardPlayer, Mod.Settings.PoisonCastRange or 4000);
+	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (Game, intPlayerID_cardPlayer, -1, (Mod.Settings.PoisonImpactRange or 1));
 	game.HighlightTerritories (arrValidTerrs);
 
 	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
@@ -46,9 +47,9 @@ function play_Poison_card (game, cardInstance, playCard)
 			return;
 		end
 
-		local intDistanceToTargetTerritory = getDistanceBetweenTwoTerritories (game, TargetTerritoryID, intPlayerID_cardPlayer);
+		local intDistanceToTargetTerritory = getDistanceToPlayersNearestTerritory (game, TargetTerritoryID, intPlayerID_cardPlayer);
 		if (intDistanceToTargetTerritory == -1 or intDistanceToTargetTerritory > intCastRange) then
-			UI.Alert ("Selected territory must be within distance of " ..tostring (intCastRange).. " from a territory you own.");
+			UI.Alert ("Selected territory must be within distance of " ..tostring (intCastRange).. " from a territory you own. Selected territory is distance of " ..tostring (intDistanceToTargetTerritory).. ".");
 			return;
 		end
 		-- if (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= game.Us.ID) then
@@ -85,38 +86,9 @@ function TerritoryClicked (terrDetails)
 		TargetTerritoryInstructionLabel.SetText ("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
-		-- local arrImpactedTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (Game, intPlayerID_cardPlayer, 0, (Mod.Settings.PoisonImpactRange or 1) + 1);
 		local arrImpactedTerrs = getTerritoriesWithinDistance (Game, TargetTerritoryID, (Mod.Settings.PoisonImpactRange or 1));
 		Game.HighlightTerritories (arrImpactedTerrs);
 	end
-end
-
---return array list of territory IDs within specified distance from the target territory
-function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
-    local arrTerrProcessed = {}; --list of terrs already processed
-    local arrTerrResults = {}; --resultant list of terrs within specified distance
-    local arrTerrListToProcess = {}; --terrs remaining to be processed
-
-	local intDepth = 0;
-    arrTerrProcessed [targetTerritoryID] = true;
-    table.insert (arrTerrResults, targetTerritoryID);
-    table.insert (arrTerrListToProcess, targetTerritoryID);
-
-    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
-        local intNextTerrID = {};
-        for _, terrID in ipairs(arrTerrListToProcess) do
-            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
-                if not arrTerrProcessed [neighbourTerrID] then
-                    arrTerrProcessed [neighbourTerrID] = true;
-                    table.insert(arrTerrResults, neighbourTerrID);
-                    table.insert(intNextTerrID, neighbourTerrID);
-                end
-            end
-        end
-        arrTerrListToProcess = intNextTerrID;
-        intDepth = intDepth + 1;
-    end
-    return (arrTerrResults);
 end
 
 function getColours()
@@ -209,7 +181,7 @@ function createJumpToLocationObject (game, targetTerritoryID)
 		game.Map.Territories[targetTerritoryID].MiddlePointY));
 end
 
--- returns array of territory IDs belonging to targetPlayerID (0=neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+-- returns array of territory IDs belonging to targetPlayerID (0=neutral, -1=all territories within distance regardless of which player or neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
 function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
   local arrTerrProcessed = {};        -- list of terrs already processed
     local arrTerrResults = {};          -- resultant list of matching terrs
@@ -220,8 +192,8 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
     -- initialize BFS with all territories owned by mainPlayerID
     for terrID, terrObj in pairs (game.LatestStanding.Territories) do
         if (terrObj.OwnerPlayerID == mainPlayerID) then
-            arrTerrProcessed [terrID] = true;
-            table.insert (arrTerrListToProcess, terrID);
+            arrTerrProcessed[terrID] = true;
+            table.insert(arrTerrListToProcess, terrID);
         end
     end
 
@@ -247,7 +219,7 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
                     arrTerrProcessed[neighbourTerrID] = true;
 
                     -- ownership filter
-                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+                    if (targetPlayerID == -1 or game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
                         table.insert(arrTerrResults, neighbourTerrID);
                     end
 
@@ -294,4 +266,68 @@ function getTerritoryDistance (game, sourceTerritoryID, targetTerritoryID)
 		arrTerrListToProcess = arrNextTerrList;
 	end
 	return (-1); -- target is not reached from source
+end
+
+-- return distance from specific territory to the nearest territory owned by specified player
+-- returns:
+--   intDistance, intClosestTerritoryID
+--   -1, nil  --> if no territory found (player has no territories / unreachable)
+function getDistanceToPlayersNearestTerritory (game, sourceTerritoryID, targetPlayerID)
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed[sourceTerritoryID] = true;
+	table.insert(arrTerrListToProcess, sourceTerritoryID);
+
+	-- check depth 0 case (source itself)
+	if (game.LatestStanding.Territories[sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					-- ownership check
+					if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+						return intDepth, neighbourTerrID; -- nearest match (guaranteed shortest)
+					end
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+
+	return -1, nil; -- player has no reachable territories
+end
+
+--return array list of territory IDs within specified distance from the target territory
+function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
+    local arrTerrProcessed = {}; --list of terrs already processed
+    local arrTerrResults = {}; --resultant list of terrs within specified distance
+    local arrTerrListToProcess = {}; --terrs remaining to be processed
+
+	local intDepth = 0;
+    arrTerrProcessed [targetTerritoryID] = true;
+    table.insert (arrTerrResults, targetTerritoryID);
+    table.insert (arrTerrListToProcess, targetTerritoryID);
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local intNextTerrID = {};
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+                if not arrTerrProcessed [neighbourTerrID] then
+                    arrTerrProcessed [neighbourTerrID] = true;
+                    table.insert(arrTerrResults, neighbourTerrID);
+                    table.insert(intNextTerrID, neighbourTerrID);
+                end
+            end
+        end
+        arrTerrListToProcess = intNextTerrID;
+        intDepth = intDepth + 1;
+    end
+    return (arrTerrResults);
 end
