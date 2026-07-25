@@ -278,8 +278,9 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 		local terrsToProcessNext = {};
 		table.insert (terrsToProcess, targetTerritoryID); --add the targetTerritoryID to the list of terrs to process
 		local boolFinishedProcessing = false;
+		local intPoisonImpactRange = Mod.Settings.PoisonImpactRange or 1; --default to 1 if not set in the mod settings
 
-		while (#terrsToProcess > 0 and intNeighbourLevel <= Mod.Settings.PoisonImpactRange) do
+		while (#terrsToProcess > 0 and intNeighbourLevel <= intPoisonImpactRange) do
 			for _, terrID in pairs (terrsToProcess) do
 				local terr = game.Map.Territories [terrID];
 				if (terr ~= nil) then
