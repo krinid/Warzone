@@ -1,1 +1,1 @@
-Allows players to gift cards and/or card pieces to other players.
+Allows players to transfer cards and/or card pieces to other players.

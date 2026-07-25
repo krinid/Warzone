@@ -10,6 +10,7 @@ function Client_PresentConfigureUI(rootParent)
 	Mod.Settings.PoisonDamagePercentArmies = Mod.Settings.PoisonDamagePercentArmies or 25; --0; --default to 0
 	Mod.Settings.PoisonDamageFixedSpecialUnits = Mod.Settings.PoisonDamageFixedSpecialUnits or 5; --default to 0
 	Mod.Settings.PoisonDamagePercentSpecialUnits = Mod.Settings.PoisonDamagePercentSpecialUnits or 10; --default to 10%
+	Mod.Settings.PoisonCastRange = Mod.Settings.PoisonCastRange or 3; --default to 3
 	Mod.Settings.PoisonImpactRange = Mod.Settings.PoisonImpactRange or 1; --default to 1 (doesn't spread)
 	Mod.Settings.PoisonSpreadRange = Mod.Settings.PoisonSpreadRange or 3; --default to 3
 	Mod.Settings.PoisonDamageAffectsAllAbilities = Mod.Settings.PoisonDamageAffectsAllAbilities == nil and true or Mod.Settings.PoisonDamageAffectsAllAbilities --default to true (affects all abilities, eg: Attack+DefensePower, Attack+DefensePower%, DamageAbsorption); false == only affects Health and Damage To Kill
@@ -41,10 +42,15 @@ function Client_PresentConfigureUI(rootParent)
 	UI.CreateLabel (mainUI).SetText("  • % damage is applied first, then fixed damage is applied");
 	UI.CreateLabel (mainUI).SetText("  • eg: if configured to 25% damage + 10 fixed damage, a targeted Special Unit with 100 Health or DamageToKill would be reduced to 65 (100*0.75-10)]");
 
+	local horzPoisonCastRange = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzPoisonCastRange).SetText ("Cast range: ").SetPreferredWidth (300);
+	NIFcastRange = UI.CreateNumberInputField (horzPoisonCastRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.PoisonCastRange);
+	UI.CreateLabel (mainUI).SetText("  • how far Poison can be cast from a territory you own");
+
 	local horzPoisonImpactRange = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzPoisonImpactRange).SetText ("Impact range: ").SetPreferredWidth (300);
 	NIFimpactRange = UI.CreateNumberInputField (horzPoisonImpactRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.PoisonImpactRange);
-	UI.CreateLabel (mainUI).SetText("  • how many neighbouring territories the poison will spread to upon impact");
+	UI.CreateLabel (mainUI).SetText("  • how many neighbouring territories the poison hits on impact; 0 = epicenter only; 1 = all neighbouring territories; 2 = all neighbouring territories + their neighbours, etc");
 
 	local horzPoisonSpreadRange = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzPoisonSpreadRange).SetText ("Spread range: ").SetPreferredWidth (300);

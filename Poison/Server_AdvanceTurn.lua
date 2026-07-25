@@ -267,8 +267,43 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 	--Poison only causes impact iff not protected by Shield
 	local boolBlockedByShield = territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID]);
 	if (boolBlockedByShield == false) then
-		impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --add Poison custom structure to target terr
-		apply_Poison_Damage_to_Territory (game, order.PlayerID, order.Description, addNewOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --apply damage to armies & SUs on the target terr, with strength 1.0 (full strength)
+		-- impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --add Poison custom structure to target terr
+		-- apply_Poison_Damage_to_Territory (game, order.PlayerID, order.Description, addNewOrder, game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID], impactedTerritory, 1.0); --apply damage to armies & SUs on the target terr, with strength 1.0 (full strength)
+
+		--Mod.Settings.PoisonCastRange, Mod.Settings.PoisonImpactRange
+		--apply Poison to all bordering territories within the range specified by Mod.Settings.PoisonImpactRange, ensure not to double apply by backtracking through connections leading to already processed neighbours
+		local intNeighbourLevel = 0; --1st level '0' is processing of the target territory itself
+		local terrsToProcess = {}; --store terr IDs to process the neighbour connections of here; remove it from the list once processed; use table.insert/table.remove to add/remove from the list
+		local terrsAlreadyProcessed = {}; --store terr IDs that have already had poison applied here to check against to avoid dupe applications; use indeces with terrID as index
+		local terrsToProcessNext = {};
+		table.insert (terrsToProcess, targetTerritoryID); --add the targetTerritoryID to the list of terrs to process
+		local boolFinishedProcessing = false;
+
+		while (#terrsToProcess > 0 and intNeighbourLevel <= Mod.Settings.PoisonImpactRange) do
+			for _, terrID in pairs (terrsToProcess) do
+				local terr = game.Map.Territories [terrID];
+				if (terr ~= nil) then
+					local impactedTerritory = WL.TerritoryModification.Create (terrID);
+					impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, game.ServerGame.LatestTurnStanding.Territories [terrID], impactedTerritory, 1.0); --add Poison custom structure to target terr
+					apply_Poison_Damage_to_Territory (game, order.PlayerID, order.Description, addNewOrder, game.ServerGame.LatestTurnStanding.Territories [terrID], impactedTerritory, 1.0); --apply damage to armies & SUs on the target terr, with strength 1.0 (full strength)
+
+					for connID, _ in pairs (terr.ConnectedTo) do
+					--connID is a neighbour of terrID and has not yet been processed, so apply Poison to it and add it to the list of terrs to process next
+						if (terrsAlreadyProcessed [connID] == nil) then
+							terrsAlreadyProcessed [connID] = true;
+							table.insert (terrsToProcessNext, connID); --add this neighbour to the list of terrs to process next
+						end
+					end
+				end
+			end
+
+			terrsToProcess = terrsToProcessNext;
+			terrsToProcessNext = {};
+			intNeighbourLevel = intNeighbourLevel + 1;
+
+		end
+
+
 	else
 		--Poison was blocked by Shield, so no damage is done; enter an order indicating what happened
 		local event = WL.GameOrderEvent.Create (order.PlayerID, order.Description .. " (blocked by Shield)", {}, {impactedTerritory});

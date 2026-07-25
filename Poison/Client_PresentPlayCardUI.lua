@@ -5,12 +5,12 @@ function Client_PresentPlayCardUI(game, cardInstance, playCard)
 
 	if (game.Us == nil) then return; end --technically not required b/c spectators could never initiative this function (requires playing a Card, which they can't do b/c they're not in the game)
 
-    strPlayerName_cardPlayer = game.Us.DisplayName(nil, false);
+    strPlayerName_cardPlayer = game.Us.DisplayName (nil, false);
     intPlayerID_cardPlayer = game.Us.PlayerID;
-    strCardBeingPlayed = game.Settings.Cards[cardInstance.CardID].Name;
+    strCardBeingPlayed = game.Settings.Cards [cardInstance.CardID].Name;
     print ("PLAY CARD="..strCardBeingPlayed.."::");
 
-    if (strCardBeingPlayed=="Poison") then play_Poison_card (game, cardInstance, playCard); end
+    if (strCardBeingPlayed == "Poison") then play_Poison_card (game, cardInstance, playCard); end
 end
 
 function TargetCardClicked (strText, cards)
@@ -23,7 +23,7 @@ function createDialog (rootParent, setMaxSize, setScrollable, game, close)
 	return (PoisonDialog); --unfortunately this return value is ignored b/c it is passed back to the calling parameter of game.CreateDialog and thus need to pass the real value back as a global variable
 end
 
-function play_Poison_card(game, cardInstance, playCard)
+function play_Poison_card (game, cardInstance, playCard)
     print("[POISON] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
 
 	PoisonDialog = nil; --set global variable to nil, assign value in createDialog function
@@ -35,6 +35,9 @@ function play_Poison_card(game, cardInstance, playCard)
 	TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("Button|Cyan"));
 	TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
 	TargetTerritoryClicked("Select the territory to spew Poison on.");
+
+	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, Mod.Settings.PoisonCastRange or 4000);
+	game.HighlightTerritories (arrValidTerrs);
 
 	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
 		if (TargetTerritoryID == nil) then
@@ -53,33 +56,6 @@ function play_Poison_card(game, cardInstance, playCard)
 		playCard (strPoisonMessage, 'Poison|' .. TargetTerritoryID, WL.TurnPhase.BombCards, territoryAnnotation, jumpToActionSpotOpt);
 		PoisonDialog.close ();
 	end);
-end
-
-function TargetPlayerClicked_Fizz (strText)
-	local options = map (filter(Game.Game.Players, IsPotentialTarget), PlayerButton);
-	UI.PromptFromList(strText, options);
-end
-
---Determines if the player is one we can propose an alliance to.
-function IsPotentialTarget (player)
-	if (Game.Us.ID == player.ID) then return false end; -- can't select self
-
-	if (player.State ~= WL.GamePlayerState.Playing) then return false end; --skip players not alive anymore, or that declined the game
-
-	--if (Game.Settings.SinglePlayer) then return true end; --in single player, allow proposing with everyone
-    --return not player.IsAI; --In multi-player, never allow proposing with an AI.
-    return (player.State == WL.GamePlayerState.Playing); --return true if they are still playing, false otherwise
-end
-
-function PlayerButton (player)
-	local name = player.DisplayName(nil, false);
-	local ret = {};
-	ret["text"] = name;
-	ret["selected"] = function()
-		TargetPlayerBtn.SetText(name);
-		TargetPlayerID = player.ID;
-	end
-	return ret;
 end
 
 function TargetTerritoryClicked (strLabelText)
@@ -102,24 +78,10 @@ function TerritoryClicked (terrDetails)
 		TargetTerritoryInstructionLabel.SetText ("Selected territory: " .. terrDetails.Name);
 		TargetTerritoryID = terrDetails.ID;
         TargetTerritoryName = terrDetails.Name;
+		-- local arrImpactedTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (Game, intPlayerID_cardPlayer, 0, (Mod.Settings.PoisonImpactRange or 1) + 1);
+		local arrImpactedTerrs = getTerritoriesWithinDistance (Game, TargetTerritoryID, (Mod.Settings.PoisonImpactRange or 1));
+		Game.HighlightTerritories (arrImpactedTerrs);
 	end
-end
-
-function TargetPlayerClicked (strTextLabel)
-	local players = filter (Game.Game.Players, function (p) return p.ID ~= Game.Us.ID end);
-	local options = map (players, PlayerButton);
-	UI.PromptFromList (strTextLabel, options);
-end
-
-function PlayerButton (player)
-	local name = player.DisplayName (nil, false);
-	local ret = {};
-	ret["text"] = name;
-	ret["selected"] = function()
-		TargetPlayerBtn.SetText (name);
-		TargetPlayerID = player.ID;
-	end
-	return ret;
 end
 
 --return array list of territory IDs within specified distance from the target territory
@@ -238,4 +200,57 @@ function createJumpToLocationObject (game, targetTerritoryID)
 		game.Map.Territories[targetTerritoryID].MiddlePointY,
 		game.Map.Territories[targetTerritoryID].MiddlePointX,
 		game.Map.Territories[targetTerritoryID].MiddlePointY));
+end
+
+-- returns array of territory IDs belonging to targetPlayerID (0=neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
+  local arrTerrProcessed = {};        -- list of terrs already processed
+    local arrTerrResults = {};          -- resultant list of matching terrs
+    local arrTerrListToProcess = {};    -- terrs remaining to be processed
+
+    local intDepth = 0;
+
+    -- initialize BFS with all territories owned by mainPlayerID
+    for terrID, terrObj in pairs (game.LatestStanding.Territories) do
+        if (terrObj.OwnerPlayerID == mainPlayerID) then
+            arrTerrProcessed[terrID] = true;
+            table.insert(arrTerrListToProcess, terrID);
+        end
+    end
+
+    -- if main player owns no territories, return empty result
+    if (#arrTerrListToProcess == 0) then
+        return arrTerrResults;
+    end
+
+    -- -- depth 0 check (only matters if mainPlayerID == targetPlayerID)
+    -- if (mainPlayerID == targetPlayerID) then
+    --     for _, terrID in ipairs(arrTerrListToProcess) do
+    --         table.insert(arrTerrResults, terrID);
+    --     end
+    -- end
+
+    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+        local arrNextTerrList = {};
+        intDepth = intDepth + 1;
+
+        for _, terrID in ipairs(arrTerrListToProcess) do
+            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+                if not arrTerrProcessed[neighbourTerrID] then
+                    arrTerrProcessed[neighbourTerrID] = true;
+
+                    -- ownership filter
+                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+                        table.insert(arrTerrResults, neighbourTerrID);
+                    end
+
+                    table.insert(arrNextTerrList, neighbourTerrID);
+                end
+            end
+        end
+
+        arrTerrListToProcess = arrNextTerrList;
+    end
+
+    return arrTerrResults;
 end

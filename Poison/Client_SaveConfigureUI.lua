@@ -18,8 +18,9 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.PoisonDamagePercentArmies = NIFarmiesKilledPercentInput.GetValue (); --permit <0 to enable 'healing poison'
 	Mod.Settings.PoisonDamageFixedSpecialUnits = NIFspecialUnitsKilledInput.GetValue (); --permit <0 to enable 'healing poison'
 	Mod.Settings.PoisonDamagePercentSpecialUnits = NIFspecialUnitsKilledPercentInput.GetValue (); --permit <0 to enable 'healing poison'
-	Mod.Settings.PoisonImpactRange = math.max (NIFimpactRange.GetValue (), 0); --cannot be less than 0
-	Mod.Settings.PoisonSpreadRange = math.max (NIFspreadRange.GetValue (), 0); --cannot be less than 0
+	Mod.Settings.PoisonCastRange = math.max (NIFcastRange.GetValue (), -1); -- -1 indicates that can be cast anywhere on map w/o limitations; 0 = can only cast poison on territories you own yourself
+	Mod.Settings.PoisonImpactRange = math.max (NIFimpactRange.GetValue (), 0); --cannot be less than 0; 0 = spreads to no territories upon impact
+	Mod.Settings.PoisonSpreadRange = math.max (NIFspreadRange.GetValue (), 0); --cannot be less than 0; 0 = carries to no territories
 
 	Mod.Settings.PoisonDamageAffectsAllAbilities = cboxPoisonDamageAffectsAllAbilities.GetIsChecked ();
 	Mod.Settings.PoisonAffectsOtherModAbilities = cboxPoisonAffectsOtherModAbilities.GetIsChecked ();
