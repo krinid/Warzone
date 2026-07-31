@@ -38,7 +38,7 @@ function play_Poison_card (game, cardInstance, playCard)
 	TargetTerritoryClicked("Select the territory to spew Poison on.");
 
 	-- local arrValidTerrs = getTerritoriesWithinDistance (game, intPlayerID_cardPlayer, Mod.Settings.PoisonCastRange or 4000);
-	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (Game, intPlayerID_cardPlayer, -1, (Mod.Settings.PoisonImpactRange or 1));
+	local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (Game, intPlayerID_cardPlayer, -1, (Mod.Settings.PoisonCastRange or 1));
 	game.HighlightTerritories (arrValidTerrs);
 
 	UI.CreateButton (vert).SetText ("Play Card").SetColor (getColourCode ("Button|Green")).SetOnClick (function()
@@ -67,7 +67,7 @@ function play_Poison_card (game, cardInstance, playCard)
 end
 
 function TargetTerritoryClicked (strLabelText)
-	UI.InterceptNextTerritoryClick(TerritoryClicked);
+	UI.InterceptNextTerritoryClick (TerritoryClicked);
 	if strLabelText ~= nil then TargetTerritoryInstructionLabel.SetText(strLabelText); end --strLabelText==nil indicates that the label wasn't specified, reason is b/c was already applied in a previous operation, that this is a re-select of a territory, so no need to reapply the label as it's already there
 	TargetTerritoryBtn.SetInteractable(false);
 end
@@ -188,6 +188,7 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
     local arrTerrListToProcess = {};    -- terrs remaining to be processed
 
     local intDepth = 0;
+	print ("[HIGHLIGHT TERRS] max distance " .. tostring (intMaxDistance) .. ", Mod setting " ..tostring (Mod.Settings.PoisonCastRange).. ", from player " .. tostring (mainPlayerID) .. " to player " .. tostring (targetPlayerID));
 
     -- initialize BFS with all territories owned by mainPlayerID
     for terrID, terrObj in pairs (game.LatestStanding.Territories) do
