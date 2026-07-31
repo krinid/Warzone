@@ -6,10 +6,8 @@ function Client_PresentSettingsUI (rootParent)
 	UI.CreateLabel (UImain).SetText("Damage - Armies - Percentage: " .. Mod.Settings.PoisonDamagePercentArmies .."%");
 	UI.CreateLabel (UImain).SetText("Damage - Special Units - Fixed amount: " .. Mod.Settings.PoisonDamageFixedSpecialUnits);
 	UI.CreateLabel (UImain).SetText("Damage - Special Units - Percentage: " .. Mod.Settings.PoisonDamagePercentSpecialUnits .."%");
-	if (Mod.Settings.PoisonCastRange ~= nil) then UI.CreateLabel (UImain).SetText("\nCast range: " .. Mod.Settings.PoisonCastRange); end --old variable name, not used anymore, after existing games using it end, can remove this
-	UI.CreateLabel (UImain).SetText("• distance from a territory the caster owns that poison be casted");
-	if (Mod.Settings.PoisonImpactRange ~= nil) then UI.CreateLabel (UImain).SetText("Impact range: " .. Mod.Settings.PoisonImpactRange); end
-	UI.CreateLabel (UImain).SetText("• how many neighbouring territories the poison will spread to upon impact");
+	if (Mod.Settings.PoisonCastRange ~= nil) then UI.CreateLabel (UImain).SetText("\nCast range: " .. Mod.Settings.PoisonCastRange); UI.CreateLabel (UImain).SetText("• distance from a territory the caster owns that poison be casted"); end
+	if (Mod.Settings.PoisonImpactRange ~= nil) then UI.CreateLabel (UImain).SetText("Impact range: " .. Mod.Settings.PoisonImpactRange); UI.CreateLabel (UImain).SetText("• how many neighbouring territories the poison will spread to upon impact"); end
 	if (Mod.Settings.PoisonSpreadRange ~= nil) then UI.CreateLabel (UImain).SetText("Spread range: " .. Mod.Settings.PoisonSpreadRange); UI.CreateLabel (UImain).SetText ("• how many neighbouring territories the poison can spread to if carried"); end
 
 	UI.CreateEmpty (UImain);
