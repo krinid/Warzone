@@ -54,7 +54,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		end
 	--check if order is a transfer or an attack of at least 1 army from a territory that has Poison on it, and if so, spread Poison to the target territory
 	-- elseif (order.proxyType == 'GameOrderAttackTransfer' and (((orderResult.IsAttack == true and orderResult.DefendingArmiesKilled.IsEmpty == false) or orderResult.IsSuccessful == true) and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0)) then
-	elseif (order.proxyType == 'GameOrderAttackTransfer' and orderResult.IsAttack == true and orderResult.IsSuccessful == true and orderResult.ActualArmies.IsEmpty == false and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0) then
+	elseif (order.proxyType == 'GameOrderAttackTransfer' --[[ and orderResult.IsAttack == true ]] and orderResult.IsSuccessful == true and orderResult.ActualArmies.IsEmpty == false and countStructures (game.ServerGame.LatestTurnStanding.Territories [order.From], strPoisonNameText) > 0) then
 		local poisonData = Mod.PublicGameData.PoisonData or {};
 		print ("[POISON] spread to " ..order.To.. ", poison present on target terr: " ..tostring (poisonData [order.From] ~= nil));
 
