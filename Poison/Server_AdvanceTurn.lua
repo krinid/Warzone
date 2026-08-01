@@ -85,7 +85,11 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 	--GameOrderReceiveCard, GameOrderStateTransition, and ActiveCardWoreOff
 	elseif (order.proxyType == 'GameOrderStateTransition') then
 		print ("[NEW ORDER TYPE] [GameOrderStateTransition] player " ..order.PlayerID.. ", New state: " ..order.NewState.. "/" ..tostring (WL.GamePlayerState.ToString (order.NewState)).. ", TakingOverForAI " ..tostring (order.TakingOverForAI).. ", TurningIntoAI: " ..tostring (order.TurningIntoAI));
-		if (order.NewState == WL.GamePlayerState.Eliminated) then print ("[PLAYER ELIMINATED] " .."player " ..order.PlayerID);
+		if (order.NewState == WL.GamePlayerState.Eliminated) then
+			print ("[PLAYER ELIMINATED] " .."player " ..order.PlayerID);
+			-- addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "TEST Player eliminated"), false);
+			-- for k,v in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+			-- end
 		elseif (order.TakingOverForAI == true) then print ("[PLAYER RECLAIMING CONTROL FROM AI] " .."player " ..order.PlayerID);
 		elseif (order.TurningIntoAI == true) then print ("[AI TAKING OVER FOR PLAYER] " .."player " ..order.PlayerID);
 		end

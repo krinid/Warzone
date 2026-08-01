@@ -403,7 +403,7 @@ end
 function playerHasCard (playerID, cardID, game)
 	print ("player "..playerID);
 	if (playerID==0) then print ("playerID is neutral (has no cards)"); return nil; end
-	if (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
+	if (game.ServerGame.LatestTurnStanding.Cards[playerID] == nil or game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards==nil) then print ("WHOLE CARDS nil"); return nil; end
 	for k,v in pairs (game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards) do
 		if (v.CardID == cardID) then return k; end
 	end
