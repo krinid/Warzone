@@ -53,12 +53,14 @@ function apply_Commerce_Carryover_Tax (game, addOrder)
 		local intTaxAmount = math.floor (intTaxableAmount * intTaxRate + 0.5); --round to nearest whole gold
 		local intTaxAmount_GoldInHand = intTaxAmount;
 
-		if (intTaxAmount_GoldInHand > 0) then
+		print ("  EVAL player " ..tostring (playerID).. ", gold in hand " ..intGoldInHand.. ", gold carried over " ..intGoldInHand_Carryover.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount (full) " ..intTaxAmount.. --[[ ", tax amount (income) " ..tostring (intTaxAmount_Income)..  ]]", tax amount (gold in hand) " ..intTaxAmount_GoldInHand);
+		if (intTaxAmount_GoldInHand ~= 0) then
 		-- if (intTaxAmount_Income > 0 or intTaxAmount_GoldInHand > 0) then
-			print ("  player " ..tostring (playerID).. ", gold in hand " ..intGoldInHand.. ", gold carried over " ..intGoldInHand_Carryover.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount (full) " ..intTaxAmount.. ", tax amount (income) " ..tostring (intTaxAmount_Income).. ", tax amount (gold in hand) " ..intTaxAmount_GoldInHand);
+			print ("  TAX player " ..tostring (playerID).. ", gold in hand " ..intGoldInHand.. ", gold carried over " ..intGoldInHand_Carryover.. ", income " ..intIncome.. ", taxable amount " ..intTaxableAmount.. ", tax amount (full) " ..intTaxAmount.. --[[ ", tax amount (income) " ..tostring (intTaxAmount_Income)..  ]]", tax amount (gold in hand) " ..intTaxAmount_GoldInHand);
 			local arrTaxAmount_GoldInHand = {};
 			-- table.insert (arrIncomeMods, WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax"));
-			if (intTaxAmount_GoldInHand > 0) then arrTaxAmount_GoldInHand[playerID] = {}; arrTaxAmount_GoldInHand [playerID][WL.ResourceType.Gold] = math.max (0, intGoldInHand - intTaxAmount_GoldInHand); end --if income isn't high enough to cover the tax, take it from gold in hand but never go below 0 (it can break the game, player can't commit)
+			-- if (intTaxAmount_GoldInHand > 0) then 
+			arrTaxAmount_GoldInHand[playerID] = {}; arrTaxAmount_GoldInHand [playerID][WL.ResourceType.Gold] = math.max (0, intGoldInHand - intTaxAmount_GoldInHand); --if income isn't high enough to cover the tax, take it from gold in hand but never go below 0 (it can break the game, player can't commit)
 			addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmount_GoldInHand, {}));
 		end
 	end
