@@ -22,8 +22,8 @@ function Client_PresentConfigureUI(rootParent)
 	mainWin = "mainWindow"
     SetWindow(mainWin);
 
-    disallowDeployments = Mod.Settings.DoNotAllowDeployments or true; --default to true, deployments not allowed when encircled
-    removeArmies = Mod.Settings.RemoveArmiesFromEncircledTerrs or true; --default to true, reduce armies when encircled
+    disallowDeployments = Mod.Settings.DoNotAllowDeployments == nil and true or Mod.Settings.DoNotAllowDeployments; --default to true, deployments not allowed when encircled
+    removeArmies = Mod.Settings.RemoveArmiesFromEncircledTerrs == nil and true or Mod.Settings.RemoveArmiesFromEncircledTerrs; --default to true, reduce armies when encircled
     turnNeutral = Mod.Settings.TerritoriesTurnNeutral or false; --default to false, don't immediately turn terr neutral when encircled (this is too harsh)
     percentageLost = Mod.Settings.PercentageLost or 34; --default to 34% army reduction
 

@@ -194,6 +194,8 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 	if (intPoisonArmyDamage ~= 0) then impactedTerritory.AddArmies = intPoisonArmyDamage; end
 	if (intDuration == nil or intDuration <= 0) then intDuration = Mod.Settings.PoisonDuration; end
 	print ("[POISON impact - Army damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", damage " ..tostring (intPoisonArmyDamage) ..", ".. Mod.Settings.PoisonDamagePercentArmies*floatPoisonStrength.. "% damage, fixed damage " ..Mod.Settings.PoisonDamageFixedArmies*floatPoisonStrength);
+	local poisonData = Mod.PublicGameData.PoisonData or {};
+	local poisonRecord = poisonData [targetTerritory.ID];
 
 	-- SU damage defined by: Mod.Settings.PoisonDamageFixedSpecialUnits & Mod.Settings.PoisonDamagePercentSpecialUnits
 	-- Spread to bordering territories quantity Mod.Settings.PoisonDamageRange
@@ -243,6 +245,20 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 				-- print ("[SU dies - just remove it]")
 			end
 			table.insert (SUsToRemove, SU.ID);
+		end
+	end
+
+	--if poison is configured to (A) destroy cities and (B) destroy cities each turn, or (C) this is the 1st turn impact of poison, apply damage to cities
+	if (Mod.Settings.NumCitiesDestroyedByPoison > 0 and (Mod.Settings.CitiesAreDestroyedEachTurn == true or poisonRecord.turnApplied == game.Game.TurnNumber)) then
+		local intCurrentCityCount = (targetTerritory.Structures and targetTerritory.Structures [WL.StructureType.City]) or 0;
+		local intNumCitiesToDestroy = math.floor (Mod.Settings.NumCitiesDestroyedByPoison * floatPoisonStrength + 0.5); --destroy # of cities relative to poison strength, round up to nearest whole number
+		print ("[POISON - city damage calc] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", current cities " ..tostring (intCurrentCityCount) ..", num cities to destroy " ..tostring (intNumCitiesToDestroy) ..", strength " ..floatPoisonStrength.. ", resultant strength ".. Mod.Settings.NumCitiesDestroyedByPoison*floatPoisonStrength);
+
+		if (intCurrentCityCount > 0 and intNumCitiesToDestroy > 0) then
+			local intNewCityCount = math.max (0, intCurrentCityCount - intNumCitiesToDestroy);
+			local structures = impactedTerritory.SetStructuresOpt or {}; --targetTerritory.Structures or {};
+			structures [WL.StructureType.City] = intNewCityCount;
+			impactedTerritory.SetStructuresOpt = structures;
 		end
 	end
 
