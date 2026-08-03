@@ -26,7 +26,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 
 		if (strOperation == "Purchase") then
 			if (goldSpent > 0) then
-				createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent);
+				createBehemoth (game, order, addNewOrder, skipThisOrder, targetTerritoryID, goldSpent);
 			else
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
 				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
@@ -165,11 +165,13 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 	end
 end
 
-function createBehemoth (game, order, addNewOrder, targetTerritoryID, goldSpent)
+function createBehemoth (game, order, addNewOrder, skipThisOrder, targetTerritoryID, goldSpent)
 	local targetTerritoryStanding = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
 
 	if (targetTerritoryStanding.OwnerPlayerID ~= order.PlayerID) then
-		return; --can only buy a tank onto a territory you control
+		addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Failed to create Behemoth on "..game.Map.Territories[targetTerritoryID].Name, {}, {},{}), false); --use 'false' since we will skip the Behemoth creation order as it charges money to player that shouldn't be charged if Behemoth isn't created
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added; important to skip so Behemoth cost is refunded since the B wasn't created
+		return; --can only buy a Behemoth onto a territory you control
 	end
 
 	if (order.CostOpt == nil) then
