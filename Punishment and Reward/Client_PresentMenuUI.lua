@@ -168,6 +168,7 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	UI.CreateLabel (windowUI).SetText ("    • Income reduction: " ..tostring (incomeAdjustments.LongTermPunishmentUnits * 100).. "%").SetFlexibleWidth (1.0);
 	UI.CreateLabel (windowUI).SetText ("    • Army reduction: " ..tostring (incomeAdjustments.ArmyReduction*100).. "%").SetFlexibleWidth (1.0);
 	UI.CreateLabel (windowUI).SetText ("    • Territory reduction: " ..tostring (incomeAdjustments.TerritoryReduction*100).. "%").SetFlexibleWidth (1.0);
+	UI.CreateLabel (windowUI).SetText ("    • Special Unit damage: " ..tostring (incomeAdjustments.SUreductionRate*100).. "% [affects all properties: " ..tostring (incomeAdjustments.SUreductionAppliesToAllStats).. "]").SetFlexibleWidth (1.0);
 
 	UI.CreateLabel (windowUI).SetText ("\n• #Finished turns: " ..tostring (game.Game.TurnNumber-1).. "   • #Turns evaluated on: " ..tostring (incomeAdjustments.NumTurnsEvaluatedOn)).SetAlignment(WL.TextAlignmentOptions.Left).SetFlexibleWidth (1.0);
 	UI.CreateLabel (windowUI).SetText ("\nTurns where territory count didn't increase:").SetFlexibleWidth (1.0);
