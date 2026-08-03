@@ -565,7 +565,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Viridian"];
 	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
-	elseif (itemName=="Card|Beacon") then return getColours()[""]; --
+	elseif (itemName=="Card|Beacon") then return getColours()["Yellow"]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
@@ -575,6 +575,7 @@ function getColourCode (itemName)
 	--Beacon colors.Yellow, BW colors["Dark Gray"], tank card colors["Army Green"], smoke bomb1 & v2 colors["Dark Gray"], recon+, mystery colors["WZLight Blue"] , dms, poison colors.Lime, CP  colors["Sea Green"] colors["Apple Green"] colors["Screamin' Green"] Amazon Viridian Rain Forest
 	elseif (itemName=="Card|Smoke Bomb Card") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Mystery Card") then return getColours()["WZLight Blue"]; --
+	elseif (itemName=="Card|Barbed Wire Card") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Dead Man's Switch Card") then return getColours()["Artichoke"]; --
 	elseif (itemName=="Card|Poison") then return getColours()["Apple Green"]; --
 	elseif (itemName=="Card|Card Piece") then return getColours()["Screamin' Green"]; --

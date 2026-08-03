@@ -433,7 +433,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Resurrection") then return getColours()["Viridian"];
 	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
-	elseif (itemName=="Card|Beacon") then return getColours()[""]; --
+	elseif (itemName=="Card|Beacon") then return getColours()["Yellow"]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
@@ -444,6 +444,7 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Smoke Bomb Card") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Mystery Card") then return getColours()["WZLight Blue"]; --
 	elseif (itemName=="Card|Dead Man's Switch Card") then return getColours()["Artichoke"]; --
+	elseif (itemName=="Card|Barbed Wire Card") then return getColours()["Dark Gray"]; --
 	elseif (itemName=="Card|Poison") then return getColours()["Apple Green"]; --
 	elseif (itemName=="Card|Card Piece") then return getColours()["Screamin' Green"]; --
 	elseif (itemName=="Phase|Purchase") then return "#007700";
@@ -477,5 +478,6 @@ end
 function getColours()
     local colors = {}; -- Stores all the built-in colors (player colors only)
     colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+	colors.WZyellow = "#ABA500"; colors.WZgreen = "#198225"; colors["WZLight Blue"] = "#50B2E3"; colors.WZblue = "#242D9A"; colors.WZred = "#9A2929";
     return colors;
 end
