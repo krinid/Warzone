@@ -269,7 +269,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 		--if flag to block receiving card pieces @ end of turn is set, retract the card pieces that were given (revert card pieces & wholecards to the snapshot state)
 		if (incomeAdjustments.BlockCardPieceReceiving == true) then processCardRetractions (game, addOrder, ID); end
 		if (incomeAdjustments.ArmyReduction ~= 0) then reduceArmyCounts (game, addOrder, ID, incomeAdjustments.ArmyReduction); end
-		if (incomeAdjustments.SUreductionRate ~= 0) then reduceSpecialUnitCounts (game, addOrder, ID, incomeAdjustments.SUreductionRate); end
+		if (incomeAdjustments.SUreductionRate ~= 0) then reduceSpecialUnitCounts (game, addOrder, ID, incomeAdjustments.SUreductionRate, incomeAdjustments.SUreductionAppliesToAllStats); end
 	end
 
 	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
@@ -281,7 +281,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 end
 
 --reduce SU stats on territories owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
-function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreductionRate, boolSUpunishment_ApplyToAllStats, boolSUpunishment_AffectsAllStats)
+function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreductionRate, boolSUpunishment_ApplyToAllStats)
 -- function reduceSpecialUnitCounts (game, intPoisonPlayerID, strOrderDescription, addNewOrder, targetTerritory, impactedTerritory, floatPoisonStrength, intDuration)
 -- function reduceArmyCounts (game, addOrder, targetPlayerID, numArmyReductionPercent)
 
@@ -314,20 +314,20 @@ function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreduct
 					-- print ("[PRE]  Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
 					local intDamageToSU = 0;
 					if (builder.Health ~= nil) then
-						intDamageToSU = math.max (1, SU.Health * (1+numSUreductionRate));
-						builder.Health = intDamageToSU;
-						print ("[PUNISHMENT - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", damage " ..tostring (intDamageToSU) ..", ".. numSUreductionRate.. "% damage");
+						intDamageToSU = math.min (-1, SU.Health * (numSUreductionRate));
+						builder.Health = math.max (0, builder.Health + intDamageToSU);
+						print ("[PUNISHMENT - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
 					elseif (builder.DamageToKill ~= nil) then
-						intDamageToSU = math.max (1, SU.DamageToKill * (1+numSUreductionRate));
-						builder.DamageToKill = intDamageToSU;
-						print ("[PUNISHMENT - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", damage " ..tostring (intDamageToSU) ..", ".. numSUreductionRate.. "% damage");
+						intDamageToSU = math.min (-1, SU.DamageToKill * (numSUreductionRate));
+						builder.DamageToKill = math.max (0, SU.DamageToKill + intDamageToSU);
+						print ("[PUNISHMENT - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
 					end
 
 					--if setting to apply to all abilities is true, modify AttackPower, DefensePower, AttackPowerPercent, DefensePowerPercent, DamageAbsorption; ignores the SU Fixed Damage amount, reduce using only SU Percent Damage modifier
 					if (boolSUpunishment_ApplyToAllStats == true) then
-						if (builder.AttackPower ~= nil) then builder.AttackPower = math.max (1, SU.AttackPower * (1+numSUreductionRate)); end
-						if (builder.DefensePower ~= nil) then builder.DefensePower = math.max (1, SU.DefensePower * (1+numSUreductionRate)); end
-						if (builder.DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = math.max (1, SU.DamageAbsorbedWhenAttacked * (1+numSUreductionRate)); end
+						if (builder.AttackPower ~= nil) then builder.AttackPower = math.max (0, SU.AttackPower + math.min (-1, SU.AttackPower * numSUreductionRate)); end
+						if (builder.DefensePower ~= nil) then builder.DefensePower = math.max (0, SU.DefensePower + math.min (-1, SU.DefensePower * numSUreductionRate)); end
+						if (builder.DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = math.min (0, SU.DamageAbsorbedWhenAttacked + math.max (-1, SU.DamageAbsorbedWhenAttacked * (1+numSUreductionRate))); end
 						--DamageAbsorbedWhenAttacked is also ignored for Health based SUs, but not really relevant here
 					end
 					-- print ("[POST] Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
