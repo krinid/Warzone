@@ -561,8 +561,37 @@ function getColourCode (itemName)
 	elseif (itemName=="Card|Quicksand") then return getColours()["Saddle Brown"]; --
 	elseif (itemName=="Card|Forest Fire") then return getColours()["Orange Red"]; --
 	elseif (itemName=="Card|Wildfire") then return getColours()["Orange Red"]; --
-	elseif (itemName=="Card|Resurrection") then return getColours()["Goldenrod"]; --
+	elseif (itemName=="Card|Resurrection") then return getColours()["Viridian"];
 	elseif (itemName=="Card|Fort Card") then return getColours()["Donkey Brown"]; --
+	elseif (itemName=="Card|Beacon") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	-- elseif (itemName=="Card|") then return getColours()[""]; --
+	elseif (itemName=="Card|Recon+ Card") then return getColours()["Red"]; --
+	elseif (itemName=="Card|Tank Card") then return getColours()["Army Green"]; --
+	--Beacon colors.Yellow, BW colors["Dark Gray"], tank card colors["Army Green"], smoke bomb1 & v2 colors["Dark Gray"], recon+, mystery colors["WZLight Blue"] , dms, poison colors.Lime, CP  colors["Sea Green"] colors["Apple Green"] colors["Screamin' Green"] Amazon Viridian Rain Forest
+	elseif (itemName=="Card|Smoke Bomb Card") then return getColours()["Dark Gray"]; --
+	elseif (itemName=="Card|Mystery Card") then return getColours()["WZLight Blue"]; --
+	elseif (itemName=="Card|Dead Man's Switch Card") then return getColours()["Artichoke"]; --
+	elseif (itemName=="Card|Poison") then return getColours()["Apple Green"]; --
+	elseif (itemName=="Card|Card Piece") then return getColours()["Screamin' Green"]; --
+	elseif (itemName=="Phase|Purchase") then return "#007700";
+	elseif (itemName=="Phase|CardsWearOff") then return "#964B00";
+	elseif (itemName=="Phase|Discards") then return "#654321";
+	elseif (itemName=="Phase|OrderPriorityCards") then return getColours()["Yellow"];
+	elseif (itemName=="Phase|SpyingCards") then return getColours()["Red"];
+	elseif (itemName=="Phase|ReinforcementCards") then return getColours()["Dark Green"];
+	elseif (itemName=="Phase|Deploys") then return "#00BB00";
+	elseif (itemName=="Phase|BombCards") then return getColours()["Dark Magenta"];
+	elseif (itemName=="Phase|EmergencyBlockadeCards") then return getColours()["Royal Blue"];
+	elseif (itemName=="Phase|Airlift") then return "#777777";
+	elseif (itemName=="Phase|Gift") then return getColours()["Aqua"];
+	elseif (itemName=="Phase|Attacks") then return "#FF0000";
+	elseif (itemName=="Phase|BlockadeCards") then return getColours()["Blue"];
+	elseif (itemName=="Phase|DiplomacyCards") then return getColours()["Light Blue"];
+	elseif (itemName=="Phase|SanctionCards") then return getColours()["Purple"];
+	elseif (itemName=="Phase|ReceiveCards") then return "#005500";
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
