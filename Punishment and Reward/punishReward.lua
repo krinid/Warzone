@@ -7,6 +7,8 @@ punishmentIncrement = -0.1;
 cityAverageToleranceLevel = 0.25; --quantity of cities of a territory must be within this ratio of the average of (total cities)/(total territories) to receive the city bonus
 cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default tolerance% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
 --^^ this ok for both (A) and (B) or do they need separate ratios?
+SUpunishmentRate = -0.1; --the rate at which SU stats are reduced with punished; default to -10%
+SUpunishment_AllStats = false; --indicates whether Punishment applies to all stats (att/def power, etc) or just Health/DTK
 
 strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
 strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income, no card pieces";
