@@ -154,7 +154,7 @@ function createCastleSU (castlePower)
 	builder.DefensePower = castlePower;
 	builder.CombatOrder = 10001; --fights after armies and most SUs; castles don't defend armies or SUs on the territory, only the armies inside the castle itself
 	builder.Health = castlePower;
-	builder.CanBeGiftedWithGiftCard = false;
+	builder.CanBeGiftedWithGiftCard = true;
 	builder.CanBeTransferredToTeammate = false;
 	builder.CanBeAirliftedToSelf = false;
 	builder.CanBeAirliftedToTeammate = false;

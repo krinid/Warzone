@@ -269,6 +269,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 		--if flag to block receiving card pieces @ end of turn is set, retract the card pieces that were given (revert card pieces & wholecards to the snapshot state)
 		if (incomeAdjustments.BlockCardPieceReceiving == true) then processCardRetractions (game, addOrder, ID); end
 		if (incomeAdjustments.ArmyReduction ~= 0) then reduceArmyCounts (game, addOrder, ID, incomeAdjustments.ArmyReduction); end
+		if (incomeAdjustments.SUreductionRate ~= 0) then reduceSpecialUnitCounts (game, addOrder, ID, incomeAdjustments.SUreductionRate); end
 	end
 
 	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
@@ -277,6 +278,118 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 	-- crashNow ();
 	print ("[S_AT_E] END");
+end
+
+--reduce SU stats on territories owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
+function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreductionRate, boolSUpunishment_ApplyToAllStats, boolSUpunishment_AffectsAllStats)
+-- function reduceSpecialUnitCounts (game, intPoisonPlayerID, strOrderDescription, addNewOrder, targetTerritory, impactedTerritory, floatPoisonStrength, intDuration)
+-- function reduceArmyCounts (game, addOrder, targetPlayerID, numArmyReductionPercent)
+
+	-- local modifiedTerritories = {}; --table of all territories being modified
+	-- local numTerritoriesImpacted = 0;
+	-- local annotations = {}; --initialize annotations array to store annotations for each territory impacted by the SU punishment
+	-- local terrID_somewhereInThePunishment = nil; --to be set to one of the territories in the Punishment to write the "Punishment" annotation (as opposed to the "." ones for the other impacted areas)
+
+	--loop through territories to see if owned by current player & if so, apply Punishment damage of % numSUreductionRate
+	for targetTerritoryID, terr in pairs (game.ServerGame.LatestTurnStanding.Territories) do
+		if (terr.OwnerPlayerID == targetPlayerID and #terr.NumArmies.SpecialUnits > 0) then
+			-- local numArmies = terr.NumArmies.NumArmies;
+			local impactedTerritory = WL.TerritoryModification.Create (terr.ID);
+			print ("[PUNISHMENT - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU stats reduction rate ".. tostring (numSUreductionRate).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));
+
+			-- SU damage defined by: SUpunishmentRate & boolSUpunishment_AffectsAllStats set in punishReward.lua -- eventually to be Mod.Settings.xyz values
+			local SUsNewList = {}; --new list of SUs after applying Punishment SU damage
+			local SUsToRemove = {}; --list of SUs to remove after applying Punishment SU damage (b/c they are replaced by the ones in SUsNewList)
+			for _,SU in pairs (terr.NumArmies.SpecialUnits) do
+				--if SU is Commander or Boss, handle it separately  (must create a Custom SU to mimic these built-in SUs) --> actually just ignore these for now, need to figure out how to handle these special SUs
+				--if SU has Health, reduce the Health by the appropriate amount (must clone the SU and remove the current one)
+				--if SU is DamageToKill type, reduce the DamageToKill value by the appropriate amount (must clone the SU and remove the current one)
+				if (SU.proxyType == "Commander" or SU.proxyType == "Boss" or SU.proxyType == "Boss1" or SU.proxyType == "Boss2" or SU.proxyType == "Boss3" or SU.proxyType == "Boss4") then
+					--handle Commander/Boss SUs here
+					--but don't do anything for now; how should these special Built-In units be handled? They have fixed properties and can't be "weakened"; would have to recreate as a Custom SU which make break other aspects of the game related to those units
+					--so just do nothing until I can come up with a good idea for this case
+				elseif (SU.proxyType == "CustomSpecialUnit") then
+					local builder = WL.CustomSpecialUnitBuilder.CreateCopy (SU);
+					-- if (terrID_somewhereInThePunishment == nil) then terrID_somewhereInThePunishment = targetTerritoryID; end --set this to one of the territories in the Punishment to write the "Punishment" annotation (as opposed to the "." ones for the other impacted areas)
+					-- print ("[PRE]  Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
+					local intDamageToSU = 0;
+					if (builder.Health ~= nil) then
+						intDamageToSU = math.max (1, SU.Health * (1+numSUreductionRate));
+						builder.Health = intDamageToSU;
+						print ("[PUNISHMENT - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", damage " ..tostring (intDamageToSU) ..", ".. numSUreductionRate.. "% damage");
+					elseif (builder.DamageToKill ~= nil) then
+						intDamageToSU = math.max (1, SU.DamageToKill * (1+numSUreductionRate));
+						builder.DamageToKill = intDamageToSU;
+						print ("[PUNISHMENT - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", damage " ..tostring (intDamageToSU) ..", ".. numSUreductionRate.. "% damage");
+					end
+
+					--if setting to apply to all abilities is true, modify AttackPower, DefensePower, AttackPowerPercent, DefensePowerPercent, DamageAbsorption; ignores the SU Fixed Damage amount, reduce using only SU Percent Damage modifier
+					if (boolSUpunishment_ApplyToAllStats == true) then
+						if (builder.AttackPower ~= nil) then builder.AttackPower = math.max (1, SU.AttackPower * (1+numSUreductionRate)); end
+						if (builder.DefensePower ~= nil) then builder.DefensePower = math.max (1, SU.DefensePower * (1+numSUreductionRate)); end
+						if (builder.DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = math.max (1, SU.DamageAbsorbedWhenAttacked * (1+numSUreductionRate)); end
+						--DamageAbsorbedWhenAttacked is also ignored for Health based SUs, but not really relevant here
+					end
+					-- print ("[POST] Health " ..tostring (builder.Health).. ", DamageToKill " ..tostring (builder.DamageToKill).. ", Name " ..tostring (builder.Name));
+
+					local newSU = nil;
+					--if SU.Health is defined, SU.DamageToKill is ignored even if defined
+					-- if (builder.Health == nil and builder.DamageToKill ~= nil and builder.DamageToKill >= 0 or builder.Health ~= nil and builder.Health >= 0) then --this version of the IF creates SUs with 0 Health or 0 DTK when they have been reduced to 0 instead of killing them
+					if (builder.Health == nil and builder.DamageToKill ~= nil and builder.DamageToKill > 0 or builder.Health ~= nil and builder.Health > 0) then --this version of the IF kills SUs that have been reduced to 0 Health or 0 DTK
+						--SU is still alive, either DTK>0 or Health>0, so remove existing SU + add cloned/reduced SU to territory
+						newSU = builder.Build (); --create newSU
+						table.insert (SUsNewList, newSU);
+						-- print ("[SU survives - reduce & replace it]")
+					else
+						--SU died b/c either DTK==0 or Health==0, so just remove existing SU from territory and don't add a new SU
+						-- print ("[SU dies - just remove it]")
+					end
+					table.insert (SUsToRemove, SU.ID);
+				end
+			end
+
+			--if SUs were modified by Punishment, add the SU Removals/Additions to the event order
+			--if no SUs were modified and no army damage was done, don't add an event order
+			local strOrderDescription = "Punishment: " .. tostring (numSUreductionRate*100) .. "% Special Unit damage";
+			if (#SUsNewList == 0 and #SUsToRemove == 0) then
+				--no SUs to add or remove, just apply army damage
+				local event = WL.GameOrderEvent.Create (targetPlayerID, strOrderDescription, {}, {impactedTerritory});
+				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Punishment (SU)", 4, getColourInteger (200, 0, 0))};
+				addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
+			elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison)
+				local strPunishment = strOrderDescription;
+				impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
+				local event = WL.GameOrderEvent.Create (targetPlayerID, strPunishment, {}, {impactedTerritory});
+				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Punishment (SU)", 4, getColourInteger (200, 0, 0))};
+				addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
+			else
+				--SUs to add/remove
+				--add SUs to TO territory in blocks of max 4 SUs at a time per WZ order (WZ limitation)
+				local specialsToAdd = split_table_into_blocks (SUsNewList, 4); --split the Specials into blocks of 4, so that they can be added to the target territory in multiple orders
+
+				--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
+				for k,SUlistBlock in pairs (specialsToAdd) do
+					-- if (impactedTerritory == nil) then 
+					impactedTerritory.AddSpecialUnits = SUlistBlock; --add Specials to target territory
+					local event = nil;
+					local strPunishment = strOrderDescription;
+
+					if (k == 1) then
+						impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
+						-- event = WL.GameOrderEvent.Create (order.PlayerID, order.Description, {}, {impactedTerritory});
+					else
+						strPunishment = "[SU punishment damage]";
+					end
+					event = WL.GameOrderEvent.Create (targetPlayerID, strPunishment, {}, {impactedTerritory});
+					event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+					event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Punishment (SU)", 4, getColourInteger (200, 0, 0))};
+					addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
+				end
+			end
+		end
+	end
 end
 
 --reduce army counts on territories owned by targetPlayerID by % specified by numArmyReductionPercent
@@ -608,4 +721,25 @@ function getPlayerName(game, playerid)
 		end
 	end
 	return "[Error - Player ID not found,playerid==]"..tostring(playerid); --only reaches here if no player name was found but playerID >50 was provided
+end
+
+function split_table_into_blocks (data, blockSize)
+	local blocks = {};
+	for i = 1, #data, blockSize do
+		local block = {};
+		for j = i, math.min(i + blockSize - 1, #data) do
+			table.insert(block, data[j]);
+		end
+		table.insert(blocks, block);
+	end
+	return blocks;
+end
+
+function createJumpToLocationObject (game, targetTerritoryID)
+	if (game.Map.Territories[targetTerritoryID] == nil) then return WL.RectangleVM.Create (1,1,1,1); end --territory ID does not exist for this game/template/map, so just use 1,1,1,1 (should be on every map)
+	return (WL.RectangleVM.Create(
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY,
+		game.Map.Territories[targetTerritoryID].MiddlePointX,
+		game.Map.Territories[targetTerritoryID].MiddlePointY));
 end

@@ -8,7 +8,7 @@ cityAverageToleranceLevel = 0.25; --quantity of cities of a territory must be wi
 cityRewardIncrement = 0.01; --ratio of buff per city that fulfills (A) the tolerance requirement (with default tolerance% of av city/territory count) and (B) # territories with cities on them -- these are different bonuses and players collect both rewards separately
 --^^ this ok for both (A) and (B) or do they need separate ratios?
 SUpunishmentRate = -0.1; --the rate at which SU stats are reduced with punished; default to -10%
-SUpunishment_AllStats = false; --indicates whether Punishment applies to all stats (att/def power, etc) or just Health/DTK
+boolSUpunishment_AffectsAllStats = false; --indicates whether Punishment applies to all stats (att/def power, etc) or just Health/DTK
 
 strLongTermPunishmentL1 = "• 0-3 turns: no additional long term penalty";
 strLongTermPunishmentL2 = "• 4-6 turns: " ..tostring (1*punishmentIncrement*100).. "% income, no card pieces";
@@ -42,6 +42,8 @@ function assessLongTermPunishment (arrPlayerData, turnNumber)
 	incomeAdjustments.TerritoryReduction = 0; --reduction factor (0.05 for 5% reduction), applies to owned territories to be turned neutral (with additional blockaded armies? to avoid simple reclamation)
 	incomeAdjustments.ZeroArmiesGoNeutral = false; --whether or not territories with 0 armies post reduction go neutral or not
 	incomeAdjustments.BlockCardPieceReceiving = false; --whether to block card receiving pieces or not
+	incomeAdjustments.SUreductionRate = 0; --rate at which SU stats are reduced (0.1 for 10% reduction)
+	incomeAdjustments.SUreductionAppliesToAllStats = false; --whether or not SU stat reduction applies to all stats (att/def power, etc) or just Health/DTK; default to false
 
 	incomeAdjustments.CurrTurn = {};
 	incomeAdjustments.CurrTurn.Attacks = 0;
@@ -124,37 +126,48 @@ function assessLongTermPunishment (arrPlayerData, turnNumber)
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = SUpunishmentRate; --reduce SU stats by 1x SU punishment rate (10%)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=11) then -- 11 turns - regular 1U penalty (not defined here), +4U long term penalty, -30% armies on all territories
 		incomeAdjustments.LongTermPunishmentUnits = 4; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 3*punishmentIncrement; --reduce armies by 3PU
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = SUpunishmentRate; --reduce SU stats by 1x SU punishment rate (10%)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=12) then -- 12 turns - regular 1U penalty (not defined here), +5U long term penalty, -40% armies on all territories
 		incomeAdjustments.LongTermPunishmentUnits = 5; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 4*punishmentIncrement; --reduce armies by 4PU
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = 2*SUpunishmentRate; --reduce SU stats by 2x SU punishment rate (20%)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=13) then -- 13 turns - regular 1U penalty (not defined here), +6U long term penalty, -50% armies on all territories
 		incomeAdjustments.LongTermPunishmentUnits = 6; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 5*punishmentIncrement; --reduce armies by 5PU
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = 2*SUpunishmentRate; --reduce SU stats by 2x SU punishment rate (20%)
 	elseif (intNumConsecutiveTurnsWithNoIncrease <=14) then -- 14 turns - regular 1U penalty (not defined here), +7U long term penalty, -60% armies on all territories
 		incomeAdjustments.LongTermPunishmentUnits = 7; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 6*punishmentIncrement; --reduce armies by 6PU
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = 5*SUpunishmentRate; --reduce SU stats by 3x SU punishment rate (30%)
 	elseif (intNumConsecutiveTurnsWithNoIncrease >=15) then -- 15+ turns - regular 1U penalty (not defined here), +8U long term penalty, -75% armies on all territories
 		incomeAdjustments.LongTermPunishmentUnits = 8; --3 PU of punishment --  * punishmentIncrement;
 		incomeAdjustments.ArmyReduction = 8*punishmentIncrement; --reduce armies by 8PU
 		incomeAdjustments.TerritoryReduction = 0.05;
 		incomeAdjustments.ZeroArmiesGoNeutral = true;
 		incomeAdjustments.BlockCardPieceReceiving = true;
+		incomeAdjustments.SUreductionRate = 8*SUpunishmentRate; --reduce SU stats by 5x SU punishment rate (50%)
+		incomeAdjustments.SUreductionAppliesToAllStats = true; --apply SU reductions to all stats, not just Health/DTK
 	end
+	--DELME - for testing only
+	incomeAdjustments.SUreductionRate = 1*SUpunishmentRate; --DELME - for testing only
+	incomeAdjustments.SUreductionAppliesToAllStats = false; --apply SU reductions to all stats, not just Health/DTK
+	--DELME - for testing only
 
 	incomeAdjustments.NumTurnsWithNoIncrease = intTotalTurnsWithNoIncrease;
 	incomeAdjustments.NumConsecutiveTurnsWithNoIncrease = intNumConsecutiveTurnsWithNoIncrease;
