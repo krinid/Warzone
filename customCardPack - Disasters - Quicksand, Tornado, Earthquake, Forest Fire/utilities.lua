@@ -136,6 +136,45 @@ function addZeros(field, i)
 	end
 	return i;
 end
+
+function getBonusColor (game, bonusID)
+	local colourString = "#";
+	for i = 2, 4 do
+		colourString = colourString .. numberToHex (tonumber (game.Map.Bonuses [bonusID].Color [i]))
+	end
+	return colourString;
+end
+
+function numberToHex (value)
+	local lookUpList = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+	local returnString = "";
+	for i = 1, 16 do
+		if (value - (16 * i) < 0) then
+			returnString = returnString .. lookUpList [i];
+			value = value - (16 * (i - 1));
+			break;
+		end
+	end
+	if (value == 0) then
+		returnString = returnString .. lookUpList [1];
+	else
+		for i = 1, 16 do
+			if (value - i == 0) then
+				returnString = returnString .. lookUpList [i+1];
+				break;
+			end
+		end
+	end
+	return returnString;
+end
+
+function getBonusValue (game, bonusID)
+	if (game.Settings.OverriddenBonuses [bonusID] ~= nil) then
+		return game.Settings.OverriddenBonuses [bonusID];
+	else
+		return game.Map.Bonuses [bonusID].Amount;
+	end
+end
 --- END of Dutch's functions
 
 --- START of dabo's functions
