@@ -1,0 +1,9 @@
+Adds customization for Bomb Cards whereby damage applied is a combination of:
+(A) % damage dealt (0% - 100%)
+(B) fixed damage (any integer)
+
+% damage is applied first, then fixed damage is applied
+
+Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb  hits
+
+Bombs can also be configured to impact at end of turn instead at start of turn
