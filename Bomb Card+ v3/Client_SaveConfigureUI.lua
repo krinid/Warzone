@@ -21,5 +21,5 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.NumCitiesDestroyedByBombPlay = NIFnumCitiesDestroyedByBomb.GetValue ();
 
 	local strBombPlusDesc = get_BombPlus_description ();
-	Mod.Settings.BombCardPlusID = addCard ("Time Bomb", strBombPlusDesc, "FIXME FIXME Time Bomb_130x180.png", Mod.Settings.BombPlusPiecesNeeded, Mod.Settings.BombPlusPiecesPerTurn, Mod.Settings.BombPlusStartPieces, Mod.Settings.BombPlusCardWeight);
+	Mod.Settings.BombCardPlusID = addCard ("Bomb+ Card", strBombPlusDesc, "Bomb Card+ v2_130x180.png", Mod.Settings.BombPlusPiecesNeeded, Mod.Settings.BombPlusPiecesPerTurn, Mod.Settings.BombPlusStartPieces, Mod.Settings.BombPlusCardWeight);
 end

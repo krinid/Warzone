@@ -1,20 +1,30 @@
 function get_BombPlus_description ()
 	local strBombPlusDesc = "Target a neighbouring enemy territory to inflict ";
-	if (Mod.Settings.killPercentage == 0 and Mod.Settings.armiesKilled == 0) then strBombPlusDesc = strBombPlusDesc .. "0 ";
-	elseif (Mod.Settings.killPercentage ~= 0 and Mod.Settings.armiesKilled == 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.killPercentage).. "% ";
-	elseif (Mod.Settings.killPercentage == 0 and Mod.Settings.armiesKilled ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.armiesKilled).. " ";
-	elseif (Mod.Settings.killPercentage ~= 0 and Mod.Settings.armiesKilled ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.killPercentage).. "% + " ..tostring (Mod.Settings.armiesKilled).. " ";
+	if (Mod.Settings.ArmyDamagePercent == 0 and Mod.Settings.ArmyDamageFixed == 0) then strBombPlusDesc = strBombPlusDesc .. "no ";
+	elseif (Mod.Settings.ArmyDamagePercent ~= 0 and Mod.Settings.ArmyDamageFixed == 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.ArmyDamagePercent).. "% ";
+	elseif (Mod.Settings.ArmyDamagePercent == 0 and Mod.Settings.ArmyDamageFixed ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.ArmyDamageFixed).. " ";
+	elseif (Mod.Settings.ArmyDamagePercent ~= 0 and Mod.Settings.ArmyDamageFixed ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.ArmyDamagePercent).. "% + " ..tostring (Mod.Settings.ArmyDamageFixed).. " ";
 	end
 
-	strBombPlusDesc = strBombPlusDesc .. "damage.\n\n";
+	strBombPlusDesc = strBombPlusDesc .. "damage to armies, and ";
 
-	if (Mod.Settings.EmptyTerritoriesGoNeutral == true) then strBombPlusDesc = strBombPlusDesc .. "If the target territory is reduced to 0 armies, it will turn neutral ";
-		if (Mod.Settings.SpecialUnitsPreventNeutral == true) then strBombPlusDesc = strBombPlusDesc .."unless a Special Unit is present. ";
-		else strBombPlusDesc = strBombPlusDesc .."and you will lose control of any Special Units present at that time. ";
+	if (Mod.Settings.SUdamagePercent == 0 and Mod.Settings.SUdamageFixed == 0) then strBombPlusDesc = strBombPlusDesc .. "no ";
+	elseif (Mod.Settings.SUdamagePercent ~= 0 and Mod.Settings.SUdamageFixed == 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.SUdamagePercent).. "% ";
+	elseif (Mod.Settings.SUdamagePercent == 0 and Mod.Settings.SUdamageFixed ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.SUdamageFixed).. " ";
+	elseif (Mod.Settings.SUdamagePercent ~= 0 and Mod.Settings.SUdamageFixed ~= 0) then strBombPlusDesc = strBombPlusDesc ..tostring (Mod.Settings.SUdamagePercent).. "% + " ..tostring (Mod.Settings.SUdamageFixed).. " ";
+	end
+
+	strBombPlusDesc = strBombPlusDesc .. "damage to Special Units.\n\n";
+
+	if (Mod.Settings.EmptyTerritoriesGoNeutral == true) then
+		strBombPlusDesc = strBombPlusDesc .. "If the target territory is reduced to 0 armies";
+		if (Mod.Settings.SpecialUnitsPreventNeutral == true) then strBombPlusDesc = strBombPlusDesc .." and 0 Special Units"; end
+		strBombPlusDesc = strBombPlusDesc ..", it will turn neutral"
+		if (Mod.Settings.SpecialUnitsPreventNeutral == false) then strBombPlusDesc = strBombPlusDesc .." and you will lose control of any Special Units present on the territory at that time.";
 		end
 	end
 
-	strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..WL.TurnPhase.ToString (tonumber ((Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed ~= nil and Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase.";
+	strBombPlusDesc = strBombPlusDesc .. "\n\nThis card will execute during the '" ..WL.TurnPhase.ToString (tonumber (Mod.Settings.BombImplementationPhase)).. "' turn phase.";
 	-- strBombPlusDesc = strBombPlusDesc .. "Special Units do not take damage.\n\nThis card will execute during the '" ..(tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards))).. "' turn phase.";
 	-- UI.Alert ("BombImplementationPhase " ..tostring (Mod.Settings.BombImplementationPhase).. ", " ..tostring (Mod.Settings.delayed) .." --> ".. strBombPlusDesc);
 	return (strBombPlusDesc);

@@ -268,8 +268,8 @@ function Server_AdvanceTurn_End(game, addOrder)
 
 		--if flag to block receiving card pieces @ end of turn is set, retract the card pieces that were given (revert card pieces & wholecards to the snapshot state)
 		if (incomeAdjustments.BlockCardPieceReceiving == true) then processCardRetractions (game, addOrder, ID); end
-		if (incomeAdjustments.ArmyReduction ~= 0) then reduceArmyCounts (game, addOrder, ID, incomeAdjustments.ArmyReduction); end
-		if (incomeAdjustments.SUreductionRate ~= 0) then reduceSpecialUnitCounts (game, addOrder, ID, incomeAdjustments.SUreductionRate, incomeAdjustments.SUreductionAppliesToAllStats); end
+		if (incomeAdjustments.ArmyReduction ~= 0) then applyArmyDamage (game, addOrder, ID, incomeAdjustments.ArmyReduction); end
+		if (incomeAdjustments.SUreductionRate ~= 0) then applySpecialUnitDamage (game, addOrder, ID, incomeAdjustments.SUreductionRate, incomeAdjustments.SUreductionAppliesToAllStats); end
 	end
 
 	publicGameData.PRdataByTurn[turnNumber].TerritoryCount = historicalTerritoryCount; --store Captures for this turn; this is easily retrievable by turn#, then by playerID
@@ -281,9 +281,7 @@ function Server_AdvanceTurn_End(game, addOrder)
 end
 
 --reduce SU stats on territories owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
-function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreductionRate, boolSUpunishment_ApplyToAllStats)
--- function reduceSpecialUnitCounts (game, intPoisonPlayerID, strOrderDescription, addNewOrder, targetTerritory, impactedTerritory, floatPoisonStrength, intDuration)
--- function reduceArmyCounts (game, addOrder, targetPlayerID, numArmyReductionPercent)
+function applySpecialUnitDamage (game, addNewOrder, targetPlayerID, numSUreductionRate, boolSUpunishment_ApplyToAllStats)
 
 	-- local modifiedTerritories = {}; --table of all territories being modified
 	-- local numTerritoriesImpacted = 0;
@@ -393,7 +391,7 @@ function reduceSpecialUnitCounts (game, addNewOrder, targetPlayerID, numSUreduct
 end
 
 --reduce army counts on territories owned by targetPlayerID by % specified by numArmyReductionPercent
-function reduceArmyCounts (game, addOrder, targetPlayerID, numArmyReductionPercent)
+function applyArmyDamage (game, addOrder, targetPlayerID, numArmyReductionPercent)
 	local modifiedTerritories = {}; --table of all territories being modified
 	local numTerritoriesImpacted = 0;
 	local annotations = {}; --initialize annotations array to store annotations for each territory impacted by earthquake
