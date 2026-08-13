@@ -20,7 +20,7 @@ function play_BombPlus_card(game, cardInstance, playCard)
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize(400, 600);
         local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-        UI.CreateLabel (vert).SetText ("[BOMB+]\n\n").SetColor (getColourCode("card play heading"));
+        UI.CreateLabel (vert).SetText ("[TIME BOMB]\n\n").SetColor (getColourCode("card play heading"));
 		UI.CreateLabel (vert).SetText (game.Settings.Cards[cardInstance.CardID].FriendlyDescription.."\n \n");
 
         TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
@@ -43,18 +43,16 @@ function play_BombPlus_card(game, cardInstance, playCard)
                 return;
             end
 
-            local strBombPlusMessage = strPlayerName_cardPlayer .. " plays a Bomb+ card on " .. TargetTerritoryName;
+            local strBombPlusMessage = strPlayerName_cardPlayer .. " plays a Time Bomb card on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
 			local intTurnPhase = (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards);
 			-- UI.Alert (intTurnPhase.. ", " ..WL.TurnPhase.ToString (intTurnPhase));
 
 			if (WL.IsVersionOrHigher("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, getColourInteger(0, 0, 0))}; --use Black for Bomb
-                -- playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
-                playCard (strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Time Bomb", 8, getColourInteger(0, 0, 0))}; --use Black for Bomb
+                playCard (strBombPlusMessage, 'Time Bomb|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
-                -- playCard(strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
-                playCard (strBombPlusMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase);
+                playCard (strBombPlusMessage, 'Time Bomb|' .. TargetTerritoryID, intTurnPhase);
             end
 
             close();

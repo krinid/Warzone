@@ -13,17 +13,8 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 end
 
 function PlayBombCard (game, order, addNewOrder)
-	local intTargetTerritoryID;
-	--get target territory ID; if card is played from a standard Bomb cad, get it from order.PlayerID; if played from the custom Bomb+ card, get it from the order.ModData
-	if (order.proxyType == 'GameOrderPlayCardBomb') then
-		intTargetTerritoryID = order.TargetTerritoryID;
-	else
-		local modDataContent = split (order.ModData, "|");
-		-- printDebug ("[GameOrderPlayCardCustom] modData=="..order.ModData.."::");
-		--strCardTypeBeingPlayed = modDataContent[1]; --1st component of ModData up to "|" is the card name --already captured in global variable 'strCardTypeBeingPlayed' from process_game_orders_CustomCards function
-		intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the source territory ID
-	end
-
+	local modDataContent = split (order.ModData, "|");
+	local intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the source territory ID
 	local strFortStructureID = territoryHasFort (game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID]);
 	local boolTerritoryHasShield = territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID]);
 	local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
@@ -75,24 +66,23 @@ function PlayBombCard (game, order, addNewOrder)
 	end
 
 	local event = WL.GameOrderEvent.Create (order.PlayerID, strBombMsg, {}, {terrMod});
-	event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
+	-- event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
 	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, 0)}; --mimic the base "Bomb" annotation
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	event.Icon = strBombOrderFilename;
 
-	applySpecialUnitDamage (game, addNewOrder, event, order.PlayerID, terr.OwnerPlayerID, terr, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
+	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 
 	--2nd param indicates whether to skip this order if the original order is skipped (by this or any other mod)
 	--if using regular bomb card, original order will be skipped (elsewhere in code) so it doesn't apply default damage of 50%, so must use 'false' when calling addNewOrder
 	--but if using the new custom Bomb+ card, use 'true' here so it is correctly tied to orig order and if that is skipped (via Card Block, etc), then this order is also skipped
-	addNewOrder (event, true);
+	-- addNewOrder (event, true);
 	if (eventDestroyFort ~= nil) then addNewOrder (eventDestroyFort, true); end -- if an event to destroy a Fort was created, add it here after the "Bomb+" order
 end
 
 --reduce SU Health/DTK on taget territory owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
-function applySpecialUnitDamage (game, addNewOrder, event, castingPlayerID, targetPlayerID, terr, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
-	if (#terr.NumArmies.SpecialUnits > 0) then
-		local impactedTerritory = WL.TerritoryModification.Create (terr.ID);
+function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
+	-- if (#terr.NumArmies.SpecialUnits > 0) then
 		local targetTerritoryID = terr.ID;
 		print ("[BOMB+ - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU damage % ".. tostring (numSUreductionRate).. ", SU fixed damage " ..tostring (numSUdamageFixed).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));
 
@@ -150,20 +140,28 @@ function applySpecialUnitDamage (game, addNewOrder, event, castingPlayerID, targ
 		--if SUs were modified by Punishment, add the SU Removals/Additions to the event order
 		--if no SUs were modified and no army damage was done, don't add an event order
 		local strOrderDescription = "Bomb+ SU damage";
+		if (impactedTerritory == nil) then impactedTerritory = WL.TerritoryModification.Create (terr.ID); end
+		-- print ("[BOMB TEST1] " .. tostring (#SUsNewList));
+		-- print ("[BOMB TEST2] " .. tostring (#SUsToRemove));
+		print ("[BOMB TEST3] " .. tostring (#SUsNewList) ..", " .. tostring (#SUsToRemove));
 		if (#SUsNewList == 0 and #SUsToRemove == 0) then
 			--no SUs to add or remove, just apply army damage --> for Bomb+ v3, this is handled in the main Bomb+ order, so no army damage is applied here (at least not right now)
-			local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
-			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-			event.Icon = strBombOrderFilename;
+			if (event == nil) then
+				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
+				event.Icon = strBombOrderFilename;
+			end
+			print ("[BOMB] SUBMIT EVENT");
 			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
 		elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison)
-			local strPunishment = strOrderDescription;
 			impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
-			local event = WL.GameOrderEvent.Create (castingPlayerID, strPunishment, {}, {impactedTerritory});
-			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-			event.Icon = strBombOrderFilename;
+			if (event == nil) then
+				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
+				event.Icon = strBombOrderFilename;
+			end
 			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
 		else
 			--SUs to add/remove
@@ -172,25 +170,22 @@ function applySpecialUnitDamage (game, addNewOrder, event, castingPlayerID, targ
 
 			--iterate through the SU tables (up to 4 SUs per element due to WZ limitation) to add them to the target territory 4 SUs per order at a time
 			for k,SUlistBlock in pairs (specialsToAdd) do
-				-- if (impactedTerritory == nil) then 
 				impactedTerritory.AddSpecialUnits = SUlistBlock; --add Specials to target territory
-				local event = nil;
-				local strPunishment = strOrderDescription;
 
 				if (k == 1) then
 					impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
-					-- event = WL.GameOrderEvent.Create (order.PlayerID, order.Description, {}, {impactedTerritory});
-				else
-					strPunishment = "[SU punishment damage]";
 				end
-				event = WL.GameOrderEvent.Create (castingPlayerID, strPunishment, {}, {impactedTerritory});
-				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-				event.Icon = strBombOrderFilename;
+				if (event == nil) then
+					event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+					event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
+					event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+ (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
+					event.Icon = strBombOrderFilename;
+				end
 				addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
+				event = nil;
 			end
 		end
-	end
+	-- end
 end
 
 function tablelength(T)

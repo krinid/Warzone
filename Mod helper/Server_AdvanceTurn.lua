@@ -51,8 +51,9 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	local intNumRecruitersToCreateEachTurn = 0; --# of Recruiter SUs to create each turn
 
 	if (intGameStyle == 1) then
-		intNumTurnsToHelp = 1;
-		intNumWorkersToCreateEachTurn = 1;
+		intNumTurnsToHelp = 5;
+		-- intNumWorkersToCreateEachTurn = 1;
+		intNumWorkersToCreateEachTurn = 4;
 	elseif (intGameStyle == 2) then
 		intNumTurnsToHelp = 5;
 		intNumRecruitersToCreateEachTurn = 1;

@@ -3,8 +3,8 @@ require ('Bomb+ common');
 function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.ArmyDamagePercent = Mod.Settings.ArmyDamagePercent ~= nil and Mod.Settings.ArmyDamagePercent or 25;
 	Mod.Settings.ArmyDamageFixed = Mod.Settings.ArmyDamageFixed ~= nil and Mod.Settings.ArmyDamageFixed or 10;
-	Mod.Settings.SUdamagePercent = Mod.Settings.SUdamagePercent ~= nil and Mod.Settings.SUdamagePercent or 25;
-	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 10;
+	Mod.Settings.SUdamagePercent = Mod.Settings.SUdamagePercent ~= nil and Mod.Settings.SUdamagePercent or 0;
+	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 0;
 	Mod.Settings.SpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral == nil and true or Mod.Settings.SpecialUnitsPreventNeutral;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral == nil and true or Mod.Settings.EmptyTerritoriesGoNeutral;
 	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;

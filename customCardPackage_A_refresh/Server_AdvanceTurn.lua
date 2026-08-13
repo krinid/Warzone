@@ -2851,6 +2851,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 8, getColourInteger (175, 0, 0)); --overwrite the annotation done above (".") for the Epicenter
 	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (150, 0, 0))}; --use Dark Red colour for Nuke epicenter
 	event.TerritoryAnnotationsOpt = annotations;
+	event.Icon = "Nuke_icon_40x40";
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 -- GameOrderEventWL Create (playerID: PlayerID, message: string, visibleToOpt: HashSet<PlayerID> | nil, terrModsOpt?: TerritoryModification[], setResoucesOpt: table<PlayerID, table<EnumResourceType, integer>> | nil, incomeModsOpt: IncomeMod[] | nil): GameOrderEvent # Creates a GameOrderEvent object
 -- Create (playerID, message, visibileToOppenets - nil is ok, terrMods OPTIONAL, resources OPTIONAL - nil is ok, incomeMods OPTIONAL - nil is ok)

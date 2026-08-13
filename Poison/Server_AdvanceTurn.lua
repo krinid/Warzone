@@ -62,11 +62,17 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		if (poisonData [order.To] == nil) then
 			local poisonRecord = poisonData [order.From];
 			local floatPoisonStrength = 0.5; --default to 50% strength if not found in the poisonData table
-			if (poisonRecord ~= nil) then floatPoisonStrength = poisonRecord.strength * 0.5; end --assign actual 50% of poison strength value from source terr
+			local intExpiresOnTurn = tonumber (game.Game.TurnNumber) + 1; --default to expire 1 turn from now; this value is only used if there is no Poison data record for the territory the poison is spreading from, which means it has a Poison structure but no associated Poison data
+
+			--if there is an existing poison dat record on the FROM territory (there should be -- this is where poison is spreading from; if not, there is an error, the data record was deleted but the structure wasn't), use the data from that record
+			if (poisonRecord ~= nil) then
+				floatPoisonStrength = poisonRecord.strength * 0.5; --assign actual 50% of poison strength value from source terr
+				intExpiresOnTurn = tonumber (poisonRecord.expiresOnTurn) - tonumber (game.Game.TurnNumber) + 1; --set poison to expire on the turn after the poison it is spreading from is set to expire
+			end
 
 			local targetTerritory = game.ServerGame.LatestTurnStanding.Territories [order.To];
 			local impactedTerritory = WL.TerritoryModification.Create (order.To);
-			local intNewDuration = 	math.max (1, tonumber (poisonRecord.expiresOnTurn) - tonumber (game.Game.TurnNumber) + 1); --set poison to expire on the turn after the poison it is spreading from is set to expire
+			local intNewDuration = 	math.max (1, intExpiresOnTurn);
 			impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, targetTerritory, impactedTerritory, floatPoisonStrength, intNewDuration);
 			local event = WL.GameOrderEvent.Create (order.PlayerID, strPoisonNameText.. " carried to " ..getTerritoryName (order.To, game), {}, {impactedTerritory});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
