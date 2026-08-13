@@ -182,8 +182,8 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 	if (game.Settings.CommerceCityBaseCost ~= nil or SUisInUse (nil, game.LatestStanding.Territories, "Worker")) then
 		local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[playerID] = game.Game.Players [playerID]});
 		--use floor for lower bound & ceiling for upper bound so lower bound is always a different integer than upper bound; this is beneficial esp for small ave city #'s where 25% of that value would result in the same lower and upper bound and thus be too restrictive
-		local lowerBound = math.floor (cityRewards[playerID].aveCitiesPerTerritory * (1 - cityAverageToleranceLevel));
-		local upperBound = math.ceil (cityRewards[playerID].aveCitiesPerTerritory * (1 + cityAverageToleranceLevel));
+		local lowerBound = math.floor (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 - cityAverageToleranceLevel) or 1);
+		local upperBound = math.ceil (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 + cityAverageToleranceLevel) or 1);
 
 		UI.CreateLabel (windowUI).SetText ("\nCOMPONENT 3 - CITY REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
 		UI.CreateLabel (windowUI).SetText ("• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
