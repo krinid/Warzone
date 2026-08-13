@@ -183,7 +183,7 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 		local cityRewards = assessCityRewards (game.LatestStanding.Territories, {[playerID] = game.Game.Players [playerID]});
 		UI.CreateLabel (windowUI).SetText ("\nCOMPONENT 3 - CITY REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
 
-		if (cityRewards[playerID] == nil) then
+		if (cityRewards[playerID] ~= nil) then
 			UI.CreateLabel (windowUI).SetText ("• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
 			-- UI.CreateLabel (windowUI).SetText ("• # cities: " ..tostring (cityRewards[playerID].numCities).. "   • # terrs: " ..tostring (cityRewards[playerID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[playerID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[playerID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[playerID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[playerID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
 			UI.CreateLabel (windowUI).SetText ("• # terrs: " ..tostring (cityRewards[playerID].numTerritories).. "   • # cities: " ..tostring (cityRewards[playerID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[playerID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[playerID].rewardForTerritoriesWithCities).. "]   • av# cities/terrs with cities " ..tostring (cityRewards[playerID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
