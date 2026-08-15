@@ -2,6 +2,7 @@ require ('Bomb+ common');
 
 function Client_PresentSettingsUI(rootParent)
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+	if (Mod.Settings.LandmineCastRange ~= nil) then UI.CreateLabel (mainUI).SetText("Cast range: " .. Mod.Settings.LandmineCastRange); UI.CreateLabel (mainUI).SetText("• distance from a territory the caster owns that landmines can be set\n"); end
 	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
 	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
 	local horzArmyDamage2 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
@@ -30,41 +31,36 @@ function Client_PresentSettingsUI(rootParent)
 	UI.CreateEmpty (mainUI);
 	cboxEmptyTerritoriesGoNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetText ("Territories reduced to 0 armies turn Neutral").SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetInteractable (false);
 	NIF_SUsPreventNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.SpecialUnitsPreventNeutral).SetText ("Special Units prevent territory from turning neutral").SetInteractable (false);
-	if (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == true) then UI.CreateLabel (mainUI).SetText ('  • when Bombed territory is reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	elseif (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == false) then UI.CreateLabel (mainUI).SetText ('  • when Bombed territory is reduced to 0 will turn neutral and you will lose control of any Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	if (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == true) then UI.CreateLabel (mainUI).SetText ('  • a triggered landmine causing a territory to reduce to 0 armies will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	elseif (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == false) then UI.CreateLabel (mainUI).SetText ('  • a triggered landmine causing a territory to reduce to 0 armies will turn neutral and you will lose control of any Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
 	else UI.CreateLabel (mainUI).SetText ('  • territories do not turn neutral when reduced to 0 armies or Special Units');
 	end
-	-- UI.CreateLabel (mainUI).SetText ('  • when checked, a Bombed territory reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	-- UI.CreateLabel (mainUI).SetText ('  • when unchecked, a Bombed territory reduced to 0 will turn neutral, even if it has Special Units on it');
-	-- UI.CreateLabel (mainUI).SetText ('  • unless you have a specific mechanic in mind for your template, leave this checked');
 
-	local horzCitiesDestroyedByBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzCitiesDestroyedByBombPlay).SetText ('# cities destroyed by a Bomb+ card play: ');
-	NIFnumCitiesDestroyedByBomb = UI.CreateNumberInputField (horzCitiesDestroyedByBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByBombPlay).SetInteractable (false);
-	if (tonumber (Mod.Settings.NumCitiesDestroyedByBombPlay) == 0) then UI.CreateLabel (mainUI).SetText ("  · Bomb+ plays don't destroy cities");
-	else UI.CreateLabel (mainUI).SetText ("  · this quantity of cities are destroyed when a Bomb+ card is played");
+	local horzCitiesDestroyedByLandminePlay = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzCitiesDestroyedByLandminePlay).SetText ('# cities destroyed by a triggered Landmine: ');
+	NIFnumCitiesDestroyedByLandmine = UI.CreateNumberInputField (horzCitiesDestroyedByLandminePlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByLandminePlay).SetInteractable (false);
+	if (tonumber (Mod.Settings.NumCitiesDestroyedByLandminePlay) == 0) then UI.CreateLabel (mainUI).SetText ("  · Landmines plays don't destroy cities");
+	else UI.CreateLabel (mainUI).SetText ("  · this quantity of cities are destroyed when a Landmine is triggered is played");
 	end
-	-- UI.CreateLabel (mainUI).SetText ("  · Set to 0 = Bomb+ plays don't destroy cities");
-	-- UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a Bomb+ card is played");
 
-	local horzBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
+	local horzLandmineImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
-	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed');
-	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
+	UI.CreateLabel (horzLandmineImplementationPhase).SetText ('Turn phase where landmines are executed');
+	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.LandmineImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
 
-	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzBombPlusCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (false);
+	local horzLandminePlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandminePlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandminePlusCardPiecesNeeded = UI.CreateNumberInputField (horzLandminePlusCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandminePlusPiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel(horzBombPlusCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardStartPieces = UI.CreateNumberInputField (horzBombPlusCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusStartPieces or 1).SetWholeNumbers (true).SetInteractable (false);
+	local horzLandminePlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel(horzLandminePlusCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandminePlusCardStartPieces = UI.CreateNumberInputField (horzLandminePlusCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandminePlusStartPieces or 1).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusPiecesPerTurn = UI.CreateNumberInputField (horzBombPlusCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (false);
+	local horzLandminePlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandminePlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandminePlusPiecesPerTurn = UI.CreateNumberInputField (horzLandminePlusCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandminePlusPiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardWeight = UI.CreateNumberInputField (horzBombPlusCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.BombPlusCardWeight or 1).SetInteractable (false);
+	local horzLandminePlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandminePlusCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandminePlusCardWeight = UI.CreateNumberInputField (horzLandminePlusCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.LandminePlusCardWeight or 1).SetInteractable (false);
 end

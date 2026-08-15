@@ -1,4 +1,4 @@
-local strBombOrderFilename = "Time bomb order icon 40x40"; --icon for the Time Bomb order in the order list
+local strTimeBombOrderFilename = "Time bomb order icon 40x40"; --icon for the Time Bomb order in the order list
 
 -- function Server_AdvanceTurn_Start (game,addNewOrder)
 -- end
@@ -20,17 +20,11 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 		if (tonumber (game.Game.TurnNumber) >= tonumber (timeBombDataRecord.turnTimeBombExplodes)) then
 			local strDisplayMsg = "Time Bomb explode prep; Time Bomb on " ..game.Map.Territories [terrID].Name .. " explodes";
 			local strPayload = "ExplodeOrder-Time Bomb|".. terrID;
-			local event = WL.GameOrderEvent.Create (game.ServerGame.LatestTurnStanding.Territories [terrID].OwnerPlayerID, strPayload);
-			event.Icon = strBombOrderFilename;
+			local event = WL.GameOrderEvent.Create (game.ServerGame.LatestTurnStanding.Territories [terrID].OwnerPlayerID, strPayload, {}, {}, {}, {});
+			event.Icon = strTimeBombOrderFilename;
 			addNewOrder (event);
 		end
 	end
-	-- for playerID, playerAnnotations in pairs (annotations) do
-	-- 	local event = WL.GameOrderEvent.Create (playerID, "Landmine deployment reminder", {}, {});
-	-- 	event.TerritoryAnnotationsOpt = playerAnnotations;
-	-- 	event.Icon = strBombOrderFilename;
-	-- 	addNewOrder (event, false);
-	-- end
 end
 
 function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
@@ -54,26 +48,20 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		local modDataContent = split (order.ModData, "|");
 		local intTargetTerritoryID = tonumber (modDataContent[2]); --2nd component of ModData is the target territory ID
 		print ("[Time Bomb initial order] " .. tostring (order.ModData));
-		local event = WL.GameOrderCustom.Create (order.PlayerID, "Time Bomb initial order; " .. getPlayerName (game, order.PlayerID).. " deploys a time bomb on " ..game.Map.Territories [intTargetTerritoryID].Name, "DeployOrder-Time Bomb|".. intTargetTerritoryID)
-		event.Icon = strBombOrderFilename;
+		local event = WL.GameOrderCustom.Create (order.PlayerID, "Time Bomb initial order; " ..getPlayerName (game, order.PlayerID).. " deploys a time bomb on " ..game.Map.Territories [intTargetTerritoryID].Name, "DeployOrder-Time Bomb|".. intTargetTerritoryID)
+		event.Icon = strTimeBombOrderFilename;
 		addNewOrder (event, true);
 	elseif ((order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, "DeployOrder-Time Bomb|") == true)) then
 		print ("[Time Bomb placement] " ..tostring (order.Payload));
 		--skip the trigger order
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom game order, it's just a trigger for the real card that makes it properly blockable by Card Block
 		placeTimeBomb (game, order, addNewOrder);
-	elseif ((order.proxyType == 'GameOrderAttackTransfer' and result.IsAttack == true and result.IsSuccessful == true and Mod.PrivateGameData.TimeBombData ~= nil and Mod.PrivateGameData.TimeBombData [order.To] ~= nil)) then
-		-- print ("[Time Bomb explode order]");
-		-- -- local modDataContent = split (order.ModData, "|");
-		-- -- local intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the target territory ID
-		-- local event = WL.GameOrderCustom.Create (order.PlayerID, "Time Bomb explode prep; " .. getPlayerName (game, order.PlayerID).. " triggers a time bomb on " ..game.Map.Territories [order.To].Name, "ExplodeOrder-Time Bomb|".. order.To)
-		-- event.Icon = strBombOrderFilename;
-		-- addNewOrder (event, true);
-		-- -- explode_Time Bomb (game, order, addNewOrder, order.To);
 	elseif ((order.proxyType == 'GameOrderEvent' and startsWith (order.Message, "ExplodeOrder-Time Bomb|") == true)) then
 		print ("[Time Bomb explode] " ..tostring (order.Message));
 		local modDataContent = split (order.Message, "|");
 		local intTargetTerritoryID = tonumber (modDataContent[2]); --2nd component of ModData is the target territory ID
 		--skip the trigger order
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom game order, it's just a trigger for the real card that makes it properly blockable by Card Block
 		explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID);
 	end
 end
@@ -122,10 +110,10 @@ function placeTimeBomb (game, order, addNewOrder)
 	-- end
 
 	local strTimeBombMsg = getPlayerName (game, order.PlayerID).. " places a time bomb on " ..game.Map.Territories [intTargetTerritoryID].Name;
-	local event = WL.GameOrderEvent.Create (order.PlayerID, strTimeBombMsg, {}, {impactedTerritory});
+	local event = WL.GameOrderEvent.Create (order.PlayerID, strTimeBombMsg, {}, {impactedTerritory}, {}, {});
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Time bomb deployed")};
-	event.Icon = strBombOrderFilename;
+	event.Icon = strTimeBombOrderFilename;
 	addNewOrder (event, false);
 
 	local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.DurationForMaxPower or 3)};
@@ -144,7 +132,7 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 	local boolTerritoryHasShield = territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID]);
 	local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
 	local armies;
-	local strBombMsg = "Time Bomb explodes on " ..game.Map.Territories [intTargetTerritoryID].Name;
+	local strTimeBombMsg = "Time Bomb explodes on " ..game.Map.Territories [intTargetTerritoryID].Name;
 	local terr = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID]; --target territory
 	local eventDestroyFort = nil; --if a Fort is to be destroyed, use this to create the separate order so it can be submitted after the "Bomb+" order occurs, so the Fort destruction occurs after the bomb hits so it is visually clear in the order list
 
@@ -165,7 +153,7 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 				structures [strFortStructureID] = structures [strFortStructureID] - 1;
 				local terrMod = WL.TerritoryModification.Create (intTargetTerritoryID);
 				terrMod.SetStructuresOpt = structures;
-				eventDestroyFort = WL.GameOrderEvent.Create (order.PlayerID, "Destroyed fort", {}, {terrMod});
+				eventDestroyFort = WL.GameOrderEvent.Create (order.PlayerID, "Destroyed fort", {}, {terrMod}, {}, {});
 				eventDestroyFort.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID);
 				eventDestroyFort.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Destroy Fort")};
 			end
@@ -198,19 +186,15 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 	structures [structureID] = -1;
 	terrMod.AddStructuresOpt = structures;
 
-	local event = WL.GameOrderEvent.Create (order.PlayerID, strBombMsg, {}, {terrMod});
-	-- event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
+	local event = WL.GameOrderEvent.Create (order.PlayerID, strTimeBombMsg, {}, {terrMod}, {}, {});
+	-- event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the TimeBomb card (must be done b/c we're skipping the original order that consumes the card)
 	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Time Bomb", 4, 255)}; --mimic the base "Bomb" annotation
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
-	event.Icon = strBombOrderFilename;
+	event.Icon = strTimeBombOrderFilename;
 
 	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 
-	--2nd param indicates whether to skip this order if the original order is skipped (by this or any other mod)
-	--if using regular bomb card, original order will be skipped (elsewhere in code) so it doesn't apply default damage of 50%, so must use 'false' when calling addNewOrder
-	--but if using the new custom Bomb+ card, use 'true' here so it is correctly tied to orig order and if that is skipped (via Card Block, etc), then this order is also skipped
-	-- addNewOrder (event, true);
-	if (eventDestroyFort ~= nil) then addNewOrder (eventDestroyFort, true); end -- if an event to destroy a Fort was created, add it here after the "Bomb+" order
+	if (eventDestroyFort ~= nil) then addNewOrder (eventDestroyFort, true); end -- if an event to destroy a Fort was created, add it here after the "TimeBomb" order
 
 	--remove the time bomb from the private game data so it doesn't explode again
 	print ("[POST CHECK 1] # time bombs deployed: " .. tablelength (Mod.PrivateGameData.TimeBombData or {}) ..", removing terr " ..intTargetTerritoryID.."/"..game.Map.Territories [intTargetTerritoryID].Name);
@@ -226,7 +210,7 @@ end
 function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
 	-- if (#terr.NumArmies.SpecialUnits > 0) then
 		local targetTerritoryID = terr.ID;
-		print ("[BOMB+ - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU damage % ".. tostring (numSUreductionRate).. ", SU fixed damage " ..tostring (numSUdamageFixed).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));
+		print ("[TIMEBOMB - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU damage % ".. tostring (numSUreductionRate).. ", SU fixed damage " ..tostring (numSUdamageFixed).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));
 
 		-- SU damage defined by: SUpunishmentRate & boolSUpunishment_AffectsAllStats set in punishReward.lua -- eventually to be Mod.Settings.xyz values
 		local SUsNewList = {}; --new list of SUs after applying Punishment SU damage
@@ -247,11 +231,11 @@ function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerrito
 				if (builder.Health ~= nil) then
 					intDamageToSU = math.min (-1, SU.Health * (numSUreductionRate)) + numSUdamageFixed;
 					builder.Health = math.max (0, builder.Health + intDamageToSU);
-					print ("[BOMB+ - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", fixed damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
+					print ("[TIMEBOMB - Health SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", Health " ..tostring (SU.Health) ..", fixed damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
 				elseif (builder.DamageToKill ~= nil) then
 					intDamageToSU = math.min (-1, SU.DamageToKill * (numSUreductionRate)) + numSUdamageFixed;
 					builder.DamageToKill = math.max (0, SU.DamageToKill + intDamageToSU);
-					print ("[BOMB+ - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", fixed damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
+					print ("[TIMEBOMB - DamageToKill SU damage] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", DamageToKill " ..tostring (SU.DamageToKill) ..", fixed damage " ..tostring (intDamageToSU) ..", damage rate ".. numSUreductionRate);
 				end
 
 				--if setting to apply to all abilities is true, modify AttackPower, DefensePower, AttackPowerPercent, DefensePowerPercent, DamageAbsorption; ignores the SU Fixed Damage amount, reduce using only SU Percent Damage modifier
@@ -281,28 +265,26 @@ function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerrito
 
 		--if SUs were modified by Punishment, add the SU Removals/Additions to the event order
 		--if no SUs were modified and no army damage was done, don't add an event order
-		local strOrderDescription = "Bomb+ SU damage";
+		local strOrderDescription = "TIMEBOMB SU damage";
 		if (impactedTerritory == nil) then impactedTerritory = WL.TerritoryModification.Create (terr.ID); end
-		-- print ("[BOMB TEST1] " .. tostring (#SUsNewList));
-		-- print ("[BOMB TEST2] " .. tostring (#SUsToRemove));
-		print ("[BOMB TEST3] " .. tostring (#SUsNewList) ..", " .. tostring (#SUsToRemove));
+		print ("[TIMEBOMB TEST3] " .. tostring (#SUsNewList) ..", " .. tostring (#SUsToRemove));
 		if (#SUsNewList == 0 and #SUsToRemove == 0) then
-			--no SUs to add or remove, just apply army damage --> for Bomb+ v3, this is handled in the main Bomb+ order, so no army damage is applied here (at least not right now)
+			--no SUs to add or remove, just apply army damage --> for TimeBomb, this is handled in the main TimeBomb order, so no army damage is applied here (at least not right now)
 			if (event == nil) then
-				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory}, {}, {});
 				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Time Bomb (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-				event.Icon = strBombOrderFilename;
+				event.Icon = strTimeBombOrderFilename;
 			end
-			print ("[BOMB] SUBMIT EVENT");
+			print ("[TIMEBOMB] SUBMIT EVENT");
 			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
 		elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison)
 			impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
 			if (event == nil) then
-				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+				local event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory}, {}, {});
 				event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 				event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Time Bomb (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-				event.Icon = strBombOrderFilename;
+				event.Icon = strTimeBombOrderFilename;
 			end
 			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
 		else
@@ -318,10 +300,10 @@ function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerrito
 					impactedTerritory.RemoveSpecialUnitsOpt = SUsToRemove; --remove the cloned/converted SUs
 				end
 				if (event == nil) then
-					event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory});
+					event = WL.GameOrderEvent.Create (castingPlayerID, strOrderDescription, {}, {impactedTerritory}, {}, {});
 					event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 					event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Time Bomb (SU)", 4, 0)}; --mimic the base "Bomb" annotation)};
-					event.Icon = strBombOrderFilename;
+					event.Icon = strTimeBombOrderFilename;
 				end
 				addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped <---- is it?
 				event = nil;

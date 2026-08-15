@@ -49,6 +49,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 	elseif ((order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, "DeployOrder-Landmine|") == true)) then
 		print ("[Landmine placement] " ..tostring (order.Payload));
 		--skip the trigger order
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom game order, it's just a trigger for the real card that makes it properly blockable by Card Block
 		placeLandmine (game, order, addNewOrder);
 	elseif ((order.proxyType == 'GameOrderAttackTransfer' and result.IsAttack == true and result.IsSuccessful == true and Mod.PrivateGameData.LandmineData ~= nil and Mod.PrivateGameData.LandmineData [order.To] ~= nil)) then
 		print ("[Landmine explode order]");
@@ -63,6 +64,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		local modDataContent = split (order.Payload, "|");
 		local intTargetTerritoryID = tonumber (modDataContent[2]); --2nd component of ModData is the target territory ID
 		--skip the trigger order
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom game order, it's just a trigger for the real card that makes it properly blockable by Card Block
 		explode_Landmine (game, order, addNewOrder, intTargetTerritoryID);
 	end
 end

@@ -7,8 +7,8 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 10;
 	Mod.Settings.SpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral == nil and true or Mod.Settings.SpecialUnitsPreventNeutral;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral == nil and true or Mod.Settings.EmptyTerritoriesGoNeutral;
-	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
-	Mod.Settings.NumCitiesDestroyedByBombPlay = Mod.Settings.NumCitiesDestroyedByBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByBombPlay or 10;
+	Mod.Settings.LandmineImplementationPhase = Mod.Settings.LandmineImplementationPhase ~= nil and Mod.Settings.LandmineImplementationPhase or WL.TurnPhase.BombCards;
+	Mod.Settings.NumCitiesDestroyedByLandminePlay = Mod.Settings.NumCitiesDestroyedByLandminePlay ~= nil and Mod.Settings.NumCitiesDestroyedByLandminePlay or 10;
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
 
 	-- UI.CreateLabel (mainUI).SetText ("[Army Damage]").SetColor ("#FFFF00");
@@ -55,20 +55,20 @@ function Client_PresentConfigureUI (rootParent)
 	UI.CreateEmpty (mainUI);
 	cboxEmptyTerritoriesGoNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetText ("Territories reduced to 0 armies turn Neutral").SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral);
 	NIF_SUsPreventNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.SpecialUnitsPreventNeutral).SetText ("Special Units prevent territory from turning neutral");
-	UI.CreateLabel (mainUI).SetText ('  • when checked, a Bombed territory reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	UI.CreateLabel (mainUI).SetText ('  • when unchecked, a Bombed territory reduced to 0 will turn neutral, even if it has Special Units on it');
+	UI.CreateLabel (mainUI).SetText ('  • when checked, a triggered landmine reducing a territory to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	UI.CreateLabel (mainUI).SetText ('  • when unchecked, a triggered landmine reducing a territory to 0 will turn neutral, even if it has Special Units on it');
 	UI.CreateLabel (mainUI).SetText ('  • unless you have a specific mechanic in mind for your template, leave this checked');
 
-	local horzCitiesDestroyedByBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzCitiesDestroyedByBombPlay).SetText ('# cities destroyed by a Bomb+ card play: ');
-	NIFnumCitiesDestroyedByBomb = UI.CreateNumberInputField (horzCitiesDestroyedByBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByBombPlay);
-	UI.CreateLabel (mainUI).SetText ("  · Set to 0 = Bomb+ plays don't destroy cities");
-	UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a Bomb+ card is played");
+	local horzCitiesDestroyedByLandminePlay = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzCitiesDestroyedByLandminePlay).SetText ('# cities destroyed by a triggered landmine: ');
+	NIFnumCitiesDestroyedByLandmine = UI.CreateNumberInputField (horzCitiesDestroyedByLandminePlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByLandminePlay);
+	UI.CreateLabel (mainUI).SetText ("  · Set to 0 = landmines don't destroy cities");
+	UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a landmine is triggered");
 
-	local horzBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
+	local horzLandmineImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
-	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed');
-	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
+	UI.CreateLabel (horzLandmineImplementationPhase).SetText ('Turn phase where landmine plays are executed');
+	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.LandmineImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
 
 	local horzLandmineCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzLandmineCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
@@ -96,13 +96,13 @@ function Bomb_turnPhaseButton_clicked ()
 		table.insert (WLturnPhases_PromptFromList, {text=k, selected=function () Bomb_turnPhase_selected ({name=k,value=v}); end});
 	end
 
-	UI.PromptFromList ("Select turn phase where Bomb cards will occur.\n\nThe default is BombCards, where bombs usually occur in core Warzone, which is after deployments, but before emergency blockade cards.\n\nIf you're not sure, the recommendation is to leave it at BombCards.", WLturnPhases_PromptFromList);
+	UI.PromptFromList ("Select turn phase where Landmine cards will occur.\n\nThe default is BombCards, where bombs usually occur in core Warzone, which is after deployments, but before emergency blockade cards.\n\nIf you're not sure, the recommendation is to leave it at BombCards.", WLturnPhases_PromptFromList);
 end
 
 function Bomb_turnPhase_selected (turnPhase)
 	-- print ("turnPhase selected=="..tostring(turnPhase));
 	-- print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
 	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
-	Mod.Settings.BombImplementationPhase = turnPhase.value;
-	BombImplementationPhase.SetText (turnPhase.name);
+	Mod.Settings.LandmineImplementationPhase = turnPhase.value;
+	LandmineImplementationPhase.SetText (turnPhase.name);
 end

@@ -16,12 +16,12 @@ function Client_PresentPlayCardUI (game, cardInstance, playCard)
 end
 
 function play_Explosives_card(game, cardInstance, playCard)
-    print("[BOMB+] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+    print("[EXPLOSIVES] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
 
     game.CreateDialog (function (rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize (400, 600);
         local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
-        UI.CreateLabel (vert).SetText ("[BOMB+]\n\n").SetColor (getColourCode ("card play heading"));
+        UI.CreateLabel (vert).SetText ("[EXPLOSIVES]\n\n").SetColor (getColourCode ("card play heading"));
 		UI.CreateLabel (vert).SetText (game.Settings.Cards [cardInstance.CardID].FriendlyDescription.. "\n \n");
 		UI.CreateLabel (vert).SetText ("\n \n");
 		UI.CreateEmpty (vert);
@@ -29,7 +29,7 @@ function play_Explosives_card(game, cardInstance, playCard)
 
         TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("minor heading"));
         TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
-        TargetTerritoryClicked ("Select the territory you wish to bomb");
+        TargetTerritoryClicked ("Select the territory you wish to use explosives on");
 
         UI.CreateButton (vert).SetText ("Play Card").SetColor(WZcolours ["Dark Green"]).SetOnClick (function ()
             if (TargetTerritoryID == nil) then
@@ -37,28 +37,26 @@ function play_Explosives_card(game, cardInstance, playCard)
                 return;
             end
             if (game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID == game.Us.ID) then
-                UI.Alert("You cannot bomb yourself.");
+                UI.Alert("You cannot set explosives on yourself.");
                 return;
 			elseif (game.Us.Team ~= -1 and game.Game.Players [game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID].Team == game.Us.Team) then
-                UI.Alert("You cannot bomb a teammate.");
+                UI.Alert("You cannot set explosives a teammate.");
                 return;
 			elseif (doesPlayerBorderTerritory (game, TargetTerritoryID, game.Us.ID) == false) then
-                UI.Alert("You may only bomb territories adjacent to a territory you control.");
+                UI.Alert("You may only set explosives on territories adjacent to a territory you control.");
                 return;
             end
 
-            local strExplosivesMessage = strPlayerName_cardPlayer .. " plays a Bomb+ card on " .. TargetTerritoryName;
+            local strExplosivesMessage = strPlayerName_cardPlayer .. " plays an Explosives card on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
 			local intTurnPhase = (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards);
 			-- UI.Alert (intTurnPhase.. ", " ..WL.TurnPhase.ToString (intTurnPhase));
 
 			if (WL.IsVersionOrHigher ("5.34.1")) then
-                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb+", 8, getColourInteger (0, 0, 0))}; --use Black for Bomb
-                -- playCard(strExplosivesMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards, territoryAnnotation, jumpToActionSpotOpt);
-                playCard (strExplosivesMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
+                local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Explosives", 8, getColourInteger (0, 0, 0))}; --use Black for Explosives
+                playCard (strExplosivesMessage, 'Explosives|' .. TargetTerritoryID, intTurnPhase, territoryAnnotation, jumpToActionSpotOpt);
             else
-                -- playCard(strExplosivesMessage, 'Bomb+|' .. TargetTerritoryID, WL.TurnPhase.OrderPriorityCards);
-                playCard (strExplosivesMessage, 'Bomb+|' .. TargetTerritoryID, intTurnPhase);
+                playCard (strExplosivesMessage, 'Explosives|' .. TargetTerritoryID, intTurnPhase);
             end
 
             close();

@@ -12,11 +12,11 @@ function Client_PresentPlayCardUI (game, cardInstance, playCard)
 
     strCardBeingPlayed = game.Settings.Cards [cardInstance.CardID].Name;
     print ("PLAY CARD="..strCardBeingPlayed.."::");
-	play_BombPlus_card (game, cardInstance, playCard);
+	play_Landmine_card (game, cardInstance, playCard);
 end
 
-function play_BombPlus_card(game, cardInstance, playCard)
-    print("[BOMB+] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
+function play_Landmine_card(game, cardInstance, playCard)
+    print("[LANDMINE] card play clicked, played by=" .. strPlayerName_cardPlayer .. "::");
 
     game.CreateDialog (function (rootParent, setMaxSize, setScrollable, game, close)
         setMaxSize (400, 600);
@@ -29,27 +29,30 @@ function play_BombPlus_card(game, cardInstance, playCard)
 
         TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("minor heading"));
         TargetTerritoryInstructionLabel = UI.CreateLabel (vert).SetText ("");
-        TargetTerritoryClicked ("Select the territory you wish to bomb");
+        TargetTerritoryClicked ("Select the territory you wish to set a landmine on");
 
         UI.CreateButton (vert).SetText ("Play Card").SetColor(WZcolours ["Dark Green"]).SetOnClick (function ()
             if (TargetTerritoryID == nil) then
                 UI.Alert("No territory selected. Please select a territory.");
                 return;
             end
-            if (game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID == game.Us.ID) then
-                UI.Alert("You cannot bomb yourself.");
+
+			local boolTargetIsSelf = game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID == game.Us.ID;
+			local boolTargetIsNeutral = game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral;
+			local boolTaretIsTeammate = game.Us.Team ~= -1 and game.Game.Players [game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID].Team == game.Us.Team;
+			local intDistanceToTarget = getDistanceToPlayersNearestTerritory (game, TargetTerritoryID, game.Us.ID);
+
+			if (boolTargetIsSelf == false and boolTargetIsNeutral == false and boolTaretIsTeammate == false) then
+				UI.Alert("You must place a landmine on a territory you own (or belongs to a teammate if a team game) or a neutral territory.");
                 return;
-			elseif (game.Us.Team ~= -1 and game.Game.Players [game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID].Team == game.Us.Team) then
-                UI.Alert("You cannot bomb a teammate.");
-                return;
-			elseif (doesPlayerBorderTerritory (game, TargetTerritoryID, game.Us.ID) == false) then
-                UI.Alert("You may only bomb territories adjacent to a territory you control.");
+			elseif (intDistanceToTarget > Mod.Settings.LandmineCastRange) then
+                UI.Alert("You must set a landmine within " ..tonumber (Mod.Settings.LandmineCastRange).. " steps of a territory you own.");
                 return;
             end
 
             local strLandmineMessage = strPlayerName_cardPlayer .. " plays a Landmine card on " .. TargetTerritoryName;
             local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
-			local intTurnPhase = (Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards);
+			local intTurnPhase = (Mod.Settings.LandmineImplementationPhase ~= nil and Mod.Settings.LandmineImplementationPhase) or (Mod.Settings.delayed == false and WL.TurnPhase.BombCards or WL.TurnPhase.ReceiveCards);
 			-- UI.Alert (intTurnPhase.. ", " ..WL.TurnPhase.ToString (intTurnPhase));
 
 			if (WL.IsVersionOrHigher ("5.34.1")) then
@@ -110,4 +113,40 @@ function PlayerButton (player)
 		TargetPlayerID = player.ID;
 	end
 	return ret;
+end
+
+-- return distance from specific territory to the nearest territory owned by specified player
+-- returns:
+--   intDistance, intClosestTerritoryID
+--   -1, nil  --> if no territory found (player has no territories / unreachable)
+function getDistanceToPlayersNearestTerritory (game, sourceTerritoryID, targetPlayerID)
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local intDepth = 0;
+
+	arrTerrProcessed [sourceTerritoryID] = true;
+	table.insert (arrTerrListToProcess, sourceTerritoryID);
+
+	-- check depth 0 case (source itself)
+	if (game.LatestStanding.Territories [sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
+
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs (arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+				if not arrTerrProcessed [neighbourTerrID] then
+					arrTerrProcessed [neighbourTerrID] = true;
+					-- ownership check
+					if (game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+						return intDepth, neighbourTerrID; -- nearest match (guaranteed shortest)
+					end
+					table.insert (arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
+
+	return -1, nil; -- player has no reachable territories
 end

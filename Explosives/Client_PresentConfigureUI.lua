@@ -53,6 +53,7 @@ function Client_PresentConfigureUI (rootParent)
 	UI.CreateEmpty (mainUI);
 	-- UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed');
 	-- BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
+	Mod.Settings.BombImplementationPhase = WL.TurnPhase.CardsWearOff; --executes in CardsWearOff phase, ie: before deployments
 
 	local horzExplosivesCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzExplosivesCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);

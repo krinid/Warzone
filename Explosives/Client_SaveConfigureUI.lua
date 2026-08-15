@@ -22,5 +22,5 @@ function Client_SaveConfigureUI (alert, addCard)
 	-- Mod.Settings.NumCitiesDestroyedByBombPlay = NIFnumCitiesDestroyedByBomb.GetValue ();
 
 	local strExplosivesDesc = get_BombPlus_description ();
-	Mod.Settings.BombCardPlusID = addCard ("Explosives", strExplosivesDesc, "explosive orig v3b_130x180.png", Mod.Settings.ExplosivesPiecesNeeded, Mod.Settings.ExplosivesPiecesPerTurn, Mod.Settings.ExplosivesStartPieces, Mod.Settings.ExplosivesCardWeight);
+	Mod.Settings.BombCardPlusID = addCard ("Explosive", strExplosivesDesc, "explosive orig v3b_130x180.png", Mod.Settings.ExplosivesPiecesNeeded, Mod.Settings.ExplosivesPiecesPerTurn, Mod.Settings.ExplosivesStartPieces, Mod.Settings.ExplosivesCardWeight);
 end

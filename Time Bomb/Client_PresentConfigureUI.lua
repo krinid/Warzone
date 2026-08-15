@@ -4,9 +4,9 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.SUdamagePercent = Mod.Settings.SUdamagePercent ~= nil and Mod.Settings.SUdamagePercent or 25;
 	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 10;
 	Mod.Settings.SpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral ~= nil and Mod.Settings.SpecialUnitsPreventNeutral or true;
-	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
+	Mod.Settings.TimeBombImplementationPhase = Mod.Settings.TimeBombImplementationPhase ~= nil and Mod.Settings.TimeBombImplementationPhase or WL.TurnPhase.BombCards;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral ~= nil and Mod.Settings.EmptyTerritoriesGoNeutral or true;
-	Mod.Settings.NumCitiesDestroyedByBombPlay = Mod.Settings.NumCitiesDestroyedByBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByBombPlay or 10;
+	Mod.Settings.NumCitiesDestroyedByTimeBombPlay = Mod.Settings.NumCitiesDestroyedByTimeBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByTimeBombPlay or 10;
 	Mod.Settings.TimeBombCastRange = Mod.Settings.TimeBombCastRange or 3; --default to 3
 
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
@@ -38,20 +38,20 @@ function Client_PresentConfigureUI (rootParent)
 	UI.CreateEmpty (mainUI);
 	cboxEmptyTerritoriesGoNeutral = UI.CreateCheckBox (UI.CreateHorizontalLayoutGroup (mainUI)).SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetText ("Territories reduced to 0 armies turn Neutral").SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral);
 	NIF_SUsPreventNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.SpecialUnitsPreventNeutral).SetText ("Special Units prevent territory from turning neutral");
-	UI.CreateLabel (mainUI).SetText ('  • when checked, a Bombed territory reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	UI.CreateLabel (mainUI).SetText ('  • when unchecked, a Bombed territory reduced to 0 will turn neutral, even if it has Special Units on it');
+	UI.CreateLabel (mainUI).SetText ('  • when checked, a Time Bomb reducing a territory to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	UI.CreateLabel (mainUI).SetText ('  • when unchecked, a Time Bomb reducing a territory to 0 will turn neutral, even if it has Special Units on it');
 	UI.CreateLabel (mainUI).SetText ('  • unless you have a specific mechanic in mind for your template, leave this checked');
 
-	local horzCitiesDestroyedByBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzCitiesDestroyedByBombPlay).SetText ('# cities destroyed by a Bomb+ card play: ');
-	NIFnumCitiesDestroyedByBomb = UI.CreateNumberInputField (horzCitiesDestroyedByBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByBombPlay);
-	UI.CreateLabel (mainUI).SetText ("  · Set to 0 = Bomb+ plays don't destroy cities");
-	UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a Bomb+ card is played");
+	local horzCitiesDestroyedByTimeBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzCitiesDestroyedByTimeBombPlay).SetText ('# cities destroyed by a Time Bomb card play: ');
+	NIFnumCitiesDestroyedByTimeBomb = UI.CreateNumberInputField (horzCitiesDestroyedByTimeBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByTimeBombPlay);
+	UI.CreateLabel (mainUI).SetText ("  · Set to 0 = Time Bomb plays don't destroy cities");
+	UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a Time Bomb card is played");
 
-	local horzBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
+	local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
-	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed: ');
-	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
+	UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bombs are executed: ');
+	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.TimeBombImplementationPhase))).SetOnClick (TimeBomb_turnPhaseButton_clicked);
 
 	local horzTimeBombCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
@@ -70,22 +70,22 @@ function Client_PresentConfigureUI (rootParent)
 	TimeBombCardWeight = UI.CreateNumberInputField(horzTimeBombCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.TimeBombCardWeight or 1).SetInteractable(true);
 end
 
-function Bomb_turnPhaseButton_clicked ()
+function TimeBomb_turnPhaseButton_clicked ()
 	print ("turnPhase button clicked");
 
 	WLturnPhases_PromptFromList = {}
 	for k,v in pairs (WLturnPhases()) do
 		-- print ("newObj item=="..k,v.."::");
-		table.insert (WLturnPhases_PromptFromList, {text=k, selected=function () Bomb_turnPhase_selected ({name=k,value=v}); end});
+		table.insert (WLturnPhases_PromptFromList, {text=k, selected=function () TimeBomb_turnPhase_selected ({name=k,value=v}); end});
 	end
 
-	UI.PromptFromList ("Select turn phase where Bomb cards will occur.\n\nThe default is BombCards, where bombs usually occur in core Warzone, which is after deployments, but before emergency blockade cards.\n\nIf you're not sure, the recommendation is to leave it at BombCards.", WLturnPhases_PromptFromList);
+	UI.PromptFromList ("Select turn phase where Time Bomb cards will occur.\n\nThe default is BombCards, where bombs usually occur in core Warzone, which is after deployments, but before emergency blockade cards.\n\nIf you're not sure, the recommendation is to leave it at BombCards.", WLturnPhases_PromptFromList);
 end
 
-function Bomb_turnPhase_selected (turnPhase)
+function TimeBomb_turnPhase_selected (turnPhase)
 	-- print ("turnPhase selected=="..tostring(turnPhase));
 	-- print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
 	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
-	Mod.Settings.BombImplementationPhase = turnPhase.value;
-	BombImplementationPhase.SetText (turnPhase.name);
+	Mod.Settings.TimeBombImplementationPhase = turnPhase.value;
+	TimeBombImplementationPhase.SetText (turnPhase.name);
 end

@@ -30,41 +30,36 @@ function Client_PresentSettingsUI(rootParent)
 	UI.CreateEmpty (mainUI);
 	cboxEmptyTerritoriesGoNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetText ("Territories reduced to 0 armies turn Neutral").SetIsChecked (Mod.Settings.EmptyTerritoriesGoNeutral).SetInteractable (false);
 	NIF_SUsPreventNeutral = UI.CreateCheckBox (mainUI).SetIsChecked (Mod.Settings.SpecialUnitsPreventNeutral).SetText ("Special Units prevent territory from turning neutral").SetInteractable (false);
-	if (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == true) then UI.CreateLabel (mainUI).SetText ('  • when Bombed territory is reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	elseif (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == false) then UI.CreateLabel (mainUI).SetText ('  • when Bombed territory is reduced to 0 will turn neutral and you will lose control of any Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	if (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == true) then UI.CreateLabel (mainUI).SetText ('  • a Time Bomb reducing a territory to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
+	elseif (Mod.Settings.EmptyTerritoriesGoNeutral == true and Mod.Settings.SpecialUnitsPreventNeutral == false) then UI.CreateLabel (mainUI).SetText ('  • a Time Bomb reducing a territory to 0 will turn neutral and you will lose control of any Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
 	else UI.CreateLabel (mainUI).SetText ('  • territories do not turn neutral when reduced to 0 armies or Special Units');
 	end
-	-- UI.CreateLabel (mainUI).SetText ('  • when checked, a Bombed territory reduced to 0 will not turn neutral if it has 1 or more Special Units on it, eg: Commanders, Behemoths, Dragons, Recruiters, Workers, etc');
-	-- UI.CreateLabel (mainUI).SetText ('  • when unchecked, a Bombed territory reduced to 0 will turn neutral, even if it has Special Units on it');
-	-- UI.CreateLabel (mainUI).SetText ('  • unless you have a specific mechanic in mind for your template, leave this checked');
 
-	local horzCitiesDestroyedByBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzCitiesDestroyedByBombPlay).SetText ('# cities destroyed by a Bomb+ card play: ');
-	NIFnumCitiesDestroyedByBomb = UI.CreateNumberInputField (horzCitiesDestroyedByBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByBombPlay).SetInteractable (false);
-	if (tonumber (Mod.Settings.NumCitiesDestroyedByBombPlay) == 0) then UI.CreateLabel (mainUI).SetText ("  · Bomb+ plays don't destroy cities");
-	else UI.CreateLabel (mainUI).SetText ("  · this quantity of cities are destroyed when a Bomb+ card is played");
+	local horzCitiesDestroyedByTimeBombPlay = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzCitiesDestroyedByTimeBombPlay).SetText ('# cities destroyed by a Time Bomb card play: ');
+	NIFnumCitiesDestroyedByTimeBomb = UI.CreateNumberInputField (horzCitiesDestroyedByTimeBombPlay).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (true).SetValue(Mod.Settings.NumCitiesDestroyedByTimeBombPlay).SetInteractable (false);
+	if (tonumber (Mod.Settings.NumCitiesDestroyedByTimeBombPlay) == 0) then UI.CreateLabel (mainUI).SetText ("  · Time Bombs don't destroy cities");
+	else UI.CreateLabel (mainUI).SetText ("  · this quantity of cities are destroyed when a Time Bomb explodes");
 	end
-	-- UI.CreateLabel (mainUI).SetText ("  · Set to 0 = Bomb+ plays don't destroy cities");
-	-- UI.CreateLabel (mainUI).SetText ("  · Set to >=1 = this quantity of cities are destroyed when a Bomb+ card is played");
 
-	local horzBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
+	local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
-	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed');
-	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
+	UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bomb placements are executed');
+	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.TimeBombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
 
-	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzBombPlusCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (false);
+	local horzTimeBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	TimeBombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzTimeBombPlusCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.TimeBombPlusPiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel(horzBombPlusCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardStartPieces = UI.CreateNumberInputField (horzBombPlusCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusStartPieces or 1).SetWholeNumbers (true).SetInteractable (false);
+	local horzTimeBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel(horzTimeBombPlusCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	TimeBombPlusCardStartPieces = UI.CreateNumberInputField (horzTimeBombPlusCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.TimeBombPlusStartPieces or 1).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusPiecesPerTurn = UI.CreateNumberInputField (horzBombPlusCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (false);
+	local horzTimeBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	TimeBombPlusPiecesPerTurn = UI.CreateNumberInputField (horzTimeBombPlusCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.TimeBombPlusPiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (false);
 
-	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardWeight = UI.CreateNumberInputField (horzBombPlusCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.BombPlusCardWeight or 1).SetInteractable (false);
+	local horzTimeBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombPlusCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	TimeBombPlusCardWeight = UI.CreateNumberInputField (horzTimeBombPlusCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.TimeBombPlusCardWeight or 1).SetInteractable (false);
 end
