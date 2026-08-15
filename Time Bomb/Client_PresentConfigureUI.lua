@@ -4,7 +4,7 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.SUdamagePercent = Mod.Settings.SUdamagePercent ~= nil and Mod.Settings.SUdamagePercent or 25;
 	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 10;
 	Mod.Settings.SpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral ~= nil and Mod.Settings.SpecialUnitsPreventNeutral or true;
-	Mod.Settings.TimeBombImplementationPhase = Mod.Settings.TimeBombImplementationPhase ~= nil and Mod.Settings.TimeBombImplementationPhase or WL.TurnPhase.BombCards;
+	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral ~= nil and Mod.Settings.EmptyTerritoriesGoNeutral or true;
 	Mod.Settings.NumCitiesDestroyedByTimeBombPlay = Mod.Settings.NumCitiesDestroyedByTimeBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByTimeBombPlay or 10;
 	Mod.Settings.TimeBombCastRange = Mod.Settings.TimeBombCastRange or 3; --default to 3
@@ -51,7 +51,7 @@ function Client_PresentConfigureUI (rootParent)
 	local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
 	UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bombs are executed: ');
-	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.TimeBombImplementationPhase))).SetOnClick (TimeBomb_turnPhaseButton_clicked);
+	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (TimeBomb_turnPhaseButton_clicked);
 
 	local horzTimeBombCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
@@ -86,6 +86,6 @@ function TimeBomb_turnPhase_selected (turnPhase)
 	-- print ("turnPhase selected=="..tostring(turnPhase));
 	-- print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
 	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
-	Mod.Settings.TimeBombImplementationPhase = turnPhase.value;
+	Mod.Settings.BombImplementationPhase = turnPhase.value;
 	TimeBombImplementationPhase.SetText (turnPhase.name);
 end
