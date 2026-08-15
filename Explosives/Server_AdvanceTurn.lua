@@ -1,4 +1,4 @@
-local strBombOrderFilename = "explosive orig v3b square 40x40"; --icon for the Explosives order in the order list
+local strBombOrderFilename = "Bomb card+ v3 40x40"; --icon for the Bomb+ order in the order list
 
 -- function Server_AdvanceTurn_Start (game, addNewOrder)
 -- end

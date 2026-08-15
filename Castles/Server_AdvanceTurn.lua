@@ -15,7 +15,9 @@ function Server_AdvanceTurn_End(game, addOrder)
 	--add even if no orders are included, so there isn't a give away to other players that castles have been built (in the fog, etc) when the order suddenly appears on a given turn
 	--but since all castle maintenance is being processed as a single order, do players see the content of the order anyhow and thus know how many castles each player have even they can't see the castles themselves on the map?
 	-- print ("Castle maintenance mods to be added this turn: " ..tostring (#arrCastleMaintenanceIncomeMods));
-	addOrder (WL.GameOrderEvent.Create (0, "Castle maintenance", {}, {}, {}, arrCastleMaintenanceIncomeMods));
+	local event = WL.GameOrderEvent.Create (0, "Castle maintenance", {}, {}, {}, arrCastleMaintenanceIncomeMods);
+	event.Icon = 'Castle_40x40';
+	addOrder (event);
 
 	--FOR TESTING ONLY:: set to true to cause a "called nil" error to prevent the turn from moving forward and ruining the moves inputted into the game UI
 	local boolHaltCodeExecutionAtEndofTurn = false;
@@ -50,17 +52,26 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			--also check if player paid enough gold for the castle, and if not, cancel the castle build (and flag them as a cheater); can only happen if they hack the client (etc)
 			if (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID ~= order.PlayerID) then
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
-				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed; territory no longer owned (" ..getTerritoryName (targetTerritoryID, game).. ")", {}, {}), false);
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed; territory no longer owned (" ..getTerritoryName (targetTerritoryID, game).. ")", {}, {});
+				event.Icon = 'Castle_40x40';
+				addNewOrder (event, false);
 			elseif (goldSpent >= intCastleCost) then --player paid the right amount of gold (or more - which shouldn't happen)
 				createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnteringCastle, intCastlePower);
 			else --player didn't pay enough gold; hacked the client? cancel build & flag as cheater
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
-				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price < proper cost of next castle (" ..tostring (intCastleCost).. " gold) attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Castle purchase failed --> invalid purchase price < proper cost of next castle (" ..tostring (intCastleCost).. " gold) attempted! Shame on you, CHEATER DETECTED", {}, {});
+				event.Icon = 'Castle_40x40';
+				addNewOrder (event, false);
 			end
 		elseif (strOperation == "Enter" or strOperation == "Exit") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
-			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle " ..strOperation.. " failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
-
+			if (objCastleSU == nil) then
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Castle " ..strOperation.. " failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game));
+				event.Icon = 'Castle_40x40';
+				addNewOrder (event);
+				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+				return
+			end
 			local intNumArmiesToEnterCastle = math.max (0, math.min ((strOperation == "Enter" and intArmyCountSpecified or 0), game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies));
 			local intNumArmiesToExitCastle  = math.max (0, math.min ((strOperation == "Exit"  and intArmyCountSpecified or 0), math.floor (objCastleSU.Health / intArmyToCastlePowerRatio)));
 
@@ -75,7 +86,13 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			--ref: local payload_Exit = 'Castle|Exit|' ..SelectedTerritory.ID.. "|" ..intArmiesToExitCastle;
 		elseif (strOperation == "Scuttle") then
 			local objCastleSU = getSUonTerritory (game.ServerGame.LatestTurnStanding.Territories [targetTerritoryID].NumArmies, "Castle", false);
-			if (objCastleSU == nil) then addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game))); skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); return; end
+			if (objCastleSU == nil) then
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Castle Scuttle failed; no castle on territory " ..getTerritoryName (targetTerritoryID, game));
+				event.Icon = 'Castle_40x40';
+				addNewOrder (event);
+				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+				return;
+			end
 			--ref: local payload_Scuttle = 'Castle|Scuttle|' ..SelectedTerritory.ID;
 
 			local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
@@ -90,6 +107,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 			local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle scuttled", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+			event.Icon = 'Castle_40x40';
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip order & suppress the 'Mod skipped order' message, since an order with details will be added below
 			addNewOrder (event, false);
 		else
@@ -119,6 +137,7 @@ function modifyCastle (game, order, addNewOrder, targetTerritoryID, existingCast
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle army enter/exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	event.Icon = 'Castle_40x40';
 	addNewOrder (event, false);
 end
 
@@ -142,6 +161,7 @@ function createCastle (game, order, addNewOrder, targetTerritoryID, intArmiesEnt
 	local event = WL.GameOrderEvent.Create(order.PlayerID, strDescription, {}, {terrMod});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	event.Icon = 'Castle_40x40';
 	addNewOrder (event, false);
 end
 

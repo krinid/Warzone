@@ -1,5 +1,5 @@
 --Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
-function Client_PresentPlayCardUI(game, cardInstance, playCard)
+function Client_PresentPlayCardUI (game, cardInstance, playCard)
     --when dealing with multiple cards in a single mod, observe game.Settings.Cards[cardInstance.CardID].Name to identify which one was played
     Game = game; --make client game object available globally
 
@@ -61,7 +61,7 @@ function play_Poison_card (game, cardInstance, playCard)
 		local strPoisonMessage = strPlayerName_cardPlayer .. " spews Poison on " .. TargetTerritoryName;
 		local jumpToActionSpotOpt = createJumpToLocationObject (game, TargetTerritoryID);
 		local territoryAnnotation = {[TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Poison", 8, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison  
-		playCard (strPoisonMessage, 'Poison|' .. TargetTerritoryID, WL.TurnPhase.BombCards, territoryAnnotation, jumpToActionSpotOpt);
+		playCard (strPoisonMessage, 'Poison|' .. TargetTerritoryID, WL.TurnPhase.BombCards, territoryAnnotation, jumpToActionSpotOpt, 'Poison_40x40');
 		PoisonDialog.close ();
 	end);
 end

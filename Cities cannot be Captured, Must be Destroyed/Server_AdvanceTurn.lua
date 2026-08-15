@@ -31,6 +31,7 @@ function manage_CityFort_SUs (game, addOrder)
 	end
 
 	local event = WL.GameOrderEvent.Create (0, "CityForts", {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
+	event.Icon = 'CityFort_redBack_v3_40x40';
 	addOrder (event);
 end
 
@@ -96,6 +97,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			-- event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			-- event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 			--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+			event.Icon = 'CityFort_redBack_v3_40x40';
 			addNewOrder (event, true);
 		end
 	end

@@ -23,12 +23,13 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		local event = WL.GameOrderEvent.Create (order.PlayerID, 'Placed a beacon', {}, {impactedTerritory});
 		event.FogModsOpt = {fogMod};
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
+		event.Icon = 'Beacon_40x40';
 
 		if (WL.IsVersionOrHigher("5.34.1")) then
 			event.TerritoryAnnotationsOpt = { [targetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
 		end
 
-		addNewOrder(event);
+		addNewOrder (event);
 
 		--Store the FogMod IDs so they can be removed on the appropriate turn
 		local priv = Mod.PrivateGameData;
@@ -63,10 +64,10 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 			-- if (structures == nil or structures [WL.StructureType.Custom("Beacon")] == nil) then structures = {}; --arrintBeaconStructureCount [targetTerritoryID] = 0;
 			-- elseif (structures [WL.StructureType.Custom("Beacon")] == nil) then structures [WL.StructureType.Custom("Beacon")] = 0; arrintBeaconStructureCount [targetTerritoryID] = 0;
 			-- else
-			if (structures ~= nil and structures [WL.StructureType.Custom("Beacon")] ~= nil) then
-				if (arrintBeaconStructureCount [targetTerritoryID] == nil) then arrintBeaconStructureCount [targetTerritoryID] = structures [WL.StructureType.Custom("Beacon")]; end
+			if (structures ~= nil and structures [WL.StructureType.Custom ("Beacon")] ~= nil) then
+				if (arrintBeaconStructureCount [targetTerritoryID] == nil) then arrintBeaconStructureCount [targetTerritoryID] = structures [WL.StructureType.Custom ("Beacon")]; end
 				arrintBeaconStructureCount [targetTerritoryID] = math.max (0, arrintBeaconStructureCount [targetTerritoryID] -1);
-				structures [WL.StructureType.Custom("Beacon")] = arrintBeaconStructureCount [targetTerritoryID];
+				structures [WL.StructureType.Custom ("Beacon")] = arrintBeaconStructureCount [targetTerritoryID];
 			end
 			impactedTerritory.SetStructuresOpt = structures;
 			table.insert (modifiedTerritories, impactedTerritory);
@@ -74,7 +75,8 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 
 		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, 'Beacon effect dissipates', {}, modifiedTerritories);
 		event.RemoveFogModsOpt = priv.FogModIDs [game.Game.TurnNumber];
-		addNewOrder(event);
+		event.Icon = 'Beacon_40x40';
+		addNewOrder (event);
 		priv.FogModIDs [game.Game.TurnNumber] = nil;
 		Mod.PrivateGameData = priv;
 	end

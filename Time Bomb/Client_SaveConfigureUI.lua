@@ -14,12 +14,13 @@ function Client_SaveConfigureUI (alert, addCard)
 	--b/c it's handled in Present_Configure; it's done this way to work around the fact that WL.TurnPhase is a numeric value, and we want to display the WL.TurnPhase.ToString () value of that value to the client
 	--so it's easier to just set the Mod.Settings.BombImplementationPhase to the numeric value at time of click the desired turn phase
 
-	Mod.Settings.BombPlusPiecesNeeded = BombPlusCardPiecesNeeded.GetValue ();
-	Mod.Settings.BombPlusStartPieces = BombPlusCardStartPieces.GetValue ();
-	Mod.Settings.BombPlusPiecesPerTurn = BombPlusPiecesPerTurn.GetValue ();
-	Mod.Settings.BombPlusCardWeight = BombPlusCardWeight.GetValue ();
+	Mod.Settings.TimeBombPiecesNeeded = TimeBombCardPiecesNeeded.GetValue ();
+	Mod.Settings.TimeBombStartPieces = TimeBombCardStartPieces.GetValue ();
+	Mod.Settings.TimeBombPiecesPerTurn = TimeBombPiecesPerTurn.GetValue ();
+	Mod.Settings.TimeBombCardWeight = TimeBombCardWeight.GetValue ();
 	Mod.Settings.NumCitiesDestroyedByBombPlay = NIFnumCitiesDestroyedByBomb.GetValue ();
 
-	local strBombPlusDesc = get_BombPlus_description ();
-	Mod.Settings.BombCardPlusID = addCard ("Time Bomb", strBombPlusDesc, "Time bomb 130x180.png", Mod.Settings.BombPlusPiecesNeeded, Mod.Settings.BombPlusPiecesPerTurn, Mod.Settings.BombPlusStartPieces, Mod.Settings.BombPlusCardWeight);
+	Mod.Settings.TimeBombCastRange = math.max (NIFcastRange.GetValue (), -1); -- -1 indicates that can be cast anywhere on map w/o limitations; 0 = can only cast poison on territories you own yourself
+	local strTimeBombDesc = get_BombPlus_description ();
+	Mod.Settings.BombCardPlusID = addCard ("Time Bomb", strTimeBombDesc, "Time bomb 130x180.png", Mod.Settings.TimeBombPiecesNeeded, Mod.Settings.TimeBombPiecesPerTurn, Mod.Settings.TimeBombStartPieces, Mod.Settings.TimeBombCardWeight);
 end

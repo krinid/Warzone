@@ -131,6 +131,8 @@ function ScuttleCastleButtonClicked ()
 
 	customOrder_Scuttle.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Scuttle.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Scuttle Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	customOrder_Scuttle.Icon = 'Castle_40x40';
+
 	-- table.insert(orders, customOrder_Scuttle);
 	Game.Orders = insertOrder (Game, customOrder_Scuttle, orders);
 	-- Game.Orders = orders;
@@ -164,6 +166,7 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 
 		customOrder_Enter.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Enter.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army enter", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+		customOrder_Enter.Icon = 'Castle_40x40';
 		-- table.insert (orders, customOrder_Enter);
 		Game.Orders = insertOrder (Game, customOrder_Enter, orders);
 		print ("CASTLE addOrder Enter " ..intArmiesToEnterCastle);
@@ -175,15 +178,16 @@ function AddOrderButtonClicked_ArmiesEnterExit()
 		local customOrder_Exit = WL.GameOrderCustom.Create (Game.Us.ID, msg_Exit, payload_Exit, {}, WL.TurnPhase.BlockadeCards); --Enter/Exit occurs in EMB phase; Scuttle occurs in GiftCards phase; EMB phase occurs before GiftCards phase, so Enter/Exits occur before Scuttles
 		customOrder_Exit.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 		customOrder_Exit.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle army exit", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+		customOrder_Exit.Icon = 'Castle_40x40';
 		-- table.insert(orders, customOrder_Exit);
 		Game.Orders = insertOrder (Game, customOrder_Exit, orders);
 		print ("CASTLE addOrder Exit " ..intArmiesToExitCastle);
 	end
 
-	print ("ORDERS TO BE APPLIED:");
-	displayOrders (orders);
-	print ("Game.Orders:");
-	displayOrders (Game.Orders);
+	-- print ("ORDERS TO BE APPLIED:");
+	-- displayOrders (orders);
+	-- print ("Game.Orders:");
+	-- displayOrders (Game.Orders);
 	-- Game.Orders = orders;
 	createPurchaseCastleUIcomponents (vertCastleButtons); --clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 	displayCastleStats (vertCastleStats);
@@ -342,6 +346,7 @@ function CompletePurchaseClicked()
 	local customOrder_Purchase = WL.GameOrderCustom.Create (Game.Us.ID, msg, payload,  { [WL.ResourceType.Gold] = intCastleCost }, WL.TurnPhase.SanctionCards);
 	customOrder_Purchase.JumpToActionSpotOpt = createJumpToLocationObject (Game, SelectedTerritory.ID);
 	customOrder_Purchase.TerritoryAnnotationsOpt = {[SelectedTerritory.ID] = WL.TerritoryAnnotation.Create ("Castle", 8, getColourInteger (45, 45, 45))}; --use Dark Grey for Castle
+	customOrder_Purchase.Icon = 'Castle_40x40';
 	-- table.insert(orders, customOrder_Purchase);
 	Game.Orders = insertOrder (Game, customOrder_Purchase, orders);
 	-- Game.Orders = orders;

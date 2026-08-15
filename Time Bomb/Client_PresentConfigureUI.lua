@@ -7,7 +7,14 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral ~= nil and Mod.Settings.EmptyTerritoriesGoNeutral or true;
 	Mod.Settings.NumCitiesDestroyedByBombPlay = Mod.Settings.NumCitiesDestroyedByBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByBombPlay or 10;
+	Mod.Settings.TimeBombCastRange = Mod.Settings.TimeBombCastRange or 3; --default to 3
+
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+
+	local horzTimeBombCastRange = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombCastRange).SetText ("Cast range: ").SetPreferredWidth (300);
+	NIFcastRange = UI.CreateNumberInputField (horzTimeBombCastRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.TimeBombCastRange);
+	UI.CreateLabel (mainUI).SetText("  • how far a TimeBomb can be placed from a territory you own\n");
 
 	local horzArmyDamage = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzArmyDamage).SetText ("Army Damage - ").SetColor ("#FFFF00");
@@ -46,21 +53,21 @@ function Client_PresentConfigureUI (rootParent)
 	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed: ');
 	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
 
-	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
-	BombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzBombPlusCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusPiecesNeeded or 10).SetWholeNumbers(true).SetInteractable(true);
+	local horzTimeBombCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+	TimeBombCardPiecesNeeded = UI.CreateNumberInputField (horzTimeBombCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombPiecesNeeded or 10).SetWholeNumbers(true).SetInteractable(true);
 
-	local horzBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel(horzBombPlusCardStartPieces).SetText("Pieces given to each player at the start: ");
-	BombPlusCardStartPieces = UI.CreateNumberInputField (horzBombPlusCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusStartPieces or 1).SetWholeNumbers(true).SetInteractable(true);
+	local horzTimeBombCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel(horzTimeBombCardStartPieces).SetText("Pieces given to each player at the start: ");
+	TimeBombCardStartPieces = UI.CreateNumberInputField (horzTimeBombCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombStartPieces or 1).SetWholeNumbers(true).SetInteractable(true);
 
-	local horzBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
-	BombPlusPiecesPerTurn = UI.CreateNumberInputField (horzBombPlusCardPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.BombPlusPiecesPerTurn or 1).SetWholeNumbers(true).SetInteractable(true);
+	local horzTimeBombCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
+	TimeBombPiecesPerTurn = UI.CreateNumberInputField (horzTimeBombCardPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombPiecesPerTurn or 1).SetWholeNumbers(true).SetInteractable(true);
 
-	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardWeight).SetText("Card weight: ");
-	BombPlusCardWeight = UI.CreateNumberInputField(horzBombPlusCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.BombPlusCardWeight or 1).SetInteractable(true);
+	local horzTimeBombCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombCardWeight).SetText("Card weight: ");
+	TimeBombCardWeight = UI.CreateNumberInputField(horzTimeBombCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.TimeBombCardWeight or 1).SetInteractable(true);
 end
 
 function Bomb_turnPhaseButton_clicked ()

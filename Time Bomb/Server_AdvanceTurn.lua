@@ -204,8 +204,6 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	event.Icon = strBombOrderFilename;
 
-
-
 	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 
 	--2nd param indicates whether to skip this order if the original order is skipped (by this or any other mod)

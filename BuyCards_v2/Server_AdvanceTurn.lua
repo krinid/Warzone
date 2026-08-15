@@ -9,12 +9,16 @@ function Server_AdvanceTurn_End (game, addOrder)
 		if (publicGameData.CardData.HostHasAdjustedPricing == true) then
 			publicGameData.CardData.CardPricesFinalized = true;
 			if (publicGameData.PricesFinalizedMessageAlreadyDisplayed == nil) then
-				addOrder(WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{}));
+				local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{});
+				event.Icon = 'BuyCards_v2_40x40';
+				addOrder (event);
 				publicGameData.PricesFinalizedMessageAlreadyDisplayed = true; --flag it so it doesn't redisplay each turn
 			end
 		else
 			--auto-finalize card prices at their default values
-			addOrder(WL.GameOrderEvent.Create(WL.PlayerID.Neutral, "Finalizing card prices at default values in lieu of host setting custom values", {}, {},{}));
+			local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Finalizing card prices at default values in lieu of host setting custom values", {}, {},{});
+			event.Icon = 'BuyCards_v2_40x40';
+			addOrder (event);
 			publicGameData.CardData.CardPricesFinalized = true;
 		end
 	end
@@ -54,7 +58,8 @@ function Server_AdvanceTurn_Start(game, addOrder)
 	if (Mod.PublicGameData.CardData.CardPricesFinalized == true) then
 		--don't declare variable as local, leave it global so this message can be displayed only once
 		if (Mod.PublicGameData.PricesFinalizedMessageAlreadyDisplayed == nil) then
-			addOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{}));
+			local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Game host has finalized card prices", {}, {},{});
+			addOrder (event);
 			local publicGameData = Mod.PublicGameData;
 			publicGameData.PricesFinalizedMessageAlreadyDisplayed = true; --flag it so it doesn't redisplay each turn
 			Mod.PublicGameData = publicGameData; --save updated values
@@ -98,21 +103,27 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 				--player doesn't have enough gold to afford the card purchase, so cancel it
 				local strCardLimitExceeded = "Card purchase '" ..strCardName.. "' canceled; already at purchase limit (" ..tostring (intMaxBuyableCards).. ")";
 				print (strCardLimitExceeded);
-				addOrder (WL.GameOrderEvent.Create(order.PlayerID, strCardLimitExceeded, {}, {},{}));
-				skipThisOrder(WL.ModOrderControl.Skip);
+				local event = WL.GameOrderEvent.Create(order.PlayerID, strCardLimitExceeded, {}, {},{});
+				event.Icon = 'BuyCards_v2_40x40';
+				addOrder (event);
+				skipThisOrder (WL.ModOrderControl.Skip);
 				return;
 			elseif (pricePaid < intActualCardPrice) then
 				-- local strClientTampering = "Price paid at turn input was "..pricePaid..", price of card is "..cardRecord.Price.." - evidence of client side tampering. Skipping order to buy "..strCardName;
 				local strClientTampering = "Price paid at turn input was "..pricePaid..", price of card is " ..intActualCardPrice.. " - evidence of client side tampering. Skipping order to buy "..strCardName;
 				print (strClientTampering);
-				addOrder (WL.GameOrderEvent.Create(order.PlayerID, strClientTampering, {}, {},{}));
-				skipThisOrder(WL.ModOrderControl.Skip);
+				local event = WL.GameOrderEvent.Create(order.PlayerID, strClientTampering, {}, {},{});
+				event.Icon = 'BuyCards_v2_40x40';
+				addOrder (event);
+				skipThisOrder (WL.ModOrderControl.Skip);
 				return;
 			elseif (pricePaid > intActualCardPrice) then
 				-- local strClientTampering = "Price paid at turn input was "..pricePaid..", price of card is "..cardRecord.Price.." - evidence of client side tampering but as price paid was too much and not too little, will not skip order to buy "..strCardName;
 				local strClientTampering = "Price paid at turn input was "..pricePaid..", price of card is "..intActualCardPrice.." - evidence of client side tampering but as price paid was too much and not too little, will not skip order to buy "..strCardName;
 				print (strClientTampering);
-				addOrder (WL.GameOrderEvent.Create(order.PlayerID, strClientTampering, {}, {},{}));
+				local event = WL.GameOrderEvent.Create(order.PlayerID, strClientTampering, {}, {},{})
+				event.Icon = 'BuyCards_v2_40x40';
+				addOrder (event);
 				--skipThisOrder(WL.ModOrderControl.Skip);
 			end
 
@@ -120,6 +131,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 			local event = WL.GameOrderEvent.Create (order.PlayerID, order.Message, {});
 			event.AddCardPiecesOpt = {[order.PlayerID] = {[cardID] = numCardPieces}};
 			event.AddResourceOpt = {[order.PlayerID] = {-pricePaid}}; --Table<PlayerID,Table<ResourceType (enum),integer>>
+			event.Icon = 'BuyCards_v2_40x40';
 
 			--increase counter indicating # of turns this card was purchased on if this is the 1st purchase of this card type this turn
 			--only increase the cost of each card type once per turn;
@@ -130,7 +142,7 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addOrder)
 			print ("[BUY CARD] " ..cardID,pricePaid,arrIntNewValues_NumCardPriceIncreases [cardID],arrIntNumCardsPurchased [cardID]);
 			arrIntNumCardsPurchased [cardID] = intNumCardsPurchased + 1;
 			print ("[TURNEND CARD CHECK] goes here; count  " ..count (arrIntNumCardPriceIncreases));
-			addOrder(event);
+			addOrder (event);
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --already added a custom order that adds card pieces, so don't need this order that is just a text notification (it would just dupe)
 		end
 	end

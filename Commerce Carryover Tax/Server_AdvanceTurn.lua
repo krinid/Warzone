@@ -61,7 +61,9 @@ function apply_Commerce_Carryover_Tax (game, addOrder)
 			-- table.insert (arrIncomeMods, WL.IncomeMod.Create (playerID, -intTaxAmount_Income, "Carryover tax"));
 			-- if (intTaxAmount_GoldInHand > 0) then 
 			arrTaxAmount_GoldInHand[playerID] = {}; arrTaxAmount_GoldInHand [playerID][WL.ResourceType.Gold] = math.max (0, intGoldInHand - intTaxAmount_GoldInHand); --if income isn't high enough to cover the tax, take it from gold in hand but never go below 0 (it can break the game, player can't commit)
-			addOrder (WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmount_GoldInHand, {}));
+			local event = WL.GameOrderEvent.Create (playerID, "Carryover tax: " .. tostring (intTaxAmount) .. " gold", {}, {}, arrTaxAmount_GoldInHand, {});
+			event.Icon = 'Commerce Tax_square_40x40';
+			addOrder (event);
 		end
 	end
 	--experimenting putting all income/resource adjustment orders together but it breaks visibility, showing all IncomeMods to all players - so just leave it as separate Event order belonging to the appropriate player, then it abides by the proper visibility rules

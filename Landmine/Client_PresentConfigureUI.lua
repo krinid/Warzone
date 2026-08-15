@@ -20,6 +20,13 @@ function Client_PresentConfigureUI (rootParent)
 	-- NIFarmyDamageFixed = UI.CreateNumberInputField (horzArmyDamage).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.ArmyDamageFixed);
 	-- UI.CreateLabel (mainUI).SetText ('• % damage is applied first, then fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)');
 
+	Mod.Settings.LandmineCastRange = Mod.Settings.LandmineCastRange or 3; --default to 3
+
+	local horzLandmineCastRange = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandmineCastRange).SetText ("Cast range: ").SetPreferredWidth (300);
+	NIFcastRange = UI.CreateNumberInputField (horzLandmineCastRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.LandmineCastRange);
+	UI.CreateLabel (mainUI).SetText("  • how far a Landmine can be placed from a territory you own\n");
+
 	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
 	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
 	local horzArmyDamage2 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
@@ -63,21 +70,21 @@ function Client_PresentConfigureUI (rootParent)
 	UI.CreateLabel (horzBombImplementationPhase).SetText ('Turn phase where bombs are executed');
 	BombImplementationPhase = UI.CreateButton (horzBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
 
-	local horzBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardPiecesNeeded = UI.CreateNumberInputField (horzBombPlusCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (true);
+	local horzLandmineCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandmineCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandmineCardPiecesNeeded = UI.CreateNumberInputField (horzLandmineCardPiecesNeeded).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandminePiecesNeeded or 10).SetWholeNumbers (true).SetInteractable (true);
 
-	local horzBombPlusCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel(horzBombPlusCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardStartPieces = UI.CreateNumberInputField (horzBombPlusCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusStartPieces or 1).SetWholeNumbers (true).SetInteractable (true);
+	local horzLandmineCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel(horzLandmineCardStartPieces).SetText ("Pieces given to each player at the start").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandmineCardStartPieces = UI.CreateNumberInputField (horzLandmineCardStartPieces).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandmineStartPieces or 1).SetWholeNumbers (true).SetInteractable (true);
 
-	local horzBombPlusCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusPiecesPerTurn = UI.CreateNumberInputField (horzBombPlusCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.BombPlusPiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (true);
+	local horzLandmineCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandmineCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandminePiecesPerTurn = UI.CreateNumberInputField (horzLandmineCardPiecesPerTurn).SetSliderMinValue (1).SetSliderMaxValue (10).SetValue (Mod.Settings.LandminePiecesPerTurn or 1).SetWholeNumbers (true).SetInteractable (true);
 
-	local horzBombPlusCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzBombPlusCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
-	BombPlusCardWeight = UI.CreateNumberInputField (horzBombPlusCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.BombPlusCardWeight or 1).SetInteractable (true);
+	local horzLandmineCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzLandmineCardWeight).SetText ("Card weight  (how common the card is)").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
+	LandmineCardWeight = UI.CreateNumberInputField (horzLandmineCardWeight).SetSliderMinValue (0).SetSliderMaxValue (10).SetWholeNumbers (false).SetValue (Mod.Settings.LandmineCardWeight or 1).SetInteractable (true);
 end
 
 function Bomb_turnPhaseButton_clicked ()

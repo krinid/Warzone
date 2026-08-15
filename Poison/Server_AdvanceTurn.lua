@@ -78,6 +78,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, order.To);
 			print ("[POISON] carried to " ..order.To.. "/" ..getTerritoryName (order.To, game).. ", strength " ..tostring (floatPoisonStrength));
 			event.TerritoryAnnotationsOpt = {[order.To] = WL.TerritoryAnnotation.Create (strPoisonNameText.. " carried", 4, getColourInteger (50, 175, 0))}; --use Sickly Green for Poison
+			event.Icon = 'Poison_40x40';
 			addNewOrder (event, true);
 		end
 	elseif (order.proxyType == 'GameOrderEvent') then
@@ -138,6 +139,7 @@ function expire_Poison (game, addNewOrder)
 			local event = WL.GameOrderEvent.Create (poisonRecord.cardPlayerID, strPoisonNameText.. " expires on " ..getTerritoryName (poisonRecord.targetTerritoryID, game), {}, {impactedTerritory_RemoveStructure});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, poisonRecord.targetTerritoryID);
 			-- event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+			event.Icon = 'Poison_40x40';
 			addNewOrder (event, false);
 		else
 			poisonDataNew [k] = poisonRecord;
@@ -275,6 +277,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strOrderDescription, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger (50, 175, 0))}; --use Sickly Green for Poison
+		event.Icon = 'Poison_40x40';
 		addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 	elseif (#SUsNewList == 0 and #SUsToRemove > 0) then --no SUs to add, only SUs to remove (killed by poison), potentially army reductions as well
 		local strPoisonMsg = strOrderDescription;
@@ -282,6 +285,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 		local event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+		event.Icon = 'Poison_40x40';
 		addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 	else
 		--SUs to add/remove and potentially army reductions as well
@@ -304,6 +308,7 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 			event = WL.GameOrderEvent.Create (intPoisonPlayerID, strPoisonMsg, {}, {impactedTerritory});
 			event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 			event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText, 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+			event.Icon = 'Poison_40x40';
 			addNewOrder (event, false); --needs 'false' b/c this is triggered by a GameOrderEvent that is skipped
 		end
 	end
@@ -359,6 +364,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 		local event = WL.GameOrderEvent.Create (order.PlayerID, order.Description .. " (blocked by Shield)", {}, {impactedTerritory});
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 		event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create (strPoisonNameText .. " spew (blocked by Shield)", 4, getColourInteger(50, 175, 0))}; --use Sickly Green for Poison
+		event.Icon = 'Poison_40x40';
 		addNewOrder (event, true);
 	end
 end

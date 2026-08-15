@@ -29,7 +29,9 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 				createBehemoth (game, order, addNewOrder, skipThisOrder, targetTerritoryID, goldSpent);
 			else
 				skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added below
-				addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {}), false);
+				local event = WL.GameOrderEvent.Create (order.PlayerID, "Behemoth purchase failed --> invalid purchase price <=0 gold attempted! Shame on you, CHEATER DETECTED", {}, {});
+				event.Icon = 'Behemoth_40x40';
+				addNewOrder (event, false);
 			end
 		else
 			print ("[BEHEMOTH] unsupported operation: " .. strOperation);
@@ -169,7 +171,9 @@ function createBehemoth (game, order, addNewOrder, skipThisOrder, targetTerritor
 	local targetTerritoryStanding = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
 
 	if (targetTerritoryStanding.OwnerPlayerID ~= order.PlayerID) then
-		addNewOrder (WL.GameOrderEvent.Create (order.PlayerID, "Failed to create Behemoth on "..game.Map.Territories[targetTerritoryID].Name, {}, {},{}), false); --use 'false' since we will skip the Behemoth creation order as it charges money to player that shouldn't be charged if Behemoth isn't created
+		local event = WL.GameOrderEvent.Create (order.PlayerID, "Failed to create Behemoth on "..game.Map.Territories[targetTerritoryID].Name .. " (no longer owns territory)", {}, {},{});
+		event.Icon = 'Behemoth_40x40';
+		addNewOrder (event, false); --use 'false' since we will skip the Behemoth creation order as it charges money to player that shouldn't be charged if Behemoth isn't created
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the 'Mod skipped order' message, since an order with details will be added; important to skip so Behemoth cost is refunded since the B wasn't created
 		return; --can only buy a Behemoth onto a territory you control
 	end
@@ -211,7 +215,9 @@ function createBehemoth (game, order, addNewOrder, skipThisOrder, targetTerritor
 	local terrMod = WL.TerritoryModification.Create (targetTerritoryID);
 	terrMod.AddSpecialUnits = {builder.Build()};
 
-	addNewOrder (WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod}));
+	local event = WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a Behemoth with power '..behemothPower, {}, {terrMod});
+	event.Icon = 'Behemoth_40x40';
+	addNewOrder (event, true);
 
 	--increase count for total # Behemoths created this game for this player
 	local playerGameData = Mod.PlayerGameData;
