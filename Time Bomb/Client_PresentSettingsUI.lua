@@ -45,7 +45,7 @@ function Client_PresentSettingsUI(rootParent)
 	local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
 	UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bomb placements are executed');
-	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.TimeBombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
+	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
 
 	local horzTimeBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);

@@ -46,7 +46,7 @@ function Client_PresentSettingsUI(rootParent)
 	local horzLandmineImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
 	UI.CreateLabel (horzLandmineImplementationPhase).SetText ('Turn phase where landmines are executed');
-	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.LandmineImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
+	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
 
 	local horzLandminePlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzLandminePlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);

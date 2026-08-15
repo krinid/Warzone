@@ -7,7 +7,7 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.SUdamageFixed = Mod.Settings.SUdamageFixed ~= nil and Mod.Settings.SUdamageFixed or 10;
 	Mod.Settings.SpecialUnitsPreventNeutral = Mod.Settings.SpecialUnitsPreventNeutral == nil and true or Mod.Settings.SpecialUnitsPreventNeutral;
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral == nil and true or Mod.Settings.EmptyTerritoriesGoNeutral;
-	Mod.Settings.LandmineImplementationPhase = Mod.Settings.LandmineImplementationPhase ~= nil and Mod.Settings.LandmineImplementationPhase or WL.TurnPhase.BombCards;
+	Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
 	Mod.Settings.NumCitiesDestroyedByLandminePlay = Mod.Settings.NumCitiesDestroyedByLandminePlay ~= nil and Mod.Settings.NumCitiesDestroyedByLandminePlay or 10;
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
 
@@ -68,7 +68,7 @@ function Client_PresentConfigureUI (rootParent)
 	local horzLandmineImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateEmpty (mainUI);
 	UI.CreateLabel (horzLandmineImplementationPhase).SetText ('Turn phase where landmine plays are executed');
-	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.LandmineImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
+	LandmineImplementationPhase = UI.CreateButton (horzLandmineImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (Bomb_turnPhaseButton_clicked);
 
 	local horzLandmineCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzLandmineCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
@@ -103,6 +103,6 @@ function Bomb_turnPhase_selected (turnPhase)
 	-- print ("turnPhase selected=="..tostring(turnPhase));
 	-- print ("turnPhase selected:: name=="..turnPhase.name.."::value=="..turnPhase.value.."::value from WLturnPhases=="..WLturnPhases()[turnPhase.name].."::");
 	-- printObjectDetails (turnPhase, "turnPhase stuff", "[Nuke turnPhase config]");
-	Mod.Settings.LandmineImplementationPhase = turnPhase.value;
+	Mod.Settings.BombImplementationPhase = turnPhase.value;
 	LandmineImplementationPhase.SetText (turnPhase.name);
 end
