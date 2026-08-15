@@ -6,6 +6,6 @@ Damage can be assigned independently for armies and Special Units as follows:
 
 % damage is applied first, then fixed damage is applied
 
-Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb  hits
+Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb hits
 
 In addition, Landmines can be configured to destroy cities
