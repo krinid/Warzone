@@ -1,11 +1,11 @@
-Adds customization for Bomb Cards whereby damage applied is a combination of:
+Plant a landmine on any territory owned by you, a teammate (if in a team game) or a neutral territory within a host configurable range from your territories which explodes when the territory is captured. Enemies cannot see the landmine. You will be provided a reminder of the landmine via an Annotation at the end of each turn while a landmine is still deployed. Landmines do not expire, they remain on the map until triggered.
+
+Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)
 (B) fixed damage (any integer)
-
-These can be specified independently for armies and Special Units.
 
 % damage is applied first, then fixed damage is applied
 
 Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb  hits
 
-Bombs can also be configured to impact at any turn phase (default stage is 'BombCards' - when normal bombs impact, but can change to early or later in the turn, eg: before deployments, after attack orders are processed, etc)
+In addition, Landmines can be configured to destroy cities

@@ -1,4 +1,6 @@
-Adds customization for Bomb Cards whereby damage applied is a combination of:
+Plant a time bomb on any territory within a host configurable range from your territories which explodes after a set number of turns. Enemies can see the time bomb.
+
+Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)
 (B) fixed damage (any integer)
 
@@ -6,4 +8,4 @@ Adds customization for Bomb Cards whereby damage applied is a combination of:
 
 Example: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10) after the Bomb  hits
 
-Bombs can also be configured to impact at end of turn instead at start of turn
+In addition, Time Bombs can be configured to destroy cities
