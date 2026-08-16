@@ -2,6 +2,17 @@ require ('Bomb+ common');
 
 function Client_PresentSettingsUI(rootParent)
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+
+	local horzTimeBombDurationForMaxPower = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombDurationForMaxPower).SetText ("Time delay: ").SetPreferredWidth (300);
+	NIFdurationForMaxPower = UI.CreateNumberInputField (horzTimeBombDurationForMaxPower).SetInteractable (false).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (tonumber (Mod.Settings.TimeBombDurationForMaxPower or 3));
+	UI.CreateLabel (mainUI).SetText("  • how many turns before a Time Bomb explodes\n");
+
+	local horzTimeBombCastRange = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombCastRange).SetText ("Cast range: ").SetPreferredWidth (300);
+	NIFcastRange = UI.CreateNumberInputField (horzTimeBombCastRange).SetSliderMinValue (0).SetInteractable (false).SetSliderMaxValue (100).SetValue (Mod.Settings.TimeBombCastRange);
+	UI.CreateLabel (mainUI).SetText("  • how far a TimeBomb can be placed from a territory you own\n");
+
 	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
 	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
 	local horzArmyDamage2 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);

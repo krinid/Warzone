@@ -8,31 +8,61 @@ function Client_PresentConfigureUI (rootParent)
 	Mod.Settings.EmptyTerritoriesGoNeutral = Mod.Settings.EmptyTerritoriesGoNeutral ~= nil and Mod.Settings.EmptyTerritoriesGoNeutral or true;
 	Mod.Settings.NumCitiesDestroyedByTimeBombPlay = Mod.Settings.NumCitiesDestroyedByTimeBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByTimeBombPlay or 10;
 	Mod.Settings.TimeBombCastRange = Mod.Settings.TimeBombCastRange or 3; --default to 3
+	Mod.Settings.TimeBombDurationForMaxPowerDurationForMaxPower = Mod.Settings.TimeBombDurationForMaxPowerDurationForMaxPower or 3; --default to 3 = time bombs explodes @ max power in 3 turns
 
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
 
+	local horzTimeBombDurationForMaxPower = UI.CreateHorizontalLayoutGroup (mainUI);
+	UI.CreateLabel (horzTimeBombDurationForMaxPower).SetText ("Time delay: ").SetPreferredWidth (300);
+	NIFdurationForMaxPower = UI.CreateNumberInputField (horzTimeBombDurationForMaxPower).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (tonumber (Mod.Settings.TimeBombDurationForMaxPower or 3));
+	UI.CreateLabel (mainUI).SetText("  • how many turns before a Time Bomb explodes\n");
+
 	local horzTimeBombCastRange = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombCastRange).SetText ("Cast range: ").SetPreferredWidth (300);
-	NIFcastRange = UI.CreateNumberInputField (horzTimeBombCastRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.TimeBombCastRange);
+	NIFcastRange = UI.CreateNumberInputField (horzTimeBombCastRange).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (tonumber (Mod.Settings.TimeBombCastRange or 3));
 	UI.CreateLabel (mainUI).SetText("  • how far a TimeBomb can be placed from a territory you own\n");
 
-	local horzArmyDamage = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzArmyDamage).SetText ("Army Damage - ").SetColor ("#FFFF00");
-	UI.CreateLabel (horzArmyDamage).SetText ('Damage (%): ');
-	NIFarmyDamagePercent = UI.CreateNumberInputField (horzArmyDamage).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.ArmyDamagePercent);
+	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
+	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
+	local horzArmyDamage2 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
+	UI.CreateLabel (horzArmyDamage1).SetText ("[Army Damage]").SetColor ("#FFFF00").SetPreferredWidth (150);
+	UI.CreateLabel (horzArmyDamage1).SetText ('Percent (%): ').SetPreferredWidth (100).SetAlignment (WL.TextAlignmentOptions.Right);
+	NIFarmyDamagePercent = UI.CreateNumberInputField (horzArmyDamage1).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.ArmyDamagePercent).SetPreferredWidth (150).SetInteractable (true);
 	-- local horzArmyDamageFixed = UI.CreateHorizontalLayoutGroup(mainUI);
-	UI.CreateLabel (horzArmyDamage).SetText ('  Fixed damage: ');
-	NIFarmyDamageFixed = UI.CreateNumberInputField (horzArmyDamage).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.ArmyDamageFixed);
-	UI.CreateLabel (mainUI).SetText ('[% damage is applied first, then fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)]');
+	UI.CreateLabel (horzArmyDamage2).SetText ("").SetColor ("#FFFF00").SetPreferredWidth (150);
+	UI.CreateLabel (horzArmyDamage2).SetText ('Fixed: ').SetPreferredWidth (100).SetAlignment (WL.TextAlignmentOptions.Right);
+	NIFarmyDamageFixed = UI.CreateNumberInputField (horzArmyDamage2).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.ArmyDamageFixed).SetPreferredWidth (150).SetInteractable (true);
+	-- UI.CreateLabel (mainUI).SetText ('• % damage is applied first, then fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)');
 
-	local horzSUdamage = UI.CreateHorizontalLayoutGroup(mainUI);
-	UI.CreateLabel (horzSUdamage).SetText ("SU Damage - ").SetColor ("#FFFF00");
-	UI.CreateLabel(horzSUdamage).SetText ('Damage (%): ');
-	NIF_SUdamagePercent = UI.CreateNumberInputField (horzSUdamage).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.SUdamagePercent);
+	local vertSUdamage = UI.CreateVerticalLayoutGroup (mainUI);
+	local horzSUdamage1 = UI.CreateHorizontalLayoutGroup (vertSUdamage).SetFlexibleWidth(1);
+	local horzSUdamage2 = UI.CreateHorizontalLayoutGroup (vertSUdamage).SetFlexibleWidth(1);
+	UI.CreateLabel (horzSUdamage1).SetText ("[Special Unit Damage]").SetColor ("#FFFF00").SetPreferredWidth (150);
+	UI.CreateLabel(horzSUdamage1).SetText ('Percent (%): ').SetPreferredWidth (100).SetAlignment (WL.TextAlignmentOptions.Right);
+	NIF_SUdamagePercent = UI.CreateNumberInputField (horzSUdamage1).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.SUdamagePercent).SetInteractable (true);
+	UI.CreateLabel (horzSUdamage2).SetText ("").SetColor ("#FFFF00").SetPreferredWidth (150);
 	-- local horzSUdamageFixed = UI.CreateHorizontalLayoutGroup(mainUI);
-	UI.CreateLabel(horzSUdamage).SetText ('Fixed damage: ');
-	NIF_SUdamageFixed = UI.CreateNumberInputField (horzSUdamage).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.SUdamageFixed);
-	UI.CreateLabel (mainUI).SetText ('[% damage is applied first, the fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)]');
+	UI.CreateLabel(horzSUdamage2).SetText ('Fixed: ').SetPreferredWidth (100).SetAlignment (WL.TextAlignmentOptions.Right);
+	NIF_SUdamageFixed = UI.CreateNumberInputField (horzSUdamage2).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.SUdamageFixed).SetInteractable (true);
+	UI.CreateLabel (mainUI).SetText ('• % damage is applied first, the fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)');
+
+	-- local horzArmyDamage = UI.CreateHorizontalLayoutGroup (mainUI);
+	-- UI.CreateLabel (horzArmyDamage).SetText ("Army Damage - ").SetColor ("#FFFF00");
+	-- UI.CreateLabel (horzArmyDamage).SetText ('Damage (%): ');
+	-- NIFarmyDamagePercent = UI.CreateNumberInputField (horzArmyDamage).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.ArmyDamagePercent);
+	-- -- local horzArmyDamageFixed = UI.CreateHorizontalLayoutGroup(mainUI);
+	-- UI.CreateLabel (horzArmyDamage).SetText ('  Fixed damage: ');
+	-- NIFarmyDamageFixed = UI.CreateNumberInputField (horzArmyDamage).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.ArmyDamageFixed);
+	-- UI.CreateLabel (mainUI).SetText ('[% damage is applied first, then fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)]');
+
+	-- local horzSUdamage = UI.CreateHorizontalLayoutGroup(mainUI);
+	-- UI.CreateLabel (horzSUdamage).SetText ("SU Damage - ").SetColor ("#FFFF00");
+	-- UI.CreateLabel(horzSUdamage).SetText ('Damage (%): ');
+	-- NIF_SUdamagePercent = UI.CreateNumberInputField (horzSUdamage).SetSliderMinValue (0).SetSliderMaxValue (100).SetValue (Mod.Settings.SUdamagePercent);
+	-- -- local horzSUdamageFixed = UI.CreateHorizontalLayoutGroup(mainUI);
+	-- UI.CreateLabel(horzSUdamage).SetText ('Fixed damage: ');
+	-- NIF_SUdamageFixed = UI.CreateNumberInputField (horzSUdamage).SetSliderMinValue (0).SetSliderMaxValue (25).SetValue (Mod.Settings.SUdamageFixed);
+	-- UI.CreateLabel (mainUI).SetText ('[% damage is applied first, the fixed damage is applied; eg: if configured to 25% damage + 10 fixed damage, a target territory with 100 armies would be reduced to 65 (100*0.75-10)]');
 
 	UI.CreateLabel (mainUI).SetText ("\n");
 	UI.CreateEmpty (mainUI);

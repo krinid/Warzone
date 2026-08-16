@@ -20,7 +20,8 @@ function Client_SaveConfigureUI (alert, addCard)
 	Mod.Settings.TimeBombCardWeight = TimeBombCardWeight.GetValue ();
 	Mod.Settings.NumCitiesDestroyedByTimeBombPlay = NIFnumCitiesDestroyedByTimeBomb.GetValue ();
 
-	Mod.Settings.TimeBombCastRange = math.max (NIFcastRange.GetValue (), -1); -- -1 indicates that can be cast anywhere on map w/o limitations; 0 = can only cast poison on territories you own yourself
+	Mod.Settings.TimeBombCastRange = math.max (NIFcastRange.GetValue (), -1); -- -1 indicates that can be cast anywhere on map w/o limitations; 0 = can only cast time bomb on territories you own yourself
+	Mod.Settings.TimeBombDurationForMaxPower = math.max (NIFdurationForMaxPower.GetValue (), 0); --no neg values, min value is 0 (explodes on same turn it's played [which is essentially a regular bomb except it'll explode @ end of turn instead of at time of play during BombCards phase])
 	local strTimeBombDesc = get_BombPlus_description ();
 	Mod.Settings.TimeBombCardPlusID = addCard ("Time Bomb", strTimeBombDesc, "Time bomb 130x180.png", Mod.Settings.TimeBombPiecesNeeded, Mod.Settings.TimeBombPiecesPerTurn, Mod.Settings.TimeBombStartPieces, Mod.Settings.TimeBombCardWeight);
 end

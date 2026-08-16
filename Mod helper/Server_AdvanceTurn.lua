@@ -20,7 +20,7 @@ end
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
 
-	local intGameStyle = 1; --default to game style 1
+	local intGameStyle = Mod.Settings.SimpleConfig or 1; --default to game style 1
 	--game styles:
 	--1: create 1 new Worker SU on the 1st territory found for each player on T1 (used for 'Workers FTW' mod where Workers are only form of income)
 	--2: create 1 new Recruiter SU on the 1st territory found for each player on T1~T5 (used for 'Special Disaster Battle' mod where Recruiters are only form of income)
