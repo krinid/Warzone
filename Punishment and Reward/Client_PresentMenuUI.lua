@@ -184,6 +184,11 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 		UI.CreateLabel (windowUI).SetText ("\nCOMPONENT 3 - CITY REWARDS:").SetFlexibleWidth (1.0).SetColor (getColourCode ("main heading"));
 
 		if (cityRewards[playerID] ~= nil) then
+			--use floor for lower bound & ceiling for upper bound so lower bound is always a different integer than upper bound; this is beneficial esp for small ave city #'s where 25% of that value would result in the same lower and upper bound and thus be too restrictive
+			local lowerBound = cityRewards[playerID].lowerBound or math.floor (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 - cityAverageToleranceLevel) or 1);
+			local upperBound = cityRewards[playerID].upperBound or math.ceil (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 + cityAverageToleranceLevel) or 1);
+			-- local lowerBound = math.floor (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 - cityAverageToleranceLevel) or 1);
+			-- local upperBound = math.ceil (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 + cityAverageToleranceLevel) or 1);
 			UI.CreateLabel (windowUI).SetText ("• Commerce: " ..tostring (game.Settings.CommerceGame).. "   • City cost: " ..tostring (game.Settings.CommerceCityBaseCost).. "   • Workers in play: " ..tostring (SUisInUse (nil, game.LatestStanding.Territories, "Worker"))).SetFlexibleWidth (1.0);
 			-- UI.CreateLabel (windowUI).SetText ("• # cities: " ..tostring (cityRewards[playerID].numCities).. "   • # terrs: " ..tostring (cityRewards[playerID].numTerritories).. "   • # terrs w/cities: " ..tostring (cityRewards[playerID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[playerID].rewardForTerritoriesWithCities).. "]   • av# cities/terr " ..tostring (cityRewards[playerID].aveCitiesPerTerritory).. "   • av# cities/terr w/cities " ..tostring (cityRewards[playerID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
 			UI.CreateLabel (windowUI).SetText ("• # terrs: " ..tostring (cityRewards[playerID].numTerritories).. "   • # cities: " ..tostring (cityRewards[playerID].numCities).. "   • # terrs w/cities: " ..tostring (cityRewards[playerID].numTerritoriesWithCities).. " [+" ..tostring (cityRewards[playerID].rewardForTerritoriesWithCities).. "]   • av# cities/terrs with cities " ..tostring (cityRewards[playerID].aveCitiesPerTerritory)).SetFlexibleWidth (1.0);
@@ -194,10 +199,6 @@ function showIncomeAssessment (game, windowUI, playerID, turnNumber)
 		else
 			UI.CreateLabel (windowUI).SetText ("• Data inconclusive - enemy territories likely fogged").SetFlexibleWidth (1.0);
 		end
-
-		--use floor for lower bound & ceiling for upper bound so lower bound is always a different integer than upper bound; this is beneficial esp for small ave city #'s where 25% of that value would result in the same lower and upper bound and thus be too restrictive
-		local lowerBound = math.floor (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 - cityAverageToleranceLevel) or 1);
-		local upperBound = math.ceil (cityRewards[playerID] ~= nil and cityRewards[playerID].aveCitiesPerTerritory * (1 + cityAverageToleranceLevel) or 1);
 	end
 
 	-- attacks " ..incomeAdjustments.CurrTurn.Attacks.. ", army reduction " ..incomeAdjustments.ArmyReduction.. ", terr reduction " ..incomeAdjustments.TerritoryReduction.. ", 0armies->neutral " ..tostring (incomeAdjustments.ZeroArmiesGoNeutral).. ", card pieces block " ..tostring (incomeAdjustments.BlockCardPieceReceiving));
