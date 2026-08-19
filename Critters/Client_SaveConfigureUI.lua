@@ -15,9 +15,8 @@ function Client_SaveConfigureUI (alert, addCard)
 			alert('Critters cards must apply to natural neutral territories, Neutralized territories by use of a Neutralize card, or both options.');
 	end
 	strCrittersDesc = strCrittersDesc .. "\n\nCritters executes in turn phase '" ..WL.TurnPhase.ToString (Mod.Settings.CrittersImplementationPhase).. "'. ";
-	Mod.Settings.CrittersCardID = addCard ("Critters", strCrittersDesc, "Critters_greenback2_130x180.png", Mod.Settings.CrittersPiecesNeeded, Mod.Settings.CrittersPiecesPerTurn, Mod.Settings.CrittersStartPieces, Mod.Settings.CrittersCardWeight);
+	Mod.Settings.CrittersCardID = addCard ("Critters", strCrittersDesc, "Critters_130x180.png", Mod.Settings.CrittersPiecesNeeded, Mod.Settings.CrittersPiecesPerTurn, Mod.Settings.CrittersStartPieces, Mod.Settings.CrittersCardWeight);
 	Mod.Settings.CrittersDescription = strCrittersDesc;
-
 
 	Mod.Settings.CrittersRange = CrittersRange.GetValue ();
 	Mod.Settings.CrittersImplementationPhase = CrittersImplementationPhase;
