@@ -1,20 +1,14 @@
 local strTimeBombOrderFilename = "Time bomb order icon 40x40"; --icon for the Time Bomb order in the order list
 
--- function Server_AdvanceTurn_Start (game,addNewOrder)
--- end
-
-function Server_AdvanceTurn_End (game, addNewOrder)
-	-- local annotations = {};
-	-- for terrID, timeBombDataRecord in pairs (Mod.PrivateGameData.TimeBombData or {}) do
-	-- 	print ("[Time Bomb] terr " ..terrID.. "/" ..tostring (game.Map.Territories [terrID].Name).. ", castingPlayer " ..timeBombDataRecord.castingPlayer.. ", owner " ..timeBombDataRecord.territoryOwner.. ", turn played " ..timeBombDataRecord.turnNumberPlayed.. ", turn explodes  " ..timeBombDataRecord.turnTimeBombExplodes);
-	-- 	print ("[Time Bomb CHECK] Mod.PrivateGameData.TimeBombData [terrID] == " ..tostring (Mod.PrivateGameData.TimeBombData [terrID]));
-		-- if (annotations [timeBombDataRecord.castingPlayer] == nil) then annotations [timeBombDataRecord.castingPlayer] = {}; end
-		-- annotations [timeBombDataRecord.castingPlayer][terrID] = WL.TerritoryAnnotation.Create ("Landmine reminder", 4, 0);
-		-- local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber};
-	-- end
+function Server_AdvanceTurn_Start (game, addNewOrder)
 	for terrID, timeBombDataRecord in pairs (Mod.PrivateGameData.TimeBombData or {}) do
 		-- local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.DurationForMaxPower or 3)};
-		print ("[Time Bomb] terr " ..terrID.. "/" ..tostring (game.Map.Territories [terrID].Name).. ", castingPlayer " ..timeBombDataRecord.castingPlayer.. ", owner " ..timeBombDataRecord.territoryOwner.. ", turn played " ..timeBombDataRecord.turnNumberPlayed.. ", turn explodes  " ..timeBombDataRecord.turnTimeBombExplodes);
+		-- local territory = game.ServerGame.LatestTurnStanding.Territories [terrID];
+		-- local terrMod = WL.TerritoryModification.Create (terrID);
+		-- local structureMods = {};
+		-- local intNumTurnsRemainingToExplode = tonumber(timeBombDataRecord.turnTimeBombExplodes) - game.Game.TurnNumber;
+
+		print ("[Time Bomb] terr " ..terrID.. "/" ..tostring (game.Map.Territories [terrID].Name).. ", castingPlayer " ..timeBombDataRecord.castingPlayer.. ", owner " ..timeBombDataRecord.territoryOwner.. ", turn played " ..timeBombDataRecord.turnNumberPlayed.. ", turn explodes  " ..timeBombDataRecord.turnTimeBombExplodes.. ", currTurn " ..tostring (game.Game.TurnNumber).. ", timeLeft " ..tostring (tonumber(timeBombDataRecord.turnTimeBombExplodes) - game.Game.TurnNumber));
 		print ("[Time Bomb CHECK] Mod.PrivateGameData.TimeBombData [terrID] == " ..tostring (Mod.PrivateGameData.TimeBombData [terrID]));
 		print ("[Time Bomb 2nd check] " .. terrID .. ", " ..game.ServerGame.LatestTurnStanding.Territories [terrID].OwnerPlayerID.. ", " ..game.Map.Territories [terrID].Name);
 		if (tonumber (game.Game.TurnNumber) >= tonumber (timeBombDataRecord.turnTimeBombExplodes)) then
@@ -25,6 +19,78 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 			addNewOrder (event);
 		end
 	end
+end
+
+function Server_AdvanceTurn_End (game, addNewOrder)
+	-- local annotations = {};
+	-- for terrID, timeBombDataRecord in pairs (Mod.PrivateGameData.TimeBombData or {}) do
+	-- 	print ("[Time Bomb] terr " ..terrID.. "/" ..tostring (game.Map.Territories [terrID].Name).. ", castingPlayer " ..timeBombDataRecord.castingPlayer.. ", owner " ..timeBombDataRecord.territoryOwner.. ", turn played " ..timeBombDataRecord.turnNumberPlayed.. ", turn explodes  " ..timeBombDataRecord.turnTimeBombExplodes);
+	-- 	print ("[Time Bomb CHECK] Mod.PrivateGameData.TimeBombData [terrID] == " ..tostring (Mod.PrivateGameData.TimeBombData [terrID]));
+		-- if (annotations [timeBombDataRecord.castingPlayer] == nil) then annotations [timeBombDataRecord.castingPlayer] = {}; end
+		-- annotations [timeBombDataRecord.castingPlayer][terrID] = WL.TerritoryAnnotation.Create ("Landmine reminder", 4, 0);
+		-- local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber};
+	-- end
+	local territoryModifications = {};
+
+	for terrID, timeBombDataRecord in pairs (Mod.PrivateGameData.TimeBombData or {}) do
+		-- local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.DurationForMaxPower or 3)};
+		local territory = game.ServerGame.LatestTurnStanding.Territories [terrID];
+		local terrMod = WL.TerritoryModification.Create (terrID);
+		local structureMods = {};
+		local intNumTurnsRemainingToExplode = tonumber(timeBombDataRecord.turnTimeBombExplodes) - game.Game.TurnNumber;
+
+		print ("[Time Bomb] terr " ..terrID.. "/" ..tostring (game.Map.Territories [terrID].Name).. ", castingPlayer " ..timeBombDataRecord.castingPlayer.. ", owner " ..timeBombDataRecord.territoryOwner.. ", turn played " ..timeBombDataRecord.turnNumberPlayed.. ", turn explodes  " ..timeBombDataRecord.turnTimeBombExplodes.. ", currTurn " ..tostring (game.Game.TurnNumber).. ", timeLeft " ..tostring (tonumber(timeBombDataRecord.turnTimeBombExplodes) - game.Game.TurnNumber));
+		print ("[Time Bomb CHECK] Mod.PrivateGameData.TimeBombData [terrID] == " ..tostring (Mod.PrivateGameData.TimeBombData [terrID]));
+		print ("[Time Bomb 2nd check] " .. terrID .. ", " ..game.ServerGame.LatestTurnStanding.Territories [terrID].OwnerPlayerID.. ", " ..game.Map.Territories [terrID].Name);
+		if (tonumber (game.Game.TurnNumber) >= tonumber (timeBombDataRecord.turnTimeBombExplodes)) then
+			local strDisplayMsg = "Time Bomb explode prep; Time Bomb on " ..game.Map.Territories [terrID].Name .. " explodes";
+			local strPayload = "ExplodeOrder-Time Bomb|".. terrID;
+			local event = WL.GameOrderEvent.Create (game.ServerGame.LatestTurnStanding.Territories [terrID].OwnerPlayerID, strPayload, {}, {}, {}, {});
+			event.Icon = strTimeBombOrderFilename;
+			addNewOrder (event);
+		else
+			--replace structure timer with the proper Time Bomb structure showing the countdown timer showing how many turns left until explosion 
+			-- if (tonumber (game.Game.TurnNumber) >= tonumber (timeBombDataRecord.turnTimeBombExplodes)) then
+			--structure files are Time Bomb 00.png->Time Bomb 10.png and use Time Bomb 11+.png for anything 11 or higher
+			-- local strStructureDelimiter_NEW = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower); --set to 2 digit number with leading zeroes if required
+			local strStructureDelimiter_OLD = string.format("%02d", tonumber (timeBombDataRecord.turnTimeBombExplodes) - tonumber (game.Game.TurnNumber)); --set to 2 digit number with leading zeroes if required
+			local strStructureDelimiter_NEW = string.format("%02d", math.max (0, tonumber (strStructureDelimiter_OLD) - 1)); --set to 2 digit number with leading zeroes if required
+			-- local strStructureDelimiter_NEW = string.format("%02d", tonumber (timeBombDataRecord.turnTimeBombExplodes) - tonumber (game.Game.TurnNumber) - 1); --set to 2 digit number with leading zeroes if required
+			-- local strStructureDelimiter_OLD = string.format("%02d", tonumber (strStructureDelimiter_NEW) + 1); --set to 2 digit number with leading zeroes if required
+			if (tonumber (strStructureDelimiter_OLD) >= 11) then strStructureDelimiter_OLD = "11+"; end
+			if (tonumber (strStructureDelimiter_NEW) >= 11) then strStructureDelimiter_NEW = "11+"; end
+			local strStructureName_NEW = "Time Bomb " ..strStructureDelimiter_NEW; --Mod.Settings.TimeBombDurationForMaxPower
+			local strStructureName_OLD = "Time Bomb " ..strStructureDelimiter_OLD; --Mod.Settings.TimeBombDurationForMaxPower
+			local structureID_NEW = WL.StructureType.Custom (strStructureName_NEW);
+			local structureID_OLD = WL.StructureType.Custom (strStructureName_OLD);
+			print ("[TIME BOMB]   delimNEW " ..tostring (strStructureDelimiter_NEW).. ", delimOLD " ..tostring (strStructureDelimiter_OLD).. ", nameNEW " ..tostring (strStructureName_NEW).. ", nameOLD " ..tostring (strStructureName_OLD).. ", IDnew " ..tostring (structureID_NEW).. ", IDold " ..tostring (structureID_OLD));
+			--decrease old structure count by 1
+			--increase new structure count by 1
+
+			-- if not territory then return false, nil; end --if territory is nil, just return false/nil
+			local structures = territory.Structures;
+			for structureID, structureCount in pairs (structures) do
+				local strArrayStructureData = split (structureID, '|');
+				print ("[TIME BOMB]    structure " ..tostring (structureID));
+				--within 'structureID', 1st segment of "c" indicates custom structure, 2nd segment is mod ID#, 3rd segment is structure name
+				--structureCount is integer of # of structures on the territory, and it may be 0, so only return true if there is >=1 remaining, else return false (for this ID -- there may be custom structures of the same name for other IDs, perhaps created from other mods/mod ID#'s)
+				if (structureID == structureID_OLD and structureCount > 0) then
+					--reduce count of prior structure by 1, increase count of new structure by 1
+					if (structureMods [structureID_OLD] == nil) then structureMods [structureID_OLD] = 0; end
+					if (structureMods [structureID_NEW] == nil) then structureMods [structureID_NEW] = 0; end
+					structureMods [structureID_OLD] = structureMods [structureID_OLD] - 1;
+					structureMods [structureID_NEW] = structureMods [structureID_NEW] + 1;
+				end
+			end
+		end
+		if (tablelength (structureMods) > 0) then
+			terrMod.AddStructuresOpt = structureMods;
+			table.insert (territoryModifications, terrMod);
+		end
+	end
+
+	-- if (tablelength (territoryModifications) > 0) then addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Time passes", {}, territoryModifications, {}, {})); end
+	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Time passes", {}, territoryModifications, {}, {}));
 end
 
 function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrder)
@@ -79,7 +145,12 @@ function placeTimeBomb (game, order, addNewOrder)
     local impactedTerritory = WL.TerritoryModification.Create (intTargetTerritoryID);
 	local structures = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].Structures;
 
-	local structureID = WL.StructureType.Custom ("Time Bomb");
+	--structure files are Time Bomb 00.png->Time Bomb 10.png and use Time Bomb 11+.png for anything 11 or higher
+	local strStructureDelimiter = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower); --set to 2 digit number with leading zeroes if required
+	if (Mod.Settings.TimeBombDurationForMaxPower >= 11) then strStructureDelimiter = "11+"; end
+	local strStructureName = "Time Bomb " ..string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower); --Mod.Settings.TimeBombDurationForMaxPower
+	local structureID = WL.StructureType.Custom (strStructureName);
+	-- local structureID = WL.StructureType.Custom ("Time Bomb");
 	if (structures == nil) then structures = {}; end;
 	if (structures [structureID] == nil) then structures [structureID] = 0; end;
 	print ("[TIME BOMB] PRE - # time bombs on terr " ..game.Map.Territories [intTargetTerritoryID].Name.. " == "..tostring (structures [structureID]));
@@ -116,7 +187,7 @@ function placeTimeBomb (game, order, addNewOrder)
 	event.Icon = strTimeBombOrderFilename;
 	addNewOrder (event, false);
 
-	local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.DurationForMaxPower or 3)};
+	local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.TimeBombDurationForMaxPower or 3)};
 	local privateGameData = Mod.PrivateGameData;
 	privateGameData.TimeBombData = privateGameData.TimeBombData or {};
 	privateGameData.TimeBombData [intTargetTerritoryID] = timeBombDataRecord;
@@ -178,13 +249,15 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 		end
 	end
 
-	local structureID = WL.StructureType.Custom ("Time Bomb");
-	local structures = terr.Structures;
-	if (structures == nil) then structures = {}; end;
-	if (structures [structureID] == nil) then structures [structureID] = 0; end;
-	print ("[TIME BOMB] PRE - # time bombs on terr " ..game.Map.Territories [intTargetTerritoryID].Name.. " == "..tostring (structures [structureID]));
+	-- local structureID = WL.StructureType.Custom ("Time Bomb");
+	local structureID = WL.StructureType.Custom ("Time Bomb 00");
+	local structures = {};
 	structures [structureID] = -1;
 	terrMod.AddStructuresOpt = structures;
+	-- local structures = terr.Structures;
+	-- if (structures == nil) then structures = {}; end;
+	-- if (structures [structureID] == nil) then structures [structureID] = 0; end;
+	print ("[TIME BOMB] PRE - # time bombs on terr " ..game.Map.Territories [intTargetTerritoryID].Name.. " == hard to count now (hmmm)"); --..tostring (structures [structureID]));
 
 	local event = WL.GameOrderEvent.Create (order.PlayerID, strTimeBombMsg, {}, {terrMod}, {}, {});
 	-- event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the TimeBomb card (must be done b/c we're skipping the original order that consumes the card)

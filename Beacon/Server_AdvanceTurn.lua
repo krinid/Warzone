@@ -1,6 +1,6 @@
 function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrder)
     if (order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Beacon|")) then
-        local targetTerritoryID = tonumber(string.sub (order.ModData, 8));
+        local targetTerritoryID = tonumber (string.sub (order.ModData, 8));
 		local td = game.Map.Territories[targetTerritoryID];
 		local terr = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID];
 		local structures = terr.Structures;
@@ -10,13 +10,13 @@ function Server_AdvanceTurn_Order(game, order, result, skipThisOrder, addNewOrde
 		local intBeaconRange = Mod.Settings.Range; --distance Beacon spreads to; 0=targeted territory only; 1=spreads to directly bordering terrs, etc
 		local intDuration = Mod.Settings.Duration; --duration in # of turns
 		local intTurnExpiry = game.Game.TurnNumber + intDuration;
-		local priority = 7500; -- Smoke Bomb uses 7000, Phantom uses 8000 (default), so this reveals with priority over their fog; between 6000 and 8999 means it won't obscure a player's own territories
+		local priority = 7500; -- Smoke Bomb uses 7000, Phantom uses 8000 (default), so this reveals with priority over their fog but not over default Phantom visibility; between 6000 and 8999 means it won't obscure a player's own territories
 
 		terrs = getTerritoriesWithinDistance (game, targetTerritoryID, intBeaconRange);
 		local fogMod = WL.FogMod.Create ('Revealed by Beacon|'..tostring (targetTerritoryID), WL.StandingFogLevel.Visible, priority, terrs, nil);
 
-		if (structures [WL.StructureType.Custom("Beacon")] == nil) then structures [WL.StructureType.Custom("Beacon")] = 1;
-		else structures [WL.StructureType.Custom("Beacon")] = structures [WL.StructureType.Custom("Beacon")] + 1;
+		if (structures [WL.StructureType.Custom ("Beacon")] == nil) then structures [WL.StructureType.Custom("Beacon")] = 1;
+		else structures [WL.StructureType.Custom ("Beacon")] = structures [WL.StructureType.Custom("Beacon")] + 1;
 		end
 		impactedTerritory.SetStructuresOpt = structures;
 

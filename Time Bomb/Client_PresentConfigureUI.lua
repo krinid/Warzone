@@ -84,19 +84,19 @@ function Client_PresentConfigureUI (rootParent)
 	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetOnClick (TimeBomb_turnPhaseButton_clicked);
 
 	local horzTimeBombCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzTimeBombCardPiecesNeeded).SetText("Number of pieces to divide the card into: ");
+	UI.CreateLabel (horzTimeBombCardPiecesNeeded).SetText("Number of pieces to divide the card into: ").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
 	TimeBombCardPiecesNeeded = UI.CreateNumberInputField (horzTimeBombCardPiecesNeeded).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombPiecesNeeded or 10).SetWholeNumbers(true).SetInteractable(true);
 
 	local horzTimeBombCardStartPieces = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel(horzTimeBombCardStartPieces).SetText("Pieces given to each player at the start: ");
+	UI.CreateLabel(horzTimeBombCardStartPieces).SetText("Pieces given to each player at the start: ").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
 	TimeBombCardStartPieces = UI.CreateNumberInputField (horzTimeBombCardStartPieces).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombStartPieces or 1).SetWholeNumbers(true).SetInteractable(true);
 
 	local horzTimeBombCardPiecesPerTurn = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzTimeBombCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn: ");
+	UI.CreateLabel (horzTimeBombCardPiecesPerTurn).SetText ("Minimum pieces awarded per turn: ").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
 	TimeBombPiecesPerTurn = UI.CreateNumberInputField (horzTimeBombCardPiecesPerTurn).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.TimeBombPiecesPerTurn or 1).SetWholeNumbers(true).SetInteractable(true);
 
 	local horzTimeBombCardWeight = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateLabel (horzTimeBombCardWeight).SetText("Card weight: ");
+	UI.CreateLabel (horzTimeBombCardWeight).SetText("Card weight: ").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);
 	TimeBombCardWeight = UI.CreateNumberInputField(horzTimeBombCardWeight).SetSliderMinValue(0).SetSliderMaxValue(10).SetWholeNumbers(false).SetValue(Mod.Settings.TimeBombCardWeight or 1).SetInteractable(true);
 end
 
