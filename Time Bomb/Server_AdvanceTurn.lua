@@ -147,7 +147,7 @@ function placeTimeBomb (game, order, addNewOrder)
 
 	--structure files are Time Bomb 00.png->Time Bomb 10.png and use Time Bomb 11+.png for anything 11 or higher
 	local strStructureDelimiter = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower or 3); --set to 2 digit number with leading zeroes if required
-	if (Mod.Settings.TimeBombDurationForMaxPower or 3>= 11) then strStructureDelimiter = "11+"; end
+	if (Mod.Settings.TimeBombDurationForMaxPower or 3 >= 11) then strStructureDelimiter = "11+"; end
 	local strStructureName = "Time Bomb " ..strStructureDelimiter; --Mod.Settings.TimeBombDurationForMaxPower
 	local structureID = WL.StructureType.Custom (strStructureName);
 	-- local structureID = WL.StructureType.Custom ("Time Bomb");
