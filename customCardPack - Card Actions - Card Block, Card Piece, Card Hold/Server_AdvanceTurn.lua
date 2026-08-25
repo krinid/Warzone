@@ -417,7 +417,7 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 		print ("[ORDER::CARD PLAY] player=="..gameOrder.PlayerID..", proxyType=="..gameOrder.proxyType.."::_____________________");
 
 		--check if player this order is for is impacted by Card Block
-		if (publicGameData.CardBlockData[targetPlayerID] == nil) then
+		if (publicGameData.CardBlockData [targetPlayerID] == nil) then
 			--no CardBlock data exists, so don't check, just return with don't block result (return value of false)
 			print ("[CARD BLOCK DATA dne]");
 			return false;
@@ -430,29 +430,36 @@ function execute_CardBlock_skip_affected_player_card_plays (game, gameOrder, ski
 				--ie: do nothing, let it process normally
 					print ("[CARD] Reinf card play - don't block");
 			else
-				--skip order, as it is a card play (that isn't Reinf) by a player impacted by CardBlock
-				printObjectDetails (publicGameData.CardBlockData, "CardBlockData", "in skip routine");
+				--if card block was played this turn, do nothing; it should 'activate' at end of turn to start blocking the turn after; this prevents the effect where a Card Block play blocks another player's card play but not the actions the mod takes
+				--this occurs b/c the target mod doesn't know the card play order will be skipped, and it takes non-order linked action such as storing data in Public/Private game data storage to act on in later orders/turns irrespective to the card play order
+				--which was skipped (b/c storage data doesn't depend on orders and whether they were skipped or not, even if the order that calls the function which modifies game data storage is skipped, the game data storage applies nonetheless)
+				if (publicGameData.CardBlockData [targetPlayerID].playedOnTurn ~= nil and game.Game.TurnNumber > publicGameData.CardBlockData [targetPlayerID].playedOnTurn) then
+					--skip order, as it is a card play (that isn't Reinf) by a player impacted by CardBlock
+					printObjectDetails (publicGameData.CardBlockData, "CardBlockData", "in skip routine");
 
-				--block all other card plays (skip the order)
-				local strCardType = tostring (gameOrder.proxyType:match ("^GameOrderPlayCard(.*)"));
-				local strCardName = strCardType; --this will be accurate for regular cards; for custom cards this will show as "custom", and need to get the card name from ModData (and hope all modders do this?)
+					--block all other card plays (skip the order)
+					local strCardType = tostring (gameOrder.proxyType:match ("^GameOrderPlayCard(.*)"));
+					local strCardName = strCardType; --this will be accurate for regular cards; for custom cards this will show as "custom", and need to get the card name from ModData (and hope all modders do this?)
 
-				--display appropriate output message based on whether card is a regular card or a custom card
-				if (strCardType=="Custom") then
-					print ("[CARD PLAY BLOCKED] custom card=="..gameOrder.ModData.."::");
-					local modDataContent = split(gameOrder.ModData, "|");
-					cardOrderContentDetails = nil;
-					strCardName = modDataContent[1]; --1st component of ModData up to "|" is the card name
-				else
-					--regular card, nothing special to do, just skip the card
-					print ("[CARD PLAY BLOCKED] regular card==" .. strCardName);
+					--display appropriate output message based on whether card is a regular card or a custom card
+					if (strCardType=="Custom") then
+						print ("[CARD PLAY BLOCKED] custom card=="..gameOrder.ModData.."::");
+						local modDataContent = split(gameOrder.ModData, "|");
+						cardOrderContentDetails = nil;
+						strCardName = modDataContent[1]; --1st component of ModData up to "|" is the card name
+					else
+						--regular card, nothing special to do, just skip the card
+						print ("[CARD PLAY BLOCKED] regular card==" .. strCardName);
+					end
+
+					strCardBlockSkipOrder_Message = "Skipping order to play " ..tostring (strCardName).. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
+					print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
+					local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{});
+					event.Icon = "card block order 40x40";
+					addOrder (event, true);
+					skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
+					return true;
 				end
-
-				strCardBlockSkipOrder_Message = "Skipping order to play " ..tostring (strCardName).. " card as "..toPlayerName (gameOrder.PlayerID, game).." is impacted by Card Block.";
-				print ("[CARD BLOCK] - skipOrder - playerID="..gameOrder.PlayerID.. ", "..strCardBlockSkipOrder_Message);
-				addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, strCardBlockSkipOrder_Message, {}, {},{}), true);
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since in order with details has been added above
-				return true;
 			end
 		end
 	end
@@ -966,8 +973,8 @@ function processDragonBreathAttacks (game, addNewOrder, attackingArmies, terrID)
 		if (SP.proxyType == "CustomSpecialUnit") then modID = SP.ModID; end
 		printDebug ("[AIRSTRIKE - DRAGON BREATH CHECK] ModID "..tostring (modID));
 		if (modID ~= nil and modID == 594) then --unit is a Dragon; analyze the ModData to see if it has a 'Dragon Attack' comment
-			local intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Attack' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories"));
-			if (intDragonBreathDamage == nil) then intDragonBreathDamage = tonumber (SP.ModData:match("'Dragon Breath' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories")); end --same thing but check against "Dragon Breath" in case the text changes
+			local intDragonBreathDamage = tonumber (SP.ModData:match ("'Dragon Attack' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories"));
+			if (intDragonBreathDamage == nil) then intDragonBreathDamage = tonumber (SP.ModData:match ("'Dragon Breath' ability%. Whenever this unit attacks another territory, it will deal (%d+) damage to all the connected territories")); end --same thing but check against "Dragon Breath" in case the text changes
 
 			if (intDragonBreathDamage ~= nil) then --if damage value was found, this Dragon has a Dragon Breath attack; if no damage value was found, this Dragon does not have Dragon Breath, so do nothing
 				dragonData.IsDragonBreathAttack = true;
@@ -1336,23 +1343,25 @@ function execute_CardPiece_operation(game, gameOrder, skip, addOrder, targetCard
 		print ("[CARD PIECE] played; redeem for cards/pieces of card type "..targetCardID.."/"..strTargetCardName..":: ".. strCardPieceMsg);
 		local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, strCardPieceMsg, {});
 		event.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[targetCardID] = numTotalCardPiecesToGrant}};
+		event.Icon = "card pieces order 40x40";
 		addOrder(event, true);
 	end
 end
 
 function execute_CardBlock_play_a_CardBlock_Card_operation (game, gameOrder, addOrder, targetPlayerID)
-    print("[PROCESS CARD BLOCK] playerID="..gameOrder.PlayerID.." :: playerID="..targetPlayerID);
-	--get player
-	local event = WL.GameOrderEvent.Create (targetPlayerID, gameOrder.Description, {gameOrder.PlayerID, targetPlayerID});
-    addOrder (event, true);
-    local publicGameData = Mod.PublicGameData;
-    if (publicGameData.CardBlockData == nil) then publicGameData.CardBlockData = {}; end
-    local turnNumber_CardBlockExpires = (Mod.Settings.CardBlockDuration > 0) and (game.Game.TurnNumber + Mod.Settings.CardBlockDuration) or -1;
-	local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
-    publicGameData.CardBlockData[targetPlayerID] = record;
-    Mod.PublicGameData = publicGameData;
+	print("[PROCESS CARD BLOCK] playerID="..gameOrder.PlayerID.." :: playerID="..targetPlayerID);
+	-- local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, gameOrder.Description, {gameOrder.PlayerID, targetPlayerID});
+	local event = WL.GameOrderEvent.Create (targetPlayerID, "Hit by Card Block", {gameOrder.PlayerID, targetPlayerID});
+	event.Icon = "card block order 40x40";
+	addOrder (event, false); --use false unless this is made into a cancellable operation such as submitting a new cancellable order that is dependent on this order not being canceled to truly kick off the card block
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.CardBlockData == nil) then publicGameData.CardBlockData = {}; end
+	local turnNumber_CardBlockExpires = (Mod.Settings.CardBlockDuration > 0) and (game.Game.TurnNumber + Mod.Settings.CardBlockDuration) or -1;
+	local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, playedOnTurn = game.Game.TurnNumber, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
+	publicGameData.CardBlockData[targetPlayerID] = record;
+	Mod.PublicGameData = publicGameData;
 	printObjectDetails (Mod.PublicGameData, "Mod.PublicGameData", "full");
-	printObjectDetails (Mod.PublicGameData.CardBlockData[targetPlayerID], "Mod.PublicGameData.CardBlockData[targetPlayerID]", "player record");
+	printObjectDetails (Mod.PublicGameData.CardBlockData [targetPlayerID], "Mod.PublicGameData.CardBlockData[targetPlayerID]", "player record");
 	print ("Mod.PublicGameData.CardBlockData[targetPlayerID]==nil-->"..tostring (Mod.PublicGameData.CardBlockData[targetPlayerID]==nil));
 end
 
@@ -2851,6 +2860,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 8, getColourInteger (175, 0, 0)); --overwrite the annotation done above (".") for the Epicenter
 	--event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 10, getColourInteger (150, 0, 0))}; --use Dark Red colour for Nuke epicenter
 	event.TerritoryAnnotationsOpt = annotations;
+	event.Icon = "Nuke_icon_40x40";
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
 -- GameOrderEventWL Create (playerID: PlayerID, message: string, visibleToOpt: HashSet<PlayerID> | nil, terrModsOpt?: TerritoryModification[], setResoucesOpt: table<PlayerID, table<EnumResourceType, integer>> | nil, incomeModsOpt: IncomeMod[] | nil): GameOrderEvent # Creates a GameOrderEvent object
 -- Create (playerID, message, visibileToOppenets - nil is ok, terrMods OPTIONAL, resources OPTIONAL - nil is ok, incomeMods OPTIONAL - nil is ok)
@@ -2873,6 +2883,7 @@ function CardBlock_processEndOfTurn(game, addOrder)
     for key, record in pairs(publicGameData.CardBlockData) do
          if (record.turnNumberBlockEnds > 0 and turnNumber >= record.turnNumberBlockEnds) then
             local event = WL.GameOrderEvent.Create (record.castingPlayer, "Card Block expired", {}, {});
+			event.Icon = "card block order 40x40";
 			addOrder(event, true);
 			publicGameData.CardBlockData[key] = nil;
         end

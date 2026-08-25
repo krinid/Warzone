@@ -178,30 +178,76 @@ function play_Phantom_card(game, cardInstance, playCard)
 	end);
 end
 
-function play_CardBlock_card(game, cardInstance, playCard)
+function play_CardBlock_card (game, cardInstance, playCard)
 	local strPrompt = "Select the player you wish to block from playing cards";
-	print("[CARD BLOCK] card play clicked, played by=" .. strPlayerName_cardPlayer);
+	local targetPlayerID = nil;
+	print ("[CARD BLOCK] card play clicked, played by=" .. strPlayerName_cardPlayer);
 
-	game.CreateDialog(
-	function(rootParent, setMaxSize, setScrollable, game, close)
-		setMaxSize(400,300);
-		local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
-		UI.CreateLabel (vert).SetText("[CARD BLOCK]\n\n"..strPrompt).SetColor(getColourCode("card play heading"));
-		TargetPlayerBtn = UI.CreateButton (vert).SetText("Select player").SetColor ("#00FFFF").SetOnClick(function() TargetPlayerClicked_Fizz(strPrompt) end);
+	game.CreateDialog (
+	function (rootParent, setMaxSize, setScrollable, game, close)
+		setMaxSize (400,600);
+		local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
+		UI.CreateLabel (vert).SetText ("[CARD BLOCK]").SetColor (getColourCode ("card play heading"));
+		UI.CreateLabel (vert).SetText ("Targeted player becomes unable to play cards of any type\n");
+		local horz = UI.CreateHorizontalLayoutGroup (vert);
+		UI.CreateLabel (horz).SetText ("• Executes at ");
+		UI.CreateLabel (horz).SetText (" END OF TURN " ..tostring (game.Game.TurnNumber)).SetColor (getColourCode ("subheading"));
+		-- UI.CreateLabel (horz).SetText ("(Turn #" ..tostring (game.Game.TurnNumber)..")");
+		local horz = UI.CreateHorizontalLayoutGroup (vert);
+		UI.CreateLabel (horz).SetText ("• Targeted player cannot play cards on ");
+		UI.CreateLabel (horz).SetText (" TURN " ..tostring (game.Game.TurnNumber + 1)).SetColor (getColourCode ("subheading"));
+		local horz = UI.CreateHorizontalLayoutGroup (vert);
+		if (Mod.Settings.CardBlockDuration ~= nil and Mod.Settings.CardBlockDuration ~= -1 and Mod.Settings.CardBlockDuration > 0) then
+			UI.CreateLabel (horz).SetText ("• Lasts " ..tostring (Mod.Settings.CardBlockDuration).. " turn" ..plural (Mod.Settings.CardBlockDuration).. ", expires at end of Turn " ..tostring (tonumber(Mod.Settings.CardBlockDuration) + game.Game.TurnNumber));
+		elseif (Mod.Settings.CardBlockDuration == -1) then
+			UI.CreateLabel (horz).SetText ("• Has no expiry, effect is permanent");
+		end
 
-		UI.CreateButton (vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
-		function()
-			if (TargetPlayerID == nil) then
-				UI.Alert("You must select a player");
-				return;
+		UI.CreateLabel (vert).SetText ("\n" ..strPrompt.. ":\n");
+
+		-- UI.CreateLabel (horz).SetText ("• Targeted player cannot play cards on ");
+		-- UI.CreateLabel (horz).SetText ("(Turn #" ..tostring (game.Game.TurnNumber +1).. ")");
+		-- TargetPlayerBtn = UI.CreateButton (vert).SetText ("Select player").SetColor ("#00FFFF").SetOnClick (function () TargetPlayerClicked_Fizz (strPrompt) end);
+
+		--generate list of players for popup to select from; exclude self & eliminated (non-active) players; include AIs - game.Game.PlayingPlayers provides this list (compared to game.Game.Players which includes all players ever associated to the game, even those that declined the invite, were removed by host, etc)
+		local intNumUserButtonsCreated = 0;
+		local CardBlockTargetPlayerFuncs = {};
+		for playerID,player in pairs (game.Game.PlayingPlayers) do
+			if (playerID~=game.Us.ID) then --don't show self in popup dialog
+				-- if (Mod.PublicGameData.PestilenceData[playerID]==nil) then --create a button for this player if there is no Pestilence data for this playerID (ie: not currently targeted by Pestilence)
+				CardBlockTargetPlayerFuncs [playerID] = function() CardBlock_Play_ButtonPressed (playerID, game, playCard, rootParent, close); end;
+				UI.CreateButton (vert).SetText (toPlayerName (playerID, game)).SetOnClick (CardBlockTargetPlayerFuncs [playerID]).SetColor (player.Color.HtmlColor);
+				intNumUserButtonsCreated = intNumUserButtonsCreated + 1;
 			end
+		end
 
-			-- print("[CARD BLOCK] order input: player=" .. TargetPlayerID .. "/".. toPlayerName(TargetPlayerID, game)..  " :: Card Block|" .. TargetPlayerID);
-			playCard(strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName(TargetPlayerID, game), 'Card Block|' .. TargetPlayerID, WL.TurnPhase.Discards);
-			close();
-		end);
-		TargetPlayerClicked_Fizz(strPrompt);
+		-- UI.CreateButton (vert).SetText ("Play Card").SetColor (WZcolours ["Dark Green"]).SetOnClick (
+		-- function ()
+		-- 	if (targetPlayerID == nil) then
+		-- 	-- if (TargetPlayerID == nil) then
+		-- 		UI.Alert ("You must select a player");
+		-- 		return;
+		-- 	end
+
+		-- 	-- print("[CARD BLOCK] order input: player=" .. TargetPlayerID .. "/".. toPlayerName(TargetPlayerID, game)..  " :: Card Block|" .. TargetPlayerID);
+		-- 	-- playCard(strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName(TargetPlayerID, game), 'Card Block|' .. TargetPlayerID, WL.TurnPhase.Discards);
+		-- 	-- playCard (strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName(TargetPlayerID, game), 'Card Block|' .. TargetPlayerID, WL.TurnPhase.ReceiveCards);
+		-- 	playCard (strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName (targetPlayerID, game), 'Card Block|' .. TargetPlayerID, WL.TurnPhase.ReceiveCards);
+		-- 	close ();
+		-- end);
+		-- TargetPlayerClicked_Fizz (strPrompt);
 	end);
+end
+
+function CardBlock_Play_ButtonPressed (playerID, game, playCard, rootParent, close)
+	if (playerID == nil) then
+		UI.Alert ("You must select a player");
+		return;
+	end
+
+	playCard (strPlayerName_cardPlayer .. " applies Card Block on " .. toPlayerName (playerID, game), 'Card Block|' .. playerID, WL.TurnPhase.ReceiveCards);
+	close ();
+	-- TargetPlayerClicked_Fizz (strPrompt);
 end
 
 function play_cardPiece_card (game, cardInstance, playCard)

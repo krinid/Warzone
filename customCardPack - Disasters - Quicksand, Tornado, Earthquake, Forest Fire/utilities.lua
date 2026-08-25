@@ -1030,21 +1030,21 @@ function getDistanceToPlayersNearestTerritory (game, sourceTerritoryID, targetPl
 	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
 	local intDepth = 0;
 
-	arrTerrProcessed[sourceTerritoryID] = true;
-	table.insert(arrTerrListToProcess, sourceTerritoryID);
+	arrTerrProcessed [sourceTerritoryID] = true;
+	table.insert (arrTerrListToProcess, sourceTerritoryID);
 
 	-- check depth 0 case (source itself)
-	if (game.LatestStanding.Territories[sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
+	if (game.LatestStanding.Territories [sourceTerritoryID].OwnerPlayerID == targetPlayerID) then return 0, sourceTerritoryID; end
 
 	while (#arrTerrListToProcess > 0) do
 		local arrNextTerrList = {};
 		intDepth = intDepth + 1;
-		for _, terrID in ipairs(arrTerrListToProcess) do
-			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
-				if not arrTerrProcessed[neighbourTerrID] then
-					arrTerrProcessed[neighbourTerrID] = true;
+		for _, terrID in ipairs (arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+				if not arrTerrProcessed [neighbourTerrID] then
+					arrTerrProcessed [neighbourTerrID] = true;
 					-- ownership check
-					if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+					if (game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID == targetPlayerID) then
 						return intDepth, neighbourTerrID; -- nearest match (guaranteed shortest)
 					end
 					table.insert(arrNextTerrList, neighbourTerrID);
