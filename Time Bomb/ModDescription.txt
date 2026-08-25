@@ -1,5 +1,7 @@
 Plant a time bomb on any territory within a host configurable range from your territories which explodes after a set number of turns. Enemies can see the time bomb.
 
+Time Bombs explode at the start of the turn when the timer shows 00:00.
+
 Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)
 (B) fixed damage (any integer)

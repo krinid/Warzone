@@ -2,6 +2,7 @@ require ('Bomb+ common');
 
 function Client_PresentSettingsUI(rootParent)
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+	UI.CreateLabel (mainUI).SetText ("Explosives impact at the start of the turn, before deployments occur\n");
 	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
 	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);
 	local horzArmyDamage2 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);

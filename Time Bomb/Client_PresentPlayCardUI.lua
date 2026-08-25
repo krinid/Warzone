@@ -21,15 +21,16 @@ function play_TimeBombPlus_card(game, cardInstance, playCard)
         setMaxSize(400, 600);
         local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1);
         UI.CreateLabel (vert).SetText ("[TIME BOMB]\n\n").SetColor (getColourCode("card play heading"));
-		UI.CreateLabel (vert).SetText (game.Settings.Cards[cardInstance.CardID].FriendlyDescription.."\n \n");
+		UI.CreateLabel (vert).SetText ("Time Bomb executes at the start of the turn when the timer shows 00:00.\n");
+		UI.CreateLabel (vert).SetText ("\n" ..game.Settings.Cards[cardInstance.CardID].FriendlyDescription.."\n \n");
 
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked).SetColor (getColourCode ("minor heading"));
-        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
-        TargetTerritoryClicked("Select the territory you wish to place a Time Bomb on");
+        TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor (getColourCode ("minor heading"));
+        TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText ("");
+        TargetTerritoryClicked ("Select the territory you wish to place a Time Bomb on");
 
-        UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function()
+        UI.CreateButton (vert).SetText ("Play Card").SetColor (WZcolours ["Dark Green"]).SetOnClick (function()
             if (TargetTerritoryID == nil) then
-                UI.Alert("No territory selected. Please select a territory.");
+                UI.Alert  ("No territory selected. Please select a territory.");
                 return;
             end
 

@@ -2,6 +2,7 @@ require ('Bomb+ common');
 
 function Client_PresentSettingsUI(rootParent)
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+	UI.CreateLabel (mainUI).SetText ("Time Bomb executes at the start of the turn when the timer shows 00:00\n");
 
 	local horzTimeBombDurationForMaxPower = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombDurationForMaxPower).SetText ("Time delay: ").SetPreferredWidth (300);
@@ -53,10 +54,10 @@ function Client_PresentSettingsUI(rootParent)
 	else UI.CreateLabel (mainUI).SetText ("  · this quantity of cities are destroyed when a Time Bomb explodes");
 	end
 
-	local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
-	UI.CreateEmpty (mainUI);
-	UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bomb placements are executed');
-	TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
+	-- local horzTimeBombImplementationPhase = UI.CreateHorizontalLayoutGroup (mainUI);
+	-- UI.CreateEmpty (mainUI);
+	-- UI.CreateLabel (horzTimeBombImplementationPhase).SetText ('Turn phase where Time Bomb placements are executed');
+	-- TimeBombImplementationPhase = UI.CreateButton (horzTimeBombImplementationPhase).SetInteractable (true).SetText (tostring (WL.TurnPhase.ToString (Mod.Settings.BombImplementationPhase))).SetInteractable (false).SetColor (getColourCode ("minor heading"));
 
 	local horzTimeBombPlusCardPiecesNeeded = UI.CreateHorizontalLayoutGroup (mainUI);
 	UI.CreateLabel (horzTimeBombPlusCardPiecesNeeded).SetText ("Number of pieces to divide the card into").SetPreferredWidth (290).SetAlignment (WL.TextAlignmentOptions.Left);

@@ -22,7 +22,8 @@ function play_Explosives_card(game, cardInstance, playCard)
         setMaxSize (400, 600);
         local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
         UI.CreateLabel (vert).SetText ("[EXPLOSIVES]\n\n").SetColor (getColourCode ("card play heading"));
-		UI.CreateLabel (vert).SetText (game.Settings.Cards [cardInstance.CardID].FriendlyDescription.. "\n \n");
+		UI.CreateLabel (vert).SetText ("Explosives impact at the start of the turn, before deployments occur.\n");
+		UI.CreateLabel (vert).SetText ("\n" ..game.Settings.Cards [cardInstance.CardID].FriendlyDescription.. "\n \n");
 		UI.CreateLabel (vert).SetText ("\n \n");
 		UI.CreateEmpty (vert);
 		UI.CreateLabel (vert).SetText ("_").SetColor ("#000000");

@@ -10,6 +10,7 @@ function Client_PresentConfigureUI (rootParent)
 	-- Mod.Settings.BombImplementationPhase = Mod.Settings.BombImplementationPhase ~= nil and Mod.Settings.BombImplementationPhase or WL.TurnPhase.BombCards;
 	-- Mod.Settings.NumCitiesDestroyedByBombPlay = Mod.Settings.NumCitiesDestroyedByBombPlay ~= nil and Mod.Settings.NumCitiesDestroyedByBombPlay or 10;
 	local mainUI = UI.CreateVerticalLayoutGroup (rootParent);
+	UI.CreateLabel (mainUI).SetText ("Explosives impact at the start of the turn, before deployments occur\n");
 
 	local vertArmyDamage = UI.CreateVerticalLayoutGroup (mainUI);
 	local horzArmyDamage1 = UI.CreateHorizontalLayoutGroup (vertArmyDamage).SetFlexibleWidth(1);

@@ -146,9 +146,9 @@ function placeTimeBomb (game, order, addNewOrder)
 	local structures = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].Structures;
 
 	--structure files are Time Bomb 00.png->Time Bomb 10.png and use Time Bomb 11+.png for anything 11 or higher
-	local strStructureDelimiter = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower); --set to 2 digit number with leading zeroes if required
+	local strStructureDelimiter = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower or 3); --set to 2 digit number with leading zeroes if required
 	if (Mod.Settings.TimeBombDurationForMaxPower >= 11) then strStructureDelimiter = "11+"; end
-	local strStructureName = "Time Bomb " ..string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower); --Mod.Settings.TimeBombDurationForMaxPower
+	local strStructureName = "Time Bomb " ..strStructureDelimiter; --Mod.Settings.TimeBombDurationForMaxPower
 	local structureID = WL.StructureType.Custom (strStructureName);
 	-- local structureID = WL.StructureType.Custom ("Time Bomb");
 	if (structures == nil) then structures = {}; end;
