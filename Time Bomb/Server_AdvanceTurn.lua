@@ -146,8 +146,9 @@ function placeTimeBomb (game, order, addNewOrder)
 	local structures = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].Structures;
 
 	--structure files are Time Bomb 00.png->Time Bomb 10.png and use Time Bomb 11+.png for anything 11 or higher
-	local strStructureDelimiter = string.format("%02d", Mod.Settings.TimeBombDurationForMaxPower or 3); --set to 2 digit number with leading zeroes if required
-	if (Mod.Settings.TimeBombDurationForMaxPower or 3 >= 11) then strStructureDelimiter = "11+"; end
+	local intTimeBombDurationForMaxPower = Mod.Settings.TimeBombDurationForMaxPower or 3;
+	local strStructureDelimiter = string.format("%02d", intTimeBombDurationForMaxPower); --set to 2 digit number with leading zeroes if required
+	if (intTimeBombDurationForMaxPower >= 11) then strStructureDelimiter = "11+"; end
 	local strStructureName = "Time Bomb " ..strStructureDelimiter; --Mod.Settings.TimeBombDurationForMaxPower
 	local structureID = WL.StructureType.Custom (strStructureName);
 	-- local structureID = WL.StructureType.Custom ("Time Bomb");
@@ -155,30 +156,7 @@ function placeTimeBomb (game, order, addNewOrder)
 	if (structures [structureID] == nil) then structures [structureID] = 0; end;
 	print ("[TIME BOMB] PRE - # time bombs on terr " ..game.Map.Territories [intTargetTerritoryID].Name.. " == "..tostring (structures [structureID]));
 	structures [structureID] = structures [structureID] + 1;
-	-- structures [WL.StructureType.Custom ("Portal")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 1")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 2")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 3")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 4")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 5")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 6")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 7")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 8")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 9")] = 1;
-	-- structures [WL.StructureType.Custom ("Portal 10")] = 1;
-	-- structures [WL.StructureType.Custom ("Poison")] = 1;
-	-- structures [WL.StructureType.Custom ("earthquake")] = 1;
-	-- structures [WL.StructureType.Custom ("isolation")] = 1;
-	-- structures [WL.StructureType.Custom ("neutralized territory")] = 1;
-	-- structures [WL.StructureType.Custom ("Beacon")] = 1;
-	-- structures [WL.StructureType.Custom ("Fort")] = 1;
-	-- structures [WL.StructureType.Custom ("")] = 1;
 	impactedTerritory.SetStructuresOpt = structures;
-	-- structures [structureID] = structures [structureID] ~= nil and structures [structureID] or 0 + 1;
-	-- 	structures [WL.StructureType.Custom ("time bomb")] = 1;
-	-- else
-	-- 	structures [WL.StructureType.Custom ("time bomb")] = structures [WL.StructureType.Custom ("time bomb")] + 1;
-	-- end
 
 	local strTimeBombMsg = getPlayerName (game, order.PlayerID).. " places a time bomb on " ..game.Map.Territories [intTargetTerritoryID].Name;
 	local event = WL.GameOrderEvent.Create (order.PlayerID, strTimeBombMsg, {}, {impactedTerritory}, {}, {});
