@@ -342,6 +342,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 					local impactedTerritory = WL.TerritoryModification.Create (terrID);
 					impactedTerritory = apply_Poison_to_Territory (game, order, addNewOrder, skipThisOrder, game.ServerGame.LatestTurnStanding.Territories [terrID], impactedTerritory, 1.0, Mod.Settings.PoisonDuration); --add Poison custom structure to target terr
 					apply_Poison_Damage_to_Territory (game, order.PlayerID, order.Description, addNewOrder, game.ServerGame.LatestTurnStanding.Territories [terrID], impactedTerritory, 1.0); --apply damage to armies & SUs on the target terr, with strength 1.0 (full strength)
+					terrsAlreadyProcessed [terrID] = true;
 
 					for connID, _ in pairs (terr.ConnectedTo) do
 					--connID is a neighbour of terrID and has not yet been processed, so apply Poison to it and add it to the list of terrs to process next
