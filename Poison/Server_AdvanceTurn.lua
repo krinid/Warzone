@@ -334,6 +334,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 		local boolFinishedProcessing = false;
 		local intPoisonImpactRange = Mod.Settings.PoisonImpactRange or 0; --default to 0 if not set in the mod settings (impact only target, no spread to neighbours)
 
+		--troubleshooting spot in code
 		while (#terrsToProcess > 0 and intNeighbourLevel <= intPoisonImpactRange) do
 			for _, terrID in pairs (terrsToProcess) do
 				local terr = game.Map.Territories [terrID];
