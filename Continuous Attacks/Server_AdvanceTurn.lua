@@ -172,7 +172,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			-- print ("[CONT ATTACK] order.TerritoryModifications.RemoveSpecialUnitsOpt ~= nil --> " ..tostring (order.TerritoryModifications.RemoveSpecialUnitsOpt ~= nil));
 			-- print ("[CONT ATTACK] and order.TerritoryModifications.AddSpecialUnits ~= nil --> " ..tostring (order.TerritoryModifications.AddSpecialUnits ~= nil));
 			if (terrMod.RemoveSpecialUnitsOpt ~= nil) then for _, v in pairs (terrMod.RemoveSpecialUnitsOpt) do print ("    [CONT ATTACK - SU REPLACEMENT - REMOVAL] GUID " ..tostring (v)); strSUreplacement_SUremoved_GUID = v; end end
-			if (terrMod.AddSpecialUnits ~= nil) then for _, v in pairs (terrMod.AddSpecialUnits) do print ("    [CONT ATTACK - SU REPLACEMENT - ADD] GUID " ..tostring (v.ID).. ", Name: " ..tostring (v.Name)); objSUreplacement_SUadded = v; end end
+			if (terrMod.AddSpecialUnits ~= nil) then for _, v in pairs (terrMod.AddSpecialUnits) do print ("    [CONT ATTACK - SU REPLACEMENT - ADD] GUID " ..tostring (v.ID).. ", Name: " ..tostring (v.proxyType == "CustomSpecialUnit" and v.Name or "Non-CSU")); objSUreplacement_SUadded = v; end end
 			if (strSUreplacement_SUremoved_GUID ~= nil and objSUreplacement_SUadded ~= nil) then
 				print ("    [CONT ATTACK - SU REPLACEMENT - PRESERVED] GUID " ..tostring (objSUreplacement_SUadded.ID));
 				SUonFrom = findSpecialUnitOnTerritory (strSUreplacement_SUremoved_GUID, game, objSendForwardOrder_replica.From);
@@ -192,7 +192,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 					addNewOrder (eventSUswap); --add the adjustment Event order with the fixed terrMod
 					skipThisOrder (WL.ModOrderControl.Skip); --skip the current Event order that contains the incorrect terrMod
 					print ("    [CONT ATTACK - SU REPLACEMENT - RE-SUBMIT EVENT] Submitted");
-					-- skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+					--skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 					--WL.GameOrderEvent.Create(playerID PlayerID, message string, visibleToOpt HashSet<PlayerID>, terrModsOpt Array<TerritoryModification>, setResourcesOpt Table<PlayerID,Table<ResourceType (enum),integer>>, incomeModsOpt Array<IncomeMod>) (static) returns GameOrderEvent:
 				end
 				boolSUreplaced = true;
