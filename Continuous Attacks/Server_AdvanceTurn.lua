@@ -90,7 +90,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			-- result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), {});
 			-- result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), {});
 
-			for k,SU in pairs (result.ActualArmies.SpecialUnits) do print ("[DRAGON BREATH PREP]" ..SU.proxyType..", " ..tostring (SU.Name).. ", ModData: " ..tostring (SU.ModData)); end
+			-- for k,SU in pairs (result.ActualArmies.SpecialUnits) do print ("[DRAGON BREATH PREP]" ..SU.proxyType..", " ..tostring (SU.Name).. ", ModData: " ..tostring (SU.ModData)); end
 			-- processDragonBreathAttacks (game, addNewOrder, result.ActualArmies, order.To); --process Dragon Breath attacks if a Dragon with the ability is present in attackingArmies
 			-- airstrikeResult = process_manual_attack (game, attackingArmies, game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID], result, addOrder, false);
 			local manualAttackResult = process_manual_attack (game, result.ActualArmies, game.ServerGame.LatestTurnStanding.Territories[order.To], result, addNewOrder, true);
