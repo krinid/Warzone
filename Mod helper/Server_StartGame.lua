@@ -18,6 +18,19 @@ function Server_StartGame (game, standing)
 				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Phantom", "phantom_clearback.png", 0, 0, nil, nil, 0, 0, 100, 9500, true, true, true, true, false, "Super Phantom", true);
 			end
 		end
+	elseif (Mod.Settings.SimpleConfig ~= nil and Mod.Settings.SimpleConfig == 1001) then
+		--troubleshooting for ContAtt v4 [Isle][Fog]
+		for terrID,v in pairs (standing.Territories) do
+			if (v.OwnerPlayerID == 1) then
+				-- build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Tank", "Tank.png", 3, 3, nil, nil, 0, 0, 100, 3415, true, true, true, true, false, "Super Tank", true);
+				-- build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Phantom", "phantom_clearback.png", 0, 0, nil, nil, 0, 0, 100, 9500, true, true, true, true, false, "Super Phantom", true);
+				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Behemoth", "Behemoth_clearback.png", 200, 200/4, nil, nil, 0, 0, 175, -99000, true, true, true, true, false, "Behemoth", true);
+			elseif (v.OwnerPlayerID > 1) then --all other players (but not Neutral territories)
+				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Tank", "Tank.png", 10, 10, nil, nil, 0, 10, nil, 3415, true, true, true, true, false, "Tank", true);
+				-- build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Phantom", "phantom_clearback.png", 0, 0, nil, nil, 0, 0, 100, 9500, true, true, true, true, false, "Phantom", true);
+				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Behemoth", "Behemoth_clearback.png", 265, 265/4, nil, nil, 0, 0, 265, -99000, true, true, true, true, false, "Behemoth", true);
+			end
+		end
 	end
 end
 

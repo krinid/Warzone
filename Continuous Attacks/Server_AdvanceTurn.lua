@@ -86,6 +86,20 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 	if (order.proxyType == 'GameOrderAttackTransfer') then
 		if (boolProcessingContinuousAttackOrders == true) then
 			print ("[[[[CONTINUOUS ATTACK]]]] order.NumArmies.NumArmies");
+
+			--check for infinite loop condition - this can happen when a turn that causes a continuous attack condition is repeatedly skipped, eg: when using Forced Orders which cancels the orders, thus making it appear like it can repeat the attack
+			if (intInfiniteLoopStopper == nil) then intInfiniteLoopStopper = 0; end
+			intInfiniteLoopStopper = intInfiniteLoopStopper + 1;
+			if (intInfiniteLoopStopper > 100) then
+				-- addNewOrder (WL.GameOrderCustom.Create ({order.PlayerID, "Continuous Attack - potential infinite loop; ending this attack cycle", {}));
+				addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Continuous Attack - potential infinite loop; ending this attack cycle"));
+				print ("#################### Continuous Attack - potential infinite loop; ending this attack cycle");
+				-- crashMe.Now(); end
+				intInfiniteLoopStopper = 0; --reset for the next continuous attack cycle; only abort the current cycle, not all going forward for this turn
+				-- crashNow (); --delme
+				return; --don't process this continuous attack cycle any further
+			end
+
 			result.ActualArmies = order.NumArmies; --override the ActualArmies with what was specified as the attacking ones (b/c WZ will prevent them from double moving otherwise)
 			-- result.AttackingArmiesKilled = WL.Armies.Create (math.floor (game.ServerGame.LatestTurnStanding.Territories [order.To].NumArmies.DefensePower * game.Settings.DefenseKillRate + 0.5), {});
 			-- result.DefendingArmiesKilled = WL.Armies.Create (math.floor (result.ActualArmies.AttackPower * game.Settings.OffenseKillRate + 0.5), {});
@@ -139,21 +153,9 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 			objSendForwardOrder = WL.GameOrderAttackTransfer.Create (order.PlayerID, order.From, order.To, order.AttackTransfer, order.ByPercent, newArmies, order.AttackTeammates);
 			objSendForwardOrder_replica = objSendForwardOrder; --create a replica to reference for 'Update Dragons' purposes (b/c objSendForwardOrder having an assigned value indicates action must be taken, but the replica is just used for referencing the values as required)
 
-			--check for infinite loop condition - this can happen when a turn that causes a continuous attack condition is repeatedly skipped, eg: when using Forced Orders which cancels the orders, thus making it appear like it can repeat the attack
-			if (intInfiniteLoopStopper == nil) then intInfiniteLoopStopper = 0; end
-			intInfiniteLoopStopper = intInfiniteLoopStopper + 1;
-			if (intInfiniteLoopStopper > 100) then
-				-- addNewOrder (WL.GameOrderCustom.Create ({order.PlayerID, "Continuous Attack - potential infinite loop; ending this attack cycle", {}));
-				addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Continuous Attack - potential infinite loop; ending this attack cycle"));
-				print ("#################### Continuous Attack - potential infinite loop; ending this attack cycle");
-				-- crashMe.Now(); end
-				intInfiniteLoopStopper = 0; --reset for the next continuous attack cycle; only abort the current cycle, not all going forward for this turn
-				return; --don't process this continuous attack stream any further
-			else
-				--if not in an infinite loop, continue the continuous attack cycle
-				addNewOrder (WL.GameOrderCustom.Create (order.PlayerID, "Continuous Attacks placeholder - players should never see this", "Continuous Attacks|Placeholder"), false); --insert dummy order to trigger processing of the actual next iteration of the continous attack order
-				boolProcessingContinuousAttackOrders = true;
-			end
+			--if not in an infinite loop, continue the continuous attack cycle
+			addNewOrder (WL.GameOrderCustom.Create (order.PlayerID, "Continuous Attacks placeholder - players should never see this", "Continuous Attacks|Placeholder"), false); --insert dummy order to trigger processing of the actual next iteration of the continous attack order
+			boolProcessingContinuousAttackOrders = true;
 		else
 			print ("---> __ END THE ATTACK\n");
 			objSendForwardOrder_replica = order; --assign current order to the replica b/c there will not be any future adjusted continuous attacks - this is the last order, so if there is an SU that is modified (Dragon Dynamic Health, etc) then the check on the Event that changes the SUs requires this to correctly adjust the potentially incorrect Event order
@@ -161,9 +163,9 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 	elseif (order.proxyType == 'GameOrderEvent') then -- and order.TerritoryModifications ~= nil and order.TerritoryModifications.RemoveSpecialUnitsOpt ~= nil and order.TerritoryModifications.AddSpecialUnits ~= nil) then
 		print ("[CONT ATTACK] Message: " ..tostring (order.Message));
 		print ("[CONT ATTACK] order.TerritoryModifications == " ..tostring (order.TerritoryModifications));
-		local boolSUreplacement = false;
-		local boolSUreplacement_SUremoved = false;
-		local boolSUreplacement_SUadded = false;
+		-- local boolSUreplacement = false;
+		-- local boolSUreplacement_SUremoved = false;
+		-- local boolSUreplacement_SUadded = false;
 		for k,terrMod in pairs (order.TerritoryModifications) do
 			print ("  [CONT ATTACK]   terrMod " ..tostring (terrMod.TerritoryID).. "/" ..tostring (game.Map.Territories [terrMod.TerritoryID].Name));
 			print ("  [CONT ATTACK]   terrMod.RemoveSpecialUnitsOpt == " ..tostring (terrMod.RemoveSpecialUnitsOpt));
