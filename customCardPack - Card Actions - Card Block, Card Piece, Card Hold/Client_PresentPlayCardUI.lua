@@ -474,7 +474,7 @@ function play_Monolith_card(game, cardInstance, playCard)
 		TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked);
 		TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
 		TargetTerritoryClicked("Select the territory to create a Monolith on."); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
-	
+
 		UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(function() 
 
 		--check for CANCELED request, ie: no territory selected
@@ -589,17 +589,6 @@ function play_Deneutralize_card (game, cardInstance, playCard)
 end
 
 function play_Neutralize_card (game, cardInstance, playCard)
-	--[[-- test writing to Mod.PublicGameData, Mod.PrivateGameData, Mod.PlayerGameData
-	-- all data must be saved to a code construct, then have the code construct assigned the the Mod.Public/Private/PlayerGameData construct; can't modify variable values directly
-	local data = Mod.PublicGameData;
-	publicGameData = Mod.PublicGameData; --readable from anywhere, writeable only from Server hooks
-	--privateGameData = Mod.PrivateGameData;  --readable only from Server hooks
-	playerGameData = Mod.PlayerGameData;  --readable/writeable from both Client & Server hooks
-		--Client hooks can only access data for the user associated with the Client hook (current player), doesn't need index b/c it can only access data for current player, automatically gets assigned playerID of current player
-		--Server hooks access this using an index of playerID
-	publicGameData.someProperty = "this is some public data";
-	publicGameData.anotherProperty = "this is some public data";]]
-
 	game.CreateDialog(
 		function(rootParent, setMaxSize, setScrollable, game, close)
 			setMaxSize(400, 300);
@@ -611,6 +600,10 @@ function play_Neutralize_card (game, cardInstance, playCard)
 			strNeutralize_TerritorySelectText = "Select the territory you wish to neutralize (turn to neutral).";
 			TargetTerritoryClicked(strNeutralize_TerritorySelectText); -- auto-invoke the button click event for the 'Select Territory' button (don't wait for player to click it)
 
+			local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, -2, Mod.Settings.NeutralizeRange or 4000); -- -2 indicates all non-neutral territories
+			-- local arrValidTerrs = getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, intPlayerID_cardPlayer, 0, 1);
+			game.HighlightTerritories (arrValidTerrs);
+
 			UI.CreateButton(vert).SetText("Play Card").SetColor(WZcolours["Dark Green"]).SetOnClick(
 				function() 
 					--check for CANCELED request, ie: no territory selected
@@ -620,6 +613,11 @@ function play_Neutralize_card (game, cardInstance, playCard)
 					elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID == WL.PlayerID.Neutral) then -- territory is already neutral, alert player and cancel
 						UI.Alert("The selected territory is already neutral. Select a different territory that is owned by a player.");
 						TargetTerritoryClicked(strNeutralize_TerritorySelectText); --bring up the territory select screen again
+						return;
+					elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
+						UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.NeutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
+						game.HighlightTerritories (arrValidTerrs);
+						TargetTerritoryClicked(strNneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
 						return;
 					end
 

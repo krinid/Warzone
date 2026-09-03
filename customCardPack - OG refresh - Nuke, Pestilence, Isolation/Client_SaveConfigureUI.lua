@@ -146,13 +146,16 @@ function createCards_newCards(alert, addCard);
 		print("Neutralize settings:")
 		print("NeutralizeEnabled="..tostring(Mod.Settings.NeutralizeEnabled))
 		print("NeutralizeDuration="..tostring(Mod.Settings.NeutralizeDuration))
+		print("NeutralizeRange="..tostring(Mod.Settings.NeutralizeRange))
 		print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander))
 		print("NeutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials))
 		print("NeutralizePiecesNeeded="..tostring(Mod.Settings.NeutralizePiecesNeeded))
 		print("NeutralizeStartPieces="..tostring(Mod.Settings.NeutralizeStartPieces))
 		print("NeutralizePiecesPerTurn="..tostring(Mod.Settings.NeutralizePiecesPerTurn))
 
-		local strNeutralizeDesc = "Turn a territory owned by a player to neutral ";
+		if (Mod.Settings.NeutralizeRange < 1 or Mod.Settings.NeutralizeRange > 4000) then UI.Alert ("Neutralize Range must be between 1-4000"); return; end
+
+		local strNeutralizeDesc = "Turn a territory owned by a player within " ..tostring (Mod.Settings.NeutralizeRange) .. " steps from a territory you own already to neutral ";
 		if (Mod.Settings.NeutralizeDuration>=0) then
 				strNeutralizeDesc = strNeutralizeDesc .. "for " .. Mod.Settings.NeutralizeDuration .. " turns. If it is still neutral at that time, it will revert ownership to the prior owner.";
 		else
@@ -185,7 +188,7 @@ function createCards_newCards(alert, addCard);
 		-- print("DeneutralizeStartPieces="..tostring(Mod.Settings.DeneutralizeStartPieces))
 		-- print("DeneutralizePiecesPerTurn="..tostring(Mod.Settings.DeneutralizePiecesPerTurn))
 
-		if (Mod.Settings.DeneutralizeRange < 1 or Mod.Settings.DeneutralizeRange > 4000) then UI.Alert ("Range must be between 1-4000"); return; end
+		if (Mod.Settings.DeneutralizeRange < 1 or Mod.Settings.DeneutralizeRange > 4000) then UI.Alert ("Deneutralize Range must be between 1-4000"); return; end
 
 		local strDeneutralizeDesc = "Take ownership (or assign to another player) of a neutral territory within " ..tostring (Mod.Settings.DeneutralizeRange) .. " steps from a territory you own already. ";
 		if ((Mod.Settings.DeneutralizeCanUseOnNeutralizedTerritories == true) and (Mod.Settings.DeneutralizeCanUseOnNaturalNeutrals == true)) then

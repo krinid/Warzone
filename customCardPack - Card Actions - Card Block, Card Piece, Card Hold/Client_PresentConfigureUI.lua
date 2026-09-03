@@ -668,8 +668,8 @@ function neutralizeCheckboxClicked()
 
 		print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
         print("NeutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
-        print("DeneutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
-        print("DeneutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
+        print("NeutralizeCanUseOnCommander="..tostring(Mod.Settings.NeutralizeCanUseOnCommander));
+        print("NeutralizeCanUseOnSpecials="..tostring(Mod.Settings.NeutralizeCanUseOnSpecials));
 
 		horzNeutralizeDuration = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		UI.CreateLabel (horzNeutralizeDuration).SetText("Duration: ");
@@ -677,6 +677,11 @@ function neutralizeCheckboxClicked()
 		UI.CreateLabel (UIcontainer).SetText("(Use -1 to make Neutralize permanent)"); --"; be careful with this setting as it can make a game impossible to finish depending on the other game settings)");
 		--is permanent Neutralize capable of creating a situation where a game can't conclude? Commander game, 2 players each have 1 territory only with Commander on it, they Neutralize each other; they are either both eliminated or both play on but can't move b/c Commanders are on Neutral territories
 		--don't think so b/c once they lose their last territories, it's gg; whichever goes to 0 territories first loses
+
+		horzNeutralizeRange = UI.CreateHorizontalLayoutGroup (UIcontainer);
+		UI.CreateLabel (horzNeutralizeRange).SetText("\nRange: ");
+		NeutralizeRange = UI.CreateNumberInputField (horzNeutralizeRange).SetSliderMinValue(1).SetSliderMaxValue(10).SetValue(Mod.Settings.NeutralizeRange or 1).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (UIcontainer).SetText("  (Distance [# territories] from any territory you own already where Neutralize can be used)"); --.SetColor (getColourCode ("subheading"));
 
 		horzNeutralizeCanUseOnCommander = UI.CreateHorizontalLayoutGroup (UIcontainer);
 		NeutralizeCanUseOnCommander = UI.CreateCheckBox (horzNeutralizeCanUseOnCommander).SetIsChecked(Mod.Settings.NeutralizeCanUseOnCommander).SetInteractable(true).SetText("Can use on Commander");
@@ -1277,6 +1282,7 @@ function setDefaultValues()
 	if (Mod.Settings.NeutralizeEnabled == nil) then
 		Mod.Settings.NeutralizeEnabled = false;
 		Mod.Settings.NeutralizeDuration = 3;
+		Mod.Settings.NeutralizeRange = 2;
 		Mod.Settings.NeutralizeCanUseOnCommander = false;
 		Mod.Settings.NeutralizeCanUseOnSpecials = false;
 		Mod.Settings.NeutralizePiecesNeeded = 10;
@@ -1467,6 +1473,7 @@ function updateModSettingsFromUI()
 
 	if (not UI.IsDestroyed (vertNeutralizeSettingsDetails)) then
 		Mod.Settings.NeutralizeDuration = NeutralizeCardDuration.GetValue();
+		Mod.Settings.NeutralizeRange = NeutralizeRange.GetValue();
 		Mod.Settings.NeutralizeCanUseOnCommander = NeutralizeCanUseOnCommander.GetIsChecked();
 		Mod.Settings.NeutralizeCanUseOnSpecials = NeutralizeCanUseOnSpecials.GetIsChecked();
 		Mod.Settings.NeutralizePiecesNeeded = NeutralizePiecesNeeded.GetValue();

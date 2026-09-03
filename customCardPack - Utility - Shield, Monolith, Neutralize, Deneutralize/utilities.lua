@@ -1142,7 +1142,8 @@ function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
     return (arrTerrResults);
 end
 
--- returns array of territory IDs belonging to targetPlayerID (0=neutral, -1=all territories within distance regardless of which player or neutral) within distance intMaxDistance from any terr belonging to mainPlayerID
+-- returns array of territory IDs belonging to targetPlayerID within distance intMaxDistance from any terr belonging to mainPlayerID
+--targetPlayerID: 0=neutral (use WL.PlayerID.Neutral), -1=include all territories, -2=all non-neutral territories
 function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
   local arrTerrProcessed = {};        -- list of terrs already processed
     local arrTerrResults = {};          -- resultant list of matching terrs
@@ -1180,7 +1181,7 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
                     arrTerrProcessed[neighbourTerrID] = true;
 
                     -- ownership filter
-                    if (targetPlayerID == -1 or game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) then
+                    if ((targetPlayerID == -1) or (targetPlayerID > 0 and game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) or (targetPlayerID == -2 and game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID ~= WL.PlayerID.Neutral)) then
                         table.insert(arrTerrResults, neighbourTerrID);
                     end
 
