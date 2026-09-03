@@ -538,6 +538,7 @@ function process_game_orders_RegularCards (game, gameOrder, result, skip, addOrd
 		event.RemoveWholeCardsOpt = {[gameOrder.PlayerID] = gameOrder.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
 		event.TerritoryAnnotationsOpt = {[gameOrder.TargetTerritoryID] = WL.TerritoryAnnotation.Create ("Bomb", 8, 0)}; --mimic the base "Bomb" annotation
 		event.JumpToActionSpotOpt = createJumpToLocationObject (game, gameOrder.TargetTerritoryID); --move the camera to the target territory
+		event.Icon = "shield_order_40x40";
 		addOrder (event, false); --add new order that removes the played Bomb card + protects the territory (doesn't do any damage)
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
 	--check for Airlift or Airstrike plays TO or FROM territories impacted by Quicksand or Isolation
@@ -1511,6 +1512,7 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
     local event = WL.GameOrderEvent.Create(castingPlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Shield", 8, getColourInteger (0, 0, 255))}; --use Blue for Shield
+	event.Icon = "shield_order_40x40";
 	addOrder(event, true);
 
     local privateGameData = Mod.PrivateGameData;
@@ -1716,36 +1718,7 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 	local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);  --object used to manipulate state of the territory (make it neutral) & save back to addOrder
 
-	-- create special unit for Isolation operations, place the special on the territory so it is visibly identifiable as being impacted by Isolation; destroy the unit when Isolation ends
-	-- local builder = WL.CustomSpecialUnitBuilder.Create(impactedTerritoryOwnerID);  --assign unit to owner of the territory (not the caster of the Isolation action)
-	-- builder.Name = 'Isolated territory';
-	-- builder.IncludeABeforeName = false;
-	-- builder.ImageFilename = 'IsolatedTerritory.png'; --max size of 60x100 pixels
-	-- builder.AttackPower = 0;
-	-- builder.DefensePower = 0;
-	-- builder.DamageToKill = 0;
-	-- builder.DamageAbsorbedWhenAttacked = 0;
-	-- --builder.Health = 0;
-	-- builder.CombatOrder = 10001; --doesn't protect Commander
-	-- builder.CanBeGiftedWithGiftCard = false;
-	-- builder.CanBeTransferredToTeammate = false;
-	-- builder.CanBeAirliftedToSelf = false;
-	-- builder.CanBeAirliftedToTeammate = false;
-	-- builder.IsVisibleToAllPlayers = false;
-	-- builder.TextOverHeadOpt = "Isolated";
-	-- --builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
-	-- local strUnitDescription = tostring (Mod.Settings.IsolationDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.IsolationDuration.."]";
-	-- --builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	-- builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
-	-- local specialUnit_Isolation = builder.Build(); --save this in a table somewhere to destroy later
-
-	--modify impactedTerritory object to change to neutral + add the special unit for visibility purposes			
-	-- impactedTerritory.AddSpecialUnits = {specialUnit_Isolation}; --add special unit
-	--table.insert (modifiedTerritories, impactedTerritory);
-	--printObjectDetails (specialUnit_Isolation, "Isolation specialUnit", "Isolation"); --show contents of the Isolation special unit
-
  	--add Isolation custom structure on territory for visibility; pic is isolation.png
-	--&&&isolation
 	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
 	if (structures == nil) then structures = {}; end;
 	if (structures[WL.StructureType.Custom("isolation")] == nil) then
@@ -1755,32 +1728,6 @@ function execute_Isolation_operation (game, gameOrder, addOrder, targetTerritory
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
-
---START OF REF CODE for Custom Structure add/removal
---[[
- 	--add Quicksand custom structure on territory for visibility; pic is quicksand.png
-	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
-	if (structures == nil) then structures = {}; end;
-	if (structures[WL.StructureType.Custom("quicksand")] == nil) then
-		structures[WL.StructureType.Custom("quicksand")] = 1;
-	else
-		structures[WL.StructureType.Custom("quicksand")] = structures[WL.StructureType.Custom("quicksand")] + 1;
-	end
-
-	impactedTerritory.SetStructuresOpt = structures;
-
-			--remove the Quicksand custom structure from the territory (remove both the SU & custom structure to account for cases where the SU already exists on the map already, a carry over from the previous visual, pre-custom Structures)
-			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
-			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
-			if (structures[WL.StructureType.Custom("quicksand")] == nil) then
-				structures[WL.StructureType.Custom("quicksand")] = 0;
-			else
-				structures[WL.StructureType.Custom("quicksand")] = 0; --set it to 0 instead of subtracting 1 b/c new Quicksand invocations overwrite old ones, only 1 is truly active at any given time but it creates multiple Quicksand indicators
-			end
-			impactedTerritory.SetStructuresOpt = structures;
-]]
---END OF REF CODE
-
 	local castingPlayerID = gameOrder.PlayerID; --playerID of player who casts the Isolation action
 	--need WL.GameOrderEvent.Create to modify territories (add special units) + jump to location + card/piece changes, and need WL.GameOrderCustom.Create for occursInPhase modifier (is this it?)
 	--actually think we can get away with just Event
@@ -1933,7 +1880,7 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 		impactedTerritoryOwnerName = toPlayerName (impactedTerritoryOwnerID, game);
 
 		--reassign SUs on the terr to the new owner
-		convert_SUs (game, gameOrder.PlayerID, impactedTerritoryOwnerID, currentTargetTerritory.NumArmies.SpecialUnits, targetTerritoryID, addOrder);
+		transfer_SUs_toNewOwner (game, gameOrder.PlayerID, impactedTerritoryOwnerID, currentTargetTerritory.NumArmies.SpecialUnits, targetTerritoryID, addOrder);
 		table.insert (modifiedTerritories, impactedTerritory);
 
 		--DELETE any the Neutralize structures!
@@ -1960,22 +1907,21 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 end
 
 --for each SU, clone it, assign to otherPlayerID & add to targetTerritoryID (up to 4 at a time)
-function convert_SUs (game, orderPlayerID, otherPlayerID, SpecialUnits, targetTerritoryID, addOrder)
+function transfer_SUs_toNewOwner (game, orderPlayerID, otherPlayerID, SpecialUnits, targetTerritoryID, addOrder)
 	print ("\n\n\n[pkSUs] START");
 	local clonedSUs = {};
 	local removeSUs = {};
-	local NeutralOwnershipSUtypes = {"Shield", "Monolith", "CityFort", "Castle"};
+	local NeutralOwnershipSUtypes = {["Shield"]=true, ["Monolith"]=true, ["CityFort"]=true, ["Castle"]=true}; --do not reassign ownership of these SUs, they are set to Neutral by design so they cannot be moved by a player and should remain Neutral
 	for k,sp in pairs (SpecialUnits) do
-		--don't capture Commanders/Bosses/other built-in SUs - just let them die normally, only capture Custom SUs (CustomSpecialUnits)
-		if (sp.proxyType == "CustomSpecialUnit") then
+		--don't capture Commanders/Bosses/other built-in SUs - leave them assigned to original owners, only transfer Custom SUs (CustomSpecialUnits)
+		print ("[DENEUTRALIZE] [SU TRANSFER] SU type: " ..tostring (sp.proxyType).. "/" ..tostring (sp.proxyType ~= "CustomSpecialUnit" and "Built-in" or sp.Name..", Neutral ownership type " ..tostring (NeutralOwnershipSUtypes [sp.Name])));
+		if (sp.proxyType == "CustomSpecialUnit" and NeutralOwnershipSUtypes [sp.Name] == nil) then
 			local sp_OwnerID = sp.OwnerID;
-			--this code is to recreate a new SP of the same type with same properties -- not good b/c it needs all the PNG image files (which is limited to 5)
-			-- local newSP = build_specialUnit (game, addOrder, targetTerritoryID, otherPlayerID, sp.Name, sp.ImageFilename, sp.AttackPower, sp.DefensePower, sp.AttackPowerPercentage, sp.DefensePowerPercentage, sp.DamageAbsorbedWhenAttacked, sp.DamageToKill, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToSelf, sp.CanBeAirliftedToTeammate, sp.IsVisibleToAllPlayers, sp.ModData, false);
-
+			--NOTE: clone the SU, don't recreate the SU anew, else it would require all the PNG image files (which is limited to 15 at time of writing)
 			--this code is to clone an SU & change the owner -- a much nicer solution, don't need to recreate the SU, don't need to worry about PNG image files, works with all custom SUs
 			local builder = WL.CustomSpecialUnitBuilder.CreateCopy (sp);
 			builder.OwnerID = otherPlayerID;
-			local newSP = builder.Build();
+			local newSP = builder.Build ();
 			print ("SP killed: "..k, sp.proxyType.."; , SP owner "..sp_OwnerID.. "/".. getPlayerName (game, sp_OwnerID)..", clone to " ..newSP.OwnerID.. "/".. getPlayerName (game, newSP.OwnerID));
 			table.insert (clonedSUs, newSP);
 			table.insert (removeSUs, sp.ID);
