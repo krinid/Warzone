@@ -475,14 +475,14 @@ function process_game_orders_ImmovableSpecialUnits (game, gameOrder, result, ski
 		if (gameOrder.proxyType=='GameOrderPlayCardAirlift') then orderArmies = gameOrder.Armies; end
 		if (#orderArmies.SpecialUnits >= 1) then --if there are no specials, take no further action, let the order proceed; if there are specials, check if they are one of the immovable types
 			local specialUnitsToRemoveFromOrder = {};
-			for _, unit in pairs(orderArmies.SpecialUnits) do
+			for _, unit in pairs (orderArmies.SpecialUnits) do
 				if (unit.proxyType == "CustomSpecialUnit") then --ignore non-custom special units (which I think is just Commanders & Bosses)
-					local strModData = tostring(unit.ModData);
+					local strModData = tostring (unit.ModData);
 					--print ("[___________special] ModData=="..strModData..", Name=="..unit.Name..", numArmies=="..orderArmies.NumArmies.."::");
 					if (unit.Name == "Monolith") or (unit.Name == "Shield") or (unit.Name == "Neutralized territory") or (unit.Name == "Quicksand impacted territory") or (unit.Name == "Isolated territory") or (unit.Name == "Tornado") or (unit.Name == "Earthquake") or (unit.Name == "Nuke") or (unit.Name == "Pestilence") or (unit.Name == "Forest Fire") then
 						--some of these cards don't currently have special units, but including them here so if they do going forward, this code is already in place
 						--print ("Immovable Special==true --> block movement of this unit! (but let everything else go forward)");
-						table.insert(specialUnitsToRemoveFromOrder, unit);
+						table.insert (specialUnitsToRemoveFromOrder, unit);
 					end
 				end
 			end
@@ -491,8 +491,8 @@ function process_game_orders_ImmovableSpecialUnits (game, gameOrder, result, ski
 
 				--create new Armies structure with 0 regular armies & the Immovable Specials identified in the specialUnitsToRemoveFromOrder table, then "subtract" it from the Armies structure from the original order (orderArmies)
 				--then assign it to numArmies, then make a new order using newArmies and keep all other aspects of the order the same; handle cases for both Attack/Transfer & Airlift; then skip the original order; result is same order minus the Immovable Specials
-				local newNumArmies = orderArmies.Subtract(WL.Armies.Create(0, specialUnitsToRemoveFromOrder));
-				local newNumArmies = WL.Armies.Create(gameOrder.NumArmies.NumArmies, {});
+				local newNumArmies = orderArmies.Subtract (WL.Armies.Create (0, specialUnitsToRemoveFromOrder));
+				local newNumArmies = WL.Armies.Create (gameOrder.NumArmies.NumArmies, {});
 				--print ("Immovable Specials present==true --> numArmies=="..newNumArmies.NumArmies);
 
 				if (gameOrder.proxyType=='GameOrderAttackTransfer') then replacementOrder = WL.GameOrderAttackTransfer.Create(gameOrder.PlayerID, gameOrder.From, gameOrder.To, gameOrder.AttackTransfer, gameOrder.ByPercent, newNumArmies, gameOrder.AttackTeammates); end
@@ -511,7 +511,7 @@ function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOr
 	if (order.proxyType == "GameOrderEvent" and startsWith (order.Message, "Late Airlifts|Permit mid-turn Airlift")) then
 		--this is submitted by Airstrike, as "Late Airlifts|Permit mid-turn Airlift|Airstrike", in order to permit mid-turn Airlifts and not be deferred to end of turn
 		--but it should be skipped so it never appears for actual players
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip original Bomb order (b/c there's no way to just remove the damage it does)
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		boolSkipOrder = true; --don't process any further on this order, just end execution in Server_AdvanceTurn_Order
 	elseif (order.proxyType == "GameOrderCustom" and order.Payload == "Wildfire|Burn") then
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom order, then add new orders to process Wildfire burning
@@ -1371,7 +1371,7 @@ function execute_Earthquake_operation(game, gameOrder, addOrder, targetBonusID)
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.EarthquakeData == nil) then publicGameData.EarthquakeData = {}; end --if no EarthquakeData, then initialize it
     local turnNumber_EarthquakeExpires = (Mod.Settings.EarthquakeDuration > 0) and (game.Game.TurnNumber + Mod.Settings.EarthquakeDuration) or -1;
-    publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
+    publicGameData.EarthquakeData [targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
     Mod.PublicGameData = publicGameData;
 end
 
@@ -1387,18 +1387,18 @@ function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID
 	print ("[TORNADO] structure Tornado=="..WL.StructureType.Custom("tornado").."::");
 
 	if (structures == nil) then structures = {}; end;
-	print ("[TORNADO] PRE - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
-	if (structures[WL.StructureType.Custom("tornado")] == nil) then
-		structures[WL.StructureType.Custom("tornado")] = 1;
+	print ("[TORNADO] PRE - structures[WL.StructureType.Custom ('tornado')]=="..tostring (structures[WL.StructureType.Custom ("tornado")]).."::");
+	if (structures [WL.StructureType.Custom ("tornado")] == nil) then
+		structures [WL.StructureType.Custom ("tornado")] = 1;
 		-- structures[WL.StructureType.Power] = 1; --delme
 	else
-		structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] + 1;
+		structures [WL.StructureType.Custom ("tornado")] = structures [WL.StructureType.Custom ("tornado")] + 1;
 		-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] + 1; --delme
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
     if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
-    local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
+    local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
 	--addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[airliftCardID] = game.Settings.Cards[airliftCardID].NumPieces}}; --add enough pieces to equal 1 whole card
@@ -1406,10 +1406,10 @@ function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.TornadoData == nil) then publicGameData.TornadoData = {}; end
     local turnNumber_TornadoExpires = (Mod.Settings.TornadoDuration > 0) and (game.Game.TurnNumber + Mod.Settings.TornadoDuration) or -1;
-    publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
+    publicGameData.TornadoData [targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
     Mod.PublicGameData = publicGameData;
-	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures[WL.StructureType.Power]).."::");
-	print ("[TORNADO] POST - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures[WL.StructureType.Custom("tornado")]).."::");
+	print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (structures [WL.StructureType.Power]).."::");
+	print ("[TORNADO] POST - structures[WL.StructureType.Custom('tornado')]=="..tostring (structures [WL.StructureType.Custom ("tornado")]).."::");
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
@@ -1445,36 +1445,25 @@ function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryI
     local impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID);
 	local impactedTerritoryOwnerID = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID;
 
-	--create Quicksand SU to place on territory for visibility
-	-- local specialUnit_Quicksand = build_Quicksand_specialUnit (game, targetTerritoryID);
-	-- impactedTerritory.AddSpecialUnits = {specialUnit_Quicksand};
-
 	--add Quicksand custom structure on territory for visibility; pic is quicksand.png
-	--&&&quicksand
 	local structures = game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures;
 	if (structures == nil) then structures = {}; end;
-	if (structures[WL.StructureType.Custom("quicksand")] == nil) then
-		structures[WL.StructureType.Custom("quicksand")] = 1;
+	if (structures [WL.StructureType.Custom ("quicksand")] == nil) then
+		structures [WL.StructureType.Custom ("quicksand")] = 1;
 	else
-		structures[WL.StructureType.Custom("quicksand")] = structures[WL.StructureType.Custom("quicksand")] + 1;
+		structures [WL.StructureType.Custom ("quicksand")] = structures [WL.StructureType.Custom ("quicksand")] + 1;
 	end
 
 	impactedTerritory.SetStructuresOpt = structures;
 
-	local event = WL.GameOrderEvent.Create(gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
+	local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, gameOrder.Description, {}, {impactedTerritory});
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
-	--[[WL.RectangleVM.Create(
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY,
-         game.Map.Territories[targetTerritoryID].MiddlePointX,
-         game.Map.Territories[targetTerritoryID].MiddlePointY);]]
 	event.TerritoryAnnotationsOpt = {[targetTerritoryID] = WL.TerritoryAnnotation.Create ("Quicksand", 8, getColourInteger (255, 0, 0))}; --use Red colour for Quicksand
-	addOrder(event, true);
+	addOrder (event, true);
     local publicGameData = Mod.PublicGameData;
     if (publicGameData.QuicksandData == nil) then publicGameData.QuicksandData = {}; end
     local turnNumber_QuicksandExpires = (Mod.Settings.QuicksandDuration > 0) and (game.Game.TurnNumber + Mod.Settings.QuicksandDuration) or -1;
-    -- publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};
-    publicGameData.QuicksandData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=nil};
+    publicGameData.QuicksandData [targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds = turnNumber_QuicksandExpires, specialUnitID=nil};
     Mod.PublicGameData = publicGameData;
 end
 
@@ -2058,7 +2047,7 @@ function execute_Neutralize_operation (game, gameOrder, result, skip, addOrder, 
 			-- print ("[Neutralization special unit inspection]--------------------- ");
 			--printObjectDetails (impactedTerritoryLastStanding, "[impactedTerritory]", "[Neutralization special unit inspection]");
 			--printObjectDetails (impactedTerritoryLastStanding.NumArmies.SpecialUnits, "[NumArmies.SpecialUnits]", "[Neutralization special unit inspection]");
-			
+
 			--check for specials
 			-- print ("[#impactedTerritoryLastStanding.NumArmies.SpecialUnits=="..#impactedTerritoryLastStanding.NumArmies.SpecialUnits.."::]");
 			if (#impactedTerritoryLastStanding.NumArmies.SpecialUnits >= 1) then --territory has 1+ special units
@@ -2892,16 +2881,6 @@ function CardBlock_processEndOfTurn(game, addOrder)
     print("[CARD BLOCK] processEndOfTurn END");
 end
 
---process actions that occur @ end of turn for various card types   <--- unfinished
-function processEndOfTurn_Actions(game, addOrder)
-    local publicGameData = Mod.PublicGameData;
-    local turnNumber = tonumber(game.Game.TurnNumber);
-	for _,record in pairs (publicGameData.EndOfTurnData) do
-		--sampleRecord = {turnNumber where action occurs, specials {specialUnitID, terrID where the special exists} table of special units that correlate to the event, card/event name/code for the event, ID# - the index# within the native table for that card/event that this relates to, any other data?}
-		--do something with the data here
-	end
-end
-
 function Tornado_processEndOfTurn (game, addOrder)
     local publicGameData = Mod.PublicGameData;
     local turnNumber = tonumber(game.Game.TurnNumber);
@@ -3003,9 +2982,9 @@ function Earthquake_processEndOfTurn (game, addOrder)
 
 	print("[EARTHQUAKE] processEndOfTurn START");
 	local publicGameData = Mod.PublicGameData;
-    local turnNumber = tonumber(game.Game.TurnNumber);
+    local turnNumber = tonumber (game.Game.TurnNumber);
 
-    if (publicGameData.EarthquakeData == nil) then print("[EARTHQUAKE] no data"); return; end --if no Earthquake data, skip everything, just return
+    if (publicGameData.EarthquakeData == nil) then print ("[EARTHQUAKE] no data"); return; end --if no Earthquake data, skip everything, just return
 
 	for bonusID, record in pairs(publicGameData.EarthquakeData) do
 		--implement earthquake action (damge to bonus territories)
@@ -3015,13 +2994,19 @@ function Earthquake_processEndOfTurn (game, addOrder)
 		local terrID_somewhereInTheEarthquake = nil; --to be set to one of the territories in the Earthquake to write the "Earthquake" annotation (as opposed to the "." ones for the other impacted areas)
 		strBonusName = getBonusName (bonusID, game);
 		print ("[EARTHQUAKE] An earthquake ravages bonus " ..bonusID .."/".. strBonusName);
-		for _, terrID in pairs(game.Map.Bonuses[bonusID].Territories) do
-			print ("[EARTHQUAKE] " ..terrID .."/".. tostring(getTerritoryName(terrID, game)) .." takes "..Mod.Settings.EarthquakeStrength.." damage");
-			local impactedTerritory = WL.TerritoryModification.Create(terrID);
-			if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength; end --reduce armies on territory iff not protected by a Shield
-			table.insert(modifiedTerritories, impactedTerritory);
+		local strStructureID = WL.StructureType.Custom ("earthquake");
+
+		--apply damage to each terr, add Earthquake structure to each terr if not already present
+		for _, terrID in pairs (game.Map.Bonuses [bonusID].Territories) do
+			print ("[EARTHQUAKE] " ..terrID .."/".. tostring(getTerritoryName (terrID, game)) .." takes "..Mod.Settings.EarthquakeStrength.." damage");
+			local impactedTerritory = WL.TerritoryModification.Create (terrID);
+			if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories [terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.EarthquakeStrength; end --reduce armies on territory iff not protected by a Shield
 			annotations [terrID] = WL.TerritoryAnnotation.Create (".", 3, getColourInteger (255, 0, 0)); --add small sized Annotation in Red for Earthquake
 			terrID_somewhereInTheEarthquake = terrID; --the last territory written terrID will hold and become the target for the "Earthquake" annotation
+			local structures = game.ServerGame.LatestTurnStanding.Territories [terrID].Structures; --add custom Earthquake structure to impacted terrs if not present already
+			if (structures == nil) then structures = {}; end;
+			if (structures [strStructureID] == nil or (structures [strStructureID] ~= nil and structures [strStructureID] ~= 1)) then structures [strStructureID] = 1; impactedTerritory.SetStructuresOpt = structures; end --set earthquake structure count to 1; can only ever be 1 active at a time; if already present, don't update structures again (just in case it overwrites something another mod is doing, there's a chance that it could overwite a structure another mod has added)
+			table.insert (modifiedTerritories, impactedTerritory);
 		end
 
 		--get XY coordinates of the bonus; note this is estimated since it's based on the midpoints of the territories in the bonus (that's all WZ provides)
@@ -3030,21 +3015,28 @@ function Earthquake_processEndOfTurn (game, addOrder)
 		local X_buffer = 25;
 		local Y_buffer = 25;
 
-		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
+		local event = WL.GameOrderEvent.Create (record.castingPlayer, "Earthquake ravages bonus "..strBonusName, {}, modifiedTerritories);
 		event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
 		-- event.TerritoryAnnotationsOpt = {[modifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (50, 50, 50))}; --use Dark Grey colour for Earthquake
 		annotations [terrID_somewhereInTheEarthquake] = WL.TerritoryAnnotation.Create ("Earthquake", 8, getColourInteger (200, 0, 0)); --overwrite the annotation done above (".") for one of the territories impacted by the Earthquake
 		event.TerritoryAnnotationsOpt = annotations;
-		addOrder(event, true);
+		addOrder (event, true);
 
-		--publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
+		--for reference: publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
          if (record.turnNumberEarthquakeEnds > 0 and turnNumber >= record.turnNumberEarthquakeEnds) then
-            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ended on bonus " .. getBonusName (bonusID, game), {}, {});
-			--event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.average_X, XYbonusCoords.average_Y, XYbonusCoords.average_X, XYbonusCoords.average_Y);
+			local modifiedTerritories_removeEQstructure = {};
+			for _, terrID in pairs (game.Map.Bonuses [bonusID].Territories) do
+				local impactedTerritory = WL.TerritoryModification.Create (terrID);
+				local structures = game.ServerGame.LatestTurnStanding.Territories [terrID].Structures; --add custom Earthquake structure to impacted terrs if not present already
+				if (structures == nil) then structures = {}; end;
+				if (structures [strStructureID] == nil or (structures [strStructureID] ~= nil and structures [strStructureID] ~= 0)) then structures [strStructureID] = 0; impactedTerritory.SetStructuresOpt = structures; end --set earthquake structure count to 1; can only ever be 1 active at a time; if already present, don't update structures again (just in case it overwrites something another mod is doing, there's a chance that it could overwite a structure another mod has added)
+				table.insert (modifiedTerritories_removeEQstructure, impactedTerritory);
+			end
+            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Earthquake ended on bonus " .. getBonusName (bonusID, game), {}, modifiedTerritories_removeEQstructure);
 			event.JumpToActionSpotOpt = WL.RectangleVM.Create (XYbonusCoords.min_X-X_buffer, XYbonusCoords.min_Y-Y_buffer, XYbonusCoords.max_X+X_buffer, XYbonusCoords.max_Y+Y_buffer); --add/subtract 25's to add buffer on each side of bonus b/c it's calc'd from the midpoints of each territory, not the actual edges, so some territories can still get cut off when using their midpoints to zoom to
-			-- event.TerritoryAnnotationsOpt = {[modifiedTerritories] = WL.TerritoryAnnotation.Create ("!", 10, getColourInteger (255, 0, 0))}; --use Red colour for Earthquake
-			addOrder(event, true);
-            publicGameData.EarthquakeData[bonusID] = nil;
+			--remove Earthquake structures from each impacted terr + inform players of end of EQ
+			addOrder (event, true);
+            publicGameData.EarthquakeData [bonusID] = nil;
         end
     end
 
