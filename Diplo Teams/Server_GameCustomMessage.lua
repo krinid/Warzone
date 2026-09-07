@@ -286,7 +286,7 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				publicGameData.War [playerID] = remainingwar;
 				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil
 				playerGameData [targetPlayerID].PeaceOffers [playerID] = {}; --send notice back that the peace offer was accepted
-				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = true;
+				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = playerID;
 				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been accepted";
 
 				--queue announcement to be shown in order list @ start of turn
