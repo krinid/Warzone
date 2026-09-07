@@ -263,7 +263,6 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 			setReturnTable (rg);
 		end
 	elseif (payload.Message == "Accept Peace" or payload.Message == "Decline Peace") then
-		local targetPlayerID = payload.TargetPlayerID;
 		local targetPlayerID = tonumber (payload.TargetPlayerID);
 		if (playerGameData [playerID].PeaceOffers [targetPlayerID] == nil) then
 			rg.Message = "Peace Offer doesn't exist, reload the Diplo Teams mod menu to refresh current status";
@@ -286,6 +285,8 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				end
 				publicGameData.War [playerID] = remainingwar;
 				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil
+				playerGameData [targetPlayerID].PeaceOffers [playerID] = {}; --send notice back that the peace offer was accepted
+				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = true;
 				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been accepted";
 
 				--queue announcement to be shown in order list @ start of turn

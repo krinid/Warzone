@@ -420,28 +420,40 @@ function ShowPeaceOffers (vert)
 		lblPeaceOffers = UI.CreateLabel (vert).SetText ("Peace Offers:");
 
 		for _,offer in pairs (Mod.PlayerGameData.PeaceOffers) do
-			intOfferCount = intOfferCount + 1;
 
-			local horz = UI.CreateHorizontalLayoutGroup (vert);
-			print ("[PEACE OFFER] from " ..tostring (offer.OfferedBy));
-			buttonAccept = UI.CreateButton (horz).SetText ("Accept").SetColor (getColourCode ("Button|Green"));
-			local onclick2=function ()
-				local payload = {};
-				payload.Message = "Accept Peace";
-				payload.Spieler = offer.OfferedBy;
-				AcceptDeclinePeaceOffer (payload);
-				end;
-			buttonAccept.SetOnClick (onclick2);
+			-- playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = true;
+			if (offer.OfferAccepted ~= nil) then
+				--this is not a new Peace Offer but rather the response to a Peace Offer sent to another player from the local player
+				--display acceptance message, then delete the Offer record notice
+				UI.Alert ("Peace Offer you sent to " ..PlayerName (Game, offer.OfferAccepted).. " was accepted, you are now in NAP with this player");
+				local playerGameData = Mod.PlayerGameData;
+				playerGameData.PeaceOffers [offer.OfferAccepted] = {}; --delete the notification
+				Mod.PlayerGameData = playerGameData;
+			else
+				--this is a new Peace Offer
+				intOfferCount = intOfferCount + 1;
 
-			buttonDeny = UI.CreateButton (horz).SetText ("Decline").SetColor (getColourCode ("Button|Red"));
-			local onclick=function ()
-				local payload = {};
-				payload.Message = "Decline Peace";
-				payload.Spieler = offer.OfferedBy;
-				AcceptDeclinePeaceOffer (payload);
-				end;
-			buttonDeny.SetOnClick (onclick);
-			UI.CreateLabel (horz).SetText ("  " ..PlayerName (Game, offer.OfferedBy) .. " offers you peace");
+				local horz = UI.CreateHorizontalLayoutGroup (vert);
+				print ("[PEACE OFFER] from " ..tostring (offer.OfferedBy));
+				buttonAccept = UI.CreateButton (horz).SetText ("Accept").SetColor (getColourCode ("Button|Green"));
+				local onclick2=function ()
+					local payload = {};
+					payload.Message = "Accept Peace";
+					payload.Spieler = offer.OfferedBy;
+					AcceptDeclinePeaceOffer (payload);
+					end;
+				buttonAccept.SetOnClick (onclick2);
+
+				buttonDeny = UI.CreateButton (horz).SetText ("Decline").SetColor (getColourCode ("Button|Red"));
+				local onclick=function ()
+					local payload = {};
+					payload.Message = "Decline Peace";
+					payload.Spieler = offer.OfferedBy;
+					AcceptDeclinePeaceOffer (payload);
+					end;
+				buttonDeny.SetOnClick (onclick);
+				UI.CreateLabel (horz).SetText ("  " ..PlayerName (Game, offer.OfferedBy) .. " offers you peace");
+			end
 		end
 	end
 	return (intOfferCount);
