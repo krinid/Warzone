@@ -79,6 +79,7 @@ function joinNames (names)
 end
 
 function PlayerName (game, playerID)
+	if (playerID == nil) then return '[Unknown player]'; end;
 	local player = game.Game.Players [playerID];
 	if (player == nil) then return '[Unknown player]'; end;
 	return player.DisplayName (nil, false);
