@@ -250,6 +250,10 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				end
 			end
 			publicGameData.War [playerID] = remainingwar;
+			if (playerGameData [playerID] == nil) then playerGameData [playerID] = {}; end
+			playerGameData [playerID].PeaceOfferAccepted = {};
+			playerGameData [playerID].PeaceOfferAccepted [targetPlayerID] = {}; --send notice back that the peace offer was accepted
+			playerGameData [playerID].PeaceOfferAccepted [targetPlayerID] = game.Game.TurnNumber;
 			rg.Message = "Peace Offer has been accepted by the AI player (" ..PlayerName (game, targetPlayerID).. ")";
 
 			--queue announcement to be shown in order list @ start of turn
@@ -284,9 +288,9 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 					end
 				end
 				publicGameData.War [playerID] = remainingwar;
-				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil
-				playerGameData [targetPlayerID].PeaceOffers [playerID] = {}; --send notice back that the peace offer was accepted
-				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = playerID;
+				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil;
+				playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = {}; --send notice back that the peace offer was accepted
+				playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = game.Game.TurnNumber;
 				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been accepted";
 
 				--queue announcement to be shown in order list @ start of turn
@@ -304,11 +308,8 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 			end
 		end
 	elseif (payload.Message == "Delete Peace Offer Acknowledgement") then
-		-- payload.PeaceOfferer = offer.OfferAccepted;
-		-- payload.PeaceAccepter = Game.Us.ID;
-		local playerGameData = Mod.PlayerGameData;
+		--delete the Offer Acknowledgement
 		playerGameData [payload.PeaceAccepter].PeaceOffers [payload.PeaceOfferer] = {}; --delete the notification
-		Mod.PlayerGameData = playerGameData;
 	end
 	Mod.PlayerGameData = playerGameData;
 	Mod.PublicGameData = publicGameData;
