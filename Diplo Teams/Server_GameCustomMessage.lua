@@ -289,6 +289,8 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				end
 				publicGameData.War [playerID] = remainingwar;
 				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil;
+				if (playerGameData [targetPlayerID] == nil) then playerGameData [targetPlayerID] = {}; end
+				if (playerGameData [targetPlayerID].PeaceOfferAccepted == nil) then playerGameData [targetPlayerID].PeaceOfferAccepted = {}; end
 				playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = {}; --send notice back that the peace offer was accepted
 				playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = game.Game.TurnNumber;
 				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been accepted";
