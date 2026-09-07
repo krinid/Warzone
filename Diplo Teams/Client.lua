@@ -1,4 +1,4 @@
-require('Utilities');
+require ("utilities");
 
 --Actions the player can take.  These are shared between the menu and the propose dialog.
 
@@ -38,7 +38,7 @@ end
 --Every message this mod sends either hands back an Error to show the player, or succeeded.
 function SendTeamMessage(game, waitingText, payload, closeOpt, successMessageFn)
 	if (closeOpt ~= nil) then
-		closeOpt(); --close the dialog now, since whatever it's showing is about to be out of date
+		-- closeOpt(); --close the dialog now, since whatever it's showing is about to be out of date
 	end
 
 	game.SendGameCustomMessage(waitingText, payload, function(returnValue)

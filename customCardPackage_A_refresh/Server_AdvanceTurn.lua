@@ -2623,7 +2623,7 @@ function wildfire_igniteTerritory (game, targetTerritoryID, cfg, intCastingPlaye
 end
 
 -- Call this once per turn (e.g., in Server_AdvanceTurn_End or suitable place) to advance all active wildfires.
-function process_Wildfires_for_turn(game, addOrder)
+function process_Wildfires_for_turn (game, addOrder)
 	local cfg = loadWildfireConfig ();
 
 	local publicGameData = Mod.PublicGameData;

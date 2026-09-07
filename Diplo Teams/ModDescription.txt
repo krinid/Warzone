@@ -1,21 +1,7 @@
-Don't use this mod with any other mod with a notifications system, else it may happen that the notifications don't show up.
-This Mod adds:
-War/Peace System:
-  -Attacks DON'T count as declaration
-  -After you declared War on someone, you have to wait one turn before you can attack him
-  -Sanction, Bomb, Gift, Spy Card can be configurated, that they are just playable if you are in war/peace/ally with the persons you play them on
-  -you start at peace with everyone
-Alliance System:
-  -can be disabled over settings
-  -You will be able to see the territories your ally ownes(requires spycards to be in the game)(depends on settings)
-  -Alliances can be either public or private(depends on the settings)
-  -After you cancel an alliance you got to wait till the next turn to declare war
-AIs for Diplos:
-  -AIs won't declare war on players(depends on settings)
-  -AIs won't declare war on AIs(depends on settings)
-  -AIS will always accept peace so if you do not want to be in war anylonger with a booted player you can just offer the ai peace and it will instantly accept it
-Mod internal history between turns:
--All mod interaction is documented between turns in the mod history and gets written in the next turn into the normal history
--It is seperated in:
- -public(Accepting Peace and depending on settings Accepting Alliances), it can be seen by everyone
- -private(sending offeres and denying offers and depending on settings accepting alliances), it can only be seen by involved players
+Provides Diplo functionality that supports native War.App Teams. When you join a Team/Alliance with another player, you join an actual native War.App team with that player. You can transfer units between teammates, can airlift to teammate territories, cards are shared among the team, and if you win the game, points are shared among the team.
+
+Diplo functionality provides 3 relationship states between players:
+• TEAMMATE/IN ALLIANCE - you are allied with another player, you are on the same War.App team; must be AT PEACE with a player in order to invite them to form a team
+• AT WAR - you can freely attack a player you are at war with and vice versa; must be AT PEACE with a player in order to declare war on them
+• AT PEACE - you cannot attack a player you are at peace with; you can move from TEAMMATE/ALLIANCE or AT WAR state to AT PEACE
+• All state changes require 1 turn to execute

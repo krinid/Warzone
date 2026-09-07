@@ -1,28 +1,37 @@
-function Server_StartGame(game,standing)
-	--required to store data localy to be able to do changes to data
+function Server_StartGame (game, standing)
 	local playerGameData = Mod.PlayerGameData;
 	local publicGameData = Mod.PublicGameData;
-	--Contains every War
-	publicGameData.War = {};
-	--Contains all additional public history, that happened during GameCustomMessage, getting cleared in Server_AdvancedTurnStart, in order to save storage space
-	publicGameData.History = {};
-	publicGameData.Historyorder = {};
-	for _,pid in pairs(game.ServerGame.Game.Players) do
-		if(pid.IsAI == false)then
-			playerGameData[pid.ID] = {};
-			--Contains all peace offers for pid.ID
-			playerGameData[pid.ID].Peaceoffers = {};
-			--Contains all ally offers for pid.ID
-			playerGameData[pid.ID].AllyOffers = {};
-			--Contains all acitve alliances of pid.ID, it is stored in playerGameData, due to the feature allow everyone to see every ally
-			playerGameData[pid.ID].Allianzen = {};
-			--Contains all non public history, that happened during GameCustomMessage, getting cleared in Server_AdvancedTurnStart, in order to save storage space(this data is only containing declining and acceptiong of certain offers and alliances)
-			playerGameData[pid.ID].PrivateHistory = {};
+	publicGameData.War = {}; --contains all ongoing War relationships
+
+	for _, player1 in pairs (game.ServerGame.Game.Players) do
+		--default values are no war, no peace offers for all players
+		publicGameData.War [player1.ID] = {};
+		playerGameData [player1.ID] = {};
+		playerGameData [player1.ID].PeaceOffers = {};
+
+		--if starting state is AT WAR, configure all players to be at war with one another
+		if (Mod.Settings.WarStartState == "ATWAR") then
+			for _,player2 in pairs (game.ServerGame.Game.Players) do
+				if (player1.ID ~= player2.ID) then
+					publicGameData.War [player1.ID][tablelength (publicGameData.War [player1.ID])+1] = player2.ID;
+					playerGameData [player1.ID].HasNewWar = true;
+					-- print ("[START GAME] set WAR " ..tostring (player1.ID) .." vs " ..tostring (player2.ID));
+				end
+			end
 		end
-		--Sets, that every player has no war going on
-		publicGameData.War[pid.ID] = {};
 	end
-	--Saves data
+
 	Mod.PlayerGameData = playerGameData;
 	Mod.PublicGameData = publicGameData;
+end
+
+function  tablelength (T)
+	local count = 0;
+	if (T==nil) then
+		return 0;
+	end
+	for _, elem in pairs (T) do
+		count = count + 1;
+	end
+	return count;
 end

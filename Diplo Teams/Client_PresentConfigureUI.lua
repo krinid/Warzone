@@ -1,142 +1,129 @@
+function Client_PresentConfigureUI (rootParent)
+	local UIcontainer = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
+	Mod.Settings.AllowAIDeclaration = Mod.Settings.AllowAIDeclaration == nil and true or Mod.Settings.AllowAIDeclaration;
+	Mod.Settings.AIsDeclareAIs = Mod.Settings.AIsDeclareAIs == nil and true or Mod.Settings.AIsDeclareAIs;
+	Mod.Settings.SanctionCardRequireWar = Mod.Settings.SanctionCardRequireWar == nil and true or Mod.Settings.SanctionCardRequireWar;
+	Mod.Settings.SanctionCardRequirePeace = Mod.Settings.SanctionCardRequirePeace == nil and false or Mod.Settings.SanctionCardRequirePeace;
+	Mod.Settings.SanctionCardRequireAlly = Mod.Settings.SanctionCardRequireAlly == nil and false or Mod.Settings.SanctionCardRequireAlly;
+	Mod.Settings.BombCardRequireWar = Mod.Settings.BombCardRequireWar == nil and true or Mod.Settings.BombCardRequireWar;
+	Mod.Settings.BombCardRequirePeace = Mod.Settings.BombCardRequirePeace == nil and false or Mod.Settings.BombCardRequirePeace;
+	Mod.Settings.BombCardRequireAlly = Mod.Settings.BombCardRequireAlly == nil and false or Mod.Settings.BombCardRequireAlly;
+	Mod.Settings.GiftCardRequireWar = Mod.Settings.GiftCardRequireWar == nil and false or Mod.Settings.GiftCardRequireWar;
+	Mod.Settings.GiftCardRequirePeace = Mod.Settings.GiftCardRequirePeace == nil and true or Mod.Settings.GiftCardRequirePeace;
+	Mod.Settings.GiftCardRequireAlly = Mod.Settings.GiftCardRequireAlly == nil and true or Mod.Settings.GiftCardRequireAlly;
+	Mod.Settings.SpyCardRequireWar = Mod.Settings.SpyCardRequireWar == nil and true or Mod.Settings.SpyCardRequireWar;
+	Mod.Settings.SpyCardRequirePeace = Mod.Settings.SpyCardRequirePeace == nil and true or Mod.Settings.SpyCardRequirePeace;
+	Mod.Settings.SpyCardRequireAlly = Mod.Settings.SpyCardRequireAlly == nil and true or Mod.Settings.SpyCardRequireAlly;
 
-function Client_PresentConfigureUI(rootParent)
-	rootParentobj = rootParent;
-	AIDeclerationinit = Mod.Settings.AllowAIDeclaration;
-	if(AIDeclerationinit == nil)then
-		AIDeclerationinit = false;
-	end
-	SeeAllyTerritoriesinit = Mod.Settings.SeeAllyTerritories;
-	if(SeeAllyTerritoriesinit == nil)then
-		SeeAllyTerritoriesinit = true;
-	end
-	DisableAlliesinit = Mod.Settings.DisableAllies;
-	if(DisableAlliesinit == nil)then
-		DisableAlliesinit = false;
-	end
-	PublicAlliesinit = Mod.Settings.PublicAllies;
-	if(PublicAlliesinit == nil)then
-		PublicAlliesinit = true;
-	end
-	AIsdeclearAIsinit = Mod.Settings.AIsdeclearAIs;
-	if(AIsdeclearAIsinit == nil)then
-		AIsdeclearAIsinit = false;
-	end
-	SanctionCardRequireWarinit = Mod.Settings.SanctionCardRequireWar;
-	if(SanctionCardRequireWarinit == nil)then
-		SanctionCardRequireWarinit = true;
-	end
-	SanctionCardRequirePeaceinit = Mod.Settings.SanctionCardRequirePeace;
-	if(SanctionCardRequirePeaceinit == nil)then
-		SanctionCardRequirePeaceinit = false;
-	end
-	SanctionCardRequireAllyinit = Mod.Settings.SanctionCardRequireAlly;
-	if(SanctionCardRequireAllyinit == nil)then
-		SanctionCardRequireAllyinit = false;
-	end
-	BombCardRequireWarinit = Mod.Settings.BombCardRequireWar;
-	if(BombCardRequireWarinit == nil)then
-		BombCardRequireWarinit = true;
-	end
-	BombCardRequirePeaceinit = Mod.Settings.BombCardRequirePeace;
-	if(BombCardRequirePeaceinit == nil)then
-		BombCardRequirePeaceinit = false;
-	end
-	BombCardRequireAllyinit = Mod.Settings.BombCardRequireAlly;
-	if(BombCardRequireAllyinit == nil)then
-		BombCardRequireAllyinit = false;
-	end
-	SpyCardRequireWarinit = Mod.Settings.SpyCardRequireWar;
-	if(SpyCardRequireWarinit == nil)then
-		SpyCardRequireWarinit = true;
-	end
-	SpyCardRequirePeaceinit = Mod.Settings.SpyCardRequirePeace;
-	if(SpyCardRequirePeaceinit == nil)then
-		SpyCardRequirePeaceinit = false;
-	end
-	SpyCardRequireAllyinit = Mod.Settings.SpyCardRequireAlly;
-	if(SpyCardRequireAllyinit == nil)then
-		SpyCardRequireAllyinit = false;
-	end
-	GiftCardRequireWarinit = Mod.Settings.GiftCardRequireWar;
-	if(GiftCardRequireWarinit == nil)then
-		GiftCardRequireWarinit = false;
-	end
-	GiftCardRequirePeaceinit = Mod.Settings.GiftCardRequirePeace;
-	if(GiftCardRequirePeaceinit == nil)then
-		GiftCardRequirePeaceinit = true;
-	end
-	GiftCardRequireAllyinit = Mod.Settings.GiftCardRequireAlly;
-	if(GiftCardRequireAllyinit == nil)then
-		GiftCardRequireAllyinit = true;
-	end
-	SeePeaceTerritoriesinit = Mod.Settings.SeePeaceTerritories;
-	if(SeePeaceTerritoriesinit == nil)then
-		SeePeaceTerritoriesinit = true;
-	end
-	ShowUI();
-end
-function ShowUI()
-	horzlist = {};
-	horzlist[0] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[0]).SetText('AI Settings');
-   	horzlist[1] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	AIDeclerationcheckbox = UI.CreateCheckBox(horzlist[1]).SetText('Allow AIs to declare war on Player').SetIsChecked(AIDeclerationinit);
-	horzlist[1] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	AIsdeclearAIsinitcheckbox = UI.CreateCheckBox(horzlist[1]).SetText('Allow AIs to declare war on AIs').SetIsChecked(AIsdeclearAIsinit);
-	horzlist[2] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[2]).SetText(' ');
-	horzlist[3] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[3]).SetText('Allianze Settings');
-	horzlist[5] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	DisableAlliesCheckbox = UI.CreateCheckBox(horzlist[5]).SetText('Disable alliance system').SetIsChecked(DisableAlliesinit);
-	horzlist[6] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	SeeAllyTerritoriesCheckbox = UI.CreateCheckBox(horzlist[6]).SetText('Allow Players to see the territories of their allies(requires spy card)').SetIsChecked(SeeAllyTerritoriesinit);
-	horzlist[7] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	PublicAlliesCheckbox = UI.CreateCheckBox(horzlist[7]).SetText('Allow everyone to see every ally').SetIsChecked(PublicAlliesinit);
-	horzlist[8] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[8]).SetText(' ');
-	horzlist[9] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[9]).SetText('Card Settings');
-	horzlist[10] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[10]).SetText('Sanction Card');
-	horzlist[11] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSanctionCardRequireWar = UI.CreateCheckBox(horzlist[11]).SetText('Sanction Cards can be played on enemy').SetIsChecked(SanctionCardRequireWarinit);
-	horzlist[12] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSanctionCardRequirePeace = UI.CreateCheckBox(horzlist[12]).SetText('Sanction Cards can be played on players you are in peace with').SetIsChecked(SanctionCardRequirePeaceinit);
-	horzlist[13] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSanctionCardRequireAlly = UI.CreateCheckBox(horzlist[13]).SetText('Sanction Cards can be played on ally').SetIsChecked(SanctionCardRequireAllyinit);
-	horzlist[14] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[14]).SetText(' ');
-	horzlist[15] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[15]).SetText('Bomb Card');
-	horzlist[16] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputBombCardRequireWar = UI.CreateCheckBox(horzlist[16]).SetText('Bomb Cards can be played on enemy').SetIsChecked(BombCardRequireWarinit);
-	horzlist[17] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputBombCardRequirePeace = UI.CreateCheckBox(horzlist[17]).SetText('Bomb Cards can be played on players you are in peace with').SetIsChecked(BombCardRequirePeaceinit);
-	horzlist[18] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputBombCardRequireAlly = UI.CreateCheckBox(horzlist[18]).SetText('Bomb Cards can be played on ally').SetIsChecked(BombCardRequireAllyinit);
-	horzlist[19] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[19]).SetText(' ');
-	horzlist[22] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[22]).SetText('Spy Card');
-	horzlist[23] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSpyCardRequireWar = UI.CreateCheckBox(horzlist[23]).SetText('Spy Cards can be played on enemy').SetIsChecked(SpyCardRequireWarinit);
-	horzlist[24] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSpyCardRequirePeace = UI.CreateCheckBox(horzlist[24]).SetText('Spy Cards can be played on players you are in peace with').SetIsChecked(SpyCardRequirePeaceinit);
-	horzlist[25] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputSpyCardRequireAlly = UI.CreateCheckBox(horzlist[25]).SetText('Spy Cards can be played on ally').SetIsChecked(SpyCardRequireAllyinit);
-	horzlist[26] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[26]).SetText(' ');
-	horzlist[27] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[27]).SetText('Gift Card');
-	horzlist[29] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputGiftCardRequireWar = UI.CreateCheckBox(horzlist[29]).SetText('Gift Cards can be played on enemy').SetIsChecked(GiftCardRequireWarinit);
-	horzlist[30] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputGiftCardRequirePeace = UI.CreateCheckBox(horzlist[30]).SetText('Gift Cards can be played on players you are in peace with').SetIsChecked(GiftCardRequirePeaceinit);
-	horzlist[31] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	inputGiftCardRequireAlly = UI.CreateCheckBox(horzlist[31]).SetText('Gift Cards can be played on ally').SetIsChecked(GiftCardRequireAllyinit);
-	horzlist[32] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	UI.CreateLabel(horzlist[32]).SetText('Other Settings');
-	horzlist[33] = UI.CreateHorizontalLayoutGroup(rootParentobj);
-	SeePeaceTerritoriesCheckbox = UI.CreateCheckBox(horzlist[33]).SetText('Allow Players to see the territories of players they are in peace with(requires spy card)').SetIsChecked(SeePeaceTerritoriesinit);
+	local allow = true; --set Interactable to true
+	UI.CreateLabel (UIcontainer).SetText('- - AI Settings - -').SetColor ("#FFFF00");
+	local horzAIoptions = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	UI.CreateLabel (horzAIoptions).SetText('AIs can declare on:');
+	cboxAIdeclareOnPlayers = UI.CreateCheckBox (horzAIoptions).SetInteractable (allow).SetText ('Players').SetIsChecked (Mod.Settings.AllowAIDeclaration);
+	UI.CreateLabel (horzAIoptions).SetText('  ');
+	cboxAIdeclareOnAIs = UI.CreateCheckBox (horzAIoptions).SetInteractable (allow).SetText ('Other AIs').SetIsChecked (Mod.Settings.AIsDeclareAIs);
+	UI.CreateLabel (UIcontainer).SetText ('• AIs declare on Players: permits AIs to declare on players they have opportunity to attack or target with cards plays');
+	UI.CreateLabel (UIcontainer).SetText ('• AIs declare on AIs: AIs permits AIs to declare on other AIs that they have opportunity to attack or target with cards plays');
+
+	UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	UI.CreateLabel (UIcontainer).SetText ('- - War/Peace Start Settings - -').SetColor ("#FFFF00");
+	UI.CreateLabel (UIcontainer).SetText ("When the game starts, players will start:");
+	local horzWarStartState = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	local grouphorzWarStartState = UI.CreateRadioButtonGroup (horzWarStartState);
+	Mod.Settings.WarStateState = Mod.Settings.WarStateState ~= nil and Mod.Settings.WarStateState or Mod.Settings.WarStateState == nil and "ATWAR"; --default to "ATWAR", options are "ATWAR" or "ATPEACE"
+	WarStartState_AtWar = UI.CreateRadioButton (horzWarStartState).SetInteractable (allow).SetGroup (grouphorzWarStartState).SetText ("AT WAR with one another").SetIsChecked (Mod.Settings.WarStartState == "ATWAR");
+	WarStartState_AtPeace = UI.CreateRadioButton (horzWarStartState).SetInteractable (allow).SetGroup (grouphorzWarStartState).SetText ("AT PEACE with one another").SetIsChecked (Mod.Settings.WarStartState == "ATPEACE");
+	UI.CreateLabel (UIcontainer).SetText("• AT WAR - players can attack each other as soon as the game starts");
+	UI.CreateLabel (UIcontainer).SetText("• AT PEACE - players can't attack each other when the game starts, need to declare on players they wish to attack");
+
+	UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	UI.CreateLabel (UIcontainer).SetText ('- - Card Settings - -').SetColor ("#FFFF00");
+	UI.CreateLabel (UIcontainer).SetText ("Indicates whether cards can be played on:\n(A) Teammates/Allies\n(B) players you're at War with\n(C) players you're at peace with");
+
+	local horzCards = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	local vertCardName = UI.CreateVerticalLayoutGroup (horzCards);
+	local vertAllies = UI.CreateVerticalLayoutGroup (horzCards);
+	local vertWar = UI.CreateVerticalLayoutGroup (horzCards);
+	local vertPeace = UI.CreateVerticalLayoutGroup (horzCards);
+
+	UI.CreateLabel (vertCardName).SetText ("CARD").SetColor ("#00AAFF").SetPreferredWidth (100);
+	UI.CreateLabel (vertAllies).SetText ("ON ALLIES").SetColor ("#00AAFF").SetPreferredWidth (100);
+	UI.CreateLabel (vertWar).SetText ("AT WAR").SetColor ("#00AAFF").SetPreferredWidth (100);
+	UI.CreateLabel (vertPeace).SetText ("AT PEACE").SetColor ("#00AAFF").SetPreferredWidth (100);
+
+	UI.CreateLabel (vertCardName).SetText ("Sanction").SetPreferredHeight (30);
+	inputSanctionCardRequireAlly = UI.CreateCheckBox (vertAllies).SetInteractable (allow).SetIsChecked (Mod.Settings.SanctionCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	inputSanctionCardRequireWar = UI.CreateCheckBox (vertWar).SetInteractable (allow).SetIsChecked (Mod.Settings.SanctionCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	inputSanctionCardRequirePeace = UI.CreateCheckBox (vertPeace).SetInteractable (allow).SetIsChecked (Mod.Settings.SanctionCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	UI.CreateLabel (vertCardName).SetText ("Bomb").SetPreferredHeight (30);
+	inputBombCardRequireAlly = UI.CreateCheckBox (vertAllies).SetInteractable (allow).SetIsChecked (Mod.Settings.BombCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	inputBombCardRequireWar = UI.CreateCheckBox (vertWar).SetInteractable (allow).SetIsChecked (Mod.Settings.BombCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	inputBombCardRequirePeace = UI.CreateCheckBox (vertPeace).SetInteractable (allow).SetIsChecked (Mod.Settings.BombCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	UI.CreateLabel (vertCardName).SetText ("Gift").SetPreferredHeight (30);
+	inputGiftCardRequireAlly = UI.CreateCheckBox (vertAllies).SetInteractable (allow).SetIsChecked (Mod.Settings.GiftCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	inputGiftCardRequireWar = UI.CreateCheckBox (vertWar).SetInteractable (allow).SetIsChecked (Mod.Settings.GiftCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	inputGiftCardRequirePeace = UI.CreateCheckBox (vertPeace).SetInteractable (allow).SetIsChecked (Mod.Settings.GiftCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	UI.CreateLabel (vertCardName).SetText ("Spy").SetPreferredHeight (30);
+	inputSpyCardRequireAlly = UI.CreateCheckBox (vertAllies).SetInteractable (allow).SetIsChecked (Mod.Settings.SpyCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	inputSpyCardRequireWar = UI.CreateCheckBox (vertWar).SetInteractable (allow).SetIsChecked (Mod.Settings.SpyCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	inputSpyCardRequirePeace = UI.CreateCheckBox (vertPeace).SetInteractable (allow).SetIsChecked (Mod.Settings.SpyCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	-- UI.CreateLabel (UIcontainer).SetText('- - AI Settings - -').SetColor ("#FFFF00");
+	-- local horzAIoptions = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	-- UI.CreateLabel (horzAIoptions).SetText('AIs can declare on:');
+	-- AIDeclarationcheckbox = UI.CreateCheckBox (horzAIoptions).SetText ('Players').SetIsChecked (Mod.Settings.AllowAIDeclaration);
+	-- UI.CreateLabel (horzAIoptions).SetText('  ');
+	-- AIsDeclareAIsinitcheckbox = UI.CreateCheckBox (horzAIoptions).SetText ('Other AIs').SetIsChecked (Mod.Settings.AIsDeclareAIs);
+
+	-- UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	-- UI.CreateLabel (UIcontainer).SetText ('- - War/Peace Start Settings - -').SetColor ("#FFFF00");
+	-- UI.CreateLabel (UIcontainer).SetText ("When the game starts, players will start:");
+	-- local horzWarStartState = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	-- local grouphorzWarStartState = UI.CreateRadioButtonGroup (horzWarStartState);
+	-- Mod.Settings.WarStateState = Mod.Settings.WarStateState ~= nil and Mod.Settings.WarStateState or Mod.Settings.WarStateState == nil and "ATWAR"; --default to "ATWAR", options are "ATWAR" or "ATPEACE"
+	-- WarStartState_AtWar = UI.CreateRadioButton (horzWarStartState).SetGroup (grouphorzWarStartState).SetText ("AT WAR with one another").SetIsChecked (Mod.Settings.WarStartState == "ATWAR");
+	-- WarStartState_AtPeace = UI.CreateRadioButton (horzWarStartState).SetGroup (grouphorzWarStartState).SetText ("AT PEACE with one another").SetIsChecked (Mod.Settings.WarStartState == "ATPEACE");
+	-- -- PhantomFog_Normal = UI.CreateRadioButton(horzPhantomFogLevel).SetGroup(groupPhantomFogLevel).SetText('Normal Fog').SetIsChecked (Mod.Settings.PhantomFogLevel == WL.StandingFogLevel.Fogged);
+	-- UI.CreateLabel (UIcontainer).SetText("• AT WAR - players can attack each other as soon as the game starts");
+	-- UI.CreateLabel (UIcontainer).SetText("• AT PEACE - players can't attack each other when the game starts, need to declare on players they wish to attack");
+
+	-- UI.CreateLabel (UI.CreateHorizontalLayoutGroup (UIcontainer)).SetText (' ');
+	-- UI.CreateLabel (UIcontainer).SetText ('- - Card Settings - -').SetColor ("#FFFF00");
+	-- UI.CreateLabel (UIcontainer).SetText ("Indicates whether cards can be played on:\n(A) Teammates/Allies\n(B) players you're at War with\n(C) players you're at peace with");
+
+	-- local horzCards = UI.CreateHorizontalLayoutGroup (UIcontainer);
+	-- local vertCardName = UI.CreateVerticalLayoutGroup (horzCards);
+	-- local vertAllies = UI.CreateVerticalLayoutGroup (horzCards);
+	-- local vertWar = UI.CreateVerticalLayoutGroup (horzCards);
+	-- local vertPeace = UI.CreateVerticalLayoutGroup (horzCards);
+
+	-- UI.CreateLabel (vertCardName).SetText ("CARD").SetColor ("#00AAFF").SetPreferredWidth (100);
+	-- UI.CreateLabel (vertAllies).SetText ("ON ALLIES").SetColor ("#00AAFF").SetPreferredWidth (100);
+	-- UI.CreateLabel (vertWar).SetText ("AT WAR").SetColor ("#00AAFF").SetPreferredWidth (100);
+	-- UI.CreateLabel (vertPeace).SetText ("AT PEACE").SetColor ("#00AAFF").SetPreferredWidth (100);
+
+	-- UI.CreateLabel (vertCardName).SetText ("Sanction").SetPreferredHeight (30);
+	-- inputSanctionCardRequireAlly = UI.CreateCheckBox (vertAllies).SetIsChecked (Mod.Settings.SanctionCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	-- inputSanctionCardRequireWar = UI.CreateCheckBox (vertWar).SetIsChecked (Mod.Settings.SanctionCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	-- inputSanctionCardRequirePeace = UI.CreateCheckBox (vertPeace).SetIsChecked (Mod.Settings.SanctionCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	-- UI.CreateLabel (vertCardName).SetText ("Bomb").SetPreferredHeight (30);
+	-- inputBombCardRequireAlly = UI.CreateCheckBox (vertAllies).SetIsChecked (Mod.Settings.BombCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	-- inputBombCardRequireWar = UI.CreateCheckBox (vertWar).SetIsChecked (Mod.Settings.BombCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	-- inputBombCardRequirePeace = UI.CreateCheckBox (vertPeace).SetIsChecked (Mod.Settings.BombCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	-- UI.CreateLabel (vertCardName).SetText ("Gift").SetPreferredHeight (30);
+	-- inputGiftCardRequireAlly = UI.CreateCheckBox (vertAllies).SetIsChecked (Mod.Settings.GiftCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	-- inputGiftCardRequireWar = UI.CreateCheckBox (vertWar).SetIsChecked (Mod.Settings.GiftCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	-- inputGiftCardRequirePeace = UI.CreateCheckBox (vertPeace).SetIsChecked (Mod.Settings.GiftCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
+
+	-- UI.CreateLabel (vertCardName).SetText ("Spy").SetPreferredHeight (30);
+	-- inputSpyCardRequireAlly = UI.CreateCheckBox (vertAllies).SetIsChecked (Mod.Settings.SpyCardRequireAlly or false).SetText ("").SetPreferredHeight (30);
+	-- inputSpyCardRequireWar = UI.CreateCheckBox (vertWar).SetIsChecked (Mod.Settings.SpyCardRequireWar or false).SetText ("").SetPreferredHeight (30);
+	-- inputSpyCardRequirePeace = UI.CreateCheckBox (vertPeace).SetIsChecked (Mod.Settings.SpyCardRequirePeace or false).SetText ("").SetPreferredHeight (30);
 end
