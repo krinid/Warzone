@@ -303,7 +303,7 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				setReturnTable (rg);
 			end
 		end
-	elseif (payload.Message = "Delete Peace Offer Acknowledgement") then
+	elseif (payload.Message == "Delete Peace Offer Acknowledgement") then
 		-- payload.PeaceOfferer = offer.OfferAccepted;
 		-- payload.PeaceAccepter = Game.Us.ID;
 		local playerGameData = Mod.PlayerGameData;

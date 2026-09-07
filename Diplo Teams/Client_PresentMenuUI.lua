@@ -429,7 +429,7 @@ function ShowPeaceOffers (vert)
 				payload.Message = "Delete Peace Offer Acknowledgement";
 				payload.PeaceOfferer = offer.OfferAccepted;
 				payload.PeaceAccepter = Game.Us.ID;
-				Game.SendGameCustomMessage ("Sending data...", payload);
+				Game.SendGameCustomMessage ("Sending data...", payload, function () end);
 				-- local playerGameData = Mod.PlayerGameData;
 				-- playerGameData.PeaceOffers [offer.OfferAccepted] = {}; --delete the notification
 				-- Mod.PlayerGameData = playerGameData;
