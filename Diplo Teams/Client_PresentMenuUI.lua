@@ -420,15 +420,19 @@ function ShowPeaceOffers (vert)
 		lblPeaceOffers = UI.CreateLabel (vert).SetText ("Peace Offers:");
 
 		for _,offer in pairs (Mod.PlayerGameData.PeaceOffers) do
-
 			-- playerGameData [targetPlayerID].PeaceOffers [playerID].OfferAccepted = true;
 			if (offer.OfferAccepted ~= nil) then
 				--this is not a new Peace Offer but rather the response to a Peace Offer sent to another player from the local player
 				--display acceptance message, then delete the Offer record notice
 				UI.Alert ("Peace Offer you sent to " ..PlayerName (Game, offer.OfferAccepted).. " was accepted, you are now in NAP with this player");
-				local playerGameData = Mod.PlayerGameData;
-				playerGameData.PeaceOffers [offer.OfferAccepted] = {}; --delete the notification
-				Mod.PlayerGameData = playerGameData;
+				local payload = {};
+				payload.Message = "Delete Peace Offer Acknowledgement";
+				payload.PeaceOfferer = offer.OfferAccepted;
+				payload.PeaceAccepter = Game.Us.ID;
+				Game.SendGameCustomMessage ("Sending data...", payload);
+				-- local playerGameData = Mod.PlayerGameData;
+				-- playerGameData.PeaceOffers [offer.OfferAccepted] = {}; --delete the notification
+				-- Mod.PlayerGameData = playerGameData;
 			else
 				--this is a new Peace Offer
 				intOfferCount = intOfferCount + 1;
