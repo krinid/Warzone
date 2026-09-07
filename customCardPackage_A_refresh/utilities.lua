@@ -290,12 +290,12 @@ function NotTableEmpty(List)
 end
 
 function NotinTable(tbl, item)
-    for key, value in pairs(tbl) do
-        if value == item then 
+	for key, value in pairs(tbl) do
+		if value == item then 
 			return false 
 		end
-    end
-    return true
+	end
+	return true
 end
 --- END of Derfellios's functions
 
@@ -382,7 +382,7 @@ function startsWith(str, sub)
 end
 
 function PrintProxyInfo(obj)
-    print('type=' .. obj.proxyType .. ' readOnly=' .. tostring(obj.readonly) .. ' readableKeys=' .. table.concat(obj.readableKeys, ',') .. ' writableKeys=' .. table.concat(obj.writableKeys, ','));
+	print('type=' .. obj.proxyType .. ' readOnly=' .. tostring(obj.readonly) .. ' readableKeys=' .. table.concat(obj.readableKeys, ',') .. ' writableKeys=' .. table.concat(obj.writableKeys, ','));
 end
 
 function WLturnPhases ()
@@ -509,10 +509,10 @@ function getXYcoordsForBonus (bonusID, game)
 end
 
 function getColours()
-    local colors = {}; -- Stores all the built-in colors (player colors only)
-    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+	local colors = {}; -- Stores all the built-in colors (player colors only)
+	colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
 	colors.WZyellow = "#ABA500"; colors.WZgreen = "#198225"; colors["WZLight Blue"] = "#50B2E3"; colors.WZblue = "#242D9A"; colors.WZred = "#9A2929";
-    return colors;
+	return colors;
 end
 
 function showPopUpTurnPhaseDescriptions_StylishDialog (game)
@@ -555,18 +555,18 @@ function showPopUpTurnPhaseDescriptions_UIalert ()
 end
 
 function createWindow (game)
-    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
+	local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
 
 	game.CreateDialog (function(rootParent, setMaxSize, setScrollable, game2, close)
 		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game2, close = close};
-    end);
+	end);
 
-    return window;
+	return window;
 end
 
 function getColourCode (itemName)
-    if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
-    elseif (itemName=="error")  then return "#FF0000"; --red
+	if (itemName=="card play heading" or itemName=="main heading") then return "#0099FF"; --medium blue
+	elseif (itemName=="error")  then return "#FF0000"; --red
 	elseif (itemName=="subheading") then return "#FFFF00"; --yellow
 	elseif (itemName=="minor heading") then return "#00FFFF"; --cyan
 	elseif (itemName=="ok") then return getColours()["Dark Green"]; --standard green used for "Ok" buttons
@@ -642,8 +642,8 @@ function getColourCode (itemName)
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
 	-- elseif (itemName=="Card|") then return getColours()[""]; --
-    else return "#AAAAAA"; --return light grey for everything else
-    end
+	else return "#AAAAAA"; --return light grey for everything else
+	end
 end
 
 --given 0-255 RGB integers, return a single 24-bit integer
@@ -660,15 +660,15 @@ end
 
 --keep numDecimalsToKeep quantity of decimal points for 'number', truncate the remainder
 function truncateDecimals (number, numDecimalsToKeep)
-    local multiplier = 10 ^ numDecimalsToKeep;
-    return (math.floor (number * multiplier) / multiplier);
+	local multiplier = 10 ^ numDecimalsToKeep;
+	return (math.floor (number * multiplier) / multiplier);
 end
 
 --return list of all cards defined in this game; includes custom cards
 --generate the list once, then store it in Mod.PublicGame.CardData, and retrieve it from there going forward
 function getDefinedCardList (game)
-    local count = 0;
-    local cards = {};
+	local count = 0;
+	local cards = {};
 	local publicGameData = Mod.PublicGameData;
 
 	--if CardData structure isn't defined (eg: from an ongoing game before this was done this way), then initialize the variable and populate the list here
@@ -743,22 +743,22 @@ function getCardInstanceID (playerID, cardID, game)
 end
 
 function getCardName_fromID(cardID, game);
-    print ("cardID=="..cardID);
-    local cardConfig = game.Settings.Cards[tonumber(cardID)];
-    return getCardName_fromObject (cardConfig);
+	print ("cardID=="..cardID);
+	local cardConfig = game.Settings.Cards[tonumber(cardID)];
+	return getCardName_fromObject (cardConfig);
 end
 
 function getCardName_fromObject(cardConfig)
 	if (cardConfig==nil) then print ("cardConfig==nil"); return nil; end
-    if cardConfig.proxyType == 'CardGameCustom' then
-        return cardConfig.Name;
-    end
+	if cardConfig.proxyType == 'CardGameCustom' then
+		return cardConfig.Name;
+	end
 
-    if cardConfig.proxyType == 'CardGameAbandon' then
-        -- Abandon card was the original name of the Emergency Blockade card
-        return 'Emergency Blockade card';
-    end
-    return cardConfig.proxyType:match("^CardGame(.*)");
+	if cardConfig.proxyType == 'CardGameAbandon' then
+		-- Abandon card was the original name of the Emergency Blockade card
+		return 'Emergency Blockade card';
+	end
+	return cardConfig.proxyType:match("^CardGame(.*)");
 end
 
 function getBonusName (intBonusID, game)
@@ -803,26 +803,26 @@ function getArmiesDeployedThisTurnSoFar (game, terrID)
 end
 
 function initialize_CardData (game)
-    local publicGameData = Mod.PublicGameData;
+	local publicGameData = Mod.PublicGameData;
 
-    publicGameData.CardData = {};
-    publicGameData.CardData.DefinedCards = nil;
-    publicGameData.CardData.CardPiecesCardID = nil;
+	publicGameData.CardData = {};
+	publicGameData.CardData.DefinedCards = nil;
+	publicGameData.CardData.CardPiecesCardID = nil;
 	publicGameData.CardData.ResurrectionCardID = nil;
-    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
-    publicGameData = Mod.PublicGameData;
+	Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+	publicGameData = Mod.PublicGameData;
 
-    publicGameData.CardData.DefinedCards = getDefinedCardList (game);
-    Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
-    publicGameData = Mod.PublicGameData;
+	publicGameData.CardData.DefinedCards = getDefinedCardList (game);
+	Mod.PublicGameData = publicGameData; --save PublicGameData before calling getDefinedCardList
+	publicGameData = Mod.PublicGameData;
 
-    if (game==nil) then print ("game is nil"); return nil; end
-    if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
-    if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
+	if (game==nil) then print ("game is nil"); return nil; end
+	if (game.Settings==nil) then print ("game.Settings is nil"); return nil; end
+	if (game.Settings.Cards==nil) then print ("game.Settings.Cards is nil"); return nil; end
 
-    publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
+	publicGameData.CardData.CardPiecesCardID = tostring(getCardID ("Card Piece"));
 	publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection"));
-    Mod.PublicGameData = publicGameData;
+	Mod.PublicGameData = publicGameData;
 end
 
 --initialize the Mod.PublicGameData.Debug structure and all member properties
@@ -832,10 +832,10 @@ function initialize_debug_data ()
 	publicGameData.Debug.DebugMode = false;
 	publicGameData.Debug.DebugUser = 1058239; --only output data for this user, to prevent other users from displaying & erasing the data so it's not available for me & disable abuse of this coding/debugging feature
 	publicGameData.Debug.TrimData = true; --indicates whether to trim data (erase) it after viewing it or leave it in PublicGameData.Debug.OutputData for future perusal
-    publicGameData.Debug.OutputData = {};
-    publicGameData.Debug.OutputDataCounter = 0;  --the highest key# created so far
-    publicGameData.Debug.OutputDataLastRead = 0; --the highest key# retrieved by client side
-    Mod.PublicGameData = publicGameData;
+	publicGameData.Debug.OutputData = {};
+	publicGameData.Debug.OutputDataCounter = 0;  --the highest key# created so far
+	publicGameData.Debug.OutputDataLastRead = 0; --the highest key# retrieved by client side
+	Mod.PublicGameData = publicGameData;
 end
 
 --call from server hooks to write data to be retrieved by client hooks later
@@ -1063,153 +1063,153 @@ end
 --   -1, nil, nil  --> if no path exists (disconnected graph / invalid state)
 
 function getShortestDistanceBetweenPlayers (game, playerAID, playerBID)
-    local arrTerrProcessed = {};        -- terrs already processed
-    local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
-    local arrTerrOrigin = {};           -- map: terrID -> originating Player A territory
-    local intDepth = 0;
+	local arrTerrProcessed = {};        -- terrs already processed
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed (current depth layer)
+	local arrTerrOrigin = {};           -- map: terrID -> originating Player A territory
+	local intDepth = 0;
 
-    -- initialize BFS frontier with all Player A territories
-    for terrID, terrObj in pairs(game.LatestStanding.Territories) do
-        if (terrObj.OwnerPlayerID == playerAID) then
-            arrTerrProcessed[terrID] = true;
-            arrTerrOrigin[terrID] = terrID; -- origin is itself
-            table.insert (arrTerrListToProcess, terrID);
-        end
-    end
+	-- initialize BFS frontier with all Player A territories
+	for terrID, terrObj in pairs(game.LatestStanding.Territories) do
+		if (terrObj.OwnerPlayerID == playerAID) then
+			arrTerrProcessed[terrID] = true;
+			arrTerrOrigin[terrID] = terrID; -- origin is itself
+			table.insert (arrTerrListToProcess, terrID);
+		end
+	end
 
-    -- edge case: no territories for one of the players
-    if (#arrTerrListToProcess == 0) then
-        return -1, nil, nil;
-    end
+	-- edge case: no territories for one of the players
+	if (#arrTerrListToProcess == 0) then
+		return -1, nil, nil;
+	end
 
-    -- check depth 0 overlap (same territory ownership impossible, but safe)
-    for _, terrID in ipairs(arrTerrListToProcess) do
-        if (game.LatestStanding.Territories[terrID].OwnerPlayerID == playerBID) then
-            return 0, terrID, terrID;
-        end
-    end
+	-- check depth 0 overlap (same territory ownership impossible, but safe)
+	for _, terrID in ipairs(arrTerrListToProcess) do
+		if (game.LatestStanding.Territories[terrID].OwnerPlayerID == playerBID) then
+			return 0, terrID, terrID;
+		end
+	end
 
-    while (#arrTerrListToProcess > 0) do
-        local arrNextTerrList = {};
-        intDepth = intDepth + 1;
-        for _, terrID in ipairs(arrTerrListToProcess) do
-            local intOriginTerrID = arrTerrOrigin[terrID];
-            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
-                if not arrTerrProcessed[neighbourTerrID] then
-                    arrTerrProcessed[neighbourTerrID] = true;
-                    arrTerrOrigin[neighbourTerrID] = intOriginTerrID;
+	while (#arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			local intOriginTerrID = arrTerrOrigin[terrID];
+			for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
+				if not arrTerrProcessed[neighbourTerrID] then
+					arrTerrProcessed[neighbourTerrID] = true;
+					arrTerrOrigin[neighbourTerrID] = intOriginTerrID;
 
-                    -- check if this neighbour belongs to Player B
-                    if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == playerBID) then
-                        return intDepth, intOriginTerrID, neighbourTerrID;
-                    end
+					-- check if this neighbour belongs to Player B
+					if (game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == playerBID) then
+						return intDepth, intOriginTerrID, neighbourTerrID;
+					end
 
-                    table.insert(arrNextTerrList, neighbourTerrID);
-                end
-            end
-        end
-        arrTerrListToProcess = arrNextTerrList;
-    end
+					table.insert(arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = arrNextTerrList;
+	end
 
-    return -1, nil, nil; -- players not connected
+	return -1, nil, nil; -- players not connected
 end
 
 --return array list of territory IDs within specified distance from the target territory
 function getTerritoriesWithinDistance (game, targetTerritoryID, intMaxDistance)
-    local arrTerrProcessed = {}; --list of terrs already processed
-    local arrTerrResults = {}; --resultant list of terrs within specified distance
-    local arrTerrListToProcess = {}; --terrs remaining to be processed
+	local arrTerrProcessed = {}; --list of terrs already processed
+	local arrTerrResults = {}; --resultant list of terrs within specified distance
+	local arrTerrListToProcess = {}; --terrs remaining to be processed
 
 	local intDepth = 0;
-    arrTerrProcessed [targetTerritoryID] = true;
-    table.insert (arrTerrResults, targetTerritoryID);
-    table.insert (arrTerrListToProcess, targetTerritoryID);
+	arrTerrProcessed [targetTerritoryID] = true;
+	table.insert (arrTerrResults, targetTerritoryID);
+	table.insert (arrTerrListToProcess, targetTerritoryID);
 
-    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
-        local intNextTerrID = {};
-        for _, terrID in ipairs(arrTerrListToProcess) do
-            for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
-                if not arrTerrProcessed [neighbourTerrID] then
-                    arrTerrProcessed [neighbourTerrID] = true;
-                    table.insert(arrTerrResults, neighbourTerrID);
-                    table.insert(intNextTerrID, neighbourTerrID);
-                end
-            end
-        end
-        arrTerrListToProcess = intNextTerrID;
-        intDepth = intDepth + 1;
-    end
-    return (arrTerrResults);
+	while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+		local intNextTerrID = {};
+		for _, terrID in ipairs(arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+				if not arrTerrProcessed [neighbourTerrID] then
+					arrTerrProcessed [neighbourTerrID] = true;
+					table.insert(arrTerrResults, neighbourTerrID);
+					table.insert(intNextTerrID, neighbourTerrID);
+				end
+			end
+		end
+		arrTerrListToProcess = intNextTerrID;
+		intDepth = intDepth + 1;
+	end
+	return (arrTerrResults);
 end
 
--- returns array of territory IDs belonging to targetPlayerID within distance intMaxDistance from any terr belonging to mainPlayerID
+--returns array of territory IDs belonging to targetPlayerID within distance intMaxDistance from any terr belonging to mainPlayerID
 --targetPlayerID: 0=neutral (use WL.PlayerID.Neutral), -1=include all territories, -2=all non-neutral territories
 function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, mainPlayerID, targetPlayerID, intMaxDistance)
-  local arrTerrProcessed = {};        -- list of terrs already processed
-    local arrTerrResults = {};          -- resultant list of matching terrs
-    local arrTerrListToProcess = {};    -- terrs remaining to be processed
+	local arrTerrProcessed = {};        -- list of terrs already processed
+	local arrTerrResults = {};          -- resultant list of matching terrs
+	local arrTerrListToProcess = {};    -- terrs remaining to be processed
 
-    local intDepth = 0;
+	local intDepth = 0;
 
-    -- initialize BFS with all territories owned by mainPlayerID
-    for terrID, terrObj in pairs (game.LatestStanding.Territories) do
-        if (terrObj.OwnerPlayerID == mainPlayerID) then
-            arrTerrProcessed[terrID] = true;
-            table.insert(arrTerrListToProcess, terrID);
-        end
-    end
+	-- initialize breadth-first search (BFS) with all territories owned by mainPlayerID
+	for terrID, terrObj in pairs (game.LatestStanding.Territories) do
+		if (terrObj.OwnerPlayerID == mainPlayerID) then
+			arrTerrProcessed [terrID] = true;
+			table.insert (arrTerrListToProcess, terrID);
+		end
+	end
 
-    -- if main player owns no territories, return empty result
-    if (#arrTerrListToProcess == 0) then
-        return arrTerrResults;
-    end
+	-- if main player owns no territories, return empty result
+	if (#arrTerrListToProcess == 0) then
+		return arrTerrResults;
+	end
 
-    -- -- depth 0 check (only matters if mainPlayerID == targetPlayerID)
-    -- if (mainPlayerID == targetPlayerID) then
-    --     for _, terrID in ipairs(arrTerrListToProcess) do
-    --         table.insert(arrTerrResults, terrID);
-    --     end
-    -- end
+	-- -- depth 0 check (only matters if mainPlayerID == targetPlayerID)
+	-- if (mainPlayerID == targetPlayerID) then
+	--     for _, terrID in ipairs(arrTerrListToProcess) do
+	--         table.insert(arrTerrResults, terrID);
+	--     end
+	-- end
 
-    while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
-        local arrNextTerrList = {};
-        intDepth = intDepth + 1;
+	while (intDepth < intMaxDistance and #arrTerrListToProcess > 0) do
+		local arrNextTerrList = {};
+		intDepth = intDepth + 1;
 
-        for _, terrID in ipairs(arrTerrListToProcess) do
-            for neighbourTerrID, _ in pairs (game.Map.Territories[terrID].ConnectedTo) do
-                if not arrTerrProcessed[neighbourTerrID] then
-                    arrTerrProcessed[neighbourTerrID] = true;
+		for _, terrID in ipairs (arrTerrListToProcess) do
+			for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
+				if not arrTerrProcessed [neighbourTerrID] then
+					arrTerrProcessed [neighbourTerrID] = true;
 
-                    -- ownership filter
-                    if ((targetPlayerID == -1) or (targetPlayerID > 0 and game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID == targetPlayerID) or (targetPlayerID == -2 and game.LatestStanding.Territories[neighbourTerrID].OwnerPlayerID ~= WL.PlayerID.Neutral)) then
-                        table.insert(arrTerrResults, neighbourTerrID);
-                    end
+					-- ownership filter
+					if ((targetPlayerID == -1) or (targetPlayerID >= 0 and game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID == targetPlayerID) or (targetPlayerID == -2 and game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID ~= WL.PlayerID.Neutral)) then
+						table.insert (arrTerrResults, neighbourTerrID);
+					end
 
-                    table.insert(arrNextTerrList, neighbourTerrID);
-                end
-            end
-        end
+					table.insert (arrNextTerrList, neighbourTerrID);
+				end
+			end
+		end
 
-        arrTerrListToProcess = arrNextTerrList;
-    end
+		arrTerrListToProcess = arrNextTerrList;
+	end
 
-    return arrTerrResults;
+	return arrTerrResults;
 end
 
 --return true if player1ID and player2ID are in active diplo via standard Diplomacy card (can't attack each other), otherwise return false
 --requires parameter gamestanding.ActiveCards and the 2 player IDs to check for diplo between
 function arePlayersInDiplo (ActiveCards, player1ID, player2ID)
-    if (ActiveCards == nil) then return false; end
+	if (ActiveCards == nil) then return false; end
 
-    for _, activeCard in pairs (ActiveCards) do
+	for _, activeCard in pairs (ActiveCards) do
 		if (activeCard.Card.proxyType == 'GameOrderPlayCardDiplomacy') then
-            local p1 = activeCard.Card.PlayerOne;
-            local p2 = activeCard.Card.PlayerTwo;
-            if (p1 == player1ID and p2 == player2ID) or (p1 == player2ID and p2 == player1ID) then return true; end
-        end
-    end
+			local p1 = activeCard.Card.PlayerOne;
+			local p2 = activeCard.Card.PlayerTwo;
+			if (p1 == player1ID and p2 == player2ID) or (p1 == player2ID and p2 == player1ID) then return true; end
+		end
+	end
 
-    return (false);
+	return (false);
 end
 
 function territoryHasActiveShield (territory)

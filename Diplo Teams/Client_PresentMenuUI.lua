@@ -240,7 +240,7 @@ function commitofferpeace()
 		payload.TargetPlayerID = SelectedData [1];
 		Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 			showedreturnmessage = false;
-			UI.Alert(returnvalue.Message);
+			-- UI.Alert(returnvalue.Message);
 			end);
 		TargetPlayerBtn.SetText ("Select player...");
 	end
@@ -314,6 +314,17 @@ function ShowMenu ()
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
 	btnOfferPeace = UI.CreateButton (vertWar).SetText ("Offer Peace (NAP)").SetOnClick (OpenOfferPeace);
 
+	UI.CreateButton (vertWar).SetText ("Alert test").SetOnClick (
+		function ()
+			-- AlertPlayer (Game.Us.ID, "Wonderful, it worked yohoho '" ..PlayerName (Game, Game.Us.ID).."' - isn't it fanjastik?");
+			Game.SendGameCustomMessage ("frak Sending request...", {Message="Alert Test"},
+				function (returnvalue)
+					-- showedreturnmessage = false;
+					-- UI.Alert (returnvalue.Message);
+				end);
+		end
+	);
+
 	local boolSimulationOptionsEnabled = false;
 	if (boolSimulationOptionsEnabled == true) then
 		btnSimulateOfferWar = UI.CreateButton (vertWar).SetText ("Simulate War Declaration").SetOnClick (
@@ -343,7 +354,7 @@ function ShowMenu ()
 				payload.PlayerIDs = {1, 1058239};
 				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
-					UI.Alert (returnvalue.Message);
+					-- UI.Alert (returnvalue.Message);
 					end);
 			end
 		);
@@ -357,7 +368,7 @@ function ShowMenu ()
 				payload.TargetPlayerID = 1058239;
 				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
-					UI.Alert (returnvalue.Message);
+					-- UI.Alert (returnvalue.Message);
 					end);
 			end
 		);
@@ -414,23 +425,6 @@ function ShowMenu ()
 
 end
 
-function showPeaceOfferAccetpances (vert)
-	-- playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = {}; --send notice back that the peace offer was accepted
-	-- playerGameData [targetPlayerID].PeaceOfferAccepted [playerID] = game.Game.TurnNumber;
-
-	for offerAccepterPlayerID, intAcceptedOnTurnNumber in pairs (Mod.PlayerGameData.PeaceOfferAccepted or {}) do
-		UI.Alert ("Peace Offer you sent to " ..PlayerName (Game, offer.OfferAccepted).. " was accepted, you are now in NAP with this player");
-		local payload = {};
-		payload.Message = "Delete Peace Offer Acknowledgement";
-		payload.PeaceOfferer = Game.Us.ID;
-		payload.PeaceAccepter = offerAccepterPlayerID;
-		Game.SendGameCustomMessage ("Sending data...", payload, function () end);
-		-- local playerGameData = Mod.PlayerGameData;
-		-- playerGameData.PeaceOffers [offer.OfferAccepted] = {}; --delete the notification
-		-- Mod.PlayerGameData = playerGameData;
-	end
-end
-
 function ShowPeaceOffers (vert)
 	local intOfferCount = 0;
 	if (tablelength (Mod.PlayerGameData.PeaceOffers) > 0) then
@@ -471,7 +465,7 @@ function AcceptDeclinePeaceOffer(data)
 	payload.TargetPlayerID = data.Spieler;
 	Game.SendGameCustomMessage ("Sending data...", payload, function(returnvalue)
 		showedreturnmessage = false;
-		UI.Alert(returnvalue.Message);
+		-- UI.Alert(returnvalue.Message);
 	end);
 	ShowMenu ();
 end
