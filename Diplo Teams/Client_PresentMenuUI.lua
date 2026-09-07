@@ -16,14 +16,14 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 	mainUI = vert;
 
 	if (game.Us == nil) then
-		vert = UI.CreateVerticalLayoutGroup(rootParent);
-		UI.CreateLabel(vert).SetText("As you are not participating in this game, you cannot use the Diplomacy Mod");
+		vert = UI.CreateVerticalLayoutGroup (rootParent);
+		UI.CreateLabel (vert).SetText("As you are not participating in this game, you cannot use the Diplomacy Mod");
 		return;
 	elseif (game.Game.PlayingPlayers [game.Us.ID] == nil) then
-		UI.CreateLabel(vert).SetText("As you have been eliminated, diplo functions are not available to you");
+		UI.CreateLabel (vert).SetText("As you have been eliminated, diplo functions are not available to you");
 		return;
 	elseif (Mod.PublicGameData.War == nil) then
-		UI.CreateLabel(vert).SetText ("Diplo functions are not available during distribution stage");
+		UI.CreateLabel (vert).SetText ("Diplo functions are not available during distribution stage");
 		return;
 	end
 
@@ -415,13 +415,11 @@ function ShowMenu ()
 end
 
 function ShowPeaceOffers (vert)
-	local hasoffer = false;
 	local intOfferCount = 0;
 	if (tablelength (Mod.PlayerGameData.PeaceOffers) > 0) then
 		lblPeaceOffers = UI.CreateLabel (vert).SetText ("Peace Offers:");
 
 		for _,offer in pairs (Mod.PlayerGameData.PeaceOffers) do
-			hasoffer = true;
 			intOfferCount = intOfferCount + 1;
 
 			local horz = UI.CreateHorizontalLayoutGroup (vert);
@@ -443,7 +441,7 @@ function ShowPeaceOffers (vert)
 				AcceptDeclinePeaceOffer (payload);
 				end;
 			buttonDeny.SetOnClick (onclick);
-			UI.CreateLabel (horz).SetText ("  " ..toname (offer.OfferedBy, Game) .. " offers you peace");
+			UI.CreateLabel (horz).SetText ("  " ..PlayerName (Game, offer.OfferedBy) .. " offers you peace");
 		end
 	end
 	return (intOfferCount);

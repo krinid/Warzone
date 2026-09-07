@@ -226,6 +226,7 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 			else
 				playerGameData [targetPlayerID].PeaceOffers [playerID] = {};
 				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferBy = playerID;
+				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferedInTurn = game.Game.NumberOfTurns;
 				rg.Message = "Peace Offer has been sent to player (" ..PlayerName (game, targetPlayerID).. ")";
 				setReturnTable (rg);
 			end
