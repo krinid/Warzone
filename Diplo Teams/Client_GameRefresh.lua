@@ -11,9 +11,11 @@ function Client_GameRefresh (game)
 
 	--if there are pending Peace Offers or new War Declarations, send an Alert to the local client
 	local strMessage = nil;
+
+	if (tablelength (Mod.PlayerGameData.PeaceOffers) >0) then strMessage = 'You have ' .. tablelength (Mod.PlayerGameData.PeaceOffers) .. ' new Peace Offers (NAP)'; intTurnNumberOfLastAlertDisplay = nil; end
+
 	if (intTurnNumberOfLastAlertDisplay ~= nil and intTurnNumberOfLastAlertDisplay >= game.Game.TurnNumber) then return; end --if alert has been displayed already, don't pester the local player
 
-	if (tablelength (Mod.PlayerGameData.PeaceOffers) >0) then strMessage = 'You have ' .. tablelength (Mod.PlayerGameData.PeaceOffers) .. ' new Peace Offers (NAP)'; end
 	if (Mod.PlayerGameData.HasNewWar == true) then
 		if (strMessage ~= nil) then strMessage = strMessage .. "\n\n"; end
 		strMessage = strMessage or "" .. "!! WAR !!\nYou are involved in a new WAR\n\nCheck the Diplo Teams information by clicking Game/Diplo Teams";
