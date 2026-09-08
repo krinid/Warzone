@@ -4,6 +4,7 @@ function Client_GameOrderCreated (game, order, skip)
 	--check if an AttackTransfer on a player that the local player isn't in a Team or At War with (ie: is in NAP with) occurs, and if so flag it so it's not a surprise that it gets skipped when turn advances
 	if (order.proxyType == 'GameOrderAttackTransfer') then
 		local toowner = game.LatestStanding.Territories [order.To].OwnerPlayerID;
+		if (toowner ~= game.Us.ID) then return; end --can do anything you want to your own territories
 
 		--allows attacking of neutral territories, and verification if order is not neutral required for compatibility with other mods
 		--also permits attacking teammates (leave it to the 'Treat Teammates as Enemies' property - this is intentional and strategically useful in games)

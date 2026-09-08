@@ -7,7 +7,7 @@ function SendAccept (game, request, closeOpt)
 	payload.Message = 'AcceptTeamChange';
 	payload.ID = request.ID;
 
-	SendTeamMessage(game, 'Accepting team change...', payload, closeOpt, function(returnValue)
+	SendTeamMessage (game, 'Accepting team change...', payload, closeOpt, function(returnValue)
 		if (returnValue.Complete) then
 			return 'All invited team members have accepted. The team of ' .. PlayerNames(game, request.PlayerIDs) .. ' will be established when the turn advances';
 		else
@@ -17,11 +17,14 @@ function SendAccept (game, request, closeOpt)
 end
 
 function SendDecline (game, request, closeOpt)
+	local strMessageToPlayer = "Declining team change...";
 	local payload = {};
 	payload.Message = 'DeclineTeamChange';
 	payload.ID = request.ID;
 
-	SendTeamMessage(game, 'Declining team change...', payload, closeOpt, function(returnValue)
+	if (request.ProposerID == game.Us.ID) then strMessageToPlayer = "Canceling team proposal..." end --if client player is the proposer, it's a Proposal Cancel not a Decline
+
+	SendTeamMessage (game, strMessageToPlayer, payload, closeOpt, function(returnValue)
 		return 'You declined the team of ' .. PlayerNames(game, request.PlayerIDs);
 	end);
 end

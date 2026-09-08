@@ -126,7 +126,7 @@ function AcceptTeamChange (game, playerID, payload, setReturnTable)
 
 		TeamChangeAccepted (game, request, playerID);
 	else
-		SaveRequest(request);
+		SaveRequest (request);
 		WriteRequestToPlayerData (request);
 	end
 
@@ -172,7 +172,8 @@ function TeamChangeAccepted (game, request, lastPlayerToActID)
 	DeleteRequest (request);
 
 	local strTeamMemberNames = PlayerNames(game, request.PlayerIDs);
-	AlertPlayers (request.PlayerIDs, 'The team of ' ..strTeamMemberNames.. ' has been accepted by all team members, and will take effect when the turn advances', lastPlayerToActID);
+	-- AlertPlayers (request.PlayerIDs, 'The team of ' ..strTeamMemberNames.. ' has been accepted by all team members, and will take effect when the turn advances', lastPlayerToActID);
+	AlertPlayers (request.PlayerIDs, 'The team of ' ..strTeamMemberNames.. ' has been accepted by all team members, and will take effect when the turn advances', nil);
 
 	--queue announcement to be shown in order list @ start of turn
 	local publicGameData = Mod.PublicGameData;

@@ -82,8 +82,14 @@ function showPendingTeamProposals (vert, game)
 
 		for _, request in pairs (requests) do
 			local row = UI.CreateHorizontalLayoutGroup (vert);
-			UI.CreateButton (row).SetText ('Accept').SetInteractable (not HaveWeAccepted (game, request)).SetOnClick (function() SendAccept (game, request, Close); end).SetColor (getColourCode ("Button|Green"));
-			UI.CreateButton (row).SetText ('Decline').SetOnClick (function () SendDecline (game, request, Close); end).SetColor (getColourCode ("Button|Red"));
+			local strAcceptButtonText = "Accept";
+			local strDeclineButtonText = "Decline";
+			if (request.ProposerID == game.Us.ID) then
+				strAcceptButtonText = "Offer sent";
+				strDeclineButtonText = "Cancel proposal";
+			end
+			UI.CreateButton (row).SetText (strAcceptButtonText).SetInteractable (not HaveWeAccepted (game, request)).SetOnClick (function() SendAccept (game, request, Close); end).SetColor (getColourCode ("Button|Green"));
+			UI.CreateButton (row).SetText (strDeclineButtonText).SetOnClick (function () SendDecline (game, request, Close); end).SetColor (getColourCode ("Button|Red"));
 			UI.CreateLabel (row).SetText ('  ' .. PlayerName (game, request.ProposerID) .. ' proposed team: ' .. PlayerNames (game, request.PlayerIDs));
 			UI.CreateLabel (vert).SetText ('     Status: ' .. RequestStatus (game, request));
 		end
@@ -288,8 +294,8 @@ function ShowMenu ()
 	ShowPendingRequests (vert, Game);
 
 	local horz = UI.CreateHorizontalLayoutGroup (vert);
-	local vertTeam = UI.CreateVerticalLayoutGroup (horz);
-	local vertWar = UI.CreateVerticalLayoutGroup (horz);
+	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
+	local vertWar = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
 	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
 
 	-- UI.CreateLabel (vert).SetText ("[TEAM OPTIONS]").SetColor ("#FFFF00");
@@ -297,7 +303,23 @@ function ShowMenu ()
 	-- UI.CreateLabel (vertTeam).SetText ("- - - - - - - TEAM ACTIONS - - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vertTeam).SetText ("- - TEAM ACTIONS - -").SetColor ("#FFFF00");
 	UI.CreateButton (vertTeam).SetText ('Propose new team').SetOnClick (function() Game.CreateDialog (CreateProposeDialog); end);
-	UI.CreateButton (vertTeam).SetText ('Leave current team').SetOnClick (function() SendUnteam (Game, Close); end).SetInteractable (TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding) ~= NoTeam);
+	btnLeaveTeam = UI.CreateButton (vertTeam).SetText ('Leave current team').SetInteractable (TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding) ~= NoTeam).SetOnClick (
+		function()
+			if (lblLeaveTeamWarning.GetText () == "") then
+				btnLeaveTeam.SetText ("CONFIRM - Leave current team").SetColor (getColourCode ("Button|Red"));
+				lblLeaveTeamWarning.SetText ("**immediately abandons your team, is irreversible, you leave all your cards & card pieces behind with remaining teammates").SetColor ("#FF0000");
+			else
+				SendUnteam (Game, Close);
+				btnLeaveTeam.SetText ("Abandoned Team").SetColor ("#AAAAAA").SetInteractable (false);
+				lblLeaveTeamWarning.SetText ("");
+			end
+		end);
+	lblLeaveTeamWarning = UI.CreateLabel (vertTeam);
+
+	-- if (TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding) ~= NoTeam) then
+	-- 	--display warning about the immediate effect of clicking 'Leave current team'
+	-- 	UI.CreateLabel (vert).SetText ("**immediately abandons your team, is irreversible, you leave all your cards & card pieces behind with remaining teammates").SetColor ("#FF0000");
+	-- end
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 
 	showedreturnmessage = true;
@@ -314,17 +336,6 @@ function ShowMenu ()
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
 	btnOfferPeace = UI.CreateButton (vertWar).SetText ("Offer Peace (NAP)").SetOnClick (OpenOfferPeace);
 
-	UI.CreateButton (vertWar).SetText ("Alert test").SetOnClick (
-		function ()
-			-- AlertPlayer (Game.Us.ID, "Wonderful, it worked yohoho '" ..PlayerName (Game, Game.Us.ID).."' - isn't it fanjastik?");
-			Game.SendGameCustomMessage ("frak Sending request...", {Message="Alert Test"},
-				function (returnvalue)
-					-- showedreturnmessage = false;
-					-- UI.Alert (returnvalue.Message);
-				end);
-		end
-	);
-
 	local boolSimulationOptionsEnabled = false;
 	if (boolSimulationOptionsEnabled == true) then
 		btnSimulateOfferWar = UI.CreateButton (vertWar).SetText ("Simulate War Declaration").SetOnClick (
@@ -332,7 +343,7 @@ function ShowMenu ()
 				local payload = {};
 				payload.Message = "Simulate War Declaration";
 				payload.SendingPlayerID = 1;
-				payload.TargetPlayerID = 1058239;
+				payload.TargetPlayerID = Game.Us.ID; --1058239
 				local orders = Game.Orders or {};
 				local event = WL.GameOrderCustom.Create (Game.Us.ID, "Declared war on " .. tostring (payload.TargetPlayerID), "Diplo Teams|DeclareWar|" ..tostring (payload.SendingPlayerID).. "|" .. tostring (payload.TargetPlayerID));
 				event.Icon = "Diplo Teams_order_40x40";
@@ -351,7 +362,7 @@ function ShowMenu ()
 				local payload = {};
 				payload.Message = "Simulate Team Proposal";
 				payload.SendingPlayerID = 1;
-				payload.PlayerIDs = {1, 1058239};
+				payload.PlayerIDs = {1, Game.Us.ID};  --1058239
 				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
 					-- UI.Alert (returnvalue.Message);
@@ -365,10 +376,21 @@ function ShowMenu ()
 				local payload = {};
 				payload.Message = "Simulate Peace Offer";
 				payload.SendingPlayerID = 1;
-				payload.TargetPlayerID = 1058239;
+				payload.TargetPlayerID = Game.Us.ID; --1058239
 				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
 					-- UI.Alert (returnvalue.Message);
+					end);
+			end
+		);
+
+		UI.CreateButton (vertWar).SetText ("Alert test").SetOnClick (
+			function ()
+				-- AlertPlayer (Game.Us.ID, "Wonderful, it worked yohoho '" ..PlayerName (Game, Game.Us.ID).."' - isn't it fanjastik?");
+				Game.SendGameCustomMessage ("frak Sending request...", {Message="Alert Test"},
+					function (returnvalue)
+						-- showedreturnmessage = false;
+						-- UI.Alert (returnvalue.Message);
 					end);
 			end
 		);
