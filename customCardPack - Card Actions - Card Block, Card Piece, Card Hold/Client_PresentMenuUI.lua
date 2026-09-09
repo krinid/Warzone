@@ -635,15 +635,31 @@ function showUnitInspectorMenu (rootParent, setMaxSize, setScrollable, game, clo
 	-- inspectToolInUse = true;
 	--if (UI.IsDestroyed (UnitInspector_TerritorySelectButton)==true) then strButtonText = "Select another Territory"; end
 	--UnitInspector_TerritorySelectButton = UI.CreateButton (vert).SetText("Select another Territory").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
-	UnitInspector_TerritorySelectButton = UI.CreateButton (vert).SetText("Click a territory to inspect it").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
+	local lineInspectTerrOrOpenNewWindow = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
+	UI.CreateLabel (lineInspectTerrOrOpenNewWindow).SetText("Click a territory to inspect it\n\n").SetColor(colors.Yellow).SetFlexibleWidth(1);
+	UnitInspector_TerritorySelectButton = UI.CreateButton (lineInspectTerrOrOpenNewWindow).SetText("Open a new window instance").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (showUnitInspectorMenu); end);
 	UI.CreateButton (vert).SetText("Show combat order of visible Special Units").SetColor(colors.Orange).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
 	UI.CreateButton (vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() Game.CreateDialog (wholeMapInspectorPanel); end); --on button press, initiate comprehensive Unit Inspector, all SUs on all territories in 1 pane
 	-- UI.CreateButton (vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
 
-	line = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
+	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239 or game.Us.ID == 114191)) then
+		local linePastStanding = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
+		-- UI.CreateButton (linePastStanding).SetText ("Test Terr Inspector on Past turn data").SetOnClick (testTerrInspectorOnPastTurnData).SetColor (colors.Red).SetFlexibleWidth(1).SetOnClick(function () game.GetStanding (0, 0, getStandingCallBack); end);
+		local btnInspectPriorTurn = UI.CreateButton (linePastStanding).SetText ("Inspect Prior Turn").SetColor (colors.Red).SetFlexibleWidth(1);
+	    local vertPastStanding = UI.CreateVerticalLayoutGroup(linePastStanding).SetFlexibleWidth(1).SetCenter(false);
+		local lineTurnNumber = UI.CreateHorizontalLayoutGroup (vertPastStanding).SetFlexibleWidth(1);
+		local lineOrderNumber = UI.CreateHorizontalLayoutGroup (vertPastStanding).SetFlexibleWidth(1);
+		UI.CreateLabel (lineTurnNumber).SetText("Turn #").SetFlexibleWidth(1);
+		local NIFturnNumber = UI.CreateNumberInputField (lineTurnNumber).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(1).SetWholeNumbers(true).SetInteractable(true);
+		UI.CreateLabel (lineOrderNumber).SetText("Order #").SetFlexibleWidth(1);
+        local NIForderNumber = UI.CreateNumberInputField (lineOrderNumber).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(1).SetWholeNumbers(true).SetInteractable(true);
+		btnInspectPriorTurn.SetOnClick (function () game.GetStanding (tonumber (NIFturnNumber.GetValue ()) - 1, tonumber (NIForderNumber.GetValue ()) - 1, getStandingCallBack); end)
+	end
+
+	local line = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
 	UI.CreateLabel (line).SetText (" ").SetPreferredWidth(0.6);
-	cboxVerbose = UI.CreateCheckBox (line).SetText ("Verbose").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(); end); --.SetPreferredWidth(0.2); --.SetOnClick --
-	cboxColourful = UI.CreateCheckBox (line).SetText ("Colourful").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(); end); --.SetPreferredWidth(0.2); --.SetOnClick --
+	cboxVerbose = UI.CreateCheckBox (line).SetText ("Verbose").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(game.LatestStanding); end); --.SetPreferredWidth(0.2); --.SetOnClick --
+	cboxColourful = UI.CreateCheckBox (line).SetText ("Colourful").SetIsChecked (false).SetOnValueChanged (function () populateUnitInspectorContents(game.LatestStanding); end); --.SetPreferredWidth(0.2); --.SetOnClick --
 	intInspector_territory = nil;
 	UI.InterceptNextTerritoryClick(UnitInspector_clickedTerr);
 end
@@ -652,10 +668,17 @@ function UnitInspector_clickedTerr(terrDetails)
 	-- if terrDetails == nil or --[[not inspectToolInUse or]] UI.IsDestroyed(UnitInspectorRoot) then return WL.CancelClickIntercept; end
 	if (terrDetails == nil or UI.IsDestroyed(UnitInspectorRoot)) then return (WL.CancelClickIntercept); end
 	Inspector_territory = terrDetails; --set global variable to value of selected territory
-	populateUnitInspectorContents ();
+	populateUnitInspectorContents (customGameStanding or Game.LatestStanding);
+	customGameStanding = nil;
 end
 
-function populateUnitInspectorContents ()
+--receive a specific game standing; 'standing' is the actual standing based on calling game.GetStanding
+function getStandingCallBack (standing)
+	customGameStanding = standing;
+end
+
+--standing coiuld be game.LatestStanding for the latest standing, or a specific past standing such as game.GetStanding (turn#, order#, callback_function)
+function populateUnitInspectorContents (standing)
 	if (Inspector_territory == nil) then return; end --if territory hasn't been selected yet, do nothing
 	if (not UI.IsDestroyed(vertTerritoryInfoAndUnitInspectorList)) then UI.Destroy (vertTerritoryInfoAndUnitInspectorList); end
 	vertTerritoryInfoAndUnitInspectorList = UI.CreateVerticalLayoutGroup(UnitInspectorRoot).SetFlexibleWidth(1);
@@ -668,10 +691,11 @@ function populateUnitInspectorContents ()
 	local UIdisplay = vertTerritoryInfoAndUnitInspectorList;
 	local line = UI.CreateHorizontalLayoutGroup (UIdisplay);
 	UI.CreateLabel (line).SetText("    Owner: ").SetColor (colors.TextColor);
-	UI.CreateLabel (line).SetText(getPlayerName (Game, Game.LatestStanding.Territories[Inspector_territory.ID].OwnerPlayerID)).SetColor ("#FFFF00");
+	-- UI.CreateLabel (line).SetText(getPlayerName (Game, Game.LatestStanding.Territories[Inspector_territory.ID].OwnerPlayerID)).SetColor ("#FFFF00");
+	UI.CreateLabel (line).SetText(getPlayerName (Game, standing.Territories[Inspector_territory.ID].OwnerPlayerID)).SetColor ("#FFFF00");
 
-	local intFROMnumArmiesPresent = (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
-	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits);
+	local intFROMnumArmiesPresent = (standing.Territories[Inspector_territory.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
+	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits);
 
 	local attackPower = FROMfullAttackingForce.AttackPower;
 	local defensePower = FROMfullAttackingForce.DefensePower;
@@ -679,15 +703,15 @@ function populateUnitInspectorContents ()
 	local intDefenseKillQuantity = math.floor (defensePower * Game.Settings.DefenseKillRate + 0.5);
 
 	UI.CreateLabel (UIdisplay).SetText("    Attack Power: ".. attackPower .. " [kills ".. intAttackKillQuantity .."], Defense Power: " .. defensePower .. " [kills "..intDefenseKillQuantity.."]"..
-		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
+		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
 	UnitInspector_TerritorySelectButton.SetText ("Click here to inspect a different territory");
 	intInspector_territory = Inspector_territory.ID; --set global variable to value of selected territory
 
 	--list structures present on territory
 	local intNumStructures = 0;
-	if (Game.LatestStanding.Territories[intInspector_territory].Structures ~= nil) then
+	if (standing.Territories[intInspector_territory].Structures ~= nil) then
 		UI.CreateLabel (UIdisplay).SetText ("\n    Structures:").SetColor (getColourCode("subheading"));
-		for k,v in pairs (Game.LatestStanding.Territories[intInspector_territory].Structures) do
+		for k,v in pairs (standing.Territories[intInspector_territory].Structures) do
 			--k will be of format: (1) Built-in structure: a number; eg: 1 = city
 			--                     (2) Custom structure: a string of format "C|#|name" where "C" is a text delimiter for custom structure, '#' is the mod #, 'name' is the custom structure name
 			intNumStructures = intNumStructures + 1;
@@ -702,11 +726,11 @@ function populateUnitInspectorContents ()
 		end
 	end
 
-	if (#Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits == 0) then
+	if (#standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits == 0) then
 		UI.CreateLabel (UIdisplay).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
 	else
 		UI.CreateLabel (UIdisplay).SetText ("\n    Special Units:").SetColor (getColourCode("subheading"));
-		for k,specialUnit in pairs (Game.LatestStanding.Territories[Inspector_territory.ID].NumArmies.SpecialUnits) do
+		for k,specialUnit in pairs (standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits) do
 			local strSUownerName = getPlayerName (Game, specialUnit.OwnerID);
 			local strSUname = specialUnit.proxyType;
 			local strCR = ""; --append CR to front of SU details string except for 1st item
