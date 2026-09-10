@@ -812,14 +812,22 @@ function populateTerritoryInspectorContents (standing)
 	else UI.CreateLabel (line).SetText("  [Current State]"); --.SetColor ("#FFFFFF"));
 	end
 
+	local targetTerritory = standing.Territories[Inspector_territory.ID];
 	local UIdisplay = vertTerritoryInfoAndUnitInspectorList;
 	local line = UI.CreateHorizontalLayoutGroup (UIdisplay);
 	UI.CreateLabel (line).SetText("    Owner: ").SetColor (colors.TextColor);
-	-- UI.CreateLabel (line).SetText(getPlayerName (Game, Game.LatestStanding.Territories[Inspector_territory.ID].OwnerPlayerID)).SetColor ("#FFFF00");
-	UI.CreateLabel (line).SetText(getPlayerName (Game, standing.Territories[Inspector_territory.ID].OwnerPlayerID)).SetColor ("#FFFF00");
+	-- UI.CreateLabel (line).SetText(getPlayerName (Game, Game.LatesttargetTerritory.OwnerPlayerID)).SetColor ("#FFFF00");
+	UI.CreateLabel (line).SetText(getPlayerName (Game, targetTerritory.OwnerPlayerID)).SetColor ("#FFFF00");
 
-	local intFROMnumArmiesPresent = (standing.Territories[Inspector_territory.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
-	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits);
+	--4 levels of fog: You: [ 1 ] (what you own), Visible: [ 2 ] (what you can see you don't own. Ownership and armies), OwnerOnly: [ 3 ] (what you can see you don't own. Ownership only), Fogged: [ 4 ] (cannot see ownership or armies)
+	--only WL.StandingFogLevel.You & WL.StandingFogLevel.Visible show armies & SUs, so if the fog level for the target terr for the local client player isn't one of these 2 levels, stop here b/c we can't see the armies or SUs, there's nothing to inspect except potentially the terr owner if it's Light Fog
+	if (targetTerritory.FogLevel ~= WL.StandingFogLevel.You and targetTerritory.FogLevel ~= WL.StandingFogLevel.Visible) then
+		UI.CreateLabel (UIdisplay).SetText ("Territory is fogged, can't see armies or Special Units")
+		return;
+	end
+
+	local intFROMnumArmiesPresent = (targetTerritory.NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (Game, Inspector_territory.ID)); --includes armies deployed this turn
+	local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, targetTerritory.NumArmies.SpecialUnits);
 
 	local attackPower = FROMfullAttackingForce.AttackPower;
 	local defensePower = FROMfullAttackingForce.DefensePower;
@@ -827,7 +835,7 @@ function populateTerritoryInspectorContents (standing)
 	local intDefenseKillQuantity = math.floor (defensePower * Game.Settings.DefenseKillRate + 0.5);
 
 	UI.CreateLabel (UIdisplay).SetText("    Attack Power: ".. attackPower .. " [kills ".. intAttackKillQuantity .."], Defense Power: " .. defensePower .. " [kills "..intDefenseKillQuantity.."]"..
-		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits).SetColor(colors.TextColor);
+		"\n    Units present -- Armies: ".. intFROMnumArmiesPresent ..", Special Units: "..#targetTerritory.NumArmies.SpecialUnits).SetColor(colors.TextColor);
 	UnitInspector_TerritorySelectButton.SetText ("Inspect a different territory");
 	intInspector_territory = Inspector_territory.ID; --set global variable to value of selected territory
 
@@ -850,11 +858,11 @@ function populateTerritoryInspectorContents (standing)
 		end
 	end
 
-	if (#standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits == 0) then
+	if (#targetTerritory.NumArmies.SpecialUnits == 0) then
 		UI.CreateLabel (UIdisplay).SetText("\n[There are no Special Units on this territory]").SetColor(colors.TextColor);
 	else
 		UI.CreateLabel (UIdisplay).SetText ("\n    Special Units:").SetColor (getColourCode("subheading"));
-		for k,specialUnit in pairs (standing.Territories[Inspector_territory.ID].NumArmies.SpecialUnits) do
+		for k,specialUnit in pairs (targetTerritory.NumArmies.SpecialUnits) do
 			local strSUownerName = getPlayerName (Game, specialUnit.OwnerID);
 			local strSUname = specialUnit.proxyType;
 			local strCR = ""; --append CR to front of SU details string except for 1st item
