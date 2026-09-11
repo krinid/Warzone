@@ -1,7 +1,9 @@
+require ("SU_replacer common");
 local strExplosivesOrderFilename = "explosive orig v3b square 40x40"; --icon for the Explosives order in the order list
 
--- function Server_AdvanceTurn_Start (game, addNewOrder)
--- end
+function Server_AdvanceTurn_Start (game, addNewOrder)
+	decide_SU_replacer_MasterMod (addNewOrder);
+end
 
 -- function Server_AdvanceTurn_End(game, addNewOrder)
 -- end
@@ -10,6 +12,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 	if ((order.proxyType == 'GameOrderPlayCardCustom' and startsWith (order.ModData, "Explosives|") == true)) then
 		PlayExplosivesCard (game, order, addNewOrder);
 	end
+	process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNewOrder);
 end
 
 function PlayExplosivesCard (game, order, addNewOrder)
@@ -70,12 +73,12 @@ function PlayExplosivesCard (game, order, addNewOrder)
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	event.Icon = strExplosivesOrderFilename;
 
-	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
+	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false, "Explosives", strExplosivesOrderFilename); --3rd last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 	if (eventDestroyFort ~= nil) then addNewOrder (eventDestroyFort, true); end -- if an event to destroy a Fort was created, add it here after the "Explosives" order
 end
 
 --reduce SU Health/DTK on taget territory owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
-function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
+function applySpecialUnitDamage_OLD (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
 	-- if (#terr.NumArmies.SpecialUnits > 0) then
 		local targetTerritoryID = terr.ID;
 		print ("[Explosives - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU damage % ".. tostring (numSUreductionRate).. ", SU fixed damage " ..tostring (numSUdamageFixed).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));
@@ -122,6 +125,8 @@ function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerrito
 					--SU is still alive, either DTK>0 or Health>0, so remove existing SU + add cloned/reduced SU to territory
 					newSU = builder.Build (); --create newSU
 					table.insert (SUsNewList, newSU);
+					submit_SU_replacer_GUID_mapping (addNewOrder, SU.ID, newSU.ID); --if this mod is a Secondary mod, send the mapping to the MasterMod
+					print ("[ATTACK PROCESSING - SU replacement] Old GUID " ..SU.ID.."/" ..SU.Name.. ", replace with New SU " ..newSU.ID.."/"..newSU.Name);
 					-- print ("[SU survives - reduce & replace it]")
 				else
 					--SU died b/c either DTK==0 or Health==0, so just remove existing SU from territory and don't add a new SU

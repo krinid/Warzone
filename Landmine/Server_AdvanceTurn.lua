@@ -1,4 +1,5 @@
-local strBombOrderFilename = "Landmine order icon 40x40_clearBack"; --icon for the Landmine order in the order list
+require ("SU_replacer common");
+local strLandmineOrderFilename = "Landmine order icon 40x40_clearBack"; --icon for the Landmine order in the order list
 
 -- function Server_AdvanceTurn_Start (game, addNewOrder)
 -- end
@@ -15,7 +16,7 @@ function Server_AdvanceTurn_End(game, addNewOrder)
 	for playerID, playerAnnotations in pairs (annotations) do
 		local event = WL.GameOrderEvent.Create (playerID, "Landmine deployment reminder", {}, {});
 		event.TerritoryAnnotationsOpt = playerAnnotations;
-		event.Icon = strBombOrderFilename;
+		event.Icon = strLandmineOrderFilename;
 		addNewOrder (event, false);
 	end
 end
@@ -44,7 +45,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		local intTargetTerritoryID = tonumber (modDataContent[2]); --2nd component of ModData is the target territory ID
 		print ("[Landmine initial order] " .. tostring (order.ModData));
 		local event = WL.GameOrderCustom.Create (order.PlayerID, "Landmine initial order; " .. getPlayerName (game, order.PlayerID).. " deploys a landmine on " ..game.Map.Territories [intTargetTerritoryID].Name, "DeployOrder-Landmine|".. intTargetTerritoryID)
-		event.Icon = strBombOrderFilename;
+		event.Icon = strLandmineOrderFilename;
 		addNewOrder (event, true);
 	elseif ((order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, "DeployOrder-Landmine|") == true)) then
 		print ("[Landmine placement] " ..tostring (order.Payload));
@@ -56,7 +57,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		-- local modDataContent = split (order.ModData, "|");
 		-- local intTargetTerritoryID = modDataContent[2]; --2nd component of ModData is the target territory ID
 		local event = WL.GameOrderCustom.Create (order.PlayerID, "Landmine explode prep; " .. getPlayerName (game, order.PlayerID).. " triggers a landmine on " ..game.Map.Territories [order.To].Name, "ExplodeOrder-Landmine|".. order.To)
-		event.Icon = strBombOrderFilename;
+		event.Icon = strLandmineOrderFilename;
 		addNewOrder (event, true);
 		-- explode_Landmine (game, order, addNewOrder, order.To);
 	elseif ((order.proxyType == 'GameOrderCustom' and startsWith (order.Payload, "ExplodeOrder-Landmine|") == true)) then
@@ -82,7 +83,7 @@ function placeLandmine (game, order, addNewOrder)
 	local event = WL.GameOrderEvent.Create (order.PlayerID,  getPlayerName (game, order.PlayerID).. " places a landmine on " ..game.Map.Territories [intTargetTerritoryID].Name);
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID);
 	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Landmine deployed")};
-	event.Icon = strBombOrderFilename;
+	event.Icon = strLandmineOrderFilename;
 	addNewOrder (event, false);
 
 	local landmineDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber};
@@ -150,9 +151,9 @@ function explode_Landmine (game, order, addNewOrder, intTargetTerritoryID)
 	-- event.RemoveWholeCardsOpt = {[order.PlayerID] = order.CardInstanceID}; --consume the Bomb card (must be done b/c we're skipping the original order that consumes the card)
 	event.TerritoryAnnotationsOpt = {[intTargetTerritoryID] = WL.TerritoryAnnotation.Create ("Landmine triggered", 4, 255)}; --mimic the base "Bomb" annotation
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
-	event.Icon = strBombOrderFilename;
+	event.Icon = strLandmineOrderFilename;
 
-	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
+	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false, "Landmine", strLandmineOrderFilename); --3rd last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 
 	--2nd param indicates whether to skip this order if the original order is skipped (by this or any other mod)
 	--if using regular bomb card, original order will be skipped (elsewhere in code) so it doesn't apply default damage of 50%, so must use 'false' when calling addNewOrder
@@ -171,7 +172,7 @@ function explode_Landmine (game, order, addNewOrder, intTargetTerritoryID)
 end
 
 --reduce SU Health/DTK on taget territory owned by targetPlayerID by % specified by numSUreductionRate (-0.1 = 10% reduction)
-function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
+function applySpecialUnitDamage_OLD (game, addNewOrder, event, terr, impactedTerritory, castingPlayerID, targetPlayerID, numSUreductionRate, numSUdamageFixed, boolSUpunishment_ApplyToAllStats)
 	-- if (#terr.NumArmies.SpecialUnits > 0) then
 		local targetTerritoryID = terr.ID;
 		print ("[BOMB+ - SU Reduction] terr " ..targetTerritoryID.. "/" ..getTerritoryName (targetTerritoryID, game).. ", #SUs " ..#terr.NumArmies.SpecialUnits.. ", SU damage % ".. tostring (numSUreductionRate).. ", SU fixed damage " ..tostring (numSUdamageFixed).. ", affects all stats: " ..tostring (boolSUpunishment_ApplyToAllStats));

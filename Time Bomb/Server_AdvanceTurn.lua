@@ -1,6 +1,8 @@
+require ("SU_replacer common");
 local strTimeBombOrderFilename = "Time bomb order icon 40x40"; --icon for the Time Bomb order in the order list
 
 function Server_AdvanceTurn_Start (game, addNewOrder)
+	decide_SU_replacer_MasterMod (addNewOrder);
 	for terrID, timeBombDataRecord in pairs (Mod.PrivateGameData.TimeBombData or {}) do
 		-- local timeBombDataRecord = {territory = intTargetTerritoryID, castingPlayer = order.PlayerID, territoryOwner = game.ServerGame.LatestTurnStanding.Territories [intTargetTerritoryID].OwnerPlayerID, turnNumberPlayed = game.Game.TurnNumber, turnTimeBombExplodes = game.Game.TurnNumber + tonumber (Mod.Settings.DurationForMaxPower or 3)};
 		-- local territory = game.ServerGame.LatestTurnStanding.Territories [terrID];
@@ -130,6 +132,7 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this custom game order, it's just a trigger for the real card that makes it properly blockable by Card Block
 		explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID);
 	end
+	process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNewOrder);
 end
 
 function placeTimeBomb (game, order, addNewOrder)
@@ -243,7 +246,7 @@ function explode_TimeBomb (game, order, addNewOrder, intTargetTerritoryID)
 	event.JumpToActionSpotOpt = createJumpToLocationObject (game, intTargetTerritoryID); --move the camera to the target territory
 	event.Icon = strTimeBombOrderFilename;
 
-	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false); --last param 'false' indicates to not apply to all stats, only reduce Health/DTK
+	applySpecialUnitDamage (game, addNewOrder, event, terr, terrMod, order.PlayerID, terr.OwnerPlayerID, -Mod.Settings.SUdamagePercent/100, -Mod.Settings.SUdamageFixed, false, "Time Bomb", strTimeBombOrderFilename); --3rd last param 'false' indicates to not apply to all stats, only reduce Health/DTK
 
 	if (eventDestroyFort ~= nil) then addNewOrder (eventDestroyFort, true); end -- if an event to destroy a Fort was created, add it here after the "TimeBomb" order
 
@@ -305,6 +308,7 @@ function applySpecialUnitDamage (game, addNewOrder, event, terr, impactedTerrito
 					--SU is still alive, either DTK>0 or Health>0, so remove existing SU + add cloned/reduced SU to territory
 					newSU = builder.Build (); --create newSU
 					table.insert (SUsNewList, newSU);
+					submit_SU_replacer_GUID_mapping (addNewOrder, SU.ID, newSU.ID); --if this mod is a Secondary mod, send the mapping to the MasterMod
 					-- print ("[SU survives - reduce & replace it]")
 				else
 					--SU died b/c either DTK==0 or Health==0, so just remove existing SU from territory and don't add a new SU

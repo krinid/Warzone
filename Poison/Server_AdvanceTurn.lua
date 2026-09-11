@@ -1,12 +1,5 @@
 --TODO:
--- - restrict Poison to activate on bordering territories
--- - remove Range option
 -- - add effects for Commander & Bosses
--- - add Duration handling
--- - add impacts - @ cast time does 50% damage, start of turn does 50% damage, end of turn does 50% damage (or cast time 100%, start 50%, end 50%)
--- 		- round up @ cast time & end of turn; round down @ start of turn
--- - add spread impact - when armies or SUs move from Poison terrs, they carry 50% of the poison effect with them to the new terr; exemptions: Castles, CityForts, anything else?
--- 		- airlifts out also impacted?
 -- - copy Dragons and kill the check for modID==594 ? yea do it
 -- - import into PunRew (just Server_TurnAdvance.lua content for the the poison application part, don't need the client side stuff) to apply to terrs with 10+ Punishment
 -- 		- actually just have PunRew check for presence of the Poison/Affects Other Mods card and if present, enter a custom order to apply Poison with specific properties and duration 1 to the Punished territory
@@ -15,12 +8,14 @@
 -- - add a "Strong Poison" card? Which is just a 2nd poison card for host to modify the properties (1 could affect armies more, the other SUs more; or just 1 is stronger version of the other)
 -- - add a "Poison Affects Other Mods" card that other mods can check for in order to apply poison damage to their own mod effects (eg: Pestilence, Nuke, Bomb+, etc); this is needed in order to have the Poison damage apply to the Special Units added by these other mods; this card would just be a placeholder card that isn't actually played but just exists so that other mods can check for its existence
 
+require ("SU_replacer common");
 local strPoisonNameText = "Poison"; --use this to display "Poison" in annotations, etc
 
 ---Server_AdvanceTurn_Start hook
 ---@param game GameServerHook
 ---@param addNewOrder fun(order: GameOrder) # Adds a game order, will be processed before any of the rest of the orders
 function Server_AdvanceTurn_Start (game, addNewOrder)
+	decide_SU_replacer_MasterMod (addNewOrder);
 	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Poison|ApplyRecurringPoisonDamage|TurnStart"));
 	-- execute_Recurring_Poison_Damage (game, addNewOrder);
 end
@@ -109,6 +104,7 @@ function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addN
 		for k,v in pairs (order.InstancesCreated) do for k2,v2 in pairs (v) do print ("    Card Instance ID " ..tostring (v2)); end end
 			--k is the incremental element #; all instances of k2 are the text "__proxyID"; v2 is the actual card instance ID; this is always an array, 1 element for each received whole card, even if only 1 whole card was received
 	end
+	process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNewOrder);
 end
 
 --return count of structure of type strStructureName on targetTerritory
@@ -247,6 +243,8 @@ function apply_Poison_Damage_to_Territory (game, intPoisonPlayerID, strOrderDesc
 				--SU is still alive, either DTK>0 or Health>0, so remove existing SU + add cloned/reduced SU to territory
 				newSU = builder.Build (); --create newSU
 				table.insert (SUsNewList, newSU);
+				submit_SU_replacer_GUID_mapping (addNewOrder, SU.ID, newSU.ID); --if this mod is a Secondary mod, send the mapping to the MasterMod
+				print ("[ATTACK PROCESSING - SU replacement] Old GUID " ..SU.ID.."/" ..SU.Name.. ", replace with New SU " ..newSU.ID.."/"..newSU.Name);
 				-- print ("[SU survives - reduce & replace it]")
 			else
 				--SU died b/c either DTK==0 or Health==0, so just remove existing SU from territory and don't add a new SU
@@ -357,10 +355,7 @@ function execute_Poison_operation (game, order, addNewOrder, skipThisOrder, targ
 			terrsToProcess = terrsToProcessNext;
 			terrsToProcessNext = {};
 			intNeighbourLevel = intNeighbourLevel + 1;
-
 		end
-
-
 	else
 		--Poison was blocked by Shield, so no damage is done; enter an order indicating what happened
 		local event = WL.GameOrderEvent.Create (order.PlayerID, order.Description .. " (blocked by Shield)", {}, {impactedTerritory});
