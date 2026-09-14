@@ -29,6 +29,8 @@ function process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNe
 		local pgd = Mod.PrivateGameData or {};
 		if (order.ModID == Mod.PrivateGameData.ModID) then --this mod is MasterMod
 			pgd.MasterMod = true;
+			SUreplacementMapping = {}; --initialize these global variables; this will be necessary do to here b/c the code executed in _Start will only initialize these variables if the mod was designated the Master before the turn started
+			SUreplacementMapping_Reverse = {};
 		else --this mod is not MasterMod, it is a secondary mod
 			pgd.MasterMod = false;
 		end
@@ -41,6 +43,8 @@ function process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNe
 		-- modDataContent [3] is the oldGUID, modDataContent [4] is the newGUID
 		local strOldGUID = modDataContent [3];
 		local strNewGUID = modDataContent [4];
+		if (SUreplacementMapping == nil) then SUreplacementMapping = {}; end --initialize these global variables; this will be necessary do to here b/c the code executed in _Start will only initialize these variables if the mod was designated the Master before the turn started
+		if (SUreplacementMapping_Reverse == nil) then SUreplacementMapping_Reverse = {}; end
 		local strReverseSearchGUID = SUreplacementMapping_Reverse [modDataContent [3]];
 
 		if (strReverseSearchGUID == nil) then
