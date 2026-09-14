@@ -27,8 +27,9 @@ function Server_StartGame (game, standing)
 				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Behemoth", "Behemoth_clearback.png", 200, 200/4, nil, nil, 0, 0, 175, -99000, true, true, true, true, false, "Behemoth", true);
 			elseif (v.OwnerPlayerID > 1) then --all other players (but not Neutral territories)
 				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Tank", "Tank.png", 10, 10, nil, nil, 0, 10, nil, 3415, true, true, true, true, false, "Tank", true);
+				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Tank", "Tank.png", 10, 10, nil, nil, 0, nil, 10, 3415, true, true, true, true, false, "Tank", true);
 				-- build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Phantom", "phantom_clearback.png", 0, 0, nil, nil, 0, 0, 100, 9500, true, true, true, true, false, "Phantom", true);
-				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Behemoth", "Behemoth_clearback.png", 265, 265/4, nil, nil, 0, 0, 265, -99000, true, true, true, true, false, "Behemoth", true);
+				build_specialUnit_StartGame (game, standing, terrID, v.OwnerPlayerID, "Behemoth", "Behemoth_clearback.png", 265, 265/4, nil, nil, 0, nil, 265, -99000, true, true, true, true, false, "Behemoth", true);
 			end
 		end
 	end
@@ -46,6 +47,7 @@ function build_specialUnit_StartGame (game, standing, targetTerritoryID, playerI
 	if (DefensePower ~= nil) then builder.DefensePower = DefensePower; else builder.DefensePower = 0; end
 	if (DefensePowerPercentage ~= nil) then builder.DefensePowerPercentage = DefensePowerPercentage; else --[[builder.DefensePowerPercentage = 0;]] end
 	if (DamageToKill ~= nil) then builder.DamageToKill = DamageToKill; else builder.DamageToKill = 0; end
+	if (DamageToKill ~= nil and Health == nil) then builder.TextOverHeadOpt = tostring (DamageToKill).."!"; end
 	if (DamageAbsorbedWhenAttacked ~= nil) then builder.DamageAbsorbedWhenAttacked = DamageAbsorbedWhenAttacked; --[[else builder.DamageAbsorbedWhenAttacked = 0;]] end
 	if (Health ~= nil) then builder.Health = Health; else builder.Health = nil; end
 	if (CombatOrder ~= nil) then builder.CombatOrder = CombatOrder; else builder.CombatOrder = 0; end
