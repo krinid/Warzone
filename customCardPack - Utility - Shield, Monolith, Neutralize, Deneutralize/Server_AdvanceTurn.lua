@@ -521,6 +521,14 @@ function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOr
 	-- 	addNewOrder (WL.GameOrderCustom.Create (intSomePlayerID, "@@WILDFIRE_BURN2@@", "@@WILDFIRE_BURN2@@", nil, WL.TurnPhase.EmergencyBlockadeCards)); --add order to invoke wildifre burning during the EB card play phase
 	-- elseif (order.proxyType == "GameOrderCustom" and order.Payload == "@@WILDFIRE_BURN2@@") then
 	-- 	process_Wildfires_for_turn (game, addNewOrder); --apply burning damage to territories impacted by Wildfire and spread to neighbours
+	elseif (order.proxyType == "GameOrderCustom" and startsWith (order.Payload, "Nuke|Invoke|")) then
+		local modDataContent = split (order.Payload, "|"); --"Nuke|Invoke|targetTerrOwnerPlayerID|invokingPlayerID|targetTerrID"
+		print ("[NUKE] invoked by other mod"); --=="..order.ModData.."::");
+		local intTargetPlayerOwnerID = tonumber (modDataContent[3]); --the player getting nuked
+		local intInvokingPlayerID = tonumber (modDataContent[4]); --the player invoking the nuke
+		local intTargetTerritoryID = tonumber (modDataContent[5]); --the territory being nuked
+		execute_Nuke_operation (game, order, addNewOrder, intTargetTerritoryID, intInvokingPlayerID);
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this inter-mod trigger order, just display the actual nuke order
 	end
 end
 
@@ -532,6 +540,7 @@ function process_game_orders_RegularCards (game, gameOrder, result, skip, addOrd
 	--also only process if Shield module is active (or if current game predates ActiveModule)
 	if (gameOrder.proxyType == 'GameOrderPlayCardBomb' and territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[gameOrder.TargetTerritoryID]) and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Shield == true)) then
 		--there is no way to nullify the damage of the existing Bomb Card order, so must skip that order, create a new order that mimics it but does no damage
+
 		--New order moves the camera, shows the "Bomb" annotation, consumes the Bomb card, but the Shield protects the territory
 
 		local event = WL.GameOrderEvent.Create (gameOrder.PlayerID, getPlayerName (game, gameOrder.PlayerID).. " bombs ".. game.Map.Territories[gameOrder.TargetTerritoryID].Name .. " (protected by Shield)", {}, {});
@@ -589,7 +598,8 @@ function process_game_orders_RegularCards (game, gameOrder, result, skip, addOrd
 				strAirliftSkipOrder_Message=strAirliftSkipOrder_Message..". Original order was an ".. strCardType .." from "..getTerritoryName (FROMterritoryID, game).." to "..getTerritoryName(TOterritoryID, game);
 				print ("[".. strCardType .."/QUICKSAND] skipOrder - playerID="..gameOrder.PlayerID.. "::from="..FROMterritoryID .."/"..getTerritoryName (FROMterritoryID, game).."::, to="..TOterritoryID .."/"..getTerritoryName(TOterritoryID, game).."::"..strAirliftSkipOrder_Message.."::");
 				addOrder (WL.GameOrderEvent.Create(gameOrder.PlayerID, strAirliftSkipOrder_Message, {}, {},{}), false);
-				skip (WL.ModOrderControl.SkipAndSupressSkippedMessage); --suppress the meaningless/detailless 'Mod skipped order' message, since the above message provides the details
+				-- skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+				--can't skip this b/c else the Nuke operation gets canceled, hmmm
 			end
 		end
 
@@ -632,7 +642,7 @@ function process_game_orders_CustomCards (game, gameOrder, result, skip, addOrde
 
 		print ("[S_AT_O] cardType=="..tostring (strCardTypeBeingPlayed).."::cardOrderContent=="..tostring(cardOrderContentDetails));
 		if (strCardTypeBeingPlayed == "Nuke" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Nuke == true)) then
-			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
+			execute_Nuke_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails), gameOrder.PlayerID);
 		elseif (strCardTypeBeingPlayed == "Isolation" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Isolation == true)) then
 			execute_Isolation_operation (game, gameOrder, addOrder, tonumber(cardOrderContentDetails));
 		elseif (strCardTypeBeingPlayed == "Pestilence" and (Mod.Settings.ActiveModules == nil or Mod.Settings.ActiveModules.Pestilence == true)) then
@@ -2649,19 +2659,24 @@ function process_Wildfires_for_turn (game, addOrder)
 	Mod.PublicGameData = publicGameData;
 end
 
-function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
+function execute_Nuke_operation (game, order, addOrder, targetTerritoryID, intNukeInvokerPlayerID)
 	local modifiedTerritories = {}; --create table of modified territories to pass back to WZ to update the territories and associate with the order
 	local impactedTerritory;
 	--local targetTerritoryID = tonumber(split(order.ModData,'|')[2]);
-	local targetTerritory;
-	local targetTerritoryName = game.Map.Territories[targetTerritoryID].Name;
+	-- local targetTerritory;
+	local targetTerritoryName = game.Map.Territories [targetTerritoryID].Name;
+	-- local intNukeInvokerPlayerID = order.PlayerID;
+	local strNukeOrderMessage = toPlayerName (intNukeInvokerPlayerID, game) ..' nuked ' .. game.Map.Territories [targetTerritoryID].Name;
+
+	--if the order is a custom game order and the Message property is specified, this is a Nuke invocation from another mod (eg: DNS trigger) - use the Message as-is as the display text for this Nuke order
+	if (order.proxyType == "GameOrderCustom" and order.Message ~= nil and order.Message ~= "") then strNukeOrderMessage = order.Message; end
 
 	--print ("[newstyle]EXECUTE NUKE on "..targetTerritoryName.."//"..targetTerritoryID.."::");--" blastRadius=="..Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo.."::");
 	print ("[EXECUTE NUKE] on "..targetTerritoryName.."//"..targetTerritoryID..":: blastRadius=="..Mod.Settings.NukeCardNumLevelsConnectedTerritoriesToSpreadTo.."::");
 	print ("[EXECUTE NUKE] maindam%=="..Mod.Settings.NukeCardMainTerritoryDamage..", maindamFix=="..Mod.Settings.NukeCardMainTerritoryFixedDamage..", conndam%=="..Mod.Settings.NukeCardConnectedTerritoryDamage.. ", conndamFix="..Mod.Settings.NukeCardConnectedTerritoryFixedDamage..", connTerrSpreadDelta==".. Mod.Settings.NukeCardConnectedTerritoriesSpreadDamageDelta .."::");
 
 	--apply damage to main territory
-	if (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID ~= order.PlayerID or Mod.Settings.NukeFriendlyfire == true) then
+	if (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID ~= intNukeInvokerPlayerID or Mod.Settings.NukeFriendlyfire == true) then
 		print ("NUKE PRE  main territory="..targetTerritoryName.."//"..targetTerritoryID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies.."::");
 		impactedTerritory = WL.TerritoryModification.Create(targetTerritoryID); --create territory object
 		local intDamageToEpicenter = math.floor (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].NumArmies.NumArmies * (-1 * (Mod.Settings.NukeCardMainTerritoryDamage / 100)) -Mod.Settings.NukeCardMainTerritoryFixedDamage);
@@ -2729,7 +2744,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 							print ("","","__apply damage [not nuked yet]");
 							nuke_territoriesAlreadyNuked [conn.ID] = true;        --add to list so only gets nuked this one time
 							nuke_territoriesInNextSpreadPhase [conn.ID] = true;   --add to list to loop through next cycle to nuke connected territories
-							if (game.ServerGame.LatestTurnStanding.Territories[conn.ID].OwnerPlayerID ~= order.PlayerID or Mod.Settings.NukeFriendlyfire == true) then
+							if (game.ServerGame.LatestTurnStanding.Territories[conn.ID].OwnerPlayerID ~= intNukeInvokerPlayerID or Mod.Settings.NukeFriendlyfire == true) then
 								print ("","","","NUKE PRE  conn territory="..game.Map.Territories[conn.ID].Name.."//"..conn.ID.."::".."armies="..game.ServerGame.LatestTurnStanding.Territories[conn.ID].NumArmies.NumArmies.."::");
 								impactedTerritory = nil;
 								impactedTerritory = WL.TerritoryModification.Create(conn.ID);
@@ -2782,14 +2797,13 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 	end
 	print ("#territories impacted=="..tablelength(modifiedTerritories)..", cycles complete="..cycleCount);
 	--printObjectDetails (order, "gameOrder");
-	print ("playerID=="..order.PlayerID	.."::playerName=="..toPlayerName(order.PlayerID, game));
+	print ("playerID=="..intNukeInvokerPlayerID	.."::playerName=="..toPlayerName(intNukeInvokerPlayerID, game));
 	--create a table of WL.GameOrderEvent.Create (...) or WL.GameOrderEvent.Create (...) objects, then pass this to addOrder (table, boolean) -- 2nd param is an optional boolean, if "true" then this order you're getting gets skipped if the gameOrder ends up being skipped (perhaps by something outside of your mod, by WZ iself, another mod, etc)
 
 		--problem 1 --- check for {} empty next cycle ... for high territory spread but no territories left to spread to
 		--problem 2 --- full reduction of damageFactor goes negative and heals
 
-	local strNukeOrderMessage = toPlayerName(order.PlayerID, game) ..' nuked ' .. game.Map.Territories[targetTerritoryID].Name;
-	local event = WL.GameOrderEvent.Create(order.PlayerID, strNukeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
+	local event = WL.GameOrderEvent.Create(intNukeInvokerPlayerID, strNukeOrderMessage, {}, modifiedTerritories); -- create Event object to send back to addOrder function parameter
 	-- event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY, game.Map.Territories[targetTerritoryID].MiddlePointX, game.Map.Territories[targetTerritoryID].MiddlePointY);
     event.JumpToActionSpotOpt = createJumpToLocationObject (game, targetTerritoryID);
 	annotations [targetTerritoryID] = WL.TerritoryAnnotation.Create ("Nuke", 8, getColourInteger (175, 0, 0)); --overwrite the annotation done above (".") for the Epicenter
@@ -2803,7 +2817,7 @@ function execute_Nuke_operation(game, order, addOrder, targetTerritoryID)
 						--[[ 
 						local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
 						terrMod.AddSpecialUnits = {builder.Build()};
-						addNewOrder(WL.GameOrderEvent.Create(order.PlayerID, 'Purchased a tank', {}, {terrMod}));]]
+						addNewOrder(WL.GameOrderEvent.Create(intNukeInvokerPlayerID, 'Purchased a tank', {}, {terrMod}));]]
 end
 
 function CardBlock_processEndOfTurn(game, addOrder)

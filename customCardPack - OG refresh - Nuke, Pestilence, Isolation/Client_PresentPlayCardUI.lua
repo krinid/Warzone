@@ -560,14 +560,16 @@ function play_Deneutralize_card (game, cardInstance, playCard)
 			if (TargetTerritoryID == nil) then
 				UI.Alert ("No territory selected. Please select a territory.");
 				return;
-			elseif (game.LatestStanding.Territories[TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
-				UI.Alert ("The selected territory is not neutral. Select a different territory that is neutral.");
-				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); --bring up the territory select screen again
+			elseif (game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
+				
+				UI.Alert ("You must select a neutral territory");
+				TargetTerritoryClicked (strDeneutralize_TerritorySelectText); --bring up the territory select screen again
+
 				return;
 			elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
 				UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.DeneutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
 				game.HighlightTerritories (arrValidTerrs);
-				TargetTerritoryClicked(strDeneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
+				TargetTerritoryClicked (strDeneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
 				return;
 			end
 

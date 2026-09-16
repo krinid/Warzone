@@ -81,6 +81,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
 		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () create_DebugWindow (); displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
 		debugButtonTrimContent = UI.CreateButton (debugPanel).SetText ("Trim debug content [last trim @ " ..tostring(Mod.PublicGameData.Debug.OutputDataLastRead).. "]").SetOnClick (function () game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=Mod.PublicGameData.Debug.OutputDataCounter}, function () end); end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
+		buttonNukeTesting = UI.CreateButton (debugPanel).SetText ("Add Nuke Invoke order").SetOnClick (Nuke_invoke_Test);
 	end
 
 	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
@@ -181,6 +182,21 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	-- print ("DIPLO 1 k " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 1, 1058239)));
 	-- print ("DIPLO 2 1 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 1)));
 	-- print ("DIPLO 2 3 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 3)));
+end
+
+function Nuke_invoke_Test ()
+	local order = WL.GameOrderCustom.Create (Game.Us.ID, "Nuke invoke test", "Nuke|Invoke|ignored|" ..Game.Us.ID.. "|".. Game.Map.Territories[1].ID);
+	local Orders = Game.Orders;
+	table.insert (Orders, order);
+	Game.Orders = Orders;
+
+	-- elseif (order.proxyType == "GameOrderCustom" and startsWith (order.Payload, "Nuke|Invoke|")) then
+	-- 	local modDataContent = split (order.Payload, "|"); --"Nuke|Invoke|targetTerrOwnerPlayerID|invokingPlayerID|targetTerrID"
+	-- 	print ("[NUKE] invoked by other mod"); --=="..order.ModData.."::");
+	-- 	local intTargetPlayerOwnerID = tonumber (modDataContent[3]); --the player getting nuked
+	-- 	local intInvokingPlayerID = tonumber (modDataContent[4]); --the player invoking the nuke
+	-- 	local intTargetTerritoryID = tonumber (modDataContent[5]); --the territory being nuked
+	-- 	execute_Nuke_operation (game, order, addNewOrder, intTargetTerritoryID, intInvokingPlayerID);
 end
 
 --send message to Server hook to toggle debug mode and save result in Mod.PublicGameData
