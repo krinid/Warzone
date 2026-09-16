@@ -528,7 +528,8 @@ function process_game_orders_SpecialOrders (game, order, orderResult, skipThisOr
 		local intInvokingPlayerID = tonumber (modDataContent[4]); --the player invoking the nuke
 		local intTargetTerritoryID = tonumber (modDataContent[5]); --the territory being nuked
 		execute_Nuke_operation (game, order, addNewOrder, intTargetTerritoryID, intInvokingPlayerID);
-		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this inter-mod trigger order, just display the actual nuke order
+		-- skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip this inter-mod trigger order, just display the actual nuke order
+		--can't skip this order, else the Nuke itself gets skipped also
 	end
 end
 
