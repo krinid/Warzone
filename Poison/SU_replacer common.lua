@@ -37,7 +37,7 @@ function process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNe
 		Mod.PrivateGameData = pgd;
 	elseif (Mod.PrivateGameData ~= nil and Mod.PrivateGameData.MasterMod == true and order.proxyType == "GameOrderEvent" and startsWith (order.Message, "SU_replacer_mod|SU_replacement|") == true) then
 		--this is an order from a secondary mod containing the mapping for a replaced Old SU GUID to a New SU GUID - save the mapping in the private game data within this mod
-		print ("[SU Replacer] [Master Mod] [Receive Mapping] " ..tostring (order.Message));
+		print ("[SU Replacer] [MasterMod] [Receive Mapping] " ..tostring (order.Message));
 		local modDataContent = split (order.Message, "|");
 		-- local SUreplacementMapping = Mod.PrivateGameData.SUreplacementMapping or {}; --initialize to {} is not set yet
 		-- local SUreplacementMapping_Reverse = Mod.PrivateGameData.SUreplacementMapping_Reverse or {}; --initialize to {} is not set yet
@@ -132,12 +132,20 @@ function swap_out_replaced_SUs (game, order, SUreplacementMapping)
 	for _,SU in pairs (Armies.SpecialUnits) do
 		local newSUguid = SUreplacementMapping [SU.ID]; --will result in nil if the current SU wasn't replaced with a new SU
 		if (newSUguid ~= nil) then --SU was replaced with a new SU, need to swap out the old for the new and resubmit the order
-			print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name);
+			-- print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name);
 			local newSU = getSpecialUnitWithinArmies (game.ServerGame.LatestTurnStanding.Territories [intFromTerritoryID].NumArmies, newSUguid);
-			print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. "/" ..tostring (newSU).. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name);
-			table.insert (newSUlist, newSU);
-			print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSU.ID.."/"..newSU.Name);
-			boolSwapWasMade = true; --need to resubmit the order with the old SUs replaced with the new SUs
+			-- print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. "/" ..tostring (newSU).. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name);
+			if (newSU ~= nil) then
+				table.insert (newSUlist, newSU);
+				print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. "/" ..tostring (newSU).."/"..newSU.Name.. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name);
+				-- print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSU.ID.."/"..newSU.Name);
+				boolSwapWasMade = true; --need to resubmit the order with the old SUs replaced with the new SUs
+			else
+				--new SU was not found on the source territory; it's likely that the SU was killed/destroyed entirely and no longer exists
+				--ie: SU was damaged earlier in the turn and the replaced with a new SU (new GUID) but then killed through normal attacks not related to SU Replacer damaging abilities
+				print ("[SU REPLACER] [ORDER CHECK] Old GUID found " .. SU.ID..", replace with New SU " ..newSUguid.. "/" ..tostring (newSU).. " on terr " ..intFromTerritoryID.. "/" ..game.Map.Territories [intFromTerritoryID].Name ..
+					"\n  -----> New SU not found; it likely died outside of SU replacer damaging operations");
+			end
 		else
 			--if current SU in the loop iteration isn't a replaced SU, just add it back into the Armies structure as-is
 			table.insert (newSUlist, SU);
