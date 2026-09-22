@@ -1,0 +1,1 @@
+This Special Unit generates armies on the territory it holds at the end of the turn, Amount of armies generated at specified by the host

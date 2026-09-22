@@ -32,9 +32,9 @@ function filterDeadPlayers(game, array)
 	return array;
 end
 
-function valueInTable(t, v)
-	for _, v2 in pairs(t) do
-		if v == v2 then return true; end
+function valueInTable (t, v)
+	for _, v2 in pairs (t) do
+		if (v == v2) then return true; end
 	end
 	return false;
 end
@@ -1176,13 +1176,18 @@ function getTerritoriesWithinDistanceFromAPlayerBelongingToAnotherPlayer (game, 
 		intDepth = intDepth + 1;
 
 		for _, terrID in ipairs (arrTerrListToProcess) do
+			if ((targetPlayerID == -1) or (targetPlayerID >= 0 and game.LatestStanding.Territories [terrID].OwnerPlayerID == targetPlayerID) or (targetPlayerID == -2 and game.LatestStanding.Territories [terrID].OwnerPlayerID ~= WL.PlayerID.Neutral)) then
+				if (valueInTable (arrTerrResults, terrID) == false) then table.insert (arrTerrResults, terrID); end
+			end
+
 			for neighbourTerrID, _ in pairs (game.Map.Territories [terrID].ConnectedTo) do
 				if not arrTerrProcessed [neighbourTerrID] then
 					arrTerrProcessed [neighbourTerrID] = true;
 
 					-- ownership filter
+					print ("[CHECK__] targetplayerID " ..tostring (targetPlayerID).. ", terr " ..neighbourTerrID.. "/"..getTerritoryName  (neighbourTerrID, game).. ", owner " .. tostring (game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID).. ", check " ..tostring ((targetPlayerID == -2 and game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID ~= WL.PlayerID.Neutral)));
 					if ((targetPlayerID == -1) or (targetPlayerID >= 0 and game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID == targetPlayerID) or (targetPlayerID == -2 and game.LatestStanding.Territories [neighbourTerrID].OwnerPlayerID ~= WL.PlayerID.Neutral)) then
-						table.insert (arrTerrResults, neighbourTerrID);
+						if (valueInTable (arrTerrResults, neighbourTerrID) == false) then table.insert (arrTerrResults, neighbourTerrID); end
 					end
 
 					table.insert (arrNextTerrList, neighbourTerrID);

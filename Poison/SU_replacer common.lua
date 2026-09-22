@@ -37,6 +37,7 @@ function process_SU_replacer_MasterMod_orders (game, order, skipThisOrder, addNe
 		Mod.PrivateGameData = pgd;
 	elseif (Mod.PrivateGameData ~= nil and Mod.PrivateGameData.MasterMod == true and order.proxyType == "GameOrderEvent" and startsWith (order.Message, "SU_replacer_mod|SU_replacement|") == true) then
 		--this is an order from a secondary mod containing the mapping for a replaced Old SU GUID to a New SU GUID - save the mapping in the private game data within this mod
+		print ("[SU Replacer] [Master Mod] [Receive Mapping] " ..tostring (order.Message));
 		local modDataContent = split (order.Message, "|");
 		-- local SUreplacementMapping = Mod.PrivateGameData.SUreplacementMapping or {}; --initialize to {} is not set yet
 		-- local SUreplacementMapping_Reverse = Mod.PrivateGameData.SUreplacementMapping_Reverse or {}; --initialize to {} is not set yet

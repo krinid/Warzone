@@ -82,6 +82,8 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		debugButtonShowContent = UI.CreateButton (debugPanel).SetText ("Show debug content [counter @ " ..tostring(Mod.PublicGameData.Debug.OutputDataCounter).. "]").SetOnClick (function () create_DebugWindow (); displayDebugInfoFromServer (game); end); --display (in Mod Log output window) debug info stored by server hooks
 		debugButtonTrimContent = UI.CreateButton (debugPanel).SetText ("Trim debug content [last trim @ " ..tostring(Mod.PublicGameData.Debug.OutputDataLastRead).. "]").SetOnClick (function () game.SendGameCustomMessage ("[getting debug info from server]", {action="trimdebugdata", lastReadKey=Mod.PublicGameData.Debug.OutputDataCounter}, function () end); end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 		buttonNukeTesting = UI.CreateButton (debugPanel).SetText ("Add Nuke Invoke order").SetOnClick (Nuke_invoke_Test);
+		-- UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID() fake");
+		UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID()").SetOnClick (function () UI.Alert ("RNG test: "..tostring (math.random(1,1000000000)).."\nNewGUID() test: "..tostring (NewGuid()).."\nUUID() test: " ..tostring (uuid())); end);
 	end
 
 	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods

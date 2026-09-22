@@ -3,7 +3,7 @@ function Client_GameCommit (game, skipCommit)
 
 	local boolSameOrderExistsAlready = false; --indicates whether an order for A->B already exists in the order list; if so, assume it's legit and skip this order
 
-	--if game state isn't "Playing" then skip this; it is likely 'DistributingTerritories', in which case trying to a custom order will fail b/c only Pick orders are accepted here
+	--if game state isn't "Playing" then skip this; it is likely 'DistributingTerritories', in which case trying to submit a custom order will fail b/c only Pick orders are accepted here
 	if (game.Game.State ~= WL.GameState.Playing) then return; end
 
 	--check to see if the order exists already; only add it if it doesn't already exist; this can happen if a user commits, uncommits, recommits, etc

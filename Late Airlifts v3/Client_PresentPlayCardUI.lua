@@ -1,43 +1,36 @@
---Called when the player attempts to play your card.  You can call playCard directly if no UI is needed, or you can call game.CreateDialog to present the player with options.
-function Client_PresentPlayCardUI(game, cardInstance, playCard, closeCardsDialog)
+--Called when the player attempts to play your card. You can call playCard directly if no UI is needed, or you can call game. CreateDialog to present the player with options.
+function Client_PresentPlayCardUI (game, cardInstance, playCard, closeCardsDialog)
     Game = game;
 
     --If this dialog is already open, close the previous one. This prevents two copies of it from being open at once which can cause errors due to only saving one instance of TargetTerritoryBtn
-    if (Close ~= nil) then
-        Close();
-    end
+    if (Close ~= nil) then Close(); end
 
-	if (WL.IsVersionOrHigher("5.34")) then --closeCardsDialog callback did not exist prior to 5.34
-        closeCardsDialog();
-    end
+    closeCardsDialog();
 
     --If your mod has multiple cards, you can look at game.Settings.Cards[cardInstance.CardID].Name to see which one was played
     game.CreateDialog(function(rootParent, setMaxSize, setScrollable, game, close)
         Close = close;
         setMaxSize(400, 400);
-        local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1); --set flexible width so things don't jump around while we change InstructionLabel
+        local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1);
 
-        TargetTerritoryBtn = UI.CreateButton(vert).SetText("Select Territory").SetOnClick(TargetTerritoryClicked).SetColor ("#00FFFF");
+        TargetTerritoryBtn = UI.CreateButton (vert).SetText ("Select Territory").SetOnClick (TargetTerritoryClicked).SetColor ("#00FFFF");
         TargetTerritoryInstructionLabel = UI.CreateLabel(vert).SetText("");
 
-        UI.CreateButton(vert).SetText("Play Card").SetColor ("#008000").SetOnClick(function()
+        UI.CreateButton (vert).SetText ("Play Card").SetColor ("#008000").SetOnClick (function()
             if (TargetTerritoryID == nil) then
-                TargetTerritoryInstructionLabel.SetText("You must select a territory first");
+                TargetTerritoryInstructionLabel.SetText ("You must select a territory first");
                 return;
             end
-            local td = game.Map.Territories[TargetTerritoryID];
+            local td = game.Map.Territories [TargetTerritoryID];
 
             local annotations = nil;
             local jumpToSpot = nil;
 
-            if (WL.IsVersionOrHigher("5.34.1")) then
-                annotations = { [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
-                jumpToSpot = WL.RectangleVM.Create(td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
-            end
-
+            annotations = {}; --{ [TargetTerritoryID] = WL.TerritoryAnnotation.Create("Beacon") };
+			jumpToSpot = WL.RectangleVM.Create (td.MiddlePointX, td.MiddlePointY, td.MiddlePointX, td.MiddlePointY);
 
             print ('Create a Beacon on ' .. TargetTerritoryName.. "; Beacon|" .. TargetTerritoryID); -- .."/" .. getTerritoryName (TargetTerritoryID, game));
-            if (playCard ("Create a Beacon on " .. TargetTerritoryName, "Beacon|" .. TargetTerritoryID, WL.TurnPhase.Deploys, annotations, jumpToSpot)) then
+            if (playCard ("Airlift units X to terr Z " .. TargetTerritoryName, "LateAirlift|" .. TargetTerritoryID, WL.TurnPhase.ReceiveCards, annotations, jumpToSpot, "Late Airlift_order_40x40")) then
                 close();
             end
 

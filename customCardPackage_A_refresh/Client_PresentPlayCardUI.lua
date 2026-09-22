@@ -618,6 +618,9 @@ function play_Neutralize_card (game, cardInstance, playCard)
 						return;
 					elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
 						UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.NeutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
+						print ("[NEUT] range " ..tostring (Mod.Settings.NeutralizeRange or 4000));
+
+						for k,v in pairs (arrValidTerrs) do print ("[TERR TABLE] " .. k..", " .. tostring (v)); end
 						game.HighlightTerritories (arrValidTerrs);
 						TargetTerritoryClicked(strNneutralize_TerritorySelectText); -- re-invoke the button click event for the 'Select Territory' button
 						return;
