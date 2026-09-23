@@ -50,7 +50,7 @@ function scuttle_Castle_dialog ()
 	buttonAddOrder = UI.CreateButton(horz).SetInteractable(false).SetText("Scuttle Castle").SetOnClick(ScuttleCastleButtonClicked).SetColor (getColourCode ("button green"));
 	buttonCancelScuttle = UI.CreateButton(horz).SetInteractable(true).SetText("Cancel Scuttle").SetColor (getColourCode ("button red")).SetOnClick(function () createPurchaseCastleUIcomponents (vertCastleButtons); displayCastleStats (vertCastleStats); end); --cancel order --> reset UI to orig state --> clear Select Territory / # Armies to move inside / Purchase controls and recreate Purchase Castle button, revert to initial Commerce dialog state (so can buy more Castles, other items, etc)
 
-	UI.CreateLabel(vertPurchaseDialog).SetText("**Armies inside castle will exit before scuttled").SetColor (getColourCode ("subheading"));
+	UI.CreateLabel(vertPurchaseDialog).SetText("**Armies inside castle will exit before scuttle; scuttle occurs during the 'Blockade cards' phase [after Attack/Transfers])").SetColor (getColourCode ("subheading"));
 	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
 	UI.CreateEmpty(vertPurchaseDialog);
 	UI.CreateLabel(vertPurchaseDialog).SetText(" \n");
@@ -80,12 +80,12 @@ function enter_exit_Castle_dialog ()
 	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("# Armies to enter the Castle: ").SetColor (getColourCode("highlight"));
 	NumArmiesToEnterCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
-	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies on territory outside the castle to move inside the castle; Special Units cannot enter castles)").SetColor (getColourCode ("subheading"));
+	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies on territory outside the castle to move inside the castle; Special Units cannot enter castles; armies enter the castle during the 'Emergency Blockade cards' phase [after Bombs, before Attack/Transfers])").SetColor (getColourCode ("subheading"));
 
 	horz = UI.CreateHorizontalLayoutGroup(vertPurchaseDialog).SetFlexibleWidth(1);
 	UI.CreateLabel(horz).SetText("# Armies to exit the Castle: ").SetColor (getColourCode("highlight"));
 	NumArmiesToExitCastle = UI.CreateNumberInputField(horz).SetSliderMinValue(0).SetSliderMaxValue(1000).SetValue(0).SetPreferredWidth(100);
-	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies inside the castle to exit the castle to the territory)").SetColor (getColourCode ("subheading"));
+	UI.CreateLabel(vertPurchaseDialog).SetText("   (armies inside the castle to exit the castle back to the territory; armies exit the castle during the 'Blockade cards' phase [after Attack/Transfers])").SetColor (getColourCode ("subheading"));
 
 	SelectTerritoryBtn_CastleArmyMovements.SetInteractable (false);
 	SelectTerritoryClicked_CastleArmyMovements ("Select a castle to allow armies to Enter/Exit"); --start immediately in selection mode, no reason to require player to click the button

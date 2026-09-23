@@ -1,6 +1,6 @@
-Plant a time bomb on any territory within a host configurable range from your territories which explodes after a set number of turns. Enemies can see the time bomb.
+Adds the 'Time Bomb' card which when played plants a time bomb on any territory within a host configurable range from your territories which explodes after a set number of turns. Enemies can see the time bomb.
 
-Time Bombs explode at the start of the turn when the timer shows 00:00.
+Time Bomb timers reduce by 1 at the end of each turn, and when the timer reaches 00:00, the Time Bomb explodes at the start of the following turn.
 
 Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)

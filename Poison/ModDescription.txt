@@ -1,4 +1,4 @@
-Throw poison on a territory that lasts for some number of turns. Poison can cause fixed and % damage to both armies and Special Units.
+Adds a 'Poison' card which when played throws poison on a territory that lasts for a host configurable number of turns. Poison can cause fixed and % damage to both armies and Special Units, and can also destroy cities.
 
 For Special Units with Health, their Health will be reduced by the appropriate amount.
 

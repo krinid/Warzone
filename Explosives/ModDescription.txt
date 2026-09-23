@@ -1,4 +1,4 @@
-Cause an explosion to an enemy or neutral territory that you border. Impact occurs before deployments.
+Adds the 'Explosion' card, which you play to target an enemy or neutral territory that you border to cause an explosion. Impact occurs before deployments.
 
 Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)

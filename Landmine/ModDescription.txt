@@ -1,4 +1,4 @@
-Plant a landmine on any territory owned by you, a teammate (if in a team game) or a neutral territory within a host configurable range from your territories which explodes when the territory is captured. Enemies cannot see the landmine. You will be provided a reminder of the landmine via an Annotation at the end of each turn while a landmine is still deployed. Landmines do not expire, they remain on the map until triggered.
+Adds a 'Landmine' card which when played plants a landmine on any territory owned by you, a teammate (if in a team game) or a neutral territory within a host configurable range from your territories which explodes when the territory is captured. Enemies cannot see the landmine. You will be provided a reminder of the landmine via an Annotation at the end of each turn while a landmine is still deployed. Landmines do not expire, they remain on the map until triggered.
 
 Damage can be assigned independently for armies and Special Units as follows:
 (A) % damage dealt (0% - 100%)
