@@ -7,30 +7,30 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 		return;
 	end
 
-	Game = game; --make it globally accessible
-	Close = close;
 	setMaxSize (500, 500);
+	Game = game; --make these variables globally accessible
+	Close = close;
 	root = rootParent;
-	mainmenu = UI.CreateButton (root).SetText ("Main Menu").SetOnClick (ShowMenu).SetColor ("#00FFFF");
-	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
-	mainUI = vert;
 
 	if (game.Us == nil) then
-		vert = UI.CreateVerticalLayoutGroup (rootParent);
-		UI.CreateLabel (vert).SetText("As you are not participating in this game, you cannot use the Diplomacy Mod");
+		UI.CreateLabel (rootParent).SetText ("You are not participating in this game, Diplo Teams functions are not available to you");
 		return;
 	elseif (game.Game.PlayingPlayers [game.Us.ID] == nil) then
-		UI.CreateLabel (vert).SetText("As you have been eliminated, diplo functions are not available to you");
+		UI.CreateLabel (rootParent).SetText ("You have been eliminated, Diplo Teams functions are not available to you");
 		return;
 	elseif (Mod.PublicGameData.War == nil) then
-		UI.CreateLabel (vert).SetText ("Diplo functions are not available during distribution stage");
+		UI.CreateLabel (rootParent).SetText ("Diplo Teams functions are not available during distribution stage");
 		return;
 	end
 
+	mainmenu = UI.CreateButton (root).SetText ("Main Menu").SetOnClick (ShowMenu).SetColor ("#00FFFF");
+	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
+	mainUI = vert;
 	ShowMenu ();
 end
 
---Lists who's on a team with who right now.  Note that teams can change during the game, so we must ask the game rather than reading GamePlayer.Team, which is only the team they started on.
+--DEPRECATED - function not required, as Teams are visible in the 'Players' dialog, so no need to display them here; leaving the code here in case there is a future need for it
+--Lists who's on a team with who right now.  Note that teams can change during the game, so we must ask the game rather than reading GamePlayer.Team, which is only the team they started on
 function ShowTeams (vert, game)
 
 	local teams = {};
@@ -481,7 +481,7 @@ function ShowPeaceOffers (vert)
 	return (intOfferCount);
 end
 
-function AcceptDeclinePeaceOffer(data)
+function AcceptDeclinePeaceOffer (data)
 	local payload = {};
 	payload.Message = data.Message;
 	payload.TargetPlayerID = data.Spieler;
