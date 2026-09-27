@@ -115,6 +115,7 @@ function BuildProposeUI ()
 	if (GameHasCards (Game.Settings)) then
 		UI.CreateLabel (ProposeVert).SetText("• When you join a team, your cards become property of the team");
 		UI.CreateLabel (ProposeVert).SetText("• If you leave a team, you forfeit all cards and card pieces, they stay behind on the team with your old teammates");
+		UI.CreateLabel (ProposeVert).SetText("• If you are already in a team and join a new team (even if it just adding a new player), this results in you leaving your current team, you forfeit all cards and card pieces, then join the new team and bring no cards or pieces with you to the new team");
 	end
 
 	UI.CreateLabel(ProposeVert).SetText('\nChoose who to invite to form a Team Alliance. All members must accept for it to take effect');

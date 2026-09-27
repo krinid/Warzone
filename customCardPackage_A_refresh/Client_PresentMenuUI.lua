@@ -413,6 +413,8 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 	local strTerritoryWithSUsCountIdentifier = "!!Terr+SUs/---"; --identifier for territory count that have SUs on them in summary table
 	local strArmiesCountIdentifier = "!!Armies/---"; --identifier for army count in summary table
 	local strSUcountIdentifier = "!!SUs/---"; --identifier for SU count in summary table
+	local strAllTerrsIdentifier = "!!AllTerritories/---"; --identifier for table containing all territories (used for highlights/circling)
+	local strTerrsWithSUsIdentifier = "!!TerrsWithSUs/---"; --identifier for table containing all territories (used for highlights/circling)
 
 	UI.CreateEmpty (UIdisplay);
 	UI.CreateEmpty (UIdisplay);
@@ -424,12 +426,15 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 		local numSpecialsOnTerritory = 0;
 		if (unitSummary [terr.OwnerPlayerID]) == nil then
 			unitSummary [terr.OwnerPlayerID] = {};
+			unitSummary [terr.OwnerPlayerID][strAllTerrsIdentifier] = {};
+			unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier] = {};
 			unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] = 0;
 			unitSummary [terr.OwnerPlayerID][strTerritoryWithArmiesCountIdentifier] = 0;
 			unitSummary [terr.OwnerPlayerID][strTerritoryWithSUsCountIdentifier] = 0;
 			unitSummary [terr.OwnerPlayerID][strArmiesCountIdentifier] = 0;
 			unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] = 0;
 		end
+		unitSummary [terr.OwnerPlayerID][strAllTerrsIdentifier] [count (unitSummary [terr.OwnerPlayerID][strAllTerrsIdentifier]) + 1] = terr.ID;
 		unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] + 1; --increment territory count for this player in summary table
 		unitSummary [terr.OwnerPlayerID][strArmiesCountIdentifier] = unitSummary [terr.OwnerPlayerID][strTerritoryCountIdentifier] + terr.NumArmies.NumArmies; --increase army count for this player in summary table
 		unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] = unitSummary [terr.OwnerPlayerID][strSUcountIdentifier] + #terr.NumArmies.SpecialUnits; --increase SU count for this player in summary table
@@ -440,9 +445,12 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 			for _,specialUnit in pairs (terr.NumArmies.SpecialUnits) do
 				numSpecialsOnTerritory = numSpecialsOnTerritory + 1;
 				if (boolCurrentTerritoryHeaderDisplayed == false) then
+					local line = UI.CreateHorizontalLayoutGroup (UIdisplay).SetFlexibleWidth (1);
+					local whereButton = UI.CreateButton (line).SetText ("📍").SetColor (colors.Yellow).SetOnClick (function() Game.HighlightTerritories ({terr.ID}); Game.CreateLocatorCircle (Game.Map.Territories [terr.ID].MiddlePointX, Game.Map.Territories [terr.ID].MiddlePointY); end);
 					local intFROMnumArmiesPresent = (game.LatestStanding.Territories[terr.ID].NumArmies.NumArmies + getArmiesDeployedThisTurnSoFar (game, terr.ID)); --includes armies deployed this turn
 					local FROMfullAttackingForce = WL.Armies.Create (intFROMnumArmiesPresent, game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits);
-					UI.CreateLabel (UIdisplay).SetText ("\n["..terr.ID.. "/".. game.Map.Territories[terr.ID].Name..
+					-- UI.CreateLabel (line).SetText ("\n["..terr.ID.. "/".. game.Map.Territories[terr.ID].Name..
+					UI.CreateLabel (line).SetText ("\n[" ..game.Map.Territories[terr.ID].Name..
 					"] Attack Power "..FROMfullAttackingForce.AttackPower.. " [kills ".. math.floor (FROMfullAttackingForce.AttackPower * game.Settings.OffenseKillRate + 0.5).."]"..
 					", Defense Power "..FROMfullAttackingForce.DefensePower.. " [kills ".. math.floor (FROMfullAttackingForce.DefensePower * game.Settings.DefenseKillRate + 0.5).."]"..
 					", #Armies ".. intFROMnumArmiesPresent..", #Special Units ".. #game.LatestStanding.Territories[terr.ID].NumArmies.SpecialUnits).SetColor(getColourCode("subheading"));
@@ -455,7 +463,8 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 
 				-- local line = UI.CreateHorizontalLayoutGroup (UIdisplay).SetFlexibleWidth(1);
 				local strSUdetailsLineHeader = "<"..numSpecialsOnTerritory.."> "..strSUname;
-				local strSUdetailsLineFooter = " ["..specialUnit.proxyType.."], owner "..specialUnit.OwnerID.."/"..strSUownerName..", ID="..specialUnit.ID;
+				local strSUdetailsLineFooter = " ["..specialUnit.proxyType.."], owner '"..strSUownerName.."'";
+				-- local strSUdetailsLineFooter = " ["..specialUnit.proxyType.."], owner "..specialUnit.OwnerID.."/"..strSUownerName..", ID="..specialUnit.ID;
 				local strSUdetailsLineFull = strSUdetailsLineHeader..strSUdetailsLineFooter;
 				-- UI.CreateLabel (line).SetText (strSUdetailsLineHeader).SetColor ("#FFFFFF");
 				-- UI.CreateLabel (line).SetText (strSUdetailsLineFooter).SetColor (getColourCode("minor heading"));
@@ -494,15 +503,48 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 				end
 				if (unitSummary [terr.OwnerPlayerID][strSUname] == nil) then unitSummary [terr.OwnerPlayerID][strSUname] = 0; end
 				unitSummary [terr.OwnerPlayerID][strSUname] = unitSummary [terr.OwnerPlayerID][strSUname] + 1; --increment SU type count for this player in summary table
+				if (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] == nil) then unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] = {}; end
+				unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] [count (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname]) + 1] = terr.ID;
 			end
 		end
 	end
 
 	--display summary of SUs by player
 	for k,v in pairs (unitSummary) do
-		UI.CreateLabel (vertSUsummaryByPlayer).SetText ("Player " ..k.. "/".. toPlayerName (k, game).. ", #Terrs "..unitSummary [k][strTerritoryCountIdentifier]..", #Terrs with Armies "..unitSummary [k][strTerritoryWithArmiesCountIdentifier]..", #Terrs with SUs "..unitSummary [k][strTerritoryWithSUsCountIdentifier].. ", #Armies ".. unitSummary [k][strArmiesCountIdentifier].. ", #SUs ".. unitSummary [k][strSUcountIdentifier]).SetColor(getColourCode("subheading"));
+		-- print ("****" .. k,v);
+		local row = UI.CreateHorizontalLayoutGroup (vertSUsummaryByPlayer).SetFlexibleWidth (1);
+
+		-- 📍 button for ALL SU territories for this player
+		UI.CreateButton (row).SetText ("📍").SetColor (getColourCode("subheading")).SetOnClick (
+			function ()
+				Game.HighlightTerritories (unitSummary [k][strAllTerrsIdentifier]);
+				for _, terrID in pairs (unitSummary [k][strAllTerrsIdentifier]) do
+					local terr = Game.Map.Territories [terrID];
+					Game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+				end
+			end
+		);
+		-- UI.CreateLabel (row).SetText ("Player " ..k.. "/".. toPlayerName (k, game).. ", #Terrs "..unitSummary [k][strTerritoryCountIdentifier]..", #Terrs with Armies "..unitSummary [k][strTerritoryWithArmiesCountIdentifier]..", #Terrs with SUs "..unitSummary [k][strTerritoryWithSUsCountIdentifier].. ", #Armies ".. unitSummary [k][strArmiesCountIdentifier].. ", #SUs ".. unitSummary [k][strSUcountIdentifier]).SetColor(getColourCode("subheading"));
+		UI.CreateLabel (row).SetText ("Player '" ..toPlayerName (k, game).. "', #Terrs "..unitSummary [k][strTerritoryCountIdentifier]..", #Terrs with Armies "..unitSummary [k][strTerritoryWithArmiesCountIdentifier]..", #Terrs with SUs "..unitSummary [k][strTerritoryWithSUsCountIdentifier].. ", #Armies ".. unitSummary [k][strArmiesCountIdentifier].. ", #SUs ".. unitSummary [k][strSUcountIdentifier]).SetColor(getColourCode("subheading"));
 		for k2, v2 in pairs (v) do
-			if (string.sub (k2, 1, 2) ~= "!!") then UI.CreateLabel (vertSUsummaryByPlayer).SetText ("   "..k2.. ": " ..v2  .." unit".. plural(v2)); end --ignore the items that start with "!!" (these are aggregate summaries already displayed on the line with the player name)
+			--only process the content for elements that aren't the AllTerritories element
+			print (k,v,k2,v2);
+			if (v ~= strAllTerrsIdentifier and v ~= strTerrsWithSUsIdentifier) then
+				if (string.sub (k2, 1, 2) ~= "!!") then
+					local rowItem = UI.CreateHorizontalLayoutGroup (vertSUsummaryByPlayer).SetFlexibleWidth (1);
+					UI.CreateLabel (rowItem).SetText ("___").SetColor ("#000000");
+					UI.CreateButton (rowItem).SetText ("📍").SetColor (getColourCode("subheading")).SetOnClick (
+						function ()
+							Game.HighlightTerritories (unitSummary [k][strTerrsWithSUsIdentifier][k2]);
+							for _, terrID in pairs (unitSummary [k][strTerrsWithSUsIdentifier][k2]) do
+								local terr = Game.Map.Territories [terrID];
+								Game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+							end
+						end
+					);
+					UI.CreateLabel (rowItem).SetText (k2.. ": " ..v2  .." unit".. plural (v2));
+				end --ignore the items that start with "!!" (these are aggregate summaries already displayed on the line with the player name)
+			end
 		end
 		if (unitSummary [k][strSUcountIdentifier] == 0) then UI.CreateLabel (vertSUsummaryByPlayer).SetText ("   No SUs"); end
 	end
@@ -666,7 +708,6 @@ function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game
 	-- UnitInspector_TerritorySelectButton = UI.CreateButton (lineInspectTerrOrOpenNewWindow).SetText("Open a new window instance").SetColor(colors.Cyan).SetFlexibleWidth(1).SetOnClick(function () Game.CreateDialog (territoryInspectorWindowInstance); end);
 	UI.CreateButton (vert).SetText("Show combat order of visible Special Units").SetColor(colors.Orange).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
 	UI.CreateButton (vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() Game.CreateDialog (wholeMapInspectorPanel); end); --on button press, initiate comprehensive Unit Inspector, all SUs on all territories in 1 pane
-	-- UI.CreateButton (vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() showCombatOrder(nil, nil, nil); end);
 
 	UI.CreateLabel (vert).SetText("\nTo view territory state on prior turns, select 'Prior Turn'");
 	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239 or game.Us.ID == 114191)) then
@@ -908,271 +949,52 @@ function populateTerritoryInspectorContents (standing)
 	end
 end
 
-function DELME_pickUnitOfList(list)
-	CurrentDisplayRoot = TerritoryInspectorRoot;
-	UI.CreateLabel (CurrentDisplayRoot).SetText("\nSelect one of the Special Units to inspect:").SetFlexibleWidth(1).SetColor(colors.TextColor);
-
-	UI.CreateEmpty (CurrentDisplayRoot).SetPreferredHeight(5);
-	for _, sp in pairs(list) do
-		UI.CreateButton (CurrentDisplayRoot).SetText(getUnitName(sp)).SetFlexibleWidth(1).SetColor(getOwnerColor(sp)).SetOnClick(function() inspectUnit(sp, function() pickUnitOfList(list); end); end)
-	end
-end
-
-function DELME_inspectUnit_Window (rootParent, setMaxSize, setScrollable, game, close)
-	UnitInspector_UnitInfoRoot = rootParent;
-	setMaxSize(600, 600);
-	CurrentDisplayRoot = UnitInspector_UnitInfoRoot;
-end
-
-function DELME_inspectUnit(sp, callback)
-	Game.CreateDialog (inspectUnit_Window);
-
-	local line = UI.CreateHorizontalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth(1);
-	UI.CreateEmpty (line).SetFlexibleWidth(0.33);
-	UI.CreateEmpty (line).SetFlexibleWidth(0.33);
-	UI.CreateButton (line).SetText("Show Combat Order").SetColor(colors.Orange).SetOnClick(function() showCombatOrder(function() inspectUnit(sp, callback--[[, TerritoryInspectorRoot]]); end, sp); end);
-	UI.CreateEmpty (line).SetFlexibleWidth(0.33);
-	UI.CreateEmpty (CurrentDisplayRoot).SetPreferredHeight(5);
-
-	--strDisplayType = cboxColourful.GetIsChecked() and "colourful" or "plain";
-	local strDisplayType = "colourful";
-
-	if sp.proxyType == "CustomSpecialUnit" then
-		--inspectCustomUnit(sp, CurrentDisplayRoot);
-		displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, sp.ModID, getUnitDescription (sp));
-	else
-		--inspectNormalUnit(sp, CurrentDisplayRoot);
-		if sp.proxyType == "Commander" then
-			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, nil, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
-		elseif sp.proxyType == "Boss3" then
-			local strBossDescription = "This unit is in Stage "..tostring (sp.Stage).." of 3. ";
-			if (sp.Stage == 3) then strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will NOT split into 4 smaller bosses. This unit is in it's last stage";
-			else
-				strBossDescription = strBossDescription .. "When this unit is killed in an attack, it will split into 4 bosses with " .. sp.Power - 10 .. " health. These 4 bosses are randomly spawned at nearby territories, taking ownership of the territory unless it is already occupied by a commander, in which case it will choose another territory"
-			end
-			line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-			displaySpecialUnitProperties (CurrentDisplayRoot, strDisplayType, true, getPlayerName(Game, sp.OwnerID), "Boss", sp.Power, 1.0, sp.Power, 1.0, sp.Power, nil, nil, 10000+sp.Stage, false, false, false, true, false, nil, strBossDescription);
-		else
-			UI.CreateLabel (TerritoryInspectorRoot).SetText("Unit type '" ..sp.proxyType.."' not implemented yet").SetColor(colors.Red);
-		end
-	end
-end
-
-function DELME_inspectCustomUnit(sp, TerritoryInspectorRoot)
-	line = UI.CreateHorizontalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Unit type: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(getReadableString(sp.proxyType)).SetColor(colors.Tan);
-	--line = UI.CreateHorizontalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText(", Owner: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(getPlayerName(Game, sp.OwnerID)).SetColor(colors.Tan);
-
-	local strUnitName = sp.Name ~= nil and sp.Name or "None";
-	local strSUownerName = getPlayerName (Game, sp.OwnerID);
-
-	displaySpecialUnitProperties (TerritoryInspectorRoot, "colourful", true, strSUownerName, sp.Name, sp.AttackPower, sp.AttackPowerPercentage, sp.DefensePower, sp.DefensePowerPercentage, sp.DamageToKill, sp.DamageAbsorbedWhenAttacked, sp.Health, sp.CombatOrder, sp.CanBeGiftedWithGiftCard, sp.CanBeTransferredToTeammate, sp.CanBeAirliftedToTeammate, sp.CanBeAirliftedToSelf, sp.IsVisibleToAllPlayers, sp.ModID, getUnitDescription (sp));
-
-	local line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Name: ").SetColor(colors.TextColor);
-	if sp.Name ~= nil then
-		UI.CreateLabel (line).SetText(sp.Name).SetColor(colors.Tan);
-	else
-		UI.CreateLabel (line).SetText("None").SetColor(colors.Tan);
-	end
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Uses health: ").SetColor(colors.TextColor);
-	if sp.Health ~= nil then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Health remaining: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.Health).SetColor(colors.Cyan);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Damage needed to kill: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.DamageToKill).SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Damage absorbed when damage is sustained: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.DamageAbsorbedWhenAttacked).SetColor(colors.Cyan);
-	end
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Attack Power: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(truncateDecimals (sp.AttackPower, 2)).SetColor(colors.Cyan);
-
-	--line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("   Defense Power: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(truncateDecimals (sp.DefensePower, 2)).SetColor(colors.Cyan);
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Attack power modifier: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(truncateDecimals (math.floor((sp.AttackPowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
-
-	--line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("   Defense power modifier: ").SetColor(colors.TextColor);
-	UI.CreateLabel (line).SetText(truncateDecimals (math.floor((sp.DefensePowerPercentage * 10000) + 0.5) / 100 - 100, 2) .. "%").SetColor(colors.Cyan);
-	UI.CreateLabel (TerritoryInspectorRoot).SetText("(modifies the kill ratios used for battles this Special Unit participates in)");
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Permanently visible to all players: ").SetColor(colors.TextColor);
-	if sp.IsVisibleToAllPlayers then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-	end
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Can be airlifted -- to self: ").SetColor(colors.TextColor);
-	if sp.CanBeAirliftedToSelf then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-	end
-
-	UI.CreateLabel (line).SetText("   -- to teammates: ").SetColor(colors.TextColor);
-	createLabel_TrueFalse_YesNo_GreenRed (line, sp.CanBeAirliftedToTeammate);
-	if sp.CanBeAirliftedToTeammate then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-	end
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Giftable using gift card: ").SetColor(colors.TextColor);
-	if sp.CanBeGiftedWithGiftCard then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-	end
-
-	--line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("    Transferrable to teammates: ").SetColor(colors.TextColor);
-	if sp.CanBeTransferredToTeammate then
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-	else
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-	end
-
-	line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-	UI.CreateLabel (line).SetText("Description: ").SetColor(colors.TextColor);
-	UI.CreateLabel (TerritoryInspectorRoot).SetText(getUnitDescription(sp)).SetColor(colors.Tan);
-
-end
-
 --given 'result' (true/false) create label on container 'line' with text Yes in green or No in red respectively
 function createLabel_TrueFalse_YesNo_GreenRed (line, result)
 	if (result) then UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
 	else UI.CreateLabel (line).SetText("No").SetColor(colors.Red); end
 end
 
-function DELME_inspectNormalUnit(sp, TerritoryInspectorRoot)
-	if sp.proxyType == "Commander" then
-		displaySpecialUnitProperties (TerritoryInspectorRoot, "colourful", true, getPlayerName(Game, sp.OwnerID), "Commander", 7, 1.0, 7, 1.0, 7, nil, nil, 10000, false, false, false, true, false, nil, "Special feature: When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately");
-
-		local line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Attack damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("7").SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Defense damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("7").SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Takes damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be airlifted: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be airlifted to teammates: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be transferred to teammates: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be gifted: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Is visible to all players: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Special features: ").SetColor(colors.TextColor);
-		UI.CreateLabel (TerritoryInspectorRoot).SetText("When this unit dies, " .. getPlayerName(Game, sp.OwnerID) .. " is eliminated immediately").SetColor(colors.Tan);
-
-	elseif sp.proxyType == "Boss3" then
-		local line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Stage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.Stage .. " / 3").SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Attack damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.Power).SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("defense damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(sp.Power).SetColor(colors.Cyan);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Takes damage: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be airlifted: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("Yes").SetColor(colors.Green);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be airlifted to teammates: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be transferred to teammates: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Can be gifted: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Is visible to all players: ").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText("No").SetColor(colors.Red);
-
-		line = UI.CreateHorizontalLayoutGroup (TerritoryInspectorRoot).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("Special features: ").SetColor(colors.TextColor);
-		if sp.Stage == 3 then
-			UI.CreateLabel (TerritoryInspectorRoot).SetText("When this unit is killed in an attack, it will NOT split into 4 smaller bosses. This unit is in it's last stage").SetColor(colors.Tan);
-		else
-			UI.CreateLabel (TerritoryInspectorRoot).SetText("When this unit is killed in an attack, it will split into 4 bosses with " .. sp.Power - 10 .. " health. These 4 bosses are randomly spawned at nearby territories, no matter who controls it. Only territories with a commander immune for this").SetColor(colors.Tan);
-		end
-	else
-		UI.CreateLabel (TerritoryInspectorRoot).SetText("This unit has not been implemented yet. Please contact me and tell me the unit type so I can implement it").SetColor(colors["Orange Red"]);
-	end
-end
-
 function showCombatOrder_Window (rootParent, setMaxSize, setScrollable, game, close)
 	UnitInspector_CombatOrderRoot = rootParent;
 	setMaxSize (600, 600);
-	CurrentDisplayRoot = UnitInspector_CombatOrderRoot;
+	CurrentDisplayRoot = UI.CreateVerticalLayoutGroup (UnitInspector_CombatOrderRoot);
 end
 
 function showCombatOrder()
 	Game.CreateDialog (showCombatOrder_Window);
+	intPlayerFilter = nil; --filter results for a specific player; nil = show all players
 
+	local row = UI.CreateHorizontalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth (1);
+	UI.CreateEmpty (row).SetFlexibleWidth (1); --pushes next element (button) to be right-aligned
+	buttonPlayerFilter = UI.CreateButton (row).SetText ("Show results for all players").SetColor (colors.Cyan).SetOnClick (
+		function ()
+			local players = {}; --need to build a table of contiguous player objects; Game.Game.PlayingPlayers is non-contigous as the keys are the playerIDs
+			for _,v in pairs (Game.Game.PlayingPlayers) do table.insert (players, v); end;
+			table.sort (players, function (a, b) return a.DisplayName (nil, false) < b.DisplayName (nil, false); end);
+			UI.PromptFromList ("Select the player to show results for", map (players, PlayerFilterButton_PlayerSelected));
+		end
+	);
+	UI.CreateLabel (CurrentDisplayRoot).SetText ("Shows the order in which units take damage. Only includes units visible to you; other units might be hidden in fog").SetColor (colors.TextColor);
+	populate_ShowCombatOrderDialog ();
+end
+
+function populate_ShowCombatOrderDialog ()
+	if (UI.IsDestroyed (vertShowCombatOrderContent) == false) then UI.Destroy (vertShowCombatOrderContent); end
+	vertShowCombatOrderContent = UI.CreateVerticalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth(1);
 	local order = {[0] = {Units = {"Armies"}, Positions = {}}};
-	for _, terr in pairs(Game.LatestStanding.Territories) do
-		if not tableIsEmpty(terr.NumArmies.SpecialUnits) then
-			for _, unit in pairs(terr.NumArmies.SpecialUnits) do
-				if order[unit.CombatOrder] == nil then order[unit.CombatOrder] = {}; order[unit.CombatOrder].Units = {}; order[unit.CombatOrder].Positions = {}; end
-				table.insert(order[unit.CombatOrder].Units, unit);
-				if not valueInTable(order[unit.CombatOrder], terr.ID) then
-					table.insert(order[unit.CombatOrder].Positions, terr.ID);
+	for _, terr in pairs (Game.LatestStanding.Territories) do
+		if (not tableIsEmpty (terr.NumArmies.SpecialUnits)) then
+			for _, unit in pairs (terr.NumArmies.SpecialUnits) do
+				if order[unit.CombatOrder] == nil then order[unit.CombatOrder] = {Units = {}, Positions = {}}; end
+
+				-- if player filter was selected, only provide results for that player
+				if (intPlayerFilter == nil or unit.OwnerID == intPlayerFilter) then
+					table.insert (order[unit.CombatOrder].Units, unit);
+
+					if (not valueInTable (order[unit.CombatOrder].Positions, terr.ID)) then
+						table.insert (order[unit.CombatOrder].Positions, terr.ID);
+					end
 				end
 			end
 		end
@@ -1180,48 +1002,60 @@ function showCombatOrder()
 
 	local cos = {};
 	local t = {};
-	for co, arr in pairs(order) do
+	for co, arr in pairs (order) do
 		local i = 1;
-		for i2, v in pairs(cos) do
+		for i2, v in pairs (cos) do
 			if v > co then
 				break;
 			end
 			i = i + 1;
 		end
-		table.insert(cos, i, co);
+		table.insert (cos, i, co);
 		arr.CombatOrder = co;
-		table.insert(t, i, arr);
+		table.insert (t, i, arr);
 	end
 	order = t;
 
-	UI.CreateEmpty (CurrentDisplayRoot).SetPreferredHeight(10);
-	UI.CreateLabel (CurrentDisplayRoot).SetText("Shows the order in which units take damage. Only includes units visible to you; other units might be hidden in fog").SetColor(colors.TextColor);
+	UI.CreateEmpty (vertShowCombatOrderContent).SetPreferredHeight(10);
 
 	local c = 1;
-	for k, arr in pairs(order) do
-		local line = UI.CreateHorizontalLayoutGroup (CurrentDisplayRoot).SetFlexibleWidth(1);
+	for k, arr in pairs (order) do
+		local line = UI.CreateHorizontalLayoutGroup (vertShowCombatOrderContent).SetFlexibleWidth(1);
 		--UI.CreateLabel (line).SetText(c .. ". [".. arr.CombatOrder .."]").SetColor(colors.TextColor);
-		UI.CreateLabel (line).SetText(c .. ". ").SetColor(colors.TextColor);
+		UI.CreateLabel (line).SetText (c .. ". ").SetColor (colors.TextColor);
 
 		local t = {};
-		for _, unit in pairs(arr.Units) do
-			if not valueInTable(t, getUnitName(unit)) then
-				table.insert(t, getUnitName(unit));
+		for _, unit in pairs (arr.Units) do
+			if not valueInTable (t, getUnitName (unit)) then
+				table.insert (t, getUnitName (unit));
 			end
 		end
-		local label = UI.CreateLabel (line).SetText(table.concat(t, ", "));
+		local label = UI.CreateLabel (line).SetText (table.concat (t, ", "));
 		if sp ~= nil and arr.CombatOrder == sp.CombatOrder then
-			label.SetColor(colors.Green);
+			label.SetColor (colors.Green);
 		else
-			label.SetColor("#EEEEEE");
+			label.SetColor ("#EEEEEE");
 		end
-		UI.CreateEmpty (line).SetFlexibleWidth(1);
-		UI.CreateLabel (line).SetText("[".. arr.CombatOrder .."]").SetColor(colors.TextColor);
-		local whereButton = UI.CreateButton (line).SetText("Where?").SetColor(colors.Blue).SetOnClick(function() Game.HighlightTerritories (weedDupes (arr.Positions)); for _, terrID in pairs(arr.Positions) do Game.CreateLocatorCircle (Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
+		UI.CreateEmpty (line).SetFlexibleWidth (1);
+		UI.CreateLabel (line).SetText ("[".. arr.CombatOrder .."]").SetColor (colors.TextColor);
+		local whereButton = UI.CreateButton (line).SetText ("Where?").SetColor (colors.Blue).SetOnClick (function() Game.HighlightTerritories (weedDupes (arr.Positions)); for _, terrID in pairs (arr.Positions) do Game.CreateLocatorCircle (Game.Map.Territories[terrID].MiddlePointX, Game.Map.Territories[terrID].MiddlePointY); end; end);
 		if (arr.CombatOrder == 0 and #arr.Units == 1) then whereButton.SetInteractable (false); end;
 
 		c = c + 1;
 	end
+end
+
+function PlayerFilterButton_PlayerSelected (player)
+	local name = player.DisplayName (nil, false);
+	local ret = {};
+
+	ret ["player"] = player.ID;
+	ret ["selected"] = function ()
+		intPlayerFilter = player.ID;
+		buttonPlayerFilter.SetText ("Show results for player: " .. player.DisplayName (nil, false));
+		populate_ShowCombatOrderDialog (); --repopulate the dialog filtered for the selected player
+	end
+	return ret;
 end
 
 function weedDupes (arrSource)
