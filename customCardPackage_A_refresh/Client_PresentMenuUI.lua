@@ -535,7 +535,7 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 				if (string.sub (k2, 1, 2) ~= "!!") then
 					local rowItem = UI.CreateHorizontalLayoutGroup (vertSUsummaryByPlayer).SetFlexibleWidth (1);
 					UI.CreateLabel (rowItem).SetText ("___").SetColor ("#000000");
-					UI.CreateButton (rowItem).SetText ("📍").SetColor (getColourCode("subheading")).SetOnClick (
+					UI.CreateButton (rowItem).SetText ("📍")--[[ .SetColor (getColourCode("subheading")) ]].SetOnClick (
 						function ()
 							Game.HighlightTerritories (unitSummary [k][strTerrsWithSUsIdentifier][k2]);
 							for _, terrID in pairs (unitSummary [k][strTerrsWithSUsIdentifier][k2]) do
