@@ -282,20 +282,20 @@ end
 --- END of DanWL's functions
 
 --- START of Derfellios's functions
-function NotTableEmpty(List)
-	for a,b in pairs(List) do
+function NotTableEmpty (List)
+	for a,b in pairs (List) do
 		return true
 	end
 	return false
 end
 
-function NotinTable(tbl, item)
+function NotinTable (tbl, item)
 	for key, value in pairs(tbl) do
-		if value == item then 
-			return false 
+		if (value == item) then
+			return false;
 		end
 	end
-	return true
+	return true;
 end
 --- END of Derfellios's functions
 

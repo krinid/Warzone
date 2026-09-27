@@ -504,7 +504,9 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 				if (unitSummary [terr.OwnerPlayerID][strSUname] == nil) then unitSummary [terr.OwnerPlayerID][strSUname] = 0; end
 				unitSummary [terr.OwnerPlayerID][strSUname] = unitSummary [terr.OwnerPlayerID][strSUname] + 1; --increment SU type count for this player in summary table
 				if (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] == nil) then unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] = {}; end
-				unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] [count (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname]) + 1] = terr.ID;
+				-- unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] [count (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname]) + 1] = terr.ID;
+				--only add the territory ID to the list if it isn't already in the list (else will cause a hard WZ error)
+				if (valueInTable (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname], terr.ID) == false) then unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname] [count (unitSummary [terr.OwnerPlayerID][strTerrsWithSUsIdentifier][strSUname]) + 1] = terr.ID; end
 			end
 		end
 	end
@@ -514,7 +516,7 @@ function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, cl
 		-- print ("****" .. k,v);
 		local row = UI.CreateHorizontalLayoutGroup (vertSUsummaryByPlayer).SetFlexibleWidth (1);
 
-		-- 📍 button for ALL SU territories for this player
+		--add button to highlight & circle the terrs on the map which have the specific SUs showing on the line
 		UI.CreateButton (row).SetText ("📍").SetColor (getColourCode("subheading")).SetOnClick (
 			function ()
 				Game.HighlightTerritories (unitSummary [k][strAllTerrsIdentifier]);
