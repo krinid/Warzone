@@ -6,6 +6,7 @@ function displayMenu (game, windowUI, close)
 	local hostIsInGame = game.Game.PlayingPlayers [game.Settings.StartedBy] ~= nil;
 	local localPlayerISkrinid = (game.Us ~= nil and game.Us.ID == 1058239); --use to allow krinid to set card prices in games where host in not in game (likely one of krinid's games started using an alt account)
 	local localPlayerIsPlayerInGame = (game.Us ~= nil) and (game.Game.PlayingPlayers[game.Us.ID] ~= nil);
+	local boolPlayerCanSetCardPrices = localPlayerIsHost==true or (hostIsInGame==false and localPlayerISkrinid==true);
 	-- if (game.Game.ID == 41159857 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Encirclement + Forts v2b" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
 	-- if (game.Game.ID == 41661316 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Biohazard" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
 	-- if (game.Game.ID == 40767112 and game.Us.ID == 1058239) then localPlayerIsHost = true; publicGameData.CardData.CardPricesFinalized = false; publicGameData.CardData.HostHasAdjustedPricing = false; end --for this game, re-assign card prices
@@ -46,7 +47,7 @@ function displayMenu (game, windowUI, close)
 
 	--if local client player is host, allow price changes until end of T1
 	if (publicGameData.CardData.CardPricesFinalized == false) then
-		if (localPlayerIsHost==true or (hostIsInGame==false and localPlayerISkrinid==true)) then
+		if (boolPlayerCanSetCardPrices == true) then
 			local newCards = {};
 			local strMessageToHost;
 			if (publicGameData.CardData.HostHasAdjustedPricing == false) then
@@ -138,7 +139,7 @@ function displayMenu (game, windowUI, close)
 			if (cardRecord.Price>0) then cardCountRegular_Buyable = cardCountRegular_Buyable + 1; cardCountTotal_Buyable = cardCountTotal_Buyable + 1; end
 		end
 		local interactable = (cardRecord.Price >=1 and publicGameData.CardData.CardPricesFinalized==true and localPlayerIsPlayerInGame == true); --set .SetInteractable of the buttons to this value; set to True when prices have been finalized, otherwise False; if card price<=0 then make non-interactive (can't buy cards that cost 0 or negative)
-		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI).SetFlexibleWidth(100); end
+		if (boolPlayerCanSetCardPrices==true and publicGameData.CardData.CardPricesFinalized == false) then targetUI = UI.CreateHorizontalLayoutGroup (targetUI).SetFlexibleWidth(100); end
 
 		--only display a card in the list if (A) prices aren't finalized, or (B) the prices is >0; if it's not available for purchase, just don't show it in the list
 		if (cardRecord.Price>0 or publicGameData.CardData.CardPricesFinalized == false) then
@@ -153,7 +154,7 @@ function displayMenu (game, windowUI, close)
 		end
 
 		--if client player is the host & prices aren't finalized, show a slider to be able to set the card price
-		if (localPlayerIsHost==true and publicGameData.CardData.CardPricesFinalized == false) then
+		if (boolPlayerCanSetCardPrices==true and publicGameData.CardData.CardPricesFinalized == false) then
 			sliderCardPrices [cardCountTotal] = UI.CreateNumberInputField(targetUI).SetSliderMinValue(1).SetSliderMaxValue(1000).SetValue(cardRecord.Price).SetFlexibleWidth (25).SetWholeNumbers(true);
 		end
 	end
