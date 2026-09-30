@@ -3,6 +3,8 @@ function displayMenu (game, windowUI, close)
 	--showDefinedCards (Game);
 	local publicGameData = Mod.PublicGameData;
 	local localPlayerIsHost = game.Us ~= nil and game.Us.ID == game.Settings.StartedBy;
+	local hostIsInGame = game.Game.PlayingPlayers [game.Settings.StartedBy] ~= nil;
+	local localPlayerISkrinid = (game.Us ~= nil and game.Us.ID == 1058239); --use to allow krinid to set card prices in games where host in not in game (likely one of krinid's games started using an alt account)
 	local localPlayerIsPlayerInGame = (game.Us ~= nil) and (game.Game.PlayingPlayers[game.Us.ID] ~= nil);
 	-- if (game.Game.ID == 41159857 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Encirclement + Forts v2b" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
 	-- if (game.Game.ID == 41661316 and game.Us ~= nil and game.Us.ID == 1058239) then localPlayerIsHost = true; end --"Biohazard" game; host is not in game so can't set card prices (oops) - manual fix to permit krinid to set card prices
@@ -44,7 +46,7 @@ function displayMenu (game, windowUI, close)
 
 	--if local client player is host, allow price changes until end of T1
 	if (publicGameData.CardData.CardPricesFinalized == false) then
-		if (localPlayerIsHost==true) then
+		if (localPlayerIsHost==true or (hostIsInGame==false and localPlayerISkrinid==true)) then
 			local newCards = {};
 			local strMessageToHost;
 			if (publicGameData.CardData.HostHasAdjustedPricing == false) then
