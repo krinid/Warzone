@@ -37,45 +37,6 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	local debugPanel = UI.CreateVerticalLayoutGroup (MenuWindow);
 	TopLabel = UI.CreateLabel (MenuWindow).SetFlexibleWidth(1).SetText ("[Testing/Debug information only]\n\n");
 
-	-- print (WL.AttackTransferEnum.Attack);
-	-- print (WL.AttackTransferEnum.Transfer);
-	-- print (WL.AttackTransferEnum.AttackTransfer);
-	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Attack));
-	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.Transfer));
-	-- print (WL.AttackTransferEnum.ToString(WL.AttackTransferEnum.AttackTransfer));
-	-- cards=getDefinedCardList (game);
-	-- for cardID, cardConfig in pairs(game.Settings.Cards) do
-	-- 	local strCardName = getCardName_fromObject(cardConfig);
-	-- 	cards[cardID] = strCardName;
-	-- 	--count = count +1
-	-- 	print ("**"..cardID,strCardName,type(cardID));
-	-- end
-
-	-- local publicGameData = Mod.PublicGameData;
-	-- publicGameData.CardData.ResurrectionCardID = tostring(getCardID ("Resurrection", game));
-	-- commanderOwner = 1; realcardID = 1000006;
-	-- playerID = 1; cardID = publicGameData.CardData.ResurrectionCardID;
-	-- -- cardID = realcardID;
-	-- jork=nil;
-	-- for k,v in pairs (game.LatestStanding.Cards[playerID].WholeCards) do
-	-- 	--print (playerID,v.CardID,k);
-	-- 	if (v.CardID == tonumber(cardID)) then print (playerID,v.CardID,k); CommanderOwner_ResurrectionCard= k; end
-	-- 	jork=k;
-	-- 	jork2=v;
-	-- end
-	-- print ("[RESURRECTION CHECK] Res cardID " ..tostring (publicGameData.CardData.ResurrectionCardID)..", Res card instance ID ".. tostring (CommanderOwner_ResurrectionCard));
-	-- print (cardID.."::",type(cardID))
-	-- print (realcardID.."::",type(realcardID))
-	-- print (publicGameData.CardData.ResurrectionCardID.."::",type (publicGameData.CardData.ResurrectionCardID))
-	-- print (jork.."::",type(jork))
-	-- print (jork2.CardID.."::",type(jork2.CardID))
-	-- print (tostring (realcardID == publicGameData.CardData.ResurrectionCardID));
-	-- print (tostring (cardID == publicGameData.CardData.ResurrectionCardID));
-	-- print (tostring (realcardID == cardID));
-
-	--debug info for debug authorized user only
-	--if (Mod.PublicGameData.Debug ~= nil and Mod.PublicGameData.Debug.DebugUser ~= nil and game.Us.ID == Mod.PublicGameData.Debug.DebugUser) then
-
 	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) then
 		--put debug panel here
 		debugButton = UI.CreateButton (debugPanel).SetText ("Debug mode active: "..tostring (Mod.PublicGameData.Debug.DebugMode)).SetOnClick (debugModeButtonClick);
@@ -84,6 +45,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		buttonNukeTesting = UI.CreateButton (debugPanel).SetText ("Add Nuke Invoke order").SetOnClick (Nuke_invoke_Test);
 		-- UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID() fake");
 		UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID()").SetOnClick (function () UI.Alert ("RNG test: "..tostring (math.random(1,1000000000)).."\nNewGUID() test: "..tostring (NewGuid()).."\nUUID() test: " ..tostring (uuid())); end);
+		buttonMapFindOverlappingBonuses = UI.CreateButton (debugPanel).SetText ("Find map overlapping bonuses").SetOnClick (findMapOverlappingBonuses);
 	end
 
 	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
@@ -184,6 +146,289 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	-- print ("DIPLO 1 k " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 1, 1058239)));
 	-- print ("DIPLO 2 1 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 1)));
 	-- print ("DIPLO 2 3 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 3)));
+end
+
+function findMapOverlappingBonuses ()
+    local overlaps = findActiveBonusOverlaps (Game)
+    printOverlapSummary(overlaps)
+    PrintFriendlyOverlaps (Game, overlaps)
+end
+
+function printOverlapSummary(overlaps)
+    local totalPairs = 0
+    local totalTerrs = 0
+
+    for _, others in pairs(overlaps) do
+        for _, terrs in pairs(others) do
+            totalPairs = totalPairs + 1
+            totalTerrs = totalTerrs + #terrs
+        end
+    end
+
+    print("Active bonus overlap pairs: " .. totalPairs)
+    print("Territories causing overlaps: " .. totalTerrs)
+end
+
+function PrintFriendlyOverlaps(game, overlaps)
+    local bonuses     = game.Map.Bonuses
+    local territories = game.Map.Territories
+
+    local printed = 0
+    local limit = 200   -- safety limit
+
+    print("=== Active Bonus Overlaps ===")
+
+    for b1, others in pairs(overlaps) do
+        for b2, terrList in pairs(others) do
+
+            printed = printed + 1
+            if printed > limit then
+                print("... output truncated to avoid client crash ...")
+                return
+            end
+
+            print("Bonus " .. b1 .. " (" .. bonuses[b1].Name .. ") overlaps Bonus " ..
+                  b2 .. " (" .. bonuses[b2].Name .. ") at territories:")
+
+            for _, terrID in ipairs(terrList) do
+                print("   Terr " .. terrID .. " (" .. territories[terrID].Name .. ")")
+            end
+        end
+    end
+end
+
+function findActiveBonusOverlaps(game)
+    local activeBonuses = getActiveBonuses(game)
+    local terrToBonus   = buildTerrToBonusMap(activeBonuses)
+
+    local overlaps = {}
+
+    for terrID, bonusList in pairs(terrToBonus) do
+        if #bonusList > 1 then
+            for i = 1, #bonusList do
+                for j = i+1, #bonusList do
+                    local b1 = bonusList[i]
+                    local b2 = bonusList[j]
+
+                    overlaps[b1] = overlaps[b1] or {}
+                    overlaps[b1][b2] = overlaps[b1][b2] or {}
+                    table.insert(overlaps[b1][b2], terrID)
+
+                    overlaps[b2] = overlaps[b2] or {}
+                    overlaps[b2][b1] = overlaps[b2][b1] or {}
+                    table.insert(overlaps[b2][b1], terrID)
+                end
+            end
+        end
+    end
+
+    return overlaps
+end
+
+function buildTerrToBonusMap(bonuses)
+    local terrToBonus = {}
+
+    for bonusID, bonus in pairs(bonuses) do
+        for _, terrID in ipairs(bonus.Territories) do
+            terrToBonus[terrID] = terrToBonus[terrID] or {}
+            table.insert(terrToBonus[terrID], bonusID)
+        end
+    end
+
+    return terrToBonus
+end
+
+function getActiveBonuses(game)
+    local bonuses    = game.Map.Bonuses
+    local overridden = game.Settings.OverriddenBonuses
+
+    local activeBonuses = {}
+
+    for bonusID, bonus in pairs(bonuses) do
+        -- (A) base value
+        local income = bonus.Amount
+
+        -- (B) overridden value (if present)
+        local overrideValue = overridden[bonusID]
+        if overrideValue ~= nil then
+            income = overrideValue
+        end
+
+        -- (C) ignore bonuses with effective income == 0
+        if income ~= 0 then
+            activeBonuses[bonusID] = bonus
+        end
+    end
+
+    return activeBonuses
+end
+
+function old ()
+	local baseMapBonusValuesOverlaps = findBonusOverlaps (Game)
+    -- local overriddenValuesOverlaps = findZeroValueBonusOverlaps (Game)
+    local overriddenValuesOverlaps = findRemainingBonusOverlaps (Game)
+
+    -- printOverlaps(normalOverlaps, "Normal Bonuses")
+    printOverlaps (overriddenValuesOverlaps, "Overridden non-Zero-Value Bonuses")
+
+	-- -- buttonMapFindOverlappingBonuses = UI.CreateButton (debugPanel).SetText ("Find map overlapping bonuses").SetOnClick (findMapOverlappingBonuses);
+	-- for k,v in pairs (Game.Map.Bonuses) do
+	-- 	local bonusTerrs = v.Territories;
+	-- end
+end
+
+function findRemainingBonusOverlapsOLD(game)
+    local bonuses = game.Map.Bonuses
+    local overridden = game.Settings.OverriddenBonuses
+
+    -- Only bonuses that are overridden AND still have non-zero income
+    local remainingBonuses = {}
+
+    for bonusID, overrideValue in pairs(overridden) do
+        if overrideValue ~= 0 then
+            local bonus = bonuses[bonusID]
+            if bonus ~= nil then
+                remainingBonuses[bonusID] = bonus
+            end
+        end
+    end
+
+	print ("# bonuses with non-zero values: " .. tostring (#remainingBonuses));
+	local terrToBonus = buildTerrToBonusMap(remainingBonuses)
+    local overlaps = {}
+
+    for terrID, bonusList in pairs(terrToBonus) do
+        if #bonusList > 1 then
+            for i = 1, #bonusList do
+                for j = i+1, #bonusList do
+                    local b1 = bonusList[i]
+                    local b2 = bonusList[j]
+
+                    overlaps[b1] = overlaps[b1] or {}
+                    overlaps[b1][b2] = overlaps[b1][b2] or {}
+                    table.insert(overlaps[b1][b2], terrID)
+
+                    overlaps[b2] = overlaps[b2] or {}
+                    overlaps[b2][b1] = overlaps[b2][b1] or {}
+                    table.insert(overlaps[b2][b1], terrID)
+                end
+            end
+        end
+    end
+
+    return overlaps
+end
+
+function buildTerrToBonusMapOLD (bonuses)
+    local terrToBonus = {}
+
+    for bonusID, bonus in pairs(bonuses) do
+        for _, terrID in ipairs(bonus.Territories) do
+            terrToBonus[terrID] = terrToBonus[terrID] or {}
+            table.insert(terrToBonus[terrID], bonusID)
+        end
+    end
+
+    return terrToBonus
+end
+
+function findBonusOverlapsOLD(game)
+    local bonuses = game.Map.Bonuses
+    local terrToBonus = buildTerrToBonusMap(bonuses)
+
+    local overlaps = {}
+
+    for terrID, bonusList in pairs(terrToBonus) do
+        if #bonusList > 1 then
+            for i = 1, #bonusList do
+                for j = i+1, #bonusList do
+                    local b1 = bonusList[i]
+                    local b2 = bonusList[j]
+
+                    overlaps[b1] = overlaps[b1] or {}
+                    overlaps[b1][b2] = overlaps[b1][b2] or {}
+                    table.insert(overlaps[b1][b2], terrID)
+
+                    overlaps[b2] = overlaps[b2] or {}
+                    overlaps[b2][b1] = overlaps[b2][b1] or {}
+                    table.insert(overlaps[b2][b1], terrID)
+                end
+            end
+        end
+    end
+
+    return overlaps
+end
+
+function findZeroValueBonusOverlapsOLD(game)
+    local bonuses = game.Map.Bonuses
+    local overridden = game.Settings.OverriddenBonuses
+
+    -- Filter bonuses whose override value is exactly 0
+    local zeroBonuses = {}
+
+    for bonusID, bonus in pairs(bonuses) do
+        local overrideValue = overridden[bonusID]
+
+        if overrideValue ~= nil and overrideValue == 0 then
+            zeroBonuses[bonusID] = bonus
+        end
+    end
+
+    local terrToBonus = buildTerrToBonusMap(zeroBonuses)
+    local overlaps = {}
+
+    for terrID, bonusList in pairs(terrToBonus) do
+        if #bonusList > 1 then
+            for i = 1, #bonusList do
+                for j = i+1, #bonusList do
+                    local b1 = bonusList[i]
+                    local b2 = bonusList[j]
+
+                    overlaps[b1] = overlaps[b1] or {}
+                    overlaps[b1][b2] = overlaps[b1][b2] or {}
+                    table.insert(overlaps[b1][b2], terrID)
+
+                    overlaps[b2] = overlaps[b2] or {}
+                    overlaps[b2][b1] = overlaps[b2][b1] or {}
+                    table.insert(overlaps[b2][b1], terrID)
+                end
+            end
+        end
+    end
+
+    return overlaps
+end
+
+function printOverlapsOLD (overlaps, label)
+    print("=== Overlaps: " .. label .. " ===")
+
+    local count = 0
+    local limit = 200   -- prevent client crash
+
+    for b1, others in pairs(overlaps) do
+        for b2, terrs in pairs(others) do
+            print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
+                  " at territories: " .. table.concat(terrs, ", "))
+
+            count = count + 1
+            if count >= limit then
+                print("... truncated output to avoid client crash ...")
+                return
+            end
+        end
+    end
+end
+
+function printOverlaps_orig (overlaps, label)
+    print("=== Overlaps: " .. label .. " ===")
+
+    for b1, others in pairs(overlaps) do
+        for b2, terrs in pairs(others) do
+            print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
+                  " at territories: " .. table.concat(terrs, ", "))
+        end
+    end
 end
 
 function Nuke_invoke_Test ()
@@ -712,7 +957,7 @@ function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game
 	UI.CreateButton (vert).SetText("Show information for all visible Special Units").SetColor(colors["Saddle Brown"]).SetFlexibleWidth(1).SetOnClick(function() Game.CreateDialog (wholeMapInspectorPanel); end); --on button press, initiate comprehensive Unit Inspector, all SUs on all territories in 1 pane
 
 	UI.CreateLabel (vert).SetText("\nTo view territory state on prior turns, select 'Prior Turn'");
-	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239 or game.Us.ID == 114191)) then
+	if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or (game.Us ~= nil and (game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239)) --[[ or game.Us.ID == 114191 ]])) then
 		local lineCurrentOrPriorTurn = UI.CreateHorizontalLayoutGroup (vert);
 		local groupCurrentOrPriorTurn = UI.CreateRadioButtonGroup (lineCurrentOrPriorTurn);
 		local linePriorTurnAndOrderNumber = UI.CreateHorizontalLayoutGroup (vert);
@@ -741,23 +986,6 @@ function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game
 		);
 	end
 
-	-- if (Mod.PublicGameData.Debug ~= nil and (boolDebugMode_Override == true or game.Settings.SinglePlayer == true or game.Us.ID == Mod.PublicGameData.Debug.DebugUser or game.Us.ID == 1058239 or game.Us.ID == 114191)) then
-	-- 	local linePastStanding = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
-	-- 	local btnInspectPriorTurn = UI.CreateButton (linePastStanding).SetText ("Inspect Prior Turn").SetColor (colors.Red).SetFlexibleWidth(1);
-	--     local vertPastStanding = UI.CreateVerticalLayoutGroup(linePastStanding).SetFlexibleWidth(1).SetCenter(false);
-	-- 	local lineTurnNumber = UI.CreateHorizontalLayoutGroup (vertPastStanding).SetFlexibleWidth(1);
-	-- 	local lineOrderNumber = UI.CreateHorizontalLayoutGroup (vertPastStanding).SetFlexibleWidth(1);
-	-- 	UI.CreateLabel (lineTurnNumber).SetText("Turn #").SetFlexibleWidth(1);
-	-- 	local NIFturnNumber = UI.CreateNumberInputField (lineTurnNumber).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(1).SetWholeNumbers(true).SetInteractable(true);
-	-- 	UI.CreateLabel (lineOrderNumber).SetText("Order #").SetFlexibleWidth(1);
-    --     local NIForderNumber = UI.CreateNumberInputField (lineOrderNumber).SetSliderMinValue(1).SetSliderMaxValue(100).SetValue(1).SetWholeNumbers(true).SetInteractable(true);
-	-- 	btnInspectPriorTurn.SetOnClick (function () game.GetStanding (tonumber (NIFturnNumber.GetValue ()) - 1, tonumber (NIForderNumber.GetValue ()) - 1, getStandingCallBack_orig); end)
-	-- end
-
-	-- local line = UI.CreateHorizontalLayoutGroup (vert).SetFlexibleWidth(1);
-	-- UI.CreateLabel (line).SetText (" ").SetPreferredWidth(0.6);
-	-- cboxVerbose = UI.CreateCheckBox (line).SetText ("Verbose").SetIsChecked (false).SetOnValueChanged (function () populateTerritoryInspectorContents(game.LatestStanding); end); --.SetPreferredWidth(0.2); --.SetOnClick --
-	-- cboxColourful = UI.CreateCheckBox (line).SetText ("Colourful").SetIsChecked (false).SetOnValueChanged (function () populateTerritoryInspectorContents(game.LatestStanding); end); --.SetPreferredWidth(0.2); --.SetOnClick --
 	intInspector_territory = nil;
 	UI.InterceptNextTerritoryClick(TerritoryInspector_clickedTerr);
 
@@ -811,7 +1039,7 @@ function TerritoryInspector_clickedTerr(terrDetails)
 	Inspector_territory = terrDetails; --set global variable to value of selected territory
 
 	--determine whether to use game standing from current state or from a prior turn based on player response on UI
-	if (Standing_PriorTurn.GetIsChecked () == true) then
+	if (Standing_PriorTurn ~= nil and Standing_PriorTurn.GetIsChecked () == true) then
 		local intTurnNumber = tonumber (NIFturnNumber.GetValue ()) - 1;
 		local intOrderNumber = tonumber (NIForderNumber.GetValue ()) - 1;
 		gameStandingToDisplay_TurnNumber = intTurnNumber;
