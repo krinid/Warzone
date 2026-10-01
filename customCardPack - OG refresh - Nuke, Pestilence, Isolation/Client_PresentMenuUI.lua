@@ -184,8 +184,8 @@ function bonusEfficiencyPanel (rootParent, setMaxSize, setScrollable, game, clos
 
     -- header row (label + NIF on same line)
     local headerRow = UI.CreateHorizontalLayoutGroup (rootParent);
-    UI.CreateLabel (headerRow).SetText ("Max results to display (1–1000):");
-    UI.CreateNumberInputField (headerRow).SetSliderMinValue (1).SetSliderMaxValue (1000).SetValue (bonusMaxResults).SetWholeNumbers (true).SetInteractable (true).SetOnValueChanged (bonusEfficiencySliderChanged);
+    UI.CreateLabel (headerRow).SetText ("# results to display");
+    UI.CreateNumberInputField (headerRow).SetSliderMinValue (1).SetSliderMaxValue (50).SetValue (bonusMaxResults).SetWholeNumbers (true).SetInteractable (true).SetOnValueChanged (bonusEfficiencySliderChanged);
 
     -- content panel (only this gets destroyed/rebuilt)
     bonusContentPanel = UI.CreateVerticalLayoutGroup (rootParent);
