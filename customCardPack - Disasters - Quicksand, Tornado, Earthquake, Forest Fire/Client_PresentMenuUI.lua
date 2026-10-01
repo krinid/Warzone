@@ -4,9 +4,9 @@ require ("DataConverter");
 --used only for testing purposes, this menu has no in-game functional purpose at this point in time
 function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close)
 	--be vigilant of referencing clientGame.Us when it ==nil for spectators, b/c they CAN initiate this function
-    Game = game; --global variable to use in other functions in this code 
+	Game = game; --global variable to use in other functions in this code 
 
-    if game == nil then print('ClientGame is nil'); end
+	if game == nil then print('ClientGame is nil'); end
 	if game.LatestStanding == nil then print('ClientGame.LatestStanding is nil'); end
 	if game.LatestStanding.Cards == nil then print('ClientGame.LatestStanding.Cards is nil'); end
 	if game.Us == nil then print('ClientGame.Us is nil'); end
@@ -27,7 +27,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	--cancel out of here if not a debug user; but this doesn't allow for a debug user who isn't a player in the game
 	if (game.Us.ID ~= 1058239) then close (); return; end --if not a valid debug user, close debug window, do nothing more, just exit
 
-    setMaxSize(600, 600);
+	setMaxSize(600, 600);
 	if (Mod.PublicGameData.Debug == nil) then game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); end --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function
 	--game.SendGameCustomMessage ("[initializing debug info on server]", {action="initializedebug"}, function() end); --last param is callback function which gets called by Server_GameCustomMessage and sends it a table of data; don't need any processing here, so it's an empty (throwaway) anonymous function	
 
@@ -46,6 +46,7 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 		-- UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID() fake");
 		UI.CreateButton (debugPanel).SetText ("Test RNG + NewGUID()").SetOnClick (function () UI.Alert ("RNG test: "..tostring (math.random(1,1000000000)).."\nNewGUID() test: "..tostring (NewGuid()).."\nUUID() test: " ..tostring (uuid())); end);
 		buttonMapFindOverlappingBonuses = UI.CreateButton (debugPanel).SetText ("Find map overlapping bonuses").SetOnClick (findMapOverlappingBonuses);
+		buttonAnalyzePicks = UI.CreateButton (debugPanel).SetText ("Analyze Picks - find efficient picks").SetOnClick (analyzeEfficientBonuses);
 	end
 
 	local incompatibleMods_gameIDlist = {40891958, 40901887}; --list of game IDs using incopmatible mods
@@ -57,32 +58,32 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	TopLabel.SetText(TopLabel.GetText().."GameID '"..game.Game.ID.."' uses incompatible mods/force manual mode: "..tostring (boolForceManualMoveMode).."\n\n");
 	--return;
 
-    TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
-    local moduleCount = 0;
-    if (Mod.Settings.ActiveModules ~= nil) then
-        for k,v in pairs (Mod.Settings.ActiveModules) do
-            moduleCount = moduleCount + 1;
-            if (moduleCount > 1) then TopLabel.SetText (TopLabel.GetText() ..", "); end
-            TopLabel.SetText (TopLabel.GetText() ..k);
-        end
-    else
-        TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
-    end
+	TopLabel.SetText (TopLabel.GetText() .. ("Active Modules: "));
+	local moduleCount = 0;
+	if (Mod.Settings.ActiveModules ~= nil) then
+		for k,v in pairs (Mod.Settings.ActiveModules) do
+			moduleCount = moduleCount + 1;
+			if (moduleCount > 1) then TopLabel.SetText (TopLabel.GetText() ..", "); end
+			TopLabel.SetText (TopLabel.GetText() ..k);
+		end
+	else
+		TopLabel.SetText (TopLabel.GetText() .."[old template - ActiveModules not present]");
+	end
 
-    print ("LOCAL CLIENT ORDERS SO FAR:");
-    for k,gameOrder in pairs (game.Orders) do
-        print (k..", "..gameOrder.proxyType);
-        if (gameOrder.proxyType == "GameOrderAttackTransfer") then
-            print ("[ATTACK/TRANSFER] player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
-        end
-    end
+	print ("LOCAL CLIENT ORDERS SO FAR:");
+	for k,gameOrder in pairs (game.Orders) do
+		print (k..", "..gameOrder.proxyType);
+		if (gameOrder.proxyType == "GameOrderAttackTransfer") then
+			print ("[ATTACK/TRANSFER] player "..gameOrder.PlayerID..", FROM "..gameOrder.From..", TO "..gameOrder.To..", AttackTransfer "..tostring (gameOrder.AttackTransfer)..", ByPercent "..tostring(gameOrder.ByPercent).. ", #armies"..gameOrder.NumArmies.NumArmies..", #SUs "..#gameOrder.NumArmies.SpecialUnits..", AttackTeammates "..tostring (gameOrder.AttackTeammates));
+		end
+	end
 
-    --debugging test criteria; for games where Mod.Settings.ActiveModules is properly defined, this should print JUMBO, then PUCHI, then JUMBO, and none cause an error/halt execution
-   	-- if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
-    -- if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
-    -- if (Mod.Settings.ERROROUT == nil or Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+	--debugging test criteria; for games where Mod.Settings.ActiveModules is properly defined, this should print JUMBO, then PUCHI, then JUMBO, and none cause an error/halt execution
+	-- if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+	-- if (Mod.Settings.ERROROUT ~= nil and Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
+	-- if (Mod.Settings.ERROROUT == nil or Mod.Settings.ERROROUT.ERROROUT2 == true) then print ("jumbo"); else print ("puchi"); end --if Pestilence isn't active for this mod, do nothing, just return
 
-    TopLabel.SetText (TopLabel.GetText() .. ("\n\nServer time: "..game.Game.ServerTime));
+	TopLabel.SetText (TopLabel.GetText() .. ("\n\nServer time: "..game.Game.ServerTime));
 	if (game.Us~=nil) then --a player in the game
 		TopLabel.SetText (TopLabel.GetText() .. "\n\nClient player "..game.Us.ID .."/"..toPlayerName (game.Us.ID, game)..", State: "..tostring(game.Game.Players[game.Us.ID].State).."/"..tostring(WLplayerStates ()[game.Game.Players[game.Us.ID].State]).. ", IsActive: "..tostring(game.Game.Players[game.Us.ID].State == WL.GamePlayerState.Playing).. ", IsHost: "..tostring(game.Us.ID == game.Settings.StartedBy));
 	else
@@ -122,11 +123,11 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	end
 
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardBlock == true) then showCardBlockData (); end
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado == true) then showTornadoData (); end
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Isolation == true) then showIsolationData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Quicksand == true) then showQuicksandData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado == true) then showTornadoData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Earthquake == true) then showEarthquakeData (); end
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Pestilence == true) then showPestilenceData (); end
 	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.ForestFire == true) then showWildfireData (); end
 	--showNeutralizeData (); --can't do this b/c NeutralizeData is in PrivateGameData --> can't view in Client hook
 
@@ -148,128 +149,502 @@ function Client_PresentMenuUI(rootParent, setMaxSize, setScrollable, game, close
 	-- print ("DIPLO 2 3 " .. tostring (arePlayersInDiplo (game.LatestStanding.ActiveCards, 2, 3)));
 end
 
+--------------------------------------------------
+-- core entry point
+--------------------------------------------------
+
+function analyzeEfficientBonuses ()
+	Game.CreateDialog (bonusEfficiencyPanel);
+end
+
+
+--------------------------------------------------
+-- dialog panel
+--------------------------------------------------
+
+local bonusContentPanel;
+local bonusActiveBonuses;
+local bonusGame;
+local bonusRootParent;
+local bonusMaxResults = 100;
+
+function bonusEfficiencyPanel (rootParent, setMaxSize, setScrollable, game, close)
+    setMaxSize (800, 600);
+    setScrollable (true);
+
+    bonusGame = game;
+    bonusRootParent = rootParent;
+
+    local activeBonuses = getEffectiveBonuses (game);
+    sortBonusesByEfficiency (activeBonuses);
+    bonusActiveBonuses = activeBonuses;
+
+    -- title
+    UI.CreateLabel (rootParent).SetText ("Bonus Efficiency Ranking").SetColor (getColourCode ("main heading"));
+
+    -- header row (label + NIF on same line)
+    local headerRow = UI.CreateHorizontalLayoutGroup (rootParent);
+    UI.CreateLabel (headerRow).SetText ("Max results to display (1–1000):");
+    UI.CreateNumberInputField (headerRow).SetSliderMinValue (1).SetSliderMaxValue (1000).SetValue (bonusMaxResults).SetWholeNumbers (true).SetInteractable (true).SetOnValueChanged (bonusEfficiencySliderChanged);
+
+    -- content panel (only this gets destroyed/rebuilt)
+    bonusContentPanel = UI.CreateVerticalLayoutGroup (rootParent);
+
+    -- initial population
+    populateBonusEfficiencyContent (game, bonusContentPanel, activeBonuses, bonusMaxResults);
+end
+
+--------------------------------------------------
+-- slider change handler
+--------------------------------------------------
+
+function bonusEfficiencySliderChanged (value)
+	bonusMaxResults = value;
+
+	if (bonusContentPanel ~= nil) then
+		UI.Destroy (bonusContentPanel);
+	end;
+
+	bonusContentPanel = UI.CreateVerticalLayoutGroup (bonusRootParent);
+	populateBonusEfficiencyContent (bonusGame, bonusContentPanel, bonusActiveBonuses, bonusMaxResults);
+end
+
+
+--------------------------------------------------
+-- content population
+--------------------------------------------------
+function populateBonusEfficiencyContent (game, contentPanel, activeBonuses, maxResults)
+    local bonuses = game.Map.Bonuses;
+    local territories = game.Map.Territories;
+
+    local count = 0;
+
+    -- approximate max width of dialog content area
+    local maxWidth = 90;    -- heuristic: ~90 chars fits well in 800px WZ dialog
+
+    for _, b in ipairs (activeBonuses) do
+        count = count + 1;
+        if (count > maxResults) then
+            break;
+        end;
+
+        -- bonus button (yellow)
+        local bonusText = b.name .. "  |  Value=" .. b.income .. "  Terrs=" .. b.terrCount .. "  Eff=" .. string.format ("%.4f", b.efficiency);
+        UI.CreateButton (contentPanel)
+            .SetText (bonusText)
+            .SetColor (getColourCode ("subheading"))
+            .SetOnClick (function() highlightBonus (game, b); end);
+
+        -- territory buttons arranged in wrapped rows
+        local currentRow = UI.CreateHorizontalLayoutGroup (contentPanel);
+        UI.CreateLabel (currentRow).SetText ("\t\t");   -- indent
+
+        local currentWidth = 0;
+
+        for _, terrID in ipairs (b.territories) do
+            local terrName = territories[terrID].Name;
+
+            -- estimate width of this button
+            local estWidth = string.len (terrName) + 4; -- padding heuristic
+
+            -- wrap to next row if needed
+            if (currentWidth + estWidth > maxWidth) then
+                currentRow = UI.CreateHorizontalLayoutGroup (contentPanel);
+                UI.CreateLabel (currentRow).SetText ("\t\t");
+                currentWidth = 0;
+            end;
+
+            -- cyan territory button
+            UI.CreateButton (currentRow)
+                .SetText (terrName)
+                .SetColor (getColourCode ("minor heading"))
+                .SetOnClick (function()
+                    local terrList = {};
+                    table.insert (terrList, terrID);
+
+                    local terr = territories[terrID];
+                    game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+
+                    game.HighlightTerritories (terrList);
+                end);
+
+            currentWidth = currentWidth + estWidth;
+        end;
+
+        UI.CreateLabel (contentPanel).SetText ("");
+    end;
+end
+
+function populateBonusEfficiencyContent_OLD (game, contentPanel, activeBonuses, maxResults)
+	local bonuses = game.Map.Bonuses;
+	local territories = game.Map.Territories;
+
+	local count = 0;
+
+	for _, b in ipairs (activeBonuses) do
+		count = count + 1;
+		if (count > maxResults) then
+			break;
+		end;
+
+		local bonusText = "Bonus " .. b.id .. " (" .. b.name .. ")  |  Value=" .. b.income .. "  Terrs=" .. b.terrCount .. "  Eff=" .. string.format ("%.4f", b.efficiency);
+		UI.CreateButton (contentPanel)
+			.SetText (bonusText)
+			.SetOnClick (function() highlightBonus (game, b); end);
+
+		for _, terrID in ipairs (b.territories) do
+			local terrName = territories[terrID].Name;
+			UI.CreateButton (contentPanel)
+				.SetText ("Terr " .. terrID .. " (" .. terrName .. ")")
+				.SetOnClick (function() highlightSingleTerritory (game, terrID); end);
+		end;
+
+		UI.CreateLabel (contentPanel).SetText ("");
+	end;
+end
+
+
+--------------------------------------------------
+-- efficiency calculation
+--------------------------------------------------
+
+function getEffectiveBonuses (game)
+	local bonuses = game.Map.Bonuses;
+	local overridden = game.Settings.OverriddenBonuses;
+
+	local active = {};
+
+	for bonusID, bonus in pairs (bonuses) do
+		local income = bonus.Amount;
+		if (overridden[bonusID] ~= nil) then
+			income = overridden[bonusID];
+		end;
+
+		if (income ~= 0) then
+			local terrCount = #bonus.Territories;
+			local efficiency = income / terrCount;
+
+			active[#active + 1] = {
+				id = bonusID;
+				name = bonus.Name;
+				income = income;
+				terrCount = terrCount;
+				efficiency = efficiency;
+				territories = bonus.Territories;
+			};
+		end;
+	end;
+
+	return active;
+end
+
+
+function sortBonusesByEfficiency (activeBonuses)
+	table.sort (activeBonuses, function (a, b)
+		return a.efficiency > b.efficiency;
+	end);
+end
+
+
+--------------------------------------------------
+-- text output
+--------------------------------------------------
+
+function printBonusEfficiency (game, activeBonuses)
+	local territories = game.Map.Territories;
+
+	print ("=== Bonus Efficiency Ranking ===");
+
+	for _, b in ipairs (activeBonuses) do
+		print ("Bonus " .. b.id .. " (" .. b.name .. ")");
+		print ("  Value: " .. b.income);
+		print ("  Territories: " .. b.terrCount);
+		print ("  Efficiency: " .. string.format ("%.4f", b.efficiency));
+		print ("  Territory List:");
+
+		for _, terrID in ipairs (b.territories) do
+			local terrName = territories[terrID].Name;
+			print ("    Terr " .. terrID .. " (" .. terrName .. ")");
+		end;
+
+		print ("");
+	end;
+end
+
+
+--------------------------------------------------
+-- highlighting helpers
+--------------------------------------------------
+
+function highlightBonus (game, bonus)
+	local territories = game.Map.Territories;
+	local terrList = {};
+
+	for _, terrID in ipairs (bonus.territories) do
+		table.insert (terrList, terrID);
+
+		local terr = territories[terrID];
+		game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+	end;
+
+	game.HighlightTerritories (terrList);
+end
+
+
+function highlightSingleTerritory (game, terrID)
+	local territories = game.Map.Territories;
+	local terrList = {};
+
+	table.insert (terrList, terrID);
+
+	local terr = territories[terrID];
+	game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+
+	game.HighlightTerritories (terrList);
+end
+
+
+function highlightTopTerritories (game, activeBonuses)
+	local territories = game.Map.Territories;
+	local terrList = {};
+	local highlighted = 0;
+	local maxHighlight = 100;
+
+	for _, b in ipairs (activeBonuses) do
+		for _, terrID in ipairs (b.territories) do
+			if (terrList[terrID] == nil) then
+				table.insert (terrList, terrID);
+
+				local terr = territories[terrID];
+				game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY);
+
+				highlighted = highlighted + 1;
+				if (highlighted >= maxHighlight) then
+					game.HighlightTerritories (terrList);
+					return;
+				end;
+			end;
+		end;
+	end;
+
+	game.HighlightTerritories (terrList);
+end
+
+-- function analyzeEfficientBonuses ()
+--     local activeBonuses = getEffectiveBonuses (Game)
+--     sortBonusesByEfficiency (activeBonuses)
+--     printBonusEfficiency (Game, activeBonuses)
+--     highlightTopTerritories (Game, activeBonuses)
+-- end
+
+-- function highlightTopTerritories (game, activeBonuses)
+--     local territories = game.Map.Territories
+--     local terrList = {}
+--     local highlighted = 0
+--     local maxHighlight = 100
+
+--     for _, b in ipairs (activeBonuses) do
+--         for _, terrID in ipairs (b.territories) do
+
+--             -- Add to hash table
+--             -- terrList[terrID] = true
+-- 			table.insert (terrList, terrID);
+
+--             -- Create locator circle
+--             local terr = territories[terrID]
+--             game.CreateLocatorCircle (terr.MiddlePointX, terr.MiddlePointY)
+
+--             highlighted = highlighted + 1
+--             if highlighted >= maxHighlight then
+--                 game.HighlightTerritories (terrList)
+--                 return
+--             end
+--         end
+--     end
+
+--     -- Highlight whatever was collected if <100
+--     game.HighlightTerritories (terrList);
+-- end
+
+-- function getEffectiveBonuses (game)
+--     local bonuses    = game.Map.Bonuses
+--     local overridden = game.Settings.OverriddenBonuses
+
+--     local active = {}
+
+--     for bonusID, bonus in pairs (bonuses) do
+--         local income = bonus.Amount
+--         if overridden[bonusID] ~= nil then
+--             income = overridden[bonusID]
+--         end
+
+--         if income ~= 0 then
+--             local terrCount = #bonus.Territories
+--             local efficiency = income / terrCount
+
+--             active[#active + 1] = {
+--                 id = bonusID,
+--                 name = bonus.Name,
+--                 income = income,
+--                 terrCount = terrCount,
+--                 efficiency = efficiency,
+--                 territories = bonus.Territories
+--             }
+--         end
+--     end
+
+--     return active
+-- end
+
+
+-- function sortBonusesByEfficiency (activeBonuses)
+-- 	table.sort(activeBonuses, function(a, b)
+--         return a.efficiency > b.efficiency
+--     end)
+-- end
+
+-- function printBonusEfficiency (game, activeBonuses)
+--     local territories = game.Map.Territories
+
+--     print ("=== Bonus Efficiency Ranking ===")
+
+--     for _, b in ipairs(activeBonuses) do
+--         print ("Bonus " .. b.id .. " (" .. b.name .. ")")
+--         print ("  Value: " .. b.income)
+--         print ("  Territories: " .. b.terrCount)
+--         print ("  Efficiency: " .. string.format("%.4f", b.efficiency))
+--         print ("  Territory List:")
+
+--         for _, terrID in ipairs(b.territories) do
+--             print ("    Terr " .. terrID .. " (" .. territories[terrID].Name .. ")")
+--         end
+
+--         print ("")
+--     end
+-- end
+
 function findMapOverlappingBonuses ()
-    local overlaps = findActiveBonusOverlaps (Game)
-    printOverlapSummary(overlaps)
-    PrintFriendlyOverlaps (Game, overlaps)
+	local overlaps = findActiveBonusOverlaps (Game)
+	printOverlapSummary(overlaps)
+	PrintFriendlyOverlaps (Game, overlaps)
 end
 
 function printOverlapSummary(overlaps)
-    local totalPairs = 0
-    local totalTerrs = 0
+	local totalPairs = 0
+	local totalTerrs = 0
 
-    for _, others in pairs(overlaps) do
-        for _, terrs in pairs(others) do
-            totalPairs = totalPairs + 1
-            totalTerrs = totalTerrs + #terrs
-        end
-    end
+	for _, others in pairs(overlaps) do
+		for _, terrs in pairs(others) do
+			totalPairs = totalPairs + 1
+			totalTerrs = totalTerrs + #terrs
+		end
+	end
 
-    print("Active bonus overlap pairs: " .. totalPairs)
-    print("Territories causing overlaps: " .. totalTerrs)
+	print("Active bonus overlap pairs: " .. totalPairs)
+	print("Territories causing overlaps: " .. totalTerrs)
 end
 
 function PrintFriendlyOverlaps(game, overlaps)
-    local bonuses     = game.Map.Bonuses
-    local territories = game.Map.Territories
+	local bonuses     = game.Map.Bonuses
+	local territories = game.Map.Territories
 
-    local printed = 0
-    local limit = 200   -- safety limit
+	local printed = 0
+	local limit = 200   -- safety limit
 
-    print("=== Active Bonus Overlaps ===")
+	print("=== Active Bonus Overlaps ===")
 
-    for b1, others in pairs(overlaps) do
-        for b2, terrList in pairs(others) do
+	for b1, others in pairs(overlaps) do
+		for b2, terrList in pairs(others) do
 
-            printed = printed + 1
-            if printed > limit then
-                print("... output truncated to avoid client crash ...")
-                return
-            end
+			printed = printed + 1
+			if printed > limit then
+				print("... output truncated to avoid client crash ...")
+				return
+			end
 
-            print("Bonus " .. b1 .. " (" .. bonuses[b1].Name .. ") overlaps Bonus " ..
-                  b2 .. " (" .. bonuses[b2].Name .. ") at territories:")
+			print("Bonus " .. b1 .. " (" .. bonuses[b1].Name .. ") overlaps Bonus " ..
+				b2 .. " (" .. bonuses[b2].Name .. ") at territories:")
 
-            for _, terrID in ipairs(terrList) do
-                print("   Terr " .. terrID .. " (" .. territories[terrID].Name .. ")")
-            end
-        end
-    end
+			for _, terrID in ipairs(terrList) do
+				print("   Terr " .. terrID .. " (" .. territories[terrID].Name .. ")")
+			end
+		end
+	end
 end
 
 function findActiveBonusOverlaps(game)
-    local activeBonuses = getActiveBonuses(game)
-    local terrToBonus   = buildTerrToBonusMap(activeBonuses)
+	local activeBonuses = getActiveBonuses(game)
+	local terrToBonus   = buildTerrToBonusMap(activeBonuses)
 
-    local overlaps = {}
+	local overlaps = {}
 
-    for terrID, bonusList in pairs(terrToBonus) do
-        if #bonusList > 1 then
-            for i = 1, #bonusList do
-                for j = i+1, #bonusList do
-                    local b1 = bonusList[i]
-                    local b2 = bonusList[j]
+	for terrID, bonusList in pairs(terrToBonus) do
+		if #bonusList > 1 then
+			for i = 1, #bonusList do
+				for j = i+1, #bonusList do
+					local b1 = bonusList[i]
+					local b2 = bonusList[j]
 
-                    overlaps[b1] = overlaps[b1] or {}
-                    overlaps[b1][b2] = overlaps[b1][b2] or {}
-                    table.insert(overlaps[b1][b2], terrID)
+					overlaps[b1] = overlaps[b1] or {}
+					overlaps[b1][b2] = overlaps[b1][b2] or {}
+					table.insert(overlaps[b1][b2], terrID)
 
-                    overlaps[b2] = overlaps[b2] or {}
-                    overlaps[b2][b1] = overlaps[b2][b1] or {}
-                    table.insert(overlaps[b2][b1], terrID)
-                end
-            end
-        end
-    end
+					overlaps[b2] = overlaps[b2] or {}
+					overlaps[b2][b1] = overlaps[b2][b1] or {}
+					table.insert(overlaps[b2][b1], terrID)
+				end
+			end
+		end
+	end
 
-    return overlaps
+	return overlaps
 end
 
 function buildTerrToBonusMap(bonuses)
-    local terrToBonus = {}
+	local terrToBonus = {}
 
-    for bonusID, bonus in pairs(bonuses) do
-        for _, terrID in ipairs(bonus.Territories) do
-            terrToBonus[terrID] = terrToBonus[terrID] or {}
-            table.insert(terrToBonus[terrID], bonusID)
-        end
-    end
+	for bonusID, bonus in pairs(bonuses) do
+		for _, terrID in ipairs(bonus.Territories) do
+			terrToBonus[terrID] = terrToBonus[terrID] or {}
+			table.insert(terrToBonus[terrID], bonusID)
+		end
+	end
 
-    return terrToBonus
+	return terrToBonus
 end
 
 function getActiveBonuses(game)
-    local bonuses    = game.Map.Bonuses
-    local overridden = game.Settings.OverriddenBonuses
+	local bonuses    = game.Map.Bonuses
+	local overridden = game.Settings.OverriddenBonuses
 
-    local activeBonuses = {}
+	local activeBonuses = {}
 
-    for bonusID, bonus in pairs(bonuses) do
-        -- (A) base value
-        local income = bonus.Amount
+	for bonusID, bonus in pairs(bonuses) do
+		-- (A) base value
+		local income = bonus.Amount
 
-        -- (B) overridden value (if present)
-        local overrideValue = overridden[bonusID]
-        if overrideValue ~= nil then
-            income = overrideValue
-        end
+		-- (B) overridden value (if present)
+		local overrideValue = overridden[bonusID]
+		if overrideValue ~= nil then
+			income = overrideValue
+		end
 
-        -- (C) ignore bonuses with effective income == 0
-        if income ~= 0 then
-            activeBonuses[bonusID] = bonus
-        end
-    end
+		-- (C) ignore bonuses with effective income == 0
+		if income ~= 0 then
+			activeBonuses[bonusID] = bonus
+		end
+	end
 
-    return activeBonuses
+	return activeBonuses
 end
 
 function old ()
 	local baseMapBonusValuesOverlaps = findBonusOverlaps (Game)
-    -- local overriddenValuesOverlaps = findZeroValueBonusOverlaps (Game)
-    local overriddenValuesOverlaps = findRemainingBonusOverlaps (Game)
+	-- local overriddenValuesOverlaps = findZeroValueBonusOverlaps (Game)
+	local overriddenValuesOverlaps = findRemainingBonusOverlaps (Game)
 
-    -- printOverlaps(normalOverlaps, "Normal Bonuses")
-    printOverlaps (overriddenValuesOverlaps, "Overridden non-Zero-Value Bonuses")
+	-- printOverlaps(normalOverlaps, "Normal Bonuses")
+	printOverlaps (overriddenValuesOverlaps, "Overridden non-Zero-Value Bonuses")
 
 	-- -- buttonMapFindOverlappingBonuses = UI.CreateButton (debugPanel).SetText ("Find map overlapping bonuses").SetOnClick (findMapOverlappingBonuses);
 	-- for k,v in pairs (Game.Map.Bonuses) do
@@ -278,157 +653,157 @@ function old ()
 end
 
 function findRemainingBonusOverlapsOLD(game)
-    local bonuses = game.Map.Bonuses
-    local overridden = game.Settings.OverriddenBonuses
+	local bonuses = game.Map.Bonuses
+	local overridden = game.Settings.OverriddenBonuses
 
-    -- Only bonuses that are overridden AND still have non-zero income
-    local remainingBonuses = {}
+	-- Only bonuses that are overridden AND still have non-zero income
+	local remainingBonuses = {}
 
-    for bonusID, overrideValue in pairs(overridden) do
-        if overrideValue ~= 0 then
-            local bonus = bonuses[bonusID]
-            if bonus ~= nil then
-                remainingBonuses[bonusID] = bonus
-            end
-        end
-    end
+	for bonusID, overrideValue in pairs(overridden) do
+		if overrideValue ~= 0 then
+			local bonus = bonuses[bonusID]
+			if bonus ~= nil then
+				remainingBonuses[bonusID] = bonus
+			end
+		end
+	end
 
 	print ("# bonuses with non-zero values: " .. tostring (#remainingBonuses));
 	local terrToBonus = buildTerrToBonusMap(remainingBonuses)
-    local overlaps = {}
+	local overlaps = {}
 
-    for terrID, bonusList in pairs(terrToBonus) do
-        if #bonusList > 1 then
-            for i = 1, #bonusList do
-                for j = i+1, #bonusList do
-                    local b1 = bonusList[i]
-                    local b2 = bonusList[j]
+	for terrID, bonusList in pairs(terrToBonus) do
+		if #bonusList > 1 then
+			for i = 1, #bonusList do
+				for j = i+1, #bonusList do
+					local b1 = bonusList[i]
+					local b2 = bonusList[j]
 
-                    overlaps[b1] = overlaps[b1] or {}
-                    overlaps[b1][b2] = overlaps[b1][b2] or {}
-                    table.insert(overlaps[b1][b2], terrID)
+					overlaps[b1] = overlaps[b1] or {}
+					overlaps[b1][b2] = overlaps[b1][b2] or {}
+					table.insert(overlaps[b1][b2], terrID)
 
-                    overlaps[b2] = overlaps[b2] or {}
-                    overlaps[b2][b1] = overlaps[b2][b1] or {}
-                    table.insert(overlaps[b2][b1], terrID)
-                end
-            end
-        end
-    end
+					overlaps[b2] = overlaps[b2] or {}
+					overlaps[b2][b1] = overlaps[b2][b1] or {}
+					table.insert(overlaps[b2][b1], terrID)
+				end
+			end
+		end
+	end
 
-    return overlaps
+	return overlaps
 end
 
 function buildTerrToBonusMapOLD (bonuses)
-    local terrToBonus = {}
+	local terrToBonus = {}
 
-    for bonusID, bonus in pairs(bonuses) do
-        for _, terrID in ipairs(bonus.Territories) do
-            terrToBonus[terrID] = terrToBonus[terrID] or {}
-            table.insert(terrToBonus[terrID], bonusID)
-        end
-    end
+	for bonusID, bonus in pairs(bonuses) do
+		for _, terrID in ipairs(bonus.Territories) do
+			terrToBonus[terrID] = terrToBonus[terrID] or {}
+			table.insert(terrToBonus[terrID], bonusID)
+		end
+	end
 
-    return terrToBonus
+	return terrToBonus
 end
 
 function findBonusOverlapsOLD(game)
-    local bonuses = game.Map.Bonuses
-    local terrToBonus = buildTerrToBonusMap(bonuses)
+	local bonuses = game.Map.Bonuses
+	local terrToBonus = buildTerrToBonusMap(bonuses)
 
-    local overlaps = {}
+	local overlaps = {}
 
-    for terrID, bonusList in pairs(terrToBonus) do
-        if #bonusList > 1 then
-            for i = 1, #bonusList do
-                for j = i+1, #bonusList do
-                    local b1 = bonusList[i]
-                    local b2 = bonusList[j]
+	for terrID, bonusList in pairs(terrToBonus) do
+		if #bonusList > 1 then
+			for i = 1, #bonusList do
+				for j = i+1, #bonusList do
+					local b1 = bonusList[i]
+					local b2 = bonusList[j]
 
-                    overlaps[b1] = overlaps[b1] or {}
-                    overlaps[b1][b2] = overlaps[b1][b2] or {}
-                    table.insert(overlaps[b1][b2], terrID)
+					overlaps[b1] = overlaps[b1] or {}
+					overlaps[b1][b2] = overlaps[b1][b2] or {}
+					table.insert(overlaps[b1][b2], terrID)
 
-                    overlaps[b2] = overlaps[b2] or {}
-                    overlaps[b2][b1] = overlaps[b2][b1] or {}
-                    table.insert(overlaps[b2][b1], terrID)
-                end
-            end
-        end
-    end
+					overlaps[b2] = overlaps[b2] or {}
+					overlaps[b2][b1] = overlaps[b2][b1] or {}
+					table.insert(overlaps[b2][b1], terrID)
+				end
+			end
+		end
+	end
 
-    return overlaps
+	return overlaps
 end
 
 function findZeroValueBonusOverlapsOLD(game)
-    local bonuses = game.Map.Bonuses
-    local overridden = game.Settings.OverriddenBonuses
+	local bonuses = game.Map.Bonuses
+	local overridden = game.Settings.OverriddenBonuses
 
-    -- Filter bonuses whose override value is exactly 0
-    local zeroBonuses = {}
+	-- Filter bonuses whose override value is exactly 0
+	local zeroBonuses = {}
 
-    for bonusID, bonus in pairs(bonuses) do
-        local overrideValue = overridden[bonusID]
+	for bonusID, bonus in pairs(bonuses) do
+		local overrideValue = overridden[bonusID]
 
-        if overrideValue ~= nil and overrideValue == 0 then
-            zeroBonuses[bonusID] = bonus
-        end
-    end
+		if overrideValue ~= nil and overrideValue == 0 then
+			zeroBonuses[bonusID] = bonus
+		end
+	end
 
-    local terrToBonus = buildTerrToBonusMap(zeroBonuses)
-    local overlaps = {}
+	local terrToBonus = buildTerrToBonusMap(zeroBonuses)
+	local overlaps = {}
 
-    for terrID, bonusList in pairs(terrToBonus) do
-        if #bonusList > 1 then
-            for i = 1, #bonusList do
-                for j = i+1, #bonusList do
-                    local b1 = bonusList[i]
-                    local b2 = bonusList[j]
+	for terrID, bonusList in pairs(terrToBonus) do
+		if #bonusList > 1 then
+			for i = 1, #bonusList do
+				for j = i+1, #bonusList do
+					local b1 = bonusList[i]
+					local b2 = bonusList[j]
 
-                    overlaps[b1] = overlaps[b1] or {}
-                    overlaps[b1][b2] = overlaps[b1][b2] or {}
-                    table.insert(overlaps[b1][b2], terrID)
+					overlaps[b1] = overlaps[b1] or {}
+					overlaps[b1][b2] = overlaps[b1][b2] or {}
+					table.insert(overlaps[b1][b2], terrID)
 
-                    overlaps[b2] = overlaps[b2] or {}
-                    overlaps[b2][b1] = overlaps[b2][b1] or {}
-                    table.insert(overlaps[b2][b1], terrID)
-                end
-            end
-        end
-    end
+					overlaps[b2] = overlaps[b2] or {}
+					overlaps[b2][b1] = overlaps[b2][b1] or {}
+					table.insert(overlaps[b2][b1], terrID)
+				end
+			end
+		end
+	end
 
-    return overlaps
+	return overlaps
 end
 
 function printOverlapsOLD (overlaps, label)
-    print("=== Overlaps: " .. label .. " ===")
+	print("=== Overlaps: " .. label .. " ===")
 
-    local count = 0
-    local limit = 200   -- prevent client crash
+	local count = 0
+	local limit = 200   -- prevent client crash
 
-    for b1, others in pairs(overlaps) do
-        for b2, terrs in pairs(others) do
-            print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
-                  " at territories: " .. table.concat(terrs, ", "))
+	for b1, others in pairs(overlaps) do
+		for b2, terrs in pairs(others) do
+			print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
+				" at territories: " .. table.concat(terrs, ", "))
 
-            count = count + 1
-            if count >= limit then
-                print("... truncated output to avoid client crash ...")
-                return
-            end
-        end
-    end
+			count = count + 1
+			if count >= limit then
+				print("... truncated output to avoid client crash ...")
+				return
+			end
+		end
+	end
 end
 
 function printOverlaps_orig (overlaps, label)
-    print("=== Overlaps: " .. label .. " ===")
+	print("=== Overlaps: " .. label .. " ===")
 
-    for b1, others in pairs(overlaps) do
-        for b2, terrs in pairs(others) do
-            print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
-                  " at territories: " .. table.concat(terrs, ", "))
-        end
-    end
+	for b1, others in pairs(overlaps) do
+		for b2, terrs in pairs(others) do
+			print("Bonus " .. b1 .. " overlaps Bonus " .. b2 ..
+				" at territories: " .. table.concat(terrs, ", "))
+		end
+	end
 end
 
 function Nuke_invoke_Test ()
@@ -465,15 +840,15 @@ end
 
 --not actually used; but keep it around as an example of how to use/return data using clientGame.SendGameCustomMessage
 function PresentMenuUI_callBack (table)
-    for k,v in pairs (table) do
-        print ("[C_PMUI] "..k,v);
-        UI.CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
-    end
+	for k,v in pairs (table) do
+		print ("[C_PMUI] "..k,v);
+		UI.CreateLabel (MenuWindow).SetText ("[C_PMUI] "..k.."/"..v);
+	end
 end
 
 function showFogModData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nFogMod data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Game.LatestStanding.FogModsOpt));
+	UI.CreateLabel (MenuWindow).SetText ("\nFogMod data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Game.LatestStanding.FogModsOpt));
 	if (Game.LatestStanding.FogModsOpt == nil) then print ("FogModsOpt == nil");
 	else
 		local intFogModCount = 0;
@@ -494,118 +869,118 @@ function showFogModData ()
 end
 
 function showNeutralizeData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nNeutralize data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PrivateGameData.NeutralizeData));
-    for k,v in pairs (Mod.PrivateGameData.NeutralizeData) do
-        printObjectDetails (v,"record", "NeutralizeData");
-        UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires).. ", ".. tostring(v.specialUnitID));
-    end
+	UI.CreateLabel (MenuWindow).SetText ("\nNeutralize data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PrivateGameData.NeutralizeData));
+	for k,v in pairs (Mod.PrivateGameData.NeutralizeData) do
+		printObjectDetails (v,"record", "NeutralizeData");
+		UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.impactedTerritoryOwnerID)..", " .. tostring(v.turnNumber_NeutralizationExpires).. ", ".. tostring(v.specialUnitID));
+	end
 	--for reference: local neutralizeDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberToRevert=turnNumber_NeutralizationExpires, specialUnitID=specialUnit_Neutralize.ID};
 end
 
 function showTornadoData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nTornado data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.TornadoData));
-    for k,v in pairs (Mod.PublicGameData.TornadoData) do
-        printObjectDetails (v,"record", "TornadoData");
-        UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberTornadoEnds));
-    end
+	UI.CreateLabel (MenuWindow).SetText ("\nTornado data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.TornadoData));
+	for k,v in pairs (Mod.PublicGameData.TornadoData) do
+		printObjectDetails (v,"record", "TornadoData");
+		UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.territory)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberTornadoEnds));
+	end
 
 	--for reference: publicGameData.TornadoData[targetTerritoryID] = {territory = targetTerritoryID, castingPlayer = gameOrder.PlayerID, turnNumberTornadoEnds = turnNumber_TornadoExpires};
 end
 
 function showEarthquakeData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nEarthquake data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.EarthquakeData));
-    for k,v in pairs (Mod.PublicGameData.EarthquakeData) do
-        printObjectDetails (v,"record", "EarthquakeData");
-        UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetBonus)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberEarthquakeEnds));
-    end
-    --for reference: publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
+	UI.CreateLabel (MenuWindow).SetText ("\nEarthquake data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.EarthquakeData));
+	for k,v in pairs (Mod.PublicGameData.EarthquakeData) do
+		printObjectDetails (v,"record", "EarthquakeData");
+		UI.CreateLabel (MenuWindow).SetText (tostring(k)..", " ..tostring(v.targetBonus)..", " ..tostring(v.castingPlayer)..", "..tostring(v.turnNumberEarthquakeEnds));
+	end
+	--for reference: publicGameData.EarthquakeData[targetBonusID] = {targetBonus = targetBonusID, castingPlayer = gameOrder.PlayerID, turnNumberEarthquakeEnds = turnNumber_EarthquakeExpires};
 end
 
 function showCardBlockData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nCard Block data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
-    for k,v in pairs (Mod.PublicGameData.CardBlockData) do
-        printObjectDetails (v,"record", "CardBlockData");
-        UI.CreateLabel (MenuWindow).SetText (k..", " ..v.castingPlayer..", "..v.turnNumberBlockEnds);
-        --for reference: local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
-    end
+	UI.CreateLabel (MenuWindow).SetText ("\nCard Block data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.CardBlockData));
+	for k,v in pairs (Mod.PublicGameData.CardBlockData) do
+		printObjectDetails (v,"record", "CardBlockData");
+		UI.CreateLabel (MenuWindow).SetText (k..", " ..v.castingPlayer..", "..v.turnNumberBlockEnds);
+		--for reference: local record = {targetPlayer = targetPlayerID, castingPlayer = gameOrder.PlayerID, turnNumberBlockEnds = turnNumber_CardBlockExpires}; --create record to save data on impacted player, casting player & end turn of Card Block impact
+	end
 end
 
 function showQuicksandData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nQuicksand data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.QuicksandData));
-    UI.CreateLabel (MenuWindow).SetText ("AttackerDamageTakenModifier: "..Mod.Settings.QuicksandAttackerDamageTakenModifier);
-    UI.CreateLabel (MenuWindow).SetText ("DefenderDamageTakenModifier: "..Mod.Settings.QuicksandDefenderDamageTakenModifier);
+	UI.CreateLabel (MenuWindow).SetText ("\nQuicksand data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.QuicksandData));
+	UI.CreateLabel (MenuWindow).SetText ("AttackerDamageTakenModifier: "..Mod.Settings.QuicksandAttackerDamageTakenModifier);
+	UI.CreateLabel (MenuWindow).SetText ("DefenderDamageTakenModifier: "..Mod.Settings.QuicksandDefenderDamageTakenModifier);
 
 	if (tablelength (Mod.PublicGameData.QuicksandData)) == 0 then UI.CreateLabel (MenuWindow).SetText ("QuicksandData is empty"); return; end
 
-    for k,v in pairs (Mod.PublicGameData.QuicksandData) do
-        printObjectDetails (v,"record", "QuicksandData");
-        UI.CreateLabel (MenuWindow).SetText (k..", " ..tostring (v.territory).."/"..getTerritoryName (v.territory, Game) ..", "..tostring (v.castingPlayer).. ", "..tostring (v.territoryOwner).. ", ".. tostring (v.turnNumberQuicksandEnds) .. ", "..tostring (v.specialUnitID));
-        --UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
-        --for reference: local QuicksandDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds=turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};---&&&
-    end
+	for k,v in pairs (Mod.PublicGameData.QuicksandData) do
+		printObjectDetails (v,"record", "QuicksandData");
+		UI.CreateLabel (MenuWindow).SetText (k..", " ..tostring (v.territory).."/"..getTerritoryName (v.territory, Game) ..", "..tostring (v.castingPlayer).. ", "..tostring (v.territoryOwner).. ", ".. tostring (v.turnNumberQuicksandEnds) .. ", "..tostring (v.specialUnitID));
+		--UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberQuicksandEnds);
+		--for reference: local QuicksandDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberQuicksandEnds=turnNumber_QuicksandExpires, specialUnitID=specialUnit_Quicksand.ID};---&&&
+	end
 end
 
 function showPestilenceData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nPestilence data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.PestilenceData));
+	UI.CreateLabel (MenuWindow).SetText ("\nPestilence data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.PestilenceData));
 
 	if (tablelength (Mod.PublicGameData.PestilenceData)) == 0 then UI.CreateLabel (MenuWindow).SetText ("PestilenceData is empty"); return; end
 
-    for k,v in pairs (Mod.PublicGameData.PestilenceData) do
-        --printObjectDetails (v,"record", "PestilenceData");
-        UI.CreateLabel (MenuWindow).SetText ("[" ..tostring (k).. "] target " ..tostring (v.territory).. "/" ..tostring (toPlayerName (v.targetPlayer, Game)).. ", caster " ..tostring (v.castingPlayer).. "/" .. tostring  (toPlayerName (v.castingPlayer, Game)).. ", warning T" ..tostring (v.PestilenceWarningTurn).. ", Start T" ..tostring (v.PestilenceStartTurn).. ", End T".. tostring  (v.PestilenceEndTurn));
+	for k,v in pairs (Mod.PublicGameData.PestilenceData) do
+		--printObjectDetails (v,"record", "PestilenceData");
+		UI.CreateLabel (MenuWindow).SetText ("[" ..tostring (k).. "] target " ..tostring (v.territory).. "/" ..tostring (toPlayerName (v.targetPlayer, Game)).. ", caster " ..tostring (v.castingPlayer).. "/" .. tostring  (toPlayerName (v.castingPlayer, Game)).. ", warning T" ..tostring (v.PestilenceWarningTurn).. ", Start T" ..tostring (v.PestilenceStartTurn).. ", End T".. tostring  (v.PestilenceEndTurn));
 		--for reference: publicGameData.PestilenceData [pestilenceTarget_playerID] = {targetPlayer=pestilenceTarget_playerID, castingPlayer=gameOrder.PlayerID, PestilenceWarningTurn=PestilenceWarningTurn, PestilenceStartTurn=PestilenceStartTurn, PestilenceEndTurn=PestilenceEndTurn};
-    end
+	end
 end
 
 function showWildfireData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nWildfire data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.WildfireData));
+	UI.CreateLabel (MenuWindow).SetText ("\nWildfire data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.WildfireData));
 
 	if (tablelength (Mod.PublicGameData.WildfireData)) == 0 then UI.CreateLabel (MenuWindow).SetText ("WildfireData is empty"); return; end
 
-    for k,v in pairs (Mod.PublicGameData.WildfireData) do
-        --printObjectDetails (v,"record", "PestilenceData");
-        UI.CreateLabel (MenuWindow).SetText ("["..k.."] terr " ..v.territory.. "/" ..getTerritoryName (v.territory, Game).. ", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", start T"..v.turnNumberWildfireStarts.. ", cycle# "..v.cycleNumber..", #terrs impacted " ..tablelength(v.territoryState));
+	for k,v in pairs (Mod.PublicGameData.WildfireData) do
+		--printObjectDetails (v,"record", "PestilenceData");
+		UI.CreateLabel (MenuWindow).SetText ("["..k.."] terr " ..v.territory.. "/" ..getTerritoryName (v.territory, Game).. ", caster "..v.castingPlayer.."/"..toPlayerName (v.castingPlayer, Game)..", start T"..v.turnNumberWildfireStarts.. ", cycle# "..v.cycleNumber..", #terrs impacted " ..tablelength(v.territoryState));
 		-- ref: Wildfire record is: territory, castingPlayer, turnNumberWildfireStarts, cycleNumber, territoryState (array of impacted territories)
-    end
+	end
 end
 
 function showIsolationData ()
-    UI.CreateLabel (MenuWindow).SetText ("\nIsolation data:");
-    UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
+	UI.CreateLabel (MenuWindow).SetText ("\nIsolation data:");
+	UI.CreateLabel (MenuWindow).SetText ("# records==".. tablelength (Mod.PublicGameData.IsolationData));
 
 	UI.CreateLabel (MenuWindow).SetText ("Isolated territories:");
-    if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then UI.CreateLabel (MenuWindow).SetText ("IsolationData is empty"); return; end
+	if (tablelength (Mod.PublicGameData.IsolationData)) == 0 then UI.CreateLabel (MenuWindow).SetText ("IsolationData is empty"); return; end
 
-    for k,v in pairs (Mod.PublicGameData.IsolationData) do
-        printObjectDetails (v,"record", "IsolationData");
-        --UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/".."?"..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
-        UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
-        --for reference: local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
-    end
+	for k,v in pairs (Mod.PublicGameData.IsolationData) do
+		printObjectDetails (v,"record", "IsolationData");
+		--UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/".."?"..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
+		UI.CreateLabel (MenuWindow).SetText (k..", " ..v.territory.."/"..getTerritoryName (v.territory, Game)..", "..v.castingPlayer.. ", "..v.territoryOwner.. ", ".. v.turnNumberIsolationEnds);
+		--for reference: local IsolationDataRecord = {territory=targetTerritoryID, castingPlayer=castingPlayerID, territoryOwner=impactedTerritoryOwnerID, turnNumberIsolationEnds=turnNumber_IsolationExpires, specialUnitID=specialUnit_Isolation.ID};---&&&
+	end
 end
 
 function showDefinedCards (game)
-    --print ("[PresentMenuUI] CARD OVERVIEW");
-    --game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
+	--print ("[PresentMenuUI] CARD OVERVIEW");
+	--game.SendGameCustomMessage ("[waiting for server response]", {action="initialize_CardData"}, PresentMenuUI_callBack);
 
-    local cards = getDefinedCardList (game);
-    local CardPiecesCardID = Mod.PublicGameData.CardData.CardPiecesCardID;
+	local cards = getDefinedCardList (game);
+	local CardPiecesCardID = Mod.PublicGameData.CardData.CardPiecesCardID;
 
-    local strText = "";
-    for k,v in pairs (cards) do
-        strText = strText .. "\n"..v.." / ["..k.."]";
-    end
+	local strText = "";
+	for k,v in pairs (cards) do
+		strText = strText .. "\n"..v.." / ["..k.."]";
+	end
 
-    strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
-    if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = strText .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
-    TopLabel.SetText (strText.."\n");
+	strText = TopLabel.GetText() .. "\n\nDEFINED CARDS:"..strText;
+	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.CardPieces == true) then strText = strText .. "\n\nCardPieceCardID=="..CardPiecesCardID; end
+	TopLabel.SetText (strText.."\n");
 end
 
 function create_DebugWindow ()
@@ -613,8 +988,8 @@ function create_DebugWindow ()
 end
 
 function showDebugWindow (rootParent, setMaxSize, setScrollable, game, close)
-    setMaxSize(600, 600);
-    --setScrollable(true);
+	setMaxSize(600, 600);
+	--setScrollable(true);
 	UIdebugWindow = rootParent;
 end
 
@@ -639,8 +1014,8 @@ function tableIsEmpty(t)
 end
 
 function wholeMapInspectorPanel (rootParent, setMaxSize, setScrollable, game, close)
-    setMaxSize (800, 600);
-    --setScrollable(true);
+	setMaxSize (800, 600);
+	--setScrollable(true);
 
 	local UIdisplay = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth(1).SetCenter(false);
 
@@ -921,8 +1296,8 @@ function displaySpecialUnitProperties (UIcontrol, displayType, boolVerbose, owne
 end
 
 function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game, close)
-    setMaxSize(500, 500);
-    --setScrollable(true);
+	setMaxSize(500, 500);
+	--setScrollable(true);
 	TerritoryInspectorMenuRoot = rootParent;
 	TerritoryInspectorRoot = rootParent; --delme at some point when window separation is finished
 	-- inspectToolInUse = true;
@@ -941,7 +1316,7 @@ function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game
 	CurrentDisplayRoot = TerritoryInspectorMenuRoot;
 	colors = GetColors();
 
-    local vert = UI.CreateVerticalLayoutGroup(TerritoryInspectorMenuRoot).SetFlexibleWidth(1).SetCenter(false);
+	local vert = UI.CreateVerticalLayoutGroup(TerritoryInspectorMenuRoot).SetFlexibleWidth(1).SetCenter(false);
 	UI.CreateLabel (vert).SetText("[TERRITORY INSPECTOR]").SetColor(getColourCode("card play heading"));
 	UI.CreateLabel (vert).SetText("_").SetColor ("#000000"); --vertical spacer
 	--UI.CreateLabel (vert).SetText("\n\nClick a territory to inspect it").SetColor(colors.TextColor);
@@ -1004,9 +1379,9 @@ function showTerritoryInspectorMenu (rootParent, setMaxSize, setScrollable, game
 end
 
 function territoryInspectorWindowInstance (rootParent, setMaxSize, setScrollable, game, close)
-    setMaxSize(600, 600);
+	setMaxSize(600, 600);
 	-- TerritoryInspectorWindowInstanceRoot = rootParent;
-    local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1).SetCenter(false);
+	local vert = UI.CreateVerticalLayoutGroup(rootParent).SetFlexibleWidth(1).SetCenter(false);
 	CurrentDisplayRoot = vert;
 	TerritoryInspectorWindowInstanceRoot = vert;
 
@@ -1337,9 +1712,9 @@ end
 --- print(colors.Blue);     -- Prints "#0000FF"
 ---```
 function GetColors()
-    local colors = {};					-- Stores all the built-in colors (player colors only)
-    colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
-    return colors;
+	local colors = {};					-- Stores all the built-in colors (player colors only)
+	colors.Blue = "#0000FF"; colors.Purple = "#59009D"; colors.Orange = "#FF7D00"; colors["Dark Gray"] = "#606060"; colors["Hot Pink"] = "#FF697A"; colors["Sea Green"] = "#00FF8C"; colors.Teal = "#009B9D"; colors["Dark Magenta"] = "#AC0059"; colors.Yellow = "#FFFF00"; colors.Ivory = "#FEFF9B"; colors["Electric Purple"] = "#B70AFF"; colors["Deep Pink"] = "#FF00B1"; colors.Aqua = "#4EFFFF"; colors["Dark Green"] = "#008000"; colors.Red = "#FF0000"; colors.Green = "#00FF05"; colors["Saddle Brown"] = "#94652E"; colors["Orange Red"] = "#FF4700"; colors["Light Blue"] = "#23A0FF"; colors.Orchid = "#FF87FF"; colors.Brown = "#943E3E"; colors["Copper Rose"] = "#AD7E7E"; colors.Tan = "#FFAF56"; colors.Lime = "#8EBE57"; colors["Tyrian Purple"] = "#990024"; colors["Mardi Gras"] = "#880085"; colors["Royal Blue"] = "#4169E1"; colors["Wild Strawberry"] = "#FF43A4"; colors["Smoky Black"] = "#100C08"; colors.Goldenrod = "#DAA520"; colors.Cyan = "#00FFFF"; colors.Artichoke = "#8F9779"; colors["Rain Forest"] = "#00755E"; colors.Peach = "#FFE5B4"; colors["Apple Green"] = "#8DB600"; colors.Viridian = "#40826D"; colors.Mahogany = "#C04000"; colors["Pink Lace"] = "#FFDDF4"; colors.Bronze = "#CD7F32"; colors["Wood Brown"] = "#C19A6B"; colors.Tuscany = "#C09999"; colors["Acid Green"] = "#B0BF1A"; colors.Amazon = "#3B7A57"; colors["Army Green"] = "#4B5320"; colors["Donkey Brown"] = "#664C28"; colors.Cordovan = "#893F45"; colors.Cinnamon = "#D2691E"; colors.Charcoal = "#36454F"; colors.Fuchsia = "#FF00FF"; colors["Screamin' Green"] = "#76FF7A"; colors.TextColor = "#DDDDDD";
+	return colors;
 end
 
 function getPlayerName_Dutch_useUtilitiesVersionInstead(playerID)
