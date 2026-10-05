@@ -1908,12 +1908,12 @@ function execute_Deneutralize_operation (game, gameOrder, result, skip, addOrder
 	else
 		skip (WL.ModOrderControl.SkipAndSupressSkippedMessage);
 		-- addOrder (WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{}));
-		local addAirLiftCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
-		local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
-		printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
-		-- addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-		addAirLiftCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
-		addOrder (addAirLiftCardEvent, false);
+		local addDeneutralizeCardEvent = WL.GameOrderEvent.Create (gameOrder.PlayerID, strSettingsRuleViolationMessage, {}, {},{});
+		-- local deneutralizeCardID = getCardID ("Deneutralize", game); --get ID for card type 'Airlift'
+		-- printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral; assign 1 Whole Card to compensate for not being able to execute the Deneutralize action");
+		printDebug ("[DENEUTRALIZE] card execution failed, target not Neutral and/or appropriate type of Neutral (natural/neutralized); display error & do nothing");
+		-- addDeneutralizeCardEvent.AddCardPiecesOpt = {[gameOrder.PlayerID] = {[deneutralizeCardID] = game.Settings.Cards[deneutralizeCardID].NumPieces}}; --add enough pieces to equal 1 whole card
+		addOrder (addDeneutralizeCardEvent, false);
 	end
 end
 

@@ -553,6 +553,7 @@ function play_Deneutralize_card (game, cardInstance, playCard)
 		function ()
 
 			print ("---");
+			print ("[DENEUT SELECT] Owner: " ..tostring (game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID).. ", Fog: " ..tostring (game.LatestStanding.Territories [TargetTerritoryID].FogLevel).. "/" ..WL.StandingFogLevel.ToString (game.LatestStanding.Territories [TargetTerritoryID].FogLevel));
 			for k,v in pairs (arrValidTerrs) do print (k,v,getTerritoryName (k, game)); end
 			print ("SELECT: ".. TargetTerritoryID, getTerritoryName (TargetTerritoryID, game));
 
@@ -560,11 +561,11 @@ function play_Deneutralize_card (game, cardInstance, playCard)
 			if (TargetTerritoryID == nil) then
 				UI.Alert ("No territory selected. Please select a territory.");
 				return;
+			elseif (game.LatestStanding.Territories [TargetTerritoryID].FogLevel ~= WL.StandingFogLevel) then --territory is fogged, flag user that the operation will fail if not neutral, but don't cancel the order
+				UI.Alert ("You have selected a fogged territory. If it is neutral when the card is played after the turn advances, the Deneutralize operation will work. Otherwise, it will fail")
 			elseif (game.LatestStanding.Territories [TargetTerritoryID].OwnerPlayerID ~= WL.PlayerID.Neutral) then -- territory is not neutral, alert player and cancel
-				
 				UI.Alert ("You must select a neutral territory");
 				TargetTerritoryClicked (strDeneutralize_TerritorySelectText); --bring up the territory select screen again
-
 				return;
 			elseif (valueInTable (arrValidTerrs, TargetTerritoryID) == false) then
 				UI.Alert ("You must pick a territory within " ..tostring (Mod.Settings.DeneutralizeRange).. " steps from a territory you own; they are highlighted for convenience");
