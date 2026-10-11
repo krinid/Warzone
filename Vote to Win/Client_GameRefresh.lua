@@ -2,7 +2,7 @@ local boolVTWpendingMessageDisplayed = false;
 
 function Client_GameRefresh (game)
 	if (game.Us == nil) then return; end --spectators don't get VTW messages
-	local boolVTWstatus = VTWvoteIsActive (game);
+	local boolVTWstatus = VTWvoteIsActive_refresh (game);
 	local boolVTWvote = Mod.PublicGameData.VoteToWin_Votes and Mod.PublicGameData.VoteToWin_Votes [game.Us.ID] or false;
 
 	--popup message to local user if VTW is active, inform them how to Vote and what it means
@@ -13,7 +13,7 @@ function Client_GameRefresh (game)
 end
 
 --return table indicating whether VTW votes are underway (1+ active players have voted), # of active players, # of VTW votes so far
-function VTWvoteIsActive (game)
+function VTWvoteIsActive_refresh (game)
 	--count # of active players & # of votes who VTW'd (only count active players)
 	local intNumPlayersTotal = 0
 	local intNumAIs = 0
