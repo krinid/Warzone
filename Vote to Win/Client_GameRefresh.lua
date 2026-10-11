@@ -1,31 +1,34 @@
-require('Utilities');
+local boolVTWpendingMessageDisplayed = false;
 
---Alerts we've already told the server about, so that we don't show them twice while we wait for it to reply.
-AcknowledgedAlertIDs = {};
+function Client_GameRefresh (game)
+	if (game.Us == nil) then return; end --spectators don't get VTW messages
+	local boolVTWstatus = VTWvoteIsActive (game);
+	local boolVTWvote = Mod.PublicGameData.VoteToWin_Votes and Mod.PublicGameData.VoteToWin_Votes [game.Us.ID] or false;
 
-function Client_GameRefresh(game)
-	--Skip if we're not in the game.  We can't use game.SendGameCustomMessage as a spectator.
-	if (game.Us == nil) then
-		return;
+	--popup message to local user if VTW is active, inform them how to Vote and what it means
+	if (boolVTWstatus.Result == true and boolVTWvote == false and boolVTWpendingMessageDisplayed == false) then
+		UI.Alert ("Vote to Win has activated - if all remaining players agree, the game will end\n\nClick Game/Vote to Win to cast your vote");
+		boolVTWpendingMessageDisplayed = true; --don't show again until page is reloaded
+	end
+end
+
+--return table indicating whether VTW votes are underway (1+ active players have voted), # of active players, # of VTW votes so far
+function VTWvoteIsActive (game)
+	--count # of active players & # of votes who VTW'd (only count active players)
+	local intNumPlayersTotal = 0
+	local intNumAIs = 0
+	local intNumVTWvotes = 0;
+	local votes = Mod.PublicGameData.VoteToWin_Votes or {};
+
+	for playerID,player in pairs (game.Game.PlayingPlayers) do
+		if (player.IsAI == false and player.IsAIOrHumanTurnedIntoAI == false) then
+			intNumPlayersTotal = intNumPlayersTotal + 1;
+			if (votes [playerID] == true) then intNumVTWvotes = intNumVTWvotes + 1; end
+		else
+			intNumAIs = intNumAIs + 1;
+		end
 	end
 
-	local alerts = filter(Mod.PlayerGameData.Alerts or {}, function(alert) return AcknowledgedAlertIDs[alert.ID] ~= true; end);
-	if (count(alerts) == 0) then
-		return;
-	end
-
-	local message = table.concat(map(alerts, function(alert) return alert.Message; end), '\n\n');
-
-	local payload = {};
-	payload.Message = 'AckAlerts';
-	payload.AlertIDs = map(alerts, function(alert) return alert.ID; end);
-
-	for _,alert in pairs(alerts) do
-		AcknowledgedAlertIDs[alert.ID] = true;
-	end
-
-	--Let the server know we've seen these so it can delete them.  Wait on showing them until it replies, just to avoid two things appearing on the screen at once.
-	game.SendGameCustomMessage('Read receipt...', payload, function(returnValue)
-		UI.Alert(message);
-	end);
+	-- print (tostring (intNumPlayersTotal) .." active players, " ..tostring (intNumVTWvotes).. " VTW votes, VTW == " ..tostring (intNumVTWvotes >= intNumPlayersTotal));
+	return { Result = (intNumVTWvotes >= intNumPlayersTotal), VoteToWinCount = intNumVTWvotes, NumPlayers = intNumPlayersTotal, NumAIs = intNumAIs };
 end

@@ -1,188 +1,107 @@
-require ('Utilities');
-require ('Client');
-
 function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, close)
-	if (not WL.IsVersionOrHigher ("6.05")) then
-		UI.Alert ("Update your app to the latest version to use the 'Vote to Win' mod");
-		return;
-	end
-
-	Game = game; --make it globally accessible
-	Close = close;
-
+	root = rootParent;
+	mainUI = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
 	setMaxSize (500, 500);
-
-	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
-
-	ShowPendingRequests(vert, game);
-	ShowActions(vert, game);
+	populateWindow (game, mainUI, close, Mod.PublicGameData.VoteToWin_Votes or {});
 end
 
---show VTW request if pending
-function ShowPendingRequests (vert, game)
+--return table indicating whether VTW votes are underway (1+ active players have voted), # of active players, # of VTW votes so far
+function VTWvoteIsActive (game, votes)
+	--count # of active players & # of votes who VTW'd (only count active players)
+	local intNumPlayersTotal = 0
+	local intNumAIs = 0
+	local intNumVTWvotes = 0;
+	-- local votes = Mod.PublicGameData.VoteToWin_Votes or {};
+	-- if (votes == nil) then votes = Mod.PublicGameData.VoteToWin_Votes or {}; end
+
+	for playerID,player in pairs (game.Game.PlayingPlayers) do
+		if (player.IsAI == false and player.IsAIOrHumanTurnedIntoAI == false) then
+			intNumPlayersTotal = intNumPlayersTotal + 1;
+			if (votes [playerID] == true) then intNumVTWvotes = intNumVTWvotes + 1; print ("VTW " .. tostring (playerID)); end
+		else
+			intNumAIs = intNumAIs + 1;
+		end
+	end
+
+	print (tostring (intNumPlayersTotal) .." active players, " ..tostring (intNumAIs).. " AIs, " ..tostring (intNumVTWvotes).. " VTW votes, VTW == " ..tostring (intNumVTWvotes >= intNumPlayersTotal));
+	return { Result = (intNumVTWvotes >= intNumPlayersTotal), VoteToWinCount = intNumVTWvotes, NumPlayers = intNumPlayersTotal, NumAIs = intNumAIs };
+end
+
+function populateWindow (game, vert, close, votes)
 	-- if (game.Us == nil) then return; end; --spectators can't receive VTW requests
-	local boolVTWactive = Mod.PublicGameData.VoteToWin_ProposalActive or false;
-	local boolVTWvote = Mod.PublicGameData.VoteToWin_Votes ~= nil and Mod.PublicGameData.VoteToWin_Votes [game.Us.ID] or false;
+	-- local boolVTWactive = Mod.PublicGameData.VoteToWin_ProposalActive or false;
+	if (votes == nil) then votes = Mod.PublicGameData.VoteToWin_Votes or {}; end
+	local boolVTWvote = votes [game.Us.ID] == true;
+	local boolActivePlayer = game.Us ~= nil and game.Game.PlayingPlayers [game.Us.ID] ~= nil or false;
 
-	if (boolVTWactive == true) then
-		UI.CreateLabel (vert).SetText ("Vote to Win has been activated by a player!\n\nYou can also Vote to Win. If all remaining players Vote to Win, they will all win the game and share the points awarded for winning.\n");
-		-- UI.CreateLabel (vert).SetText ("Vote to Win has been activated!\n\nYou can Accept or Decline the proposal.\n\nIf all remaining players Accept the proposal, all remaining players win the game and will share the points awarded for winning.\n\nIf any player Declines, the proposal is rejected and the game continues.\n");
-	else UI.CreateLabel (vert).SetText ("Vote to Win has not been initiated");
-	end;
+	local labelVTWactiveMessageHeader = UI.CreateLabel (vert);
+	local labelVTWactiveMessageDetails = UI.CreateLabel (vert);
+	-- 	UI.CreateLabel (vert).SetText ("Vote to Win has been activated").SetColor ("#FFFF00");
+	-- 	UI.CreateLabel (vert).SetText ("\n\nIf all remaining players Vote to Win, they will all win the game and share the points awarded for winning\n\nAI players will be ignored for Vote to Win purposes, only the votes of active players are relevant, AIs will be excluded from the group of winners\n");
+	-- else UI.CreateLabel (vert).SetText ("Vote to Win has not been initiated\n\nTo initiative a Vote to Win sequence, click the 'Vote to Win' button below\n");
+	-- end;
 
-	local row = UI.CreateHorizontalLayoutGroup (vert);
-	UI.CreateButton(row).SetText ('Vote to Win').SetInteractable (not boolVTWvote).SetOnClick (function() SendAccept (game, request, Close); end);
-	-- UI.CreateButton(row).SetText('Accept').SetInteractable(not HaveWeAccepted(game, request)).SetOnClick(function() SendAccept(game, request, Close); end);
-	-- UI.CreateButton(row).SetText('Decline').SetOnClick(function() SendDecline(game, request, Close); end);
-
-	UI.CreateLabel (vert).SetText("Players who have Voted to Win:");
-	local vertPlayersWhoVoted = UI.CreateVerticalLayoutGroup (vert).SetFlexibleWidth (1);
-	UI.CreateLabel (vert).SetText("Players who have not voted yet:");
-	local vertPlayersWhoHaventVoted = UI.CreateVerticalLayoutGroup (vert).SetFlexibleWidth (1);
-	for k,v in pairs (game.Game.PlayingPlayers) do
-		UI.Alert (k,v);
-		if (Mod.PublicGameData.VoteToWin_Votes ~= nil and Mod.PublicGameData.VoteToWin_Votes [k] == true) then
-			UI.CreateLabel (vertPlayersWhoVoted).SetText (v.DisplayName (game, false));
-		else
-			UI.CreateLabel (vertPlayersWhoHaventVoted).SetText (v.DisplayName (game, false));
-		end
-	end
-end
-
-function ShowActions(vert, game)
-	--if current VTW action is pending, show an "Accept VTW Proposal button"
-	--if VTW not pending, show "Propose VTW to all remaining players"
-	--any player can initiative a VTW proposal, and it just counts as 1 vote, doesn't matter who started it, all other players can vote Accept/Decline
-	--if even 1 player Declines, the VTW proposal is rejected and the game continues
-	--until 1 player Declines or all players Accept, any player can revoke their Accept vote w/o declining and can Accept again later or Decline as they see fit
+	--any player can initiative a VTW proposal, and it just counts as 1 vote, doesn't matter who started it, all other players can VTW or abstain
 	--as with VTE, the game will continue regardless of VTW voting states, VTW state will continue forward
-	if (game.Us == nil) then
-		UI.CreateLabel(vert).SetText("You can't change teams since you're not in this game.");
-		return;
-	end
-	if (game.Us.State ~= WL.GamePlayerState.Playing) then
-		UI.CreateLabel(vert).SetText("You can't change teams since you're no longer playing.");
-		return;
-	end
 
-	UI.CreateButton(vert).SetText('Propose a team').SetOnClick(function() game.CreateDialog(CreateProposeDialog); end);
+	local strVoteButtonText = not boolVTWvote and "Vote to Win" or "Retract Vote to Win";
+	local strVoteButtonColour = not boolVTWvote and "#198225" or "#9A2929"; --WZ green & WZ red
+	if (boolActivePlayer) then UI.CreateButton(vert).SetText (strVoteButtonText).SetColor (strVoteButtonColour).SetInteractable (boolActivePlayer).SetOnClick (function() SendVote (game, not boolVTWvote, close); end); end
+	-- if (boolActivePlayer) then UI.CreateButton(vert).SetText ("Vote TRUE for AIs").SetColor ("#FF7D00").SetInteractable (true).SetOnClick (function() SendVote (game, not boolVTWvote, close); end); end
 
-	UI.CreateButton(vert).SetText('Leave my team').SetOnClick(function() SendUnteam(game, Close); end);
-end
+	local labelActivePlayers = UI.CreateLabel (vert);
+	local labelPlayersVTW = UI.CreateLabel (vert);
+	local vertPlayersWhoVoted = UI.CreateVerticalLayoutGroup (vert).SetFlexibleWidth (1);
+	local labelPlayerNotVTW = UI.CreateLabel (vert);
+	local vertPlayersWhoHaventVoted = UI.CreateVerticalLayoutGroup (vert).SetFlexibleWidth (1);
+	local intNumPlayersVoted = 0;
+	local intNumPlayersNotVoted = 0;
+	local intNumAIs = 0;
 
-function CreateProposeDialog(rootParent, setMaxSize, setScrollable, game, close)
-	setMaxSize(450, 400);
-
-	ProposeRoot = rootParent;
-	ProposeClose = close;
-	SelectedPlayerIDs = {};
-
-	BuildProposeUI();
-end
-
---Rebuilt from scratch every time the player adds or removes someone from the team they're putting together.
-function BuildProposeUI()
-	if (ProposeVert ~= nil and not UI.IsDestroyed(ProposeVert)) then
-		UI.Destroy(ProposeVert);
-	end
-
-	ProposeVert = UI.CreateVerticalLayoutGroup(ProposeRoot).SetFlexibleWidth(1);
-
-	UI.CreateLabel(ProposeVert).SetText('Choose exactly who should be on the team.  Everyone you name has to accept before it takes effect.');
-
-	UI.CreateLabel(ProposeVert).SetText('The team will be:');
-	UI.CreateLabel(ProposeVert).SetText(' - ' .. PlayerName(Game, Game.Us.ID) .. ' (you)');
-
-	for _,playerID in ipairs(SelectedPlayerIDs) do
-		local row = UI.CreateHorizontalLayoutGroup(ProposeVert);
-		UI.CreateLabel(row).SetText(' - ' .. PlayerName(Game, playerID));
-		UI.CreateButton(row).SetText('Remove').SetOnClick(function()
-			SelectedPlayerIDs = filter(SelectedPlayerIDs, function(selected) return selected ~= playerID; end);
-			BuildProposeUI();
-		end);
-	end
-
-	if (count(SelectedPlayerIDs) == 0) then
-		--A team of just yourself would be the same as leaving your team, so don't let them propose one.
-		UI.CreateLabel(ProposeVert).SetText('Add at least one other player before proposing.');
-	end
-
-	UI.CreateButton(ProposeVert).SetText('Add player').SetOnClick(AddPlayerClicked);
-	UI.CreateButton(ProposeVert).SetText('Propose team').SetInteractable(count(SelectedPlayerIDs) > 0).SetOnClick(SubmitPropose);
-end
-
-function AddPlayerClicked()
-	local players = filter(Game.Game.PlayingPlayers, IsPotentialTeammate);
-
-	if (count(players) == 0) then
-		UI.Alert("There's nobody else you can add to the team.");
-		return;
-	end
-
-	table.sort(players, function(a, b)
-		return a.DisplayName(nil, false) < b.DisplayName(nil, false);
-	end);
-
-	UI.PromptFromList('Select a player to add to the team', map(players, PlayerButton));
-end
-
---Determines if this is a player we can ask to join the team.
-function IsPotentialTeammate(player)
-	if (player.ID == Game.Us.ID) then return false; end; --we're always on the team we propose
-
-	if (contains(SelectedPlayerIDs, player.ID)) then return false; end; --already on it
-
-	if (player.State ~= WL.GamePlayerState.Playing) then return false; end; --skip players who aren't alive anymore, or that declined the game.
-
-	--An AI would never respond to a proposal, so don't allow naming one in multi-player.  In single-player they accept automatically so the mod can be tried out.
-	if (player.IsAIOrHumanTurnedIntoAI and not Game.Settings.SinglePlayer) then return false; end;
-
-	return true;
-end
-
-function PlayerButton(player)
-	local name = player.DisplayName(nil, false);
-	local ret = {};
-
-	if (WL.IsVersionOrHigher("5.41.0")) then
-		ret["player"] = player.ID;
-	else
-		ret["text"] = name;
-	end
-
-	ret["selected"] = function()
-		table.insert(SelectedPlayerIDs, player.ID);
-		BuildProposeUI();
-	end
-	return ret;
-end
-
-function SubmitPropose()
-	if (count(SelectedPlayerIDs) == 0) then
-		UI.Alert("A team needs at least one other player on it.  If you want to leave the team you're on, close this and use \"Leave my team\" instead.");
-		return;
-	end
-
-	local playerIDs = { Game.Us.ID };
-	for _,playerID in ipairs(SelectedPlayerIDs) do
-		table.insert(playerIDs, playerID);
-	end
-
-	local payload = {};
-	payload.Message = 'ProposeTeamChange';
-	payload.PlayerIDs = playerIDs;
-
-	--Close the propose dialog and the menu behind it, since what they're showing is about to be out of date.
-	local closeBoth = function()
-		ProposeClose();
-		Close();
-	end
-
-	SendTeamMessage(Game, 'Proposing team...', payload, closeBoth, function(returnValue)
-		if (returnValue.Complete) then
-			return 'The team of ' .. PlayerNames(Game, playerIDs) .. ' takes effect when the turn advances.';
+	for playerID,player in pairs (game.Game.PlayingPlayers) do
+		-- UI.Alert (playerID.."/"..player.DisplayName (nil, false));
+		-- print ("CLIENT CURRENT VALUE - " ..playerID.."/"..playerID.DisplayName (nil, false).. "/" ..tostring (votes [playerID]));
+		if (player.IsAI == false and player.IsAIOrHumanTurnedIntoAI == false) then
+			if (votes [playerID] == true) then
+				UI.CreateLabel (vertPlayersWhoVoted).SetText ("• " ..player.DisplayName (nil, false));
+				intNumPlayersVoted = intNumPlayersVoted + 1;
+			else
+				UI.CreateLabel (vertPlayersWhoHaventVoted).SetText ("• " ..player.DisplayName (nil, false));
+				intNumPlayersNotVoted = intNumPlayersNotVoted + 1;
+			end
 		else
-			return 'Your proposal was sent.  The team takes effect once everyone named in it accepts.';
+			intNumAIs = intNumAIs + 1;
 		end
+	end
+
+	if (intNumPlayersVoted > 0 and boolVTWvote == false) then
+		labelVTWactiveMessageHeader.SetText ("Vote to Win has been activated").SetColor ("#FFFF00");
+		labelVTWactiveMessageDetails.SetText ("\nIf all active players Vote to Win, they will all win the game and share the points awarded for winning\n\nAI players will be ignored for Vote to Win purposes, only the votes of active players are relevant, AIs will be excluded from the group of winners\n");
+	elseif (intNumPlayersVoted > 0 and boolVTWvote == true) then
+		labelVTWactiveMessageHeader.SetText ("Vote to Win has been activated (you have Voted already)").SetColor ("#FFFFFF");
+		labelVTWactiveMessageDetails.SetText ("\nIf all active players Vote to Win, they will all win the game and share the points awarded for winning\n\nAI players will be ignored for Vote to Win purposes, only the votes of active players are relevant, AIs will be excluded from the group of winners\n");
+	else
+		labelVTWactiveMessageHeader.SetText ("Vote to Win has not been initiated").SetColor ("#FFFFFF");
+		labelVTWactiveMessageDetails.SetText ("\nTo initiative a Vote to Win sequence, click the 'Vote to Win' button below\n");
+	end
+
+	if (intNumPlayersVoted == 0) then UI.CreateLabel (vertPlayersWhoVoted).SetText ("[None]"); end
+	if (intNumPlayersNotVoted == 0) then UI.CreateLabel (vertPlayersWhoHaventVoted).SetText ("[None]"); end
+	labelActivePlayers.SetText ("\n" ..tostring (intNumPlayersVoted).. " active players (" ..tostring (intNumAIs).. " AIs)").SetColor ("#FFFF00");
+	labelPlayersVTW.SetText ("\nPlayers who have Voted to Win: (" ..tostring (intNumPlayersVoted).. ")").SetColor ("#198225");
+	labelPlayerNotVTW.SetText ("\nPlayers who have not voted: (" ..tostring (intNumPlayersNotVoted).. ")").SetColor ("#9A2929");
+end
+
+--update player's vote to boolVote
+function SendVote (game, boolVote, closeOpt)
+	local payload = {};
+	payload.Message = 'VoteToWin';
+	payload.Vote = boolVote;
+	payload.PlayerID = game.Us.ID;
+
+	-- print ("CLIENT SET VALUE - " ..game.Us.ID.. "/" ..tostring (boolVote));
+	game.SendGameCustomMessage ("Sending Vote to Win response...", payload, function (returnValue)
+		if (UI.IsDestroyed (mainUI) == false) then UI.Destroy (mainUI); mainUI = UI.CreateVerticalLayoutGroup (root).SetFlexibleWidth (1); end
+		populateWindow (game, mainUI, closeOpt, returnValue.Votes);
 	end);
 end
