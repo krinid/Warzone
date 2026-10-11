@@ -29,6 +29,7 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 		local terrMods = eliminatePlayers (game, playerList_Eliminate); --create terrMods table to eliminate all AIs (set their terrs to neutral)
 		local event = WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "All remaining players have Voted to Win", nil, terrMods);
 		event.AssignTeamOpt = playerList_Winners;
+		event.Icon = "Vote to Win_Order_40x40";
 		addNewOrder (event);
 	end
 end
