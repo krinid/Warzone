@@ -222,11 +222,12 @@ function displayOrders (orders)
 		local strPayload = order.proxyType == "GameOrderCustom" and order.Payload or "--";
 		-- print (x, order.proxyType, tostring (intPhase), tostring (strPayload));
 		strOrderList = strOrderList .. "\n[" ..tostring (x) .."] " ..order.proxyType.. ", Phase " ..tostring (intPhase).. ", Payload: " ..tostring (strPayload);
-		print (strOrderList);
-		if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239 or Game.Us.ID == 1258355)) then UI.Alert (strOrderList); showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid or Ted, popup the order list
-		if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239)) then showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid
 		-- print (x, order.proxyType, order.OccursInPhase, order.Payload);
 	end
+
+	print (strOrderList);
+	if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239 or Game.Us.ID == 1258355)) then UI.Alert (strOrderList); showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid or Ted, popup the order list
+	if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239)) then showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid
 
 	-- for i, v in ipairs(orders) do
 	-- 	print(i, v.OccursInPhase);
