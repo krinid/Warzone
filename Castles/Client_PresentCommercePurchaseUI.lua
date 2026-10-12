@@ -195,27 +195,36 @@ end
 
 --find correct spot in order list to add new order based on its phase # so that all orders remain in proper sequence
 --if orders are written back the game.Orders out of sequence according to the OccursInPhase property, a runtime error is thrown
-function insertOrder (Game, newOrder, orderList)
+function insertOrder (game, newOrder, orderList)
 	local intNewOrderPhase = newOrder.OccursInPhase or -1;
 	for i, existingOrder in pairs (orderList) do
 		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
 		if (intNewOrderPhase < intExistingOrderPhase) then
 			table.insert (orderList, i, newOrder);
+			displayOrders (orderList);
 			return orderList;
 		end
 	end
 	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
 	-- Game.Orders = orderList;
+	displayOrders (orderList);
 	return orderList;
 end
 
 function displayOrders (orders)
-	print ("ORDERS:");
+	-- print ("ORDERS:");
+	local strOrderList = "ORDERS:\n";
+	if (Game.Us ~= nil and Game.Us.ID ~= nil) then strOrderList = strOrderList .. "[Player " ..tostring (Game.Us.ID).. "/" ..Game.Game.PlayingPlayers [Game.Us.ID].DisplayName (nil, false).. "]"; end
+
 	for x, order in pairs (orders) do
 		-- if (order.OccursInPhase)
 		local intPhase = order.OccursInPhase or "--";
 		local strPayload = order.proxyType == "GameOrderCustom" and order.Payload or "--";
-		print (x, order.proxyType, tostring (intPhase), tostring (strPayload));
+		-- print (x, order.proxyType, tostring (intPhase), tostring (strPayload));
+		strOrderList = strOrderList .. "\n[" ..tostring (x) .."] " ..order.proxyType.. ", Phase " ..tostring (intPhase).. ", Payload: " ..tostring (strPayload);
+		print (strOrderList);
+		if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239 or Game.Us.ID == 1258355)) then UI.Alert (strOrderList); showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid or Ted, popup the order list
+		if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239)) then showPopUpTurnPhaseDescriptions_StylishDialog (Game); end --if krinid
 		-- print (x, order.proxyType, order.OccursInPhase, order.Payload);
 	end
 
@@ -226,6 +235,36 @@ function displayOrders (orders)
 	-- for i = 1, #orders do
     -- 	assert(orders[i] ~= nil, "table is not contiguous")
 	-- end
+end
+
+function showPopUpTurnPhaseDescriptions_StylishDialog (game)
+	local winPhaseList1 = createWindow (game);
+	winPhaseList1.setMaxSize (400, 500);
+	local rootParent1 = winPhaseList1.root;
+
+	local winPhaseList2 = createWindow (game);
+	winPhaseList2.setMaxSize (400, 500);
+	local rootParent2 = winPhaseList2.root;
+
+	UI.CreateLabel (rootParent1).SetText ("1 turn in Warzone consists of the following phases:\n");
+	UI.CreateLabel (rootParent2).SetText ("1 turn in Warzone consists of the following phases:\n");
+
+	local numUserButtonsCreated = 0;
+	for k,v in pairs(WL.TurnPhase) do
+		if (tostring (k) ~= "ToString") then UI.CreateButton (rootParent2).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		if (tostring (k) ~= "ToString") then UI.CreateLabel (rootParent1).SetText(tostring (k).."/"..tostring(v)).SetColor (getColourCode ("Phase|"..tostring (k))); end --.SetOnClick(function () assignToPlayerID = playerID; assignToPlayerName = getPlayerName (game, playerID); UI.Destroy (TargetPlayerLabel); TargetPlayerLabel = UI.CreateLabel (horzTargetPlayer).SetText (assignToPlayerName); winSelectPlayer.close(); end);
+		numUserButtonsCreated = numUserButtonsCreated + 1;
+	end
+end
+
+function createWindow (game)
+    local window = {root = nil, setMaxSize = nil, setScrollable = nil, game = nil, close = nil};
+
+	game.CreateDialog (function(rootParent, setMaxSize, setScrollable, game2, close)
+		window = {root = rootParent, setMaxSize = setMaxSize, setScrollable = setScrollable, game = game2, close = close};
+    end);
+
+    return window;
 end
 
 function PurchaseClicked()
