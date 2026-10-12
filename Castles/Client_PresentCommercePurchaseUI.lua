@@ -201,13 +201,13 @@ function insertOrder (game, newOrder, orderList)
 		local intExistingOrderPhase = existingOrder.OccursInPhase or -1;
 		if (intNewOrderPhase < intExistingOrderPhase) then
 			table.insert (orderList, i, newOrder);
-			displayOrders (orderList);
+			if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239 or Game.Us.ID == 1258355)) then displayOrders (orderList); end
 			return orderList;
 		end
 	end
 	table.insert (orderList, newOrder); --if we reach here then new order occurs in phase after all existing orders, so add to end of list
 	-- Game.Orders = orderList;
-	displayOrders (orderList);
+	if (Game ~= nil and Game.Us ~= nil and Game.Us.ID ~= nil and (Game.Us.ID == 1058239 or Game.Us.ID == 1258355)) then displayOrders (orderList); end
 	return orderList;
 end
 
