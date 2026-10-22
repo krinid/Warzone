@@ -286,19 +286,35 @@ function PlayerButton_OfferPeace (player)
 	return ret;
 end
 
-function ShowMenu ()
-	DeleteUI ();
-	local vert = mainUI;
+-- 	elseif (payload.Message == 'UpdateRPdata') then
+-- 		updateRPdata (game, playerID, payload, setReturnTable);
+-- 	end
+-- end
 
-	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
+-- function updateRPdata (game, playerID, payload, setReturnTable)
+-- 	--take payload.RolePlay_GameName and store it to Mod.PublicGameData.RolePlayData[playerID].Name, eg: Daenarys Stormborn
+-- 	--take payload.RolePlay_Title and store it to Mod.PublicGameData.RolePlayData[playerID].Title, eg: Rightful Queen of the Seven Kingdoms
+-- 	--take payload.RolePlay_Tagline and store it to Mod.PublicGameData.RolePlayData[playerID].Tagline, eg: Mother of Dragons, Breaker of Chains...
+-- 	--take payload.RolePlay_HomeTerritory and store it to Mod.PublicGameData.RolePlayData[playerID].HomeTerritory, eg: terrID of the players home terr
+-- 	--take payload.RolePlay_HomeBonus and store it to Mod.PublicGameData.RolePlayData[playerID].HomeBonus, eg: terrID of the players home bonus
+-- 	--take payload.RolePlay_VassalOf and store it to Mod.PublicGameData.RolePlayData[playerID].VassalOf, eg: playerID to whom this player is a vassal of (can't declare oneself the Lord of another player, must be declared a vassal of)
+-- 	local publicGameData = Mod.PublicGameData;
+-- 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
+-- 	if (publicGameData.RolePlayData[playerID] == nil) then publicGameData.RolePlayData[playerID] = {}; end
+-- 	publicGameData.RolePlayData[playerID].Name = payload.RolePlay_GameName;
+-- 	publicGameData.RolePlayData[playerID].Title = payload.RolePlay_Title;
+-- 	publicGameData.RolePlayData[playerID].Tagline = payload.RolePlay_Tagline;
+-- 	publicGameData.RolePlayData[playerID].HomeTerritory = payload.RolePlay_HomeTerritory;
+-- 	publicGameData.RolePlayData[playerID].HomeBonus = payload.RolePlay_HomeBonus;
+-- 	publicGameData.RolePlayData[playerID].VassalOf = payload.RolePlay_VassalOf;
+-- 	Mod.PublicGameData = publicGameData;
+
+function showPendingRequests ()
 	UI.CreateLabel (vert).SetText ("- - - - - - - PENDING REQUESTS - - - - - - -").SetColor ("#FFFF00");
 	ShowPendingRequests (vert, Game);
+end
 
-	local horz = UI.CreateHorizontalLayoutGroup (vert);
-	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
-	local vertWar = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
-	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
-
+function showTeamActions ()
 	-- UI.CreateLabel (vert).SetText ("[TEAM OPTIONS]").SetColor ("#FFFF00");
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 	-- UI.CreateLabel (vertTeam).SetText ("- - - - - - - TEAM ACTIONS - - - - - - -").SetColor ("#FFFF00");
@@ -322,16 +338,9 @@ function ShowMenu ()
 	-- 	UI.CreateLabel (vert).SetText ("**immediately abandons your team, is irreversible, you leave all your cards & card pieces behind with remaining teammates").SetColor ("#FF0000");
 	-- end
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
+end
 
-	showedreturnmessage = true;
-	TargetPlayerBtn = nil;
-	btnExecuteDeclare = nil;
-	btnDeclareWar = nil;
-	textelem = nil;
-	btnExecuteDeclare = nil;
-	btnOfferPeace = nil;
-	SelectedData = {};
-
+function showPeaceWarActions ()
 	-- UI.CreateLabel (vertWar).SetText ("- - - - - - - PEACE/WAR ACTIONS - - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vertWar).SetText ("- - PEACE/WAR ACTIONS - -").SetColor ("#FFFF00");
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
@@ -396,7 +405,9 @@ function ShowMenu ()
 			end
 		);
 	end
+end
 
+function showTeamPeaceWarStatus ()
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vert).SetText ("- - - - - - - TEAM/PEACE/WAR STATUS - - - - - - -").SetColor ("#FFFF00");
 	local boolInAlliance = false;
@@ -420,7 +431,7 @@ function ShowMenu ()
 				boolAtWar = true;
 			end
 		end
-		if (boolAtWar == false) then lblWarList.SetText ("• At war with: No one");
+		if (boolAtWar == false) then lblWarList.SetText ("• At war with: No one").SetColor ("#FF0000");
 		else lblWarList.SetText ("• At war with:").SetColor ("#FF0000");
 		end
 	end
@@ -434,8 +445,8 @@ function ShowMenu ()
 			boolAtPeace = true;
 		end
 	end
-	if (boolAtPeace == false) then lblPeaceList.SetText ("• At peace with: No one"); btnDeclareWar.SetInteractable (false);
-	else lblPeaceList.SetText ("• At peace with: "); --use default colour, no reason to highlight this like Alliance/Teammate (GREEN) or War (RED)
+	if (boolAtPeace == false) then lblPeaceList.SetText ("• At peace with: No one"); btnDeclareWar.SetInteractable (false).SetColor ("#0000FF");
+	else lblPeaceList.SetText ("• At peace with: ").SetColor ("#0000FF"); --use default colour, no reason to highlight this like Alliance/Teammate (GREEN) or War (RED)
 	end
 
 	-- print ("[FULL ONGOING WAR LIST]");
@@ -445,7 +456,33 @@ function ShowMenu ()
 	-- 		print ("    [WAR ITEM!] " ..tostring (k).." vs " ..tostring (v2));
 	-- 	end
 	-- end
+end
 
+function ShowMenu ()
+	DeleteUI ();
+	local vert = mainUI;
+
+	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
+	showPendingRequests ();
+
+	local horz = UI.CreateHorizontalLayoutGroup (vert);
+	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
+	local vertWar = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
+	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
+
+	showTeamActions ();
+
+	showedreturnmessage = true;
+	TargetPlayerBtn = nil;
+	btnExecuteDeclare = nil;
+	btnDeclareWar = nil;
+	textelem = nil;
+	btnExecuteDeclare = nil;
+	btnOfferPeace = nil;
+	SelectedData = {};
+
+	showPeaceWarActions ();
+	showTeamPeaceWarStatus ();
 end
 
 function ShowPeaceOffers (vert)

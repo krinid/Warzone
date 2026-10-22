@@ -19,7 +19,29 @@ function process_TeamChanges (game, playerID, payload, setReturnTable)
 		AckAlerts (game, playerID, payload, setReturnTable);
 	-- elseif (payload.Message == 'SendAlert') then
 	-- 	AlertPlayers (payload.playerIDs, payload.AlertContent); --send payload.message to all users in player.playerIDs
+	elseif (payload.Message == 'UpdateRPdata') then
+		updateRPdata (game, playerID, payload, setReturnTable);
 	end
+end
+
+function updateRPdata (game, playerID, payload, setReturnTable)
+	--take payload.RolePlay_GameName and store it to Mod.PublicGameData.RolePlayData[playerID].Name, eg: Daenarys Stormborn
+	--take payload.RolePlay_Title and store it to Mod.PublicGameData.RolePlayData[playerID].Title, eg: Rightful Queen of the Seven Kingdoms
+	--take payload.RolePlay_Tagline and store it to Mod.PublicGameData.RolePlayData[playerID].Tagline, eg: Mother of Dragons, Breaker of Chains...
+	--take payload.RolePlay_HomeTerritory and store it to Mod.PublicGameData.RolePlayData[playerID].HomeTerritory, eg: terrID of the players home terr
+	--take payload.RolePlay_HomeBonus and store it to Mod.PublicGameData.RolePlayData[playerID].HomeBonus, eg: terrID of the players home bonus
+	--take payload.RolePlay_VassalOf and store it to Mod.PublicGameData.RolePlayData[playerID].VassalOf, eg: playerID to whom this player is a vassal of (can't declare oneself the Lord of another player, must be declared a vassal of)
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
+	if (publicGameData.RolePlayData[playerID] == nil) then publicGameData.RolePlayData[playerID] = {}; end
+	publicGameData.RolePlayData[playerID].Name = payload.RolePlay_GameName;
+	publicGameData.RolePlayData[playerID].Title = payload.RolePlay_Title;
+	publicGameData.RolePlayData[playerID].Tagline = payload.RolePlay_Tagline;
+	publicGameData.RolePlayData[playerID].HomeTerritory = payload.RolePlay_HomeTerritory;
+	publicGameData.RolePlayData[playerID].HomeBonus = payload.RolePlay_HomeBonus;
+	publicGameData.RolePlayData[playerID].VassalOf = payload.RolePlay_VassalOf;
+	Mod.PublicGameData = publicGameData;
+	setReturnTable ({ publicGameData });
 end
 
 --Asks everyone named to form a team together.  Nothing happens until they've all accepted.

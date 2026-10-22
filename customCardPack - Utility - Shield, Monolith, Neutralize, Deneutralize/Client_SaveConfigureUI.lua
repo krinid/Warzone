@@ -311,7 +311,7 @@ function createCards_newCards(alert, addCard);
 		if (Mod.Settings.ForestFireAllowFriendlyFire == true) then strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is enabled, so your own Wildfires will burn your territories.";
 		else strForestFireDesc = strForestFireDesc .. "\n\nFriendly fire is disabled, so you are immune to damage from your own Wildfires."; end
 
-		Mod.Settings.ForestFireCardID = addCard ("Wildfire", strForestFireDesc, "forest fire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
+		Mod.Settings.ForestFireCardID = addCard ("Wildfire", strForestFireDesc, "wildfire_130x180.png", Mod.Settings.ForestFirePiecesNeeded, Mod.Settings.ForestFirePiecesPerTurn, Mod.Settings.ForestFireStartPieces, Mod.Settings.ForestFireCardWeight, Mod.Settings.ForestFireDuration);
 		Mod.Settings.ForestFireDescription = strForestFireDesc;
 	end
 	--print ("END   create new cards");
@@ -403,7 +403,8 @@ function createCards_originalCCP_cards (alert, addCard)
 		print("Mod.Settings.PestilenceStartPieces:", Mod.Settings.PestilenceStartPieces)
 		print("strPestilenceDesc:", strPestilenceDesc)]]
 		--Mod.Settings.PestilenceCardID = addCard("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct, Duration+1 b/c WZ counts from time of play which actually includes the Warning turn, so add 1 to get the full duration (so it shows up in Active Cards with accurate end turn data)
-		Mod.Settings.PestilenceCardID = addCard ("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
+		-- Mod.Settings.PestilenceCardID = addCard ("Pestilence", strPestilenceDesc, "pestilence_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
+		Mod.Settings.PestilenceCardID = addCard ("Pestilence", strPestilenceDesc, "pestilence_v2_130x180.png", Mod.Settings.PestilencePiecesNeeded, Mod.Settings.PestilencePiecesPerTurn, Mod.Settings.PestilenceStartPieces, Mod.Settings.PestilenceCardWeight, Mod.Settings.PestilenceDuration+1); --create actual WZ card construct
 		--NOTE: use PestilenceDuration+1 to submit to WZ card creation interface b/c this will make WZ engine keep the card in "Active Cards" for the full duration of the Pestilence effect starting from casting turn and including the warning turn and the effects as specified in 'PestilenceDuration'
 
 		Mod.Settings.PestilenceDescription = strPestilenceDesc;

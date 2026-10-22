@@ -1,9 +1,9 @@
 require("utilities");
-require("DataConverter");
+-- require("DataConverter");
 require("Manual_Attack");
 
-local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
-local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
+-- local strEssentialDescription_header = '[V1.1#JAD]{"Essentials"={"UnitDescription"="';
+-- local strEssentialDescription_footer = '";"__key"="garbage";};}[V1.1#JAD]';
 
 ---Server_AdvanceTurn_End hook
 ---@param game GameServerHook
@@ -1425,9 +1425,9 @@ function execute_Tornado_operation (game, gameOrder, addOrder, targetTerritoryID
 	--print ("[TORNADO] POST - structures[WL.StructureType.Power]=="..tostring (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].Structures[WL.StructureType.Power]).."::");
 end
 
---create a new special unit for Quicksand visiblity; used for both initial creation and for recreation if it gets killed by incoming attack
+--[[ --create a new special unit for Quicksand visiblity; used for both initial creation and for recreation if it gets killed by incoming attack
 function build_Quicksand_specialUnit (game, targetTerritoryID)
-    local builder = WL.CustomSpecialUnitBuilder.Create(game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
+    local builder = WL.CustomSpecialUnitBuilder.Create (game.ServerGame.LatestTurnStanding.Territories[targetTerritoryID].OwnerPlayerID);
     builder.Name = 'Quicksand impacted territory';
     builder.IncludeABeforeName = false;
     builder.ImageFilename = 'quicksand_v3_specialunit.png';
@@ -1450,7 +1450,7 @@ function build_Quicksand_specialUnit (game, targetTerritoryID)
 	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	local specialUnit_Quicksand = builder.Build();
 	return specialUnit_Quicksand;
-end
+end ]]
 
 function execute_Quicksand_operation(game, gameOrder, addOrder, targetTerritoryID)
     print("[PROCESS QUICKSAND] on territory " .. targetTerritoryID);
@@ -1510,7 +1510,8 @@ function execute_Shield_operation(game, gameOrder, addOrder, targetTerritoryID)
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local strUnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]";
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	-- builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	builder.ModData = strUnitDescription;
 	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.ShieldDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.ShieldDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="garbage";};}[V1.1#JAD]';
@@ -1570,7 +1571,8 @@ function execute_Phantom_operation (game, gameOrder, addOrder, targetTerritoryID
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	local strUnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]";
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-	builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	-- builder.ModData = createUnitDescriptionCode (strUnitDescription);
+	builder.ModData = strUnitDescription;
 	--builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
 	--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.PhantomDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.PhantomDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 	--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="garbage";};}[V1.1#JAD]';
@@ -1682,7 +1684,8 @@ function execute_Monolith_operation (game, gameOrder, addOrder, targetTerritoryI
 		--builder.ModData = DataConverter.DataToString({Essentials = {UnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]"}}, Mod); --add description to ModData field using Dutch's DataConverter, so it shows up in Essentials Unit Inspector
 		local strUnitDescription = tostring (Mod.Settings.MonolithDescription).." [Created on turn "..game.Game.TurnNumber..", expires on turn "..game.Game.TurnNumber + Mod.Settings.MonolithDuration.."]";
 		--builder.ModData = '[V1.1#JAD]{"Essentials"={"UnitDescription"="' ..strUnitDescription.. '";"__key"="fb52144e-6db8-47e6-be98-5ee606e3499f";};}[V1.1#JAD]';
-		builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+		-- builder.ModData = strEssentialDescription_header ..strUnitDescription.. strEssentialDescription_footer;
+		builder.ModData = strUnitDescription;
 
 		local specialUnit_Monolith = builder.Build(); --save this in a table somewhere to destroy later
 
@@ -2812,13 +2815,6 @@ function execute_Nuke_operation (game, order, addOrder, targetTerritoryID, intNu
 	event.TerritoryAnnotationsOpt = annotations;
 	event.Icon = "Nuke_icon_40x40";
 	addOrder (event, true); --add a new order; call the addOrder parameter (which is in itself a function) of this function
--- GameOrderEventWL Create (playerID: PlayerID, message: string, visibleToOpt: HashSet<PlayerID> | nil, terrModsOpt?: TerritoryModification[], setResoucesOpt: table<PlayerID, table<EnumResourceType, integer>> | nil, incomeModsOpt: IncomeMod[] | nil): GameOrderEvent # Creates a GameOrderEvent object
--- Create (playerID, message, visibileToOppenets - nil is ok, terrMods OPTIONAL, resources OPTIONAL - nil is ok, incomeMods OPTIONAL - nil is ok)
-						--Fizz code START
-						--[[ 
-						local terrMod = WL.TerritoryModification.Create(targetTerritoryID);
-						terrMod.AddSpecialUnits = {builder.Build()};
-						addNewOrder(WL.GameOrderEvent.Create(intNukeInvokerPlayerID, 'Purchased a tank', {}, {terrMod}));]]
 end
 
 function CardBlock_processEndOfTurn(game, addOrder)
@@ -2878,51 +2874,6 @@ function Tornado_processEndOfTurn (game, addOrder)
 				-- structures[WL.StructureType.Custom("tornado")] = structures[WL.StructureType.Custom("tornado")] - 1; --remove 1 Tornado structure from the territory
 				structures[WL.StructureType.Custom("tornado")] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators
 				structures[WL.StructureType.Power] = 0;
-			end
-
-			impactedTerritory.SetStructuresOpt = structures;
-            local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado effect ends on "..getTerritoryName (terrID, game), {}, {impactedTerritory});
-            event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-            addOrder(event, true);
-            publicGameData.TornadoData[terrID] = nil;
-         end
-    end
-    Mod.PublicGameData = publicGameData;
-    print("[TORNADO] processEndOfTurn END");
-end
-
-function Tornado_processEndOfTurn_OLD (game, addOrder)
-    local publicGameData = Mod.PublicGameData;
-    local turnNumber = tonumber(game.Game.TurnNumber);
-	if (Mod.Settings.ActiveModules ~= nil and Mod.Settings.ActiveModules.Tornado ~= true) then return; end --if module is not active, skip everything, just return
-	if (Mod.Settings.TornadoEnabled ~= true) then return; end --if card is not enabled, skip everything, just return
-	if (Mod.Settings.TornadoDuration == -1) then return; end --if duration is set to -1, then it's permanent and doesn't expire, so skip everything, just return
-
-	print("[TORNADO] processEndOfTurn START");
-    if (publicGameData.TornadoData == nil) then print("[TORNADO] no data"); return; end
-    for terrID, record in pairs(publicGameData.TornadoData) do
-		local strTerritoryName = tostring(getTerritoryName(terrID, game));
-		print ("[TORNADO] " ..terrID .."/".. strTerritoryName .." takes "..Mod.Settings.TornadoStrength.." damage");
-		local impactedTerritory = WL.TerritoryModification.Create(terrID);
-		if (territoryHasActiveShield (game.ServerGame.LatestTurnStanding.Territories[terrID]) == false) then impactedTerritory.AddArmies = -1 * Mod.Settings.TornadoStrength; end --reduce armies on territory iff not protected by Shield
-		local event = WL.GameOrderEvent.Create(record.castingPlayer, "Tornado ravages "..strTerritoryName, {}, {impactedTerritory});
-		event.JumpToActionSpotOpt = WL.RectangleVM.Create(game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY, game.Map.Territories[terrID].MiddlePointX, game.Map.Territories[terrID].MiddlePointY);
-		event.TerritoryAnnotationsOpt = {[terrID] = WL.TerritoryAnnotation.Create ("Tornado", 8, getColourInteger (255, 0, 0))}; --use Red colour for Tornado
-		addOrder(event, true);
-		--put a special unit here ... but can't at the moment b/c already have 5 special units in this mod! doh
-
-         if (record.turnNumberTornadoEnds > 0 and turnNumber >= record.turnNumberTornadoEnds) then
-            local impactedTerritory = WL.TerritoryModification.Create(terrID);
-            print ("[TORNADO] effect ends on "..terrID.."/"..getTerritoryName (terrID, game).."::");
-
-			--remove an Idle "power" structure from the territory
-			local structures = game.ServerGame.LatestTurnStanding.Territories[terrID].Structures;
-			if (structures == nil) then structures = {}; end; --this shouldn't happen, there should a 'power' structure on the territory
-			if (structures[WL.StructureType.Power] == nil) then
-				structures[WL.StructureType.Power] = 0;
-			else
-				-- structures[WL.StructureType.Power] = structures[WL.StructureType.Power] - 1;
-				structures[WL.StructureType.Power] = 0; --set it to 0 instead of subtracting 1 b/c new Tornados overwrites old ones, only 1 is truly active at any given time but it creates multiple Tornado indicators (idle power structures)
 			end
 
 			impactedTerritory.SetStructuresOpt = structures;
@@ -3511,6 +3462,7 @@ function Pestilence_processEndOfTurn (game, addOrder)
 				local strPestilenceMsg = "Pestilence ravages " .. toPlayerName(targetPlayerID, game)..", invoked by "..toPlayerName(castingPlayerID, game);
 
 				local event = WL.GameOrderEvent.Create(targetPlayerID, strPestilenceMsg, nil, pestilenceModifiedTerritories);
+				event.Icon = "Pestilence_OrderIcon_40x40";
 
 				--add annotations; if terrID_somewhereInThePestilence==nil, then the above loop through that person's territories didn't execute b/c they have no territories, which likely means that that player is already eliminated and thus no damage or annotations to apply
 				if (terrID_somewhereInThePestilence ~= nil) then
@@ -3525,7 +3477,9 @@ function Pestilence_processEndOfTurn (game, addOrder)
 				--if this is final turn of pestilence, pop the record off the table; else leave the record in to be reevalauated and applied next turn
 				if (turnNumber >= PestilenceEndTurn) then
 					print ("[PESTILENCE] duration complete, pestilence ends for "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game));
-					addOrder (WL.GameOrderEvent.Create(targetPlayerID, "Pestilence ends for "..toPlayerName(targetPlayerID, game), nil, nil));
+					local eventPestilenceEnd = WL.GameOrderEvent.Create(targetPlayerID, "Pestilence ends for "..toPlayerName(targetPlayerID, game), nil, nil);
+					eventPestilenceEnd.Icon = "Pestilence_OrderIcon_40x40";
+					addOrder (eventPestilenceEnd);
 					publicGameData.PestilenceData [targetPlayerID] = nil;
 				else
 					print ("[PESTILENCE] not finished yet! more to come "..targetPlayerID.."/"..toPlayerName(targetPlayerID, game));

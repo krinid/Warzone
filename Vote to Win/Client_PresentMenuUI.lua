@@ -8,8 +8,8 @@ end
 --return table indicating whether VTW votes are underway (1+ active players have voted), # of active players, # of VTW votes so far
 function VTWvoteIsActive (game, votes)
 	--count # of active players & # of votes who VTW'd (only count active players)
-	local intNumPlayersTotal = 0
-	local intNumAIs = 0
+	local intNumPlayersTotal = 0;
+	local intNumAIs = 0;
 	local intNumVTWvotes = 0;
 	-- local votes = Mod.PublicGameData.VoteToWin_Votes or {};
 	-- if (votes == nil) then votes = Mod.PublicGameData.VoteToWin_Votes or {}; end
