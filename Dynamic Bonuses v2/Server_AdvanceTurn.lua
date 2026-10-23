@@ -1,4 +1,4 @@
-function Server_AdvanceTurn_Start(game, addNewOrder)
+function Server_AdvanceTurn_Start (game, addNewOrder)
 	if Mod.PublicGameData.WellBeingMultiplier == nil then initData(game.ServerGame.LatestTurnStanding); end
 	playerPerTerr = {};
 	for _, terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
@@ -6,8 +6,21 @@ function Server_AdvanceTurn_Start(game, addNewOrder)
 	end
 end
 
+function Server_AdvanceTurn_End (game, addNewOrder)
+	--submit a trigger order to process dynamic bonus income; this forces the mod to receive the most current game state ;inclusive of any terr changes, rather than the generic game state send out to all mods when Server_AdvanceTurn_End begins
+	addNewOrder (WL.GameOrderEvent.Create (WL.PlayerID.Neutral, "Dynamic Bonuses|Calculate"));
+end
 
-function Server_AdvanceTurn_End(game, addNewOrder)
+function Server_AdvanceTurn_Order (game, order, orderResult, skipThisOrder, addNewOrder)
+	--detect trigger order, process dynamic bonus income adjustments
+	if (order.proxyType == "GameOrderEvent" and order.Message == "Dynamic Bonuses|Calculate") then
+		-- skipThisOrder (WL.ModOrderControl.Skip);
+		skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage);
+		process_DynamicBonusesIncome (game, addNewOrder);
+	end
+end
+
+function process_DynamicBonusesIncome (game, addNewOrder)
 	local listOfAttackedTerr = {};
 	for _, terr in pairs(game.ServerGame.LatestTurnStanding.Territories) do
 		if terr.OwnerPlayerID ~= playerPerTerr[terr.ID] then
