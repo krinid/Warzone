@@ -377,14 +377,15 @@ end
 
 function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable, game, close)
 	setMaxSize (450, 600);
-	local vert = rootParent;
+	local vertRPdata = rootParent;
+	local vertNoRPdata = rootParent;
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
 	for playerID, player in pairs (game.Game.Players) do
 		local RPdata = publicGameData.RolePlayData [playerID];
-		if (RPdata == nil) then UI.CreateLabel (vert).SetText ("[" ..player.DisplayName (nil, false).. "] [no data]");
-		else UI.CreateLabel (vert).SetText ("[" ..player.DisplayName (nil, false).. "] Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
+		if (RPdata == nil) then UI.CreateLabel (vertNoRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "] [no data]");
+		else UI.CreateLabel (vertRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "] Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
 		end
 	end
 end
