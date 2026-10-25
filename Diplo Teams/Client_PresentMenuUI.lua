@@ -377,8 +377,8 @@ end
 
 function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable, game, close)
 	setMaxSize (450, 600);
-	local vertRPdata = rootParent;
-	local vertNoRPdata = rootParent;
+	local vertRPdata = UI.CreateVerticalLayoutGroup (rootParent);
+	local vertNoRPdata = UI.CreateVerticalLayoutGroup (rootParent);
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
