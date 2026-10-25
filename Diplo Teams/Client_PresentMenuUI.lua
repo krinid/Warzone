@@ -15,9 +15,9 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 	if (game.Us == nil) then
 		UI.CreateLabel (rootParent).SetText ("You are not participating in this game, Diplo Teams functions are not available to you");
 		return;
-	elseif (game.Game.PlayingPlayers [game.Us.ID] == nil) then
-		UI.CreateLabel (rootParent).SetText ("You have been eliminated, Diplo Teams functions are not available to you");
-		return;
+	-- elseif (game.Game.PlayingPlayers [game.Us.ID] == nil) then
+	-- 	UI.CreateLabel (rootParent).SetText ("You have been eliminated, Diplo Teams functions are not available to you");
+	-- 	return;
 	elseif (Mod.PublicGameData.War == nil) then
 		UI.CreateLabel (rootParent).SetText ("Diplo Teams functions are not available during distribution stage");
 		return;
@@ -32,6 +32,7 @@ end
 function ShowMenu (game)
 	DeleteUI ();
 	local vert = mainUI;
+	local boolActivePlayer = game.Us ~= nil and game.Us.ID ~= nil and game.Game.PlayingPlayers [game.Us.ID] ~= nil;
 
 	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
 	showPendingRequests (game, vert);
@@ -43,9 +44,6 @@ function ShowMenu (game)
 	local vertRPdata = UI.CreateVerticalLayoutGroup (vert); --.SetPreferredWidth (250);
 	local vertWarPeaceStatus = UI.CreateVerticalLayoutGroup (vert); --.SetPreferredWidth (250);
 	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
-
-	showTeamActions (game, vertTeam);
-
 	showedreturnmessage = true;
 	TargetPlayerBtn = nil;
 	btnExecuteDeclare = nil;
@@ -55,9 +53,14 @@ function ShowMenu (game)
 	btnOfferPeace = nil;
 	SelectedData = {};
 
-	showPeaceWarActions (game, vertWar);
+	if (boolActivePlayer == true) then
+		showTeamActions (game, vertTeam);
+		showPeaceWarActions (game, vertWar);
+	end
+
 	showRPdata (game, vertRPdata, "Edit"); --show the RP data pane in display mode (shows "Edit" on the button)
-	showTeamPeaceWarStatus (game, vertWarPeaceStatus);
+
+	if (boolActivePlayer == true) then showTeamPeaceWarStatus (game, vertWarPeaceStatus); end
 end
 
 --DEPRECATED - function not required, as Teams are visible in the 'Players' dialog, so no need to display them here; leaving the code here in case there is a future need for it
