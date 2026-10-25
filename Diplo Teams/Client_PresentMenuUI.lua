@@ -7,7 +7,7 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 		return;
 	end
 
-	setMaxSize (500, 500);
+	setMaxSize (600, 500);
 	Game = game; --make these variables globally accessible
 	Close = close;
 	root = rootParent;
@@ -27,6 +27,37 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
 	mainUI = vert;
 	ShowMenu ();
+end
+
+function ShowMenu ()
+	DeleteUI ();
+	local vert = mainUI;
+
+	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
+	showPendingRequests (Game, vert);
+
+	local horz = UI.CreateHorizontalLayoutGroup (vert);
+	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
+	local vertWar = UI.CreateVerticalLayoutGroup (horz); --.SetPreferredWidth (250);
+
+	local vertRPdata = UI.CreateVerticalLayoutGroup (vert); --.SetPreferredWidth (250);
+	local vertWarPeaceStatus = UI.CreateVerticalLayoutGroup (vert); --.SetPreferredWidth (250);
+	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
+
+	showTeamActions (Game, vertTeam);
+
+	showedreturnmessage = true;
+	TargetPlayerBtn = nil;
+	btnExecuteDeclare = nil;
+	btnDeclareWar = nil;
+	textelem = nil;
+	btnExecuteDeclare = nil;
+	btnOfferPeace = nil;
+	SelectedData = {};
+
+	showPeaceWarActions (Game, vertWar);
+	showRPdata (Game, vertRPdata, "Edit"); --show the RP data pane in display mode (shows "Edit" on the button)
+	showTeamPeaceWarStatus (Game, vertWarPeaceStatus);
 end
 
 --DEPRECATED - function not required, as Teams are visible in the 'Players' dialog, so no need to display them here; leaving the code here in case there is a future need for it
@@ -64,15 +95,6 @@ function ShowTeams (vert, game)
 	-- end
 end
 
---Lists the proposals we're a part of that nobody has declined yet.
-function ShowPendingRequests (vert, game)
-	if (game.Us == nil) then return; end;
-	local lblPendingRequestsMessage = UI.CreateLabel (vert);
-	local intNumPeaceOffers = ShowPeaceOffers (vert);
-	local intNumTeamProposals = showPendingTeamProposals (vert, game);
-	if (intNumPeaceOffers + intNumTeamProposals <= 0) then lblPendingRequestsMessage.SetText ("You have no pending Peace Offers (NAP) or Team Proposals"); end
-end
-
 function showPendingTeamProposals (vert, game)
 	local requests = Mod.PlayerGameData.PendingTeamRequests or {};
 	local intNumRequests = count (requests);
@@ -97,7 +119,7 @@ function showPendingTeamProposals (vert, game)
 	return (intNumRequests);
 end
 
-function CreateProposeDialog(rootParent, setMaxSize, setScrollable, game, close)
+function CreateProposeDialog (rootParent, setMaxSize, setScrollable, game, close)
 	setMaxSize (450, 600);
 	ProposeRoot = rootParent;
 	ProposeClose = close;
@@ -291,42 +313,105 @@ end
 -- 	end
 -- end
 
--- function updateRPdata (game, playerID, payload, setReturnTable)
--- 	--take payload.RolePlay_GameName and store it to Mod.PublicGameData.RolePlayData[playerID].Name, eg: Daenarys Stormborn
--- 	--take payload.RolePlay_Title and store it to Mod.PublicGameData.RolePlayData[playerID].Title, eg: Rightful Queen of the Seven Kingdoms
--- 	--take payload.RolePlay_Tagline and store it to Mod.PublicGameData.RolePlayData[playerID].Tagline, eg: Mother of Dragons, Breaker of Chains...
--- 	--take payload.RolePlay_HomeTerritory and store it to Mod.PublicGameData.RolePlayData[playerID].HomeTerritory, eg: terrID of the players home terr
--- 	--take payload.RolePlay_HomeBonus and store it to Mod.PublicGameData.RolePlayData[playerID].HomeBonus, eg: terrID of the players home bonus
--- 	--take payload.RolePlay_VassalOf and store it to Mod.PublicGameData.RolePlayData[playerID].VassalOf, eg: playerID to whom this player is a vassal of (can't declare oneself the Lord of another player, must be declared a vassal of)
--- 	local publicGameData = Mod.PublicGameData;
--- 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
--- 	if (publicGameData.RolePlayData[playerID] == nil) then publicGameData.RolePlayData[playerID] = {}; end
--- 	publicGameData.RolePlayData[playerID].Name = payload.RolePlay_GameName;
--- 	publicGameData.RolePlayData[playerID].Title = payload.RolePlay_Title;
--- 	publicGameData.RolePlayData[playerID].Tagline = payload.RolePlay_Tagline;
--- 	publicGameData.RolePlayData[playerID].HomeTerritory = payload.RolePlay_HomeTerritory;
--- 	publicGameData.RolePlayData[playerID].HomeBonus = payload.RolePlay_HomeBonus;
--- 	publicGameData.RolePlayData[playerID].VassalOf = payload.RolePlay_VassalOf;
--- 	Mod.PublicGameData = publicGameData;
+--boolEditMode==true indicates to use textboxes to let player update the data; ==false indicates to just use labels (uneditable)
+function showRPdata (game, vert, strEditMode)
+	local vertRPdata = UI.CreateVerticalLayoutGroup (vert);
+	if (game.Us == nil or game.Us.ID == nil) then return; end
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
+	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
+	local horz = UI.CreateHorizontalLayoutGroup (vertRPdata);
+	UI.CreateLabel (horz).SetText ("- - - - - - - RP Data - - - - - - -").SetColor ("#FFFF00");
+	btnRPdataSaveEdit = UI.CreateButton (horz).SetText (strEditMode).SetOnClick (
+		function ()
+			if (strEditMode == "Edit") then
+				-- btnRPdataSaveEdit.SetText ("Save");
+				UI.Destroy (vertRPdata);
+				showRPdata (game, vert, "Save");
+				-- showRPdata (game, vert, nil);
+			elseif (strEditMode == "Save") then
+				local payload = {};
+				payload.Message = "UpdateRPdata";
+				payload.RPname = tboxRPname.GetText ();
+				payload.RPtitle = tboxRPtitle.GetText ();
+				payload.RPtagline = tboxRPtagline.GetText ();
+				game.SendGameCustomMessage ("Sending RP data", payload,
+					function (returnvalue)
+						-- showedreturnmessage = false;
+						-- UI.Alert (returnvalue.Message);
+						-- btnRPdataSaveEdit.SetText ("Refresh");
+						UI.Destroy (vertRPdata);
+						showRPdata (game, vert, "Refresh");
+					end
+				);
+			else
+				--it must be "Refresh", just reload the form and set text back to Edit
+				UI.Destroy (vertRPdata);
+				-- btnRPdataSaveEdit.SetText ("Edit");
+				showRPdata (game, vert, "Edit");
+			end
+		end
+	); --.SetColor ("#00FFFF");
+	-- UI.CreateButton (horz).SetText ("All Players").SetOnClick (function () showAllPlayerRPdata (game); end);
+	UI.CreateButton (horz).SetText ("All Players").SetOnClick (function () game.CreateDialog (createShowAllPlayerRPdataDialog); end);
 
-function showPendingRequests ()
-	UI.CreateLabel (vert).SetText ("- - - - - - - PENDING REQUESTS - - - - - - -").SetColor ("#FFFF00");
-	ShowPendingRequests (vert, Game);
+	local boolEditMode = strEditMode == "Save"; --if we're in "Save" mode, display editable fields for the local player
+	if (strEditMode == "Refresh") then
+		UI.CreateLabel (vertRPdata).SetText ("Hit refresh button to see updated data");
+	else
+		tboxRPname = showControlsLabelOrText (vertRPdata, tboxRPname, "Name", tostring (publicGameData.RolePlayData[game.Us.ID].Name), boolEditMode);
+		tboxRPtitle = showControlsLabelOrText (vertRPdata, tboxRPtitle, "Title", tostring (publicGameData.RolePlayData[game.Us.ID].Title), boolEditMode);
+		tboxRPtagline = showControlsLabelOrText (vertRPdata, tboxRPtagline, "Tagline", tostring (publicGameData.RolePlayData[game.Us.ID].Tagline), boolEditMode);
+		UI.CreateLabel (vertRPdata).SetText ("Home territory/bonus: " .. tostring ("tbd")); --Mod.PublicGameData.RolePlayData[game.Us.ID].));
+		UI.CreateLabel (vertRPdata).SetText ("Vassals: " .. tostring ("tbd")); --Mod.PublicGameData.RolePlayData[game.Us.ID].));
+	end
 end
 
-function showTeamActions ()
+function showControlsLabelOrText (vert, tboxObject, strFieldName, strTextContent, boolEditMode)
+	local horz = UI.CreateHorizontalLayoutGroup (vert);
+	if (boolEditMode == true) then UI.CreateLabel (horz).SetText (strFieldName .. ":"); tboxObject = UI.CreateTextInputField (horz).SetText (tostring (strTextContent)).SetInteractable (true); return (tboxObject);
+	else UI.CreateLabel (horz).SetText (strFieldName .. ": " .. tostring (strTextContent));
+	end
+	return (nil);
+end
+
+function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable, game, close)
+	setMaxSize (450, 600);
+	local vert = rootParent;
+	local publicGameData = Mod.PublicGameData;
+	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
+	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
+	for playerID, player in pairs (game.Game.Players) do
+		local RPdata = publicGameData.RolePlayData [playerID];
+		if (RPdata == nil) then UI.CreateLabel (vert).SetText ("[" ..player.DisplayName (nil, false).. "] [no data]");
+		else UI.CreateLabel (vert).SetText ("[" ..player.DisplayName (nil, false).. "] Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
+		end
+	end
+end
+
+--display proposals local player is included in that nobody has declined yet
+function showPendingRequests (game, vert)
+	if (game.Us == nil) then return; end;
+	UI.CreateLabel (vert).SetText ("- - - - - - - PENDING REQUESTS - - - - - - -").SetColor ("#FFFF00");
+	local lblPendingRequestsMessage = UI.CreateLabel (vert);
+	local intNumPeaceOffers = ShowPeaceOffers (game, vert);
+	local intNumTeamProposals = showPendingTeamProposals (vert, game);
+	if (intNumPeaceOffers + intNumTeamProposals <= 0) then lblPendingRequestsMessage.SetText ("You have no pending Peace Offers (NAP) or Team Proposals"); end
+end
+
+function showTeamActions (game, vertTeam)
 	-- UI.CreateLabel (vert).SetText ("[TEAM OPTIONS]").SetColor ("#FFFF00");
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 	-- UI.CreateLabel (vertTeam).SetText ("- - - - - - - TEAM ACTIONS - - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vertTeam).SetText ("- - TEAM ACTIONS - -").SetColor ("#FFFF00");
-	UI.CreateButton (vertTeam).SetText ('Propose new team').SetOnClick (function() Game.CreateDialog (CreateProposeDialog); end);
-	btnLeaveTeam = UI.CreateButton (vertTeam).SetText ('Leave current team').SetInteractable (TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding) ~= NoTeam).SetOnClick (
+	UI.CreateButton (vertTeam).SetText ('Propose new team').SetOnClick (function() game.CreateDialog (CreateProposeDialog); end);
+	btnLeaveTeam = UI.CreateButton (vertTeam).SetText ('Leave current team').SetInteractable (TeamOfPlayer (game, game.Us.ID, game.LatestStanding) ~= NoTeam).SetOnClick (
 		function()
 			if (lblLeaveTeamWarning.GetText () == "") then
 				btnLeaveTeam.SetText ("CONFIRM - Leave current team").SetColor (getColourCode ("Button|Red"));
 				lblLeaveTeamWarning.SetText ("**immediately abandons your team, is irreversible, you leave all your cards & card pieces behind with remaining teammates").SetColor ("#FF0000");
 			else
-				SendUnteam (Game, Close);
+				SendUnteam (game, Close);
 				btnLeaveTeam.SetText ("Abandoned Team").SetColor ("#AAAAAA").SetInteractable (false);
 				lblLeaveTeamWarning.SetText ("");
 			end
@@ -340,7 +425,7 @@ function showTeamActions ()
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 end
 
-function showPeaceWarActions ()
+function showPeaceWarActions (game, vertWar)
 	-- UI.CreateLabel (vertWar).SetText ("- - - - - - - PEACE/WAR ACTIONS - - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vertWar).SetText ("- - PEACE/WAR ACTIONS - -").SetColor ("#FFFF00");
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
@@ -353,12 +438,12 @@ function showPeaceWarActions ()
 				local payload = {};
 				payload.Message = "Simulate War Declaration";
 				payload.SendingPlayerID = 1;
-				payload.TargetPlayerID = Game.Us.ID; --1058239
-				local orders = Game.Orders or {};
-				local event = WL.GameOrderCustom.Create (Game.Us.ID, "Declared war on " .. tostring (payload.TargetPlayerID), "Diplo Teams|DeclareWar|" ..tostring (payload.SendingPlayerID).. "|" .. tostring (payload.TargetPlayerID));
+				payload.TargetPlayerID = game.Us.ID; --1058239
+				local orders = game.Orders or {};
+				local event = WL.GameOrderCustom.Create (game.Us.ID, "Declared war on " .. tostring (payload.TargetPlayerID), "Diplo Teams|DeclareWar|" ..tostring (payload.SendingPlayerID).. "|" .. tostring (payload.TargetPlayerID));
 				event.Icon = "Diplo Teams_order_40x40";
 				table.insert (orders, event); --custom order indicating which player declared war on which player
-				Game.Orders = orders;
+				game.Orders = orders;
 
 				-- Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 				-- 	showedreturnmessage = false;
@@ -372,8 +457,8 @@ function showPeaceWarActions ()
 				local payload = {};
 				payload.Message = "Simulate Team Proposal";
 				payload.SendingPlayerID = 1;
-				payload.PlayerIDs = {1, Game.Us.ID};  --1058239
-				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
+				payload.PlayerIDs = {1, game.Us.ID};  --1058239
+				game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
 					-- UI.Alert (returnvalue.Message);
 					end);
@@ -386,8 +471,8 @@ function showPeaceWarActions ()
 				local payload = {};
 				payload.Message = "Simulate Peace Offer";
 				payload.SendingPlayerID = 1;
-				payload.TargetPlayerID = Game.Us.ID; --1058239
-				Game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
+				payload.TargetPlayerID = game.Us.ID; --1058239
+				game.SendGameCustomMessage ("Sending request...", payload, function (returnvalue)
 					showedreturnmessage = false;
 					-- UI.Alert (returnvalue.Message);
 					end);
@@ -397,7 +482,7 @@ function showPeaceWarActions ()
 		UI.CreateButton (vertWar).SetText ("Alert test").SetOnClick (
 			function ()
 				-- AlertPlayer (Game.Us.ID, "Wonderful, it worked yohoho '" ..PlayerName (Game, Game.Us.ID).."' - isn't it fanjastik?");
-				Game.SendGameCustomMessage ("frak Sending request...", {Message="Alert Test"},
+				game.SendGameCustomMessage ("frak Sending request...", {Message="Alert Test"},
 					function (returnvalue)
 						-- showedreturnmessage = false;
 						-- UI.Alert (returnvalue.Message);
@@ -407,14 +492,14 @@ function showPeaceWarActions ()
 	end
 end
 
-function showTeamPeaceWarStatus ()
+function showTeamPeaceWarStatus (game, vert)
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
 	UI.CreateLabel (vert).SetText ("- - - - - - - TEAM/PEACE/WAR STATUS - - - - - - -").SetColor ("#FFFF00");
 	local boolInAlliance = false;
 	local lblAllianceList = UI.CreateLabel (vert);
-	for _,player in pairs (Game.Game.PlayingPlayers) do
-		if (player.ID ~= Game.Us.ID and (TeamOfPlayer (Game, player.ID, Game.LatestStanding) ~= -1 and TeamOfPlayer (Game, player.ID, Game.LatestStanding) == TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding))) then
-			UI.CreateLabel (vert).SetText ("    ■ " .. toname (player.ID, Game));
+	for _,player in pairs (game.Game.PlayingPlayers) do
+		if (player.ID ~= game.Us.ID and (TeamOfPlayer (game, player.ID, game.LatestStanding) ~= -1 and TeamOfPlayer (game, player.ID, game.LatestStanding) == TeamOfPlayer (game, game.Us.ID, game.LatestStanding))) then
+			UI.CreateLabel (vert).SetText ("    ■ " .. toname (player.ID, game));
 			boolInAlliance = true;
 		end
 	end
@@ -424,10 +509,10 @@ function showTeamPeaceWarStatus ()
 
 	local boolAtWar = false; --at war with 1+ players
 	local lblWarList = UI.CreateLabel (vert);
-	if (Mod.PublicGameData.War ~= nil and Mod.PublicGameData.War [Game.Us.ID] ~= nil) then
-		for _,warringPlayerID in pairs (Mod.PublicGameData.War [Game.Us.ID]) do
-			if (Game.Game.PlayingPlayers [warringPlayerID] ~= nil) then
-				UI.CreateLabel (vert).SetText ("    ■ " .. toname (warringPlayerID, Game));
+	if (Mod.PublicGameData.War ~= nil and Mod.PublicGameData.War [game.Us.ID] ~= nil) then
+		for _,warringPlayerID in pairs (Mod.PublicGameData.War [game.Us.ID]) do
+			if (game.Game.PlayingPlayers [warringPlayerID] ~= nil) then
+				UI.CreateLabel (vert).SetText ("    ■ " .. toname (warringPlayerID, game));
 				boolAtWar = true;
 			end
 		end
@@ -439,9 +524,9 @@ function showTeamPeaceWarStatus ()
 
 	local boolAtPeace = false;
 	local lblPeaceList = UI.CreateLabel (vert);
-	for _,player in pairs (Game.Game.PlayingPlayers) do
-		if (player.ID ~= Game.Us.ID and (TeamOfPlayer (Game, player.ID, Game.LatestStanding) == -1 or TeamOfPlayer (Game, player.ID, Game.LatestStanding) ~= TeamOfPlayer (Game, Game.Us.ID, Game.LatestStanding)) and atWarWithPlayer (Game.Us.ID, player.ID) == false) then
-			UI.CreateLabel (vert).SetText ("    ■ " .. toname (player.ID, Game));
+	for _,player in pairs (game.Game.PlayingPlayers) do
+		if (player.ID ~= game.Us.ID and (TeamOfPlayer (game, player.ID, game.LatestStanding) == -1 or TeamOfPlayer (game, player.ID, game.LatestStanding) ~= TeamOfPlayer (game, game.Us.ID, game.LatestStanding)) and atWarWithPlayer (game.Us.ID, player.ID) == false) then
+			UI.CreateLabel (vert).SetText ("    ■ " .. toname (player.ID, game));
 			boolAtPeace = true;
 		end
 	end
@@ -458,34 +543,7 @@ function showTeamPeaceWarStatus ()
 	-- end
 end
 
-function ShowMenu ()
-	DeleteUI ();
-	local vert = mainUI;
-
-	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
-	showPendingRequests ();
-
-	local horz = UI.CreateHorizontalLayoutGroup (vert);
-	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
-	local vertWar = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
-	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
-
-	showTeamActions ();
-
-	showedreturnmessage = true;
-	TargetPlayerBtn = nil;
-	btnExecuteDeclare = nil;
-	btnDeclareWar = nil;
-	textelem = nil;
-	btnExecuteDeclare = nil;
-	btnOfferPeace = nil;
-	SelectedData = {};
-
-	showPeaceWarActions ();
-	showTeamPeaceWarStatus ();
-end
-
-function ShowPeaceOffers (vert)
+function ShowPeaceOffers (game, vert)
 	local intOfferCount = 0;
 	if (tablelength (Mod.PlayerGameData.PeaceOffers) > 0) then
 		lblPeaceOffers = UI.CreateLabel (vert).SetText ("Peace Offers:");
@@ -513,7 +571,7 @@ function ShowPeaceOffers (vert)
 				AcceptDeclinePeaceOffer (payload);
 				end;
 			buttonDeny.SetOnClick (onclick);
-			UI.CreateLabel (horz).SetText ("  " ..PlayerName (Game, offer.OfferedBy) .. " offers you peace");
+			UI.CreateLabel (horz).SetText ("  " ..PlayerName (game, offer.OfferedBy) .. " offers you peace");
 		end
 	end
 	return (intOfferCount);

@@ -34,12 +34,12 @@ function updateRPdata (game, playerID, payload, setReturnTable)
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData[playerID] == nil) then publicGameData.RolePlayData[playerID] = {}; end
-	publicGameData.RolePlayData[playerID].Name = payload.RolePlay_GameName;
-	publicGameData.RolePlayData[playerID].Title = payload.RolePlay_Title;
-	publicGameData.RolePlayData[playerID].Tagline = payload.RolePlay_Tagline;
-	publicGameData.RolePlayData[playerID].HomeTerritory = payload.RolePlay_HomeTerritory;
-	publicGameData.RolePlayData[playerID].HomeBonus = payload.RolePlay_HomeBonus;
-	publicGameData.RolePlayData[playerID].VassalOf = payload.RolePlay_VassalOf;
+	publicGameData.RolePlayData[playerID].Name = payload.RPname;
+	publicGameData.RolePlayData[playerID].Title = payload.RPtitle;
+	publicGameData.RolePlayData[playerID].Tagline = payload.RPtagline;
+	publicGameData.RolePlayData[playerID].HomeTerritory = payload.RPhomeTerritory;
+	publicGameData.RolePlayData[playerID].HomeBonus = payload.RPhomeBonus;
+	publicGameData.RolePlayData[playerID].VassalOf = payload.RPvassalOf;
 	Mod.PublicGameData = publicGameData;
 	setReturnTable ({ publicGameData });
 end
