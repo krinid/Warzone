@@ -369,7 +369,7 @@ end
 
 function showControlsLabelOrText (vert, tboxObject, strFieldName, strTextContent, boolEditMode)
 	local horz = UI.CreateHorizontalLayoutGroup (vert);
-	if (boolEditMode == true) then UI.CreateLabel (horz).SetText (strFieldName .. ":"); tboxObject = UI.CreateTextInputField (horz).SetText (tostring (strTextContent)).SetInteractable (true); return (tboxObject);
+	if (boolEditMode == true) then UI.CreateLabel (horz).SetText (strFieldName .. ":"); tboxObject = UI.CreateTextInputField (horz).SetText (tostring (strTextContent)).SetInteractable (true).SetFlexibleWidth (1).SetPreferredWidth (300); return (tboxObject);
 	else UI.CreateLabel (horz).SetText (strFieldName .. ": " .. tostring (strTextContent));
 	end
 	return (nil);
