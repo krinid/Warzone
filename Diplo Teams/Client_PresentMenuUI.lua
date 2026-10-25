@@ -35,7 +35,7 @@ function ShowMenu (game)
 	local boolActivePlayer = game.Us ~= nil and game.Us.ID ~= nil and game.Game.PlayingPlayers [game.Us.ID] ~= nil;
 
 	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
-	showPendingRequests (game, vert);
+	if (boolActivePlayer == true) then showPendingRequests (game, vert); end
 
 	local horz = UI.CreateHorizontalLayoutGroup (vert);
 	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
