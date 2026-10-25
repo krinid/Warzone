@@ -7,7 +7,7 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 		return;
 	end
 
-	setMaxSize (600, 500);
+	setMaxSize (600, 600);
 	Game = game; --make these variables globally accessible
 	Close = close;
 	root = rootParent;
@@ -23,18 +23,18 @@ function Client_PresentMenuUI (rootParent, setMaxSize, setScrollable, game, clos
 		return;
 	end
 
-	mainmenu = UI.CreateButton (root).SetText ("Main Menu").SetOnClick (ShowMenu).SetColor ("#00FFFF");
+	mainmenu = UI.CreateButton (root).SetText ("Main Menu").SetOnClick (function () ShowMenu (game); end).SetColor ("#00FFFF");
 	local vert = UI.CreateVerticalLayoutGroup (rootParent).SetFlexibleWidth (1);
 	mainUI = vert;
-	ShowMenu ();
+	ShowMenu (game);
 end
 
-function ShowMenu ()
+function ShowMenu (game)
 	DeleteUI ();
 	local vert = mainUI;
 
 	-- ShowTeams (vert, Game); --don't need this, can just look to the player dialog to see the teams
-	showPendingRequests (Game, vert);
+	showPendingRequests (game, vert);
 
 	local horz = UI.CreateHorizontalLayoutGroup (vert);
 	local vertTeam = UI.CreateVerticalLayoutGroup (horz).SetPreferredWidth (250);
@@ -44,7 +44,7 @@ function ShowMenu ()
 	local vertWarPeaceStatus = UI.CreateVerticalLayoutGroup (vert); --.SetPreferredWidth (250);
 	--this puts Team & War panes beside each other, to revert to above/below each other, just make vertTerm = vert, vertWar = vert and ignore the horz
 
-	showTeamActions (Game, vertTeam);
+	showTeamActions (game, vertTeam);
 
 	showedreturnmessage = true;
 	TargetPlayerBtn = nil;
@@ -55,9 +55,9 @@ function ShowMenu ()
 	btnOfferPeace = nil;
 	SelectedData = {};
 
-	showPeaceWarActions (Game, vertWar);
-	showRPdata (Game, vertRPdata, "Edit"); --show the RP data pane in display mode (shows "Edit" on the button)
-	showTeamPeaceWarStatus (Game, vertWarPeaceStatus);
+	showPeaceWarActions (game, vertWar);
+	showRPdata (game, vertRPdata, "Edit"); --show the RP data pane in display mode (shows "Edit" on the button)
+	showTeamPeaceWarStatus (game, vertWarPeaceStatus);
 end
 
 --DEPRECATED - function not required, as Teams are visible in the 'Players' dialog, so no need to display them here; leaving the code here in case there is a future need for it
@@ -120,7 +120,7 @@ function showPendingTeamProposals (vert, game)
 end
 
 function CreateProposeDialog (rootParent, setMaxSize, setScrollable, game, close)
-	setMaxSize (450, 600);
+	setMaxSize (600, 400);
 	ProposeRoot = rootParent;
 	ProposeClose = close;
 	SelectedPlayerIDs = {};
@@ -352,7 +352,6 @@ function showRPdata (game, vert, strEditMode)
 			end
 		end
 	); --.SetColor ("#00FFFF");
-	-- UI.CreateButton (horz).SetText ("All Players").SetOnClick (function () showAllPlayerRPdata (game); end);
 	UI.CreateButton (horz).SetText ("All Players").SetOnClick (function () game.CreateDialog (createShowAllPlayerRPdataDialog); end);
 
 	local boolEditMode = strEditMode == "Save"; --if we're in "Save" mode, display editable fields for the local player
@@ -376,7 +375,7 @@ function showControlsLabelOrText (vert, tboxObject, strFieldName, strTextContent
 end
 
 function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable, game, close)
-	setMaxSize (450, 600);
+	setMaxSize (600, 500);
 	local vertRPdata = UI.CreateVerticalLayoutGroup (rootParent);
 	local vertNoRPdata = UI.CreateVerticalLayoutGroup (rootParent);
 	local publicGameData = Mod.PublicGameData;
@@ -586,11 +585,11 @@ function AcceptDeclinePeaceOffer (data)
 		showedreturnmessage = false;
 		-- UI.Alert(returnvalue.Message);
 	end);
-	ShowMenu ();
+	ShowMenu (Game);
 end
 
-function toname (playerid,game)
-	return game.Game.Players [tonumber (playerid)].DisplayName (nil, false);
+function toname (playerid, game)
+	return (game.Game.Players [tonumber (playerid)].DisplayName (nil, false));
 end
 
 function OpenDeclareWar ()
