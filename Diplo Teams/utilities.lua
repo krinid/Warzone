@@ -308,19 +308,9 @@ function check (message,variable)
 	return match;
 end
 
--- function numberToLetters (num)
--- 	local strLetters = "";
--- 	-- num = num + 1; --0 = team A, 1 = team B, etc
--- 	while (num + 1 > 0) do
--- 		local remainder = (num) % 26;
--- 		strLetters = string.char (65 + remainder) .. strLetters;
--- 		num = math.floor ((num) / 26)
--- 	end
--- 	return (strLetters ~= "" and strLetters or nil);
--- end
-
 function numberToLetters (num)
-    local strLetters = "";
+    if (num == NoTeam) then return ("--"); end
+	local strLetters = "";
     while (true) do
         local remainder = (num) % 26;
         strLetters = string.char (65 + remainder) .. strLetters;
