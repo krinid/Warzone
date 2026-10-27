@@ -466,7 +466,7 @@ function showPeaceWarActions (game, vertWar)
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
 	btnOfferPeace = UI.CreateButton (vertWar).SetText ("Offer Peace (NAP)").SetOnClick (OpenOfferPeace);
 
-	local boolSimulationOptionsEnabled = true; --false;
+	local boolSimulationOptionsEnabled = false;
 	if (boolSimulationOptionsEnabled == true) then
 		btnSimulateOfferWar = UI.CreateButton (vertWar).SetText ("Simulate War Declaration").SetOnClick (
 			function ()
