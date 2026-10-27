@@ -418,7 +418,7 @@ function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable,
 		local intWZteamNum = TeamOfPlayer (game, playerID, game.LatestStanding);
 		local strWZteamLetters = numberToLetters (intWZteamNum);
 		local strRPteamName = publicGameData.RolePlayData.Teams [intWZteamNum];
-		if (RPdata == nil) then UI.CreateLabel (vertNoRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "/WZ Team " ..tostring (strWZteamLetters).. "] [no data]");
+		if (RPdata == nil) then UI.CreateLabel (vertNoRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "/WZ Team " ..tostring (strWZteamLetters).. "] RP Team: " ..tostring (strRPteamName).. ", [no data]");
 		else UI.CreateLabel (vertRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "/WZ Team " ..tostring (strWZteamLetters).. "] RP Team: " ..tostring (strRPteamName).. ", Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
 		end
 	end
