@@ -27,6 +27,29 @@ function Client_GameRefresh (game)
 		payload.AlertContent = "!! WAR !!\nYou are involved in a new WAR\n\nCheck the Diplo Teams information by clicking Game/Diplo Teams";
 		payload.PlayerID = game.Us.ID;
 
+		-- print ("1 " ..tostring (Mod.PlayerGameData [game.Us.ID].HasNewWar_DeclaredOn));
+		-- print ("2 " ..tostring (Mod.PlayerGameData [game.Us.ID].HasNewWar_DeclaredUpon));
+		local strListOfPlayersDeclaredOn;
+		for playerID,_ in pairs (Mod.PlayerGameData.HasNewWar_DeclaredOn or {}) do
+			strListOfPlayersDeclaredOn = (strListOfPlayersDeclaredOn == nil and "\nYou declared war on:") .. "\n" ..tostring (game.Game.PlayingPlayers [playerID].DisplayName (nil, false));
+		end
+
+		local strListOfPlayersDeclaredUponBy;
+		for playerID,_ in pairs (Mod.PlayerGameData.HasNewWar_DeclaredUpon or {}) do
+			strListOfPlayersDeclaredUponBy = (strListOfPlayersDeclaredUponBy == nil and "\nYou were declared war upon by:") .. "\n" ..tostring (game.Game.PlayingPlayers [playerID].DisplayName (nil, false));
+		end
+
+		--if the local player declared on others or was declared upon by others
+		if (strListOfPlayersDeclaredUponBy ~= nil or strListOfPlayersDeclaredOn ~= nil) then
+			payload.AlertContent = "!! WAR !!" ..(strListOfPlayersDeclaredUponBy ~= nil and strListOfPlayersDeclaredUponBy or "") .. (strListOfPlayersDeclaredOn ~= nil and strListOfPlayersDeclaredOn or "");
+		else
+			--didn't declared on others and wasn't declared on by others -- these are default wars from start of game (or some other non-player initiated means)
+			payload.AlertContent = "!! WAR !!\nYou are involved in a new WAR\n\nCheck the Diplo Teams information by clicking Game/Diplo Teams";
+		end
+
+		-- playerGameData [pid.ID].HasNewWar_DeclaredOn = nil; --clear list of players that pid.ID declared on
+		-- playerGameData [pid.ID].HasNewWar_DeclaredUpon = nil; --clear list of players that pid.ID was declared upon by
+
 		game.SendGameCustomMessage ('Sending alert', payload, function (returnValue) end);
 	end
 

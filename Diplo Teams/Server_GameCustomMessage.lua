@@ -34,6 +34,8 @@ function updateRPdata (game, playerID, payload, setReturnTable)
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData[playerID] == nil) then publicGameData.RolePlayData[playerID] = {}; end
+	if (publicGameData.RolePlayData.Teams == nil) then publicGameData.RolePlayData.Teams = {}; end
+	if (payload.RPteamNum ~= NoTeam) then publicGameData.RolePlayData.Teams [payload.RPteamNum] = payload.RPteamName; end
 	publicGameData.RolePlayData[playerID].Name = payload.RPname;
 	publicGameData.RolePlayData[playerID].Title = payload.RPtitle;
 	publicGameData.RolePlayData[playerID].Tagline = payload.RPtagline;
@@ -249,7 +251,7 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 		print ("[SIMULATE PEACE OFFER] [END]");
 	elseif (payload.Message == "Peace") then
 		local targetPlayerID = tonumber (payload.TargetPlayerID);
-		if (game.ServerGame.Game.Players [targetPlayerID].IsAIOrHumanTurnedIntoAI == false) then
+		if (true or game.ServerGame.Game.Players [targetPlayerID].IsAIOrHumanTurnedIntoAI == false) then
 			if (playerGameData [targetPlayerID].PeaceOffers [playerID] ~= nil)then
 				rg.Message = "Player ("  ..PlayerName (game, targetPlayerID).. ") already has a pending peace offer from you";
 				setReturnTable(rg);
@@ -257,6 +259,9 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				playerGameData [targetPlayerID].PeaceOffers [playerID] = {};
 				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferedBy = playerID;
 				playerGameData [targetPlayerID].PeaceOffers [playerID].OfferedInTurn = game.Game.NumberOfTurns;
+				playerGameData [playerID].PeaceOffers [targetPlayerID] = {};
+				playerGameData [playerID].PeaceOffers [targetPlayerID].OfferedBy = playerID;
+				playerGameData [playerID].PeaceOffers [targetPlayerID].OfferedInTurn = game.Game.NumberOfTurns;
 				rg.Message = "Peace Offer has been sent to player (" ..PlayerName (game, targetPlayerID).. ")";
 				setReturnTable (rg);
 
@@ -303,8 +308,9 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 			-- print ("Mod.PublicGameData.Announcements size " ..tablelength (Mod.PublicGameData.Announcements));
 			setReturnTable (rg);
 		end
-	elseif (payload.Message == "Accept Peace" or payload.Message == "Decline Peace") then
+	elseif (payload.Message == "Accept Peace" or payload.Message == "Decline Peace" or payload.Message == "Cancel Peace Offer") then
 		local targetPlayerID = tonumber (payload.TargetPlayerID);
+		print ("[AP/DP/CPO] " ..tostring (payload.Message).. ", from " ..tostring (playerID).. ", to " ..tostring (targetPlayerID));
 		if (playerGameData [playerID].PeaceOffers [targetPlayerID] == nil) then
 			rg.Message = "Peace Offer doesn't exist, reload the Diplo Teams mod menu to refresh current status";
 			AlertPlayer (targetPlayerID, "Peace Offer doesn't exist, reload the Diplo Teams mod menu to refresh current status");
@@ -327,6 +333,7 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				end
 				publicGameData.War [playerID] = remainingwar;
 				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil;
+				playerGameData [targetPlayerID].PeaceOffers [playerID] = nil;
 				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been accepted";
 
 				--send noticed back to player than offered peace that it was accepted
@@ -345,12 +352,15 @@ function process_WarPeaceChanges (game, playerID, payload, setReturnTable)
 				setReturnTable (rg);
 			else
 				playerGameData [playerID].PeaceOffers [targetPlayerID] = nil
-				rg.Message = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been declined";
+				playerGameData [targetPlayerID].PeaceOffers [playerID] = nil;
+				local strMessage = "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been declined";
+				rg.Message = strMessage;
+				print (rg.Message);
 				setReturnTable (rg);
 
 				--send Alert to player, preserve PlayerGameData b/c AlertPlayer changes it also so need to save it, let AlertPlayer make changes, then recapture the changes AlertPlayer made
 				Mod.PlayerGameData = playerGameData;
-				AlertPlayer (targetPlayerID, "Peace Offer from player (" ..PlayerName (game, targetPlayerID).. ") has been declined");
+				AlertPlayer (targetPlayerID, strMessage);
 				playerGameData = Mod.PlayerGameData;
 			end
 		end

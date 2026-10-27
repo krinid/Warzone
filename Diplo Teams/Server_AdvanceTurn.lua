@@ -7,6 +7,8 @@ function Server_AdvanceTurn_Start (game, addNewOrder)
 	RemainingDeclarations = {}; --list of wars to be declared @ end of turn in Server_AdvanceTurn_End
 	for _,pid in pairs(game.Game.PlayingPlayers) do
 		playerGameData [pid.ID].HasNewWar = false; --clear the indicator that there's a new war, reeval this in Game_Refresh and send alert to players if new War Declarations or Peace Offers have been made since turn advanced
+		playerGameData [pid.ID].HasNewWar_DeclaredOn = nil; --clear list of players that pid.ID declared on
+		playerGameData [pid.ID].HasNewWar_DeclaredUpon = nil; --clear list of players that pid.ID was declared upon by
 	end
 	Mod.PlayerGameData = playerGameData;
 
@@ -52,13 +54,49 @@ function ExecuteTeamChanges (game, addNewOrder)
 		end
 	end
 
+	--used only for testing at this point in time 2026/10/02
+	local boolRetainCards = false; --true;
+
 	--Players leaving a team get their own event, since they're not joining anyone.
 	for _,playerID in ipairs (sortedCopy (leaving)) do
 		local event = WL.GameOrderEvent.Create (playerID, PlayerName (game, playerID) .. ' left their team');
+		local eventAssignCards = nil;
+		local tblCardPiecesOLD = game.ServerGame.LatestTurnStanding.Cards[playerID].Pieces;
+		local tblWholeCardsOLD = game.ServerGame.LatestTurnStanding.Cards[playerID].WholeCards;
+
+		if (boolRetainCards == true) then
+			eventAssignCards = WL.GameOrderEvent.Create (playerID, PlayerName(game, playerID) .. ' retains their cards');
+			eventAssignCards.Icon = "Diplo Teams_order_40x40";
+
+			local tblCardPiecesNEW = {};
+			tblCardPiecesNEW[playerID] = {};
+
+			-- re-add card pieces
+			for cardID, pieces in pairs (tblCardPiecesOLD) do
+				tblCardPiecesNEW[playerID][cardID] = pieces;
+			end
+
+			-- re-add wholecards as pieces
+			for cardInstanceID, cardInstance in pairs (tblWholeCardsOLD) do
+				local cardID = cardInstance.CardID;
+				local numPieces = game.Settings.Cards[cardID].NumPieces;
+
+				if (tblCardPiecesNEW[playerID][cardID] == nil) then
+					tblCardPiecesNEW[playerID][cardID] = 0;
+				end
+				tblCardPiecesNEW[playerID][cardID] = tblCardPiecesNEW[playerID][cardID] + numPieces;
+			end
+
+			eventAssignCards.AddCardPiecesOpt = tblCardPiecesNEW;
+		end
+
 		event.AssignTeamOpt = { [playerID] = NoTeam };
 		event.Icon = "Diplo Teams_order_40x40";
 		addNewOrder (event);
+		if (eventAssignCards ~= nil) then addNewOrder (eventAssignCards); end
 	end
+
+
 
 	for _,teamID in ipairs (sortedCopy (teamIDs)) do
 		local playerIDs = sortedCopy (groups [teamID]);
@@ -129,12 +167,16 @@ function Server_AdvanceTurn_Order (game, order, result, skipThisOrder, addNewOrd
 				-- "Diplo Teams|" ..tostring (myID).. "|" .. tostring (SelectedData[1])))
 				print ("[SATO] [WAR DECLARATION] [EXECUTE DECLARATION]" ..tostring (playerIDdeclarer).. " vs " ..tostring (playerIDtarget));
 				DeclareWar (playerIDdeclarer, playerIDtarget, game);
-				local playerGameData = Mod.PlayerGameData;
-				if (playerGameData [playerIDdeclarer] == nil) then playerGameData [playerIDdeclarer] = {}; end
-				if (playerGameData [playerIDtarget] == nil) then playerGameData [playerIDtarget] = {}; end
-				playerGameData [playerIDdeclarer].HasNewWar = true;
-				playerGameData [playerIDtarget].HasNewWar = true;
-				Mod.PlayerGameData = playerGameData;
+				-- local playerGameData = Mod.PlayerGameData;
+				-- if (playerGameData [playerIDdeclarer] == nil) then playerGameData [playerIDdeclarer] = {}; end
+				-- if (playerGameData [playerIDtarget] == nil) then playerGameData [playerIDtarget] = {}; end
+				-- playerGameData [playerIDdeclarer].HasNewWar = true;
+				-- playerGameData [playerIDdeclarer].HasNewWar_DeclaredOn = {};
+				-- playerGameData [playerIDdeclarer].HasNewWar_DeclaredOn [playerIDtarget] = true;
+				-- playerGameData [playerIDtarget].HasNewWar = true;
+				-- playerGameData [playerIDtarget].HasNewWar_DeclaredUpon = {};
+				-- playerGameData [playerIDtarget].HasNewWar_DeclaredUpon [playerIDdeclarer] = true;
+				-- Mod.PlayerGameData = playerGameData;
 			end
 			skipThisOrder (WL.ModOrderControl.SkipAndSupressSkippedMessage); --skip order, it will execute @ end of the turn in Server_AdvanceTurn_End
 		end
@@ -167,12 +209,18 @@ function Server_AdvanceTurn_End (game, addNewOrder)
 	--Finishing war declaration
 	print ("[SATE] #declarations " ..tablelength (RemainingDeclarations));
 	for _,newwar in pairs (RemainingDeclarations) do
-		if (game.ServerGame.Game.Players [newwar.S1].IsAI == false) then
-			playerGameData [newwar.S1].HasNewWar = true;
-		end
-		if (game.ServerGame.Game.Players [newwar.S2].IsAI == false) then
-			playerGameData [newwar.S2].HasNewWar = true;
-		end
+		-- if (game.ServerGame.Game.Players [newwar.S1].IsAI == false) then
+		playerGameData [newwar.S1].HasNewWar = true;
+		playerGameData [newwar.S1].HasNewWar_DeclaredOn = {};
+		playerGameData [newwar.S1].HasNewWar_DeclaredOn [newwar.S2] = true;
+		playerGameData [newwar.S2].HasNewWar = true;
+		playerGameData [newwar.S2].HasNewWar_DeclaredUpon = {};
+		playerGameData [newwar.S2].HasNewWar_DeclaredUpon [newwar.S1] = true;
+		Mod.PlayerGameData = playerGameData;
+		-- end
+		-- if (game.ServerGame.Game.Players [newwar.S2].IsAI == false) then
+		-- 	playerGameData [newwar.S2].HasNewWar = true;
+		-- end
 		--establish the war state between the players
 		publicGameData.War [newwar.S1][tablelength (publicGameData.War [newwar.S1])+1] = newwar.S2;
 		publicGameData.War [newwar.S2][tablelength (publicGameData.War [newwar.S2])+1] = newwar.S1;

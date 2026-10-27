@@ -116,6 +116,7 @@ function showPendingTeamProposals (vert, game)
 			UI.CreateButton (row).SetText (strAcceptButtonText).SetInteractable (not HaveWeAccepted (game, request)).SetOnClick (function() SendAccept (game, request, Close); end).SetColor (getColourCode ("Button|Green"));
 			UI.CreateButton (row).SetText (strDeclineButtonText).SetOnClick (function () SendDecline (game, request, Close); end).SetColor (getColourCode ("Button|Red"));
 			UI.CreateLabel (row).SetText ('  ' .. PlayerName (game, request.ProposerID) .. ' proposed team: ' .. PlayerNames (game, request.PlayerIDs));
+			UI.CreateLabel (row).SetText ('  ' .. getWZRPplayerName (game, request.ProposerID) .. ' proposed team: ' .. getList_WZRPplayerNames (game, request.PlayerIDs));
 			UI.CreateLabel (vert).SetText ('     Status: ' .. RequestStatus (game, request));
 		end
 	end
@@ -128,6 +129,24 @@ function CreateProposeDialog (rootParent, setMaxSize, setScrollable, game, close
 	ProposeClose = close;
 	SelectedPlayerIDs = {};
 	BuildProposeUI ();
+end
+
+function getWZRPplayerName (game, playerID)
+	local strWZplayerName = tostring (PlayerName (game, playerID));
+	local strRPplayerName = tostring (getRPname (playerID));
+	-- return (strRPplayerName.. " [" ..tostring (strWZplayerName).. "]");
+	return (strWZplayerName.. " [" ..tostring (strRPplayerName).. "]");
+end
+
+--shows a list of players, such as "Alice, Bob and Carol"
+function getList_WZRPplayerNames (game, playerIDs)
+	return joinNames (map (sortedCopy (playerIDs), function (pid) return getWZRPplayerName (game, pid); end));
+end
+
+function getRPname (playerID)
+	if (Mod.PublicGameData.RolePlayData ~= nil and Mod.PublicGameData.RolePlayData[playerID] ~= nil and Mod.PublicGameData.RolePlayData[playerID].Name ~= nil) then return (Mod.PublicGameData.RolePlayData[playerID].Name);
+	else return (nil);
+	end
 end
 
 --Rebuilt from scratch every time the player adds or removes someone from the team they're putting together.
@@ -146,11 +165,13 @@ function BuildProposeUI ()
 	UI.CreateLabel(ProposeVert).SetText('\nChoose who to invite to form a Team Alliance. All members must accept for it to take effect');
 
 	UI.CreateLabel (ProposeVert).SetText ('\nTeam Alliance members are:').SetColor (getColourCode ("sub-heading"));
-	UI.CreateLabel (ProposeVert).SetText ('  • ' .. PlayerName (Game, Game.Us.ID) .. ' (you)');
+	-- UI.CreateLabel (ProposeVert).SetText ('  • ' .. PlayerName (Game, Game.Us.ID) .. ' (you)');
+	UI.CreateLabel (ProposeVert).SetText ('  • ' .. getWZRPplayerName (Game, Game.Us.ID) .. ' (you)');
 
 	for _,playerID in ipairs (SelectedPlayerIDs) do
 		local row = UI.CreateHorizontalLayoutGroup (ProposeVert);
-		UI.CreateLabel (row).SetText ('  • ' .. PlayerName (Game, playerID));
+		-- UI.CreateLabel (row).SetText ('  • ' .. PlayerName (Game, playerID));
+		UI.CreateLabel (row).SetText ('  • ' .. getWZRPplayerName (Game, playerID));
 		UI.CreateButton (row).SetText ('Remove').SetColor (getColourCode ("Button|Red")).SetOnClick (function()
 			SelectedPlayerIDs = filter (SelectedPlayerIDs, function (selected) return selected ~= playerID; end);
 			BuildProposeUI ();
@@ -323,6 +344,9 @@ function showRPdata (game, vert, strEditMode)
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
+	local intWZteamNum = TeamOfPlayer (game, game.Us.ID, game.LatestStanding);
+	if (publicGameData.RolePlayData.Teams) == nil then publicGameData.RolePlayData.Teams = {}; publicGameData.RolePlayData.Teams [NoTeam] = nil; end --initialize team names; set NoTeam (-1) to nil -- no one can name "no team"
+	local strRPteamName = publicGameData.RolePlayData.Teams [intWZteamNum]; --(intWZteamNum == NoTeam and nil) or tostring (publicGameData.RolePlayData.Teams [intWZteamNum]);
 	local horz = UI.CreateHorizontalLayoutGroup (vertRPdata);
 	UI.CreateLabel (horz).SetText ("- - - - - - - RP Data - - - - - - -").SetColor ("#FFFF00");
 	btnRPdataSaveEdit = UI.CreateButton (horz).SetText (strEditMode).SetOnClick (
@@ -335,6 +359,8 @@ function showRPdata (game, vert, strEditMode)
 			elseif (strEditMode == "Save") then
 				local payload = {};
 				payload.Message = "UpdateRPdata";
+				payload.RPteamName = (intWZteamNum == NoTeam and nil) or (intWZteamNum ~= NoTeam and tboxRPteamName.GetText ());
+				payload.RPteamNum = intWZteamNum;
 				payload.RPname = tboxRPname.GetText ();
 				payload.RPtitle = tboxRPtitle.GetText ();
 				payload.RPtagline = tboxRPtagline.GetText ();
@@ -361,17 +387,19 @@ function showRPdata (game, vert, strEditMode)
 	if (strEditMode == "Refresh") then
 		UI.CreateLabel (vertRPdata).SetText ("Hit refresh button to see updated data");
 	else
-		tboxRPname = showControlsLabelOrText (vertRPdata, tboxRPname, "Name", tostring (publicGameData.RolePlayData[game.Us.ID].Name), boolEditMode);
-		tboxRPtitle = showControlsLabelOrText (vertRPdata, tboxRPtitle, "Title", tostring (publicGameData.RolePlayData[game.Us.ID].Title), boolEditMode);
-		tboxRPtagline = showControlsLabelOrText (vertRPdata, tboxRPtagline, "Tagline", tostring (publicGameData.RolePlayData[game.Us.ID].Tagline), boolEditMode);
+		tboxRPteamName = showControlsLabelOrText (vertRPdata, tboxRPteamName, "Team Name", tostring (strRPteamName), boolEditMode, intWZteamNum ~= NoTeam); --set to non-interactable of player isn't on a WZ Team
+		-- if (intWZteamNum == NoTeam) then tboxRPteamName.SetInteractable (false); end --if player isn't on a team, disable this textbox
+		tboxRPname = showControlsLabelOrText (vertRPdata, tboxRPname, "Name", tostring (publicGameData.RolePlayData[game.Us.ID].Name), boolEditMode, true);
+		tboxRPtitle = showControlsLabelOrText (vertRPdata, tboxRPtitle, "Title", tostring (publicGameData.RolePlayData[game.Us.ID].Title), boolEditMode, true);
+		tboxRPtagline = showControlsLabelOrText (vertRPdata, tboxRPtagline, "Tagline", tostring (publicGameData.RolePlayData[game.Us.ID].Tagline), boolEditMode, true);
 		UI.CreateLabel (vertRPdata).SetText ("Home territory/bonus: " .. tostring ("tbd")); --Mod.PublicGameData.RolePlayData[game.Us.ID].));
 		UI.CreateLabel (vertRPdata).SetText ("Vassals: " .. tostring ("tbd")); --Mod.PublicGameData.RolePlayData[game.Us.ID].));
 	end
 end
 
-function showControlsLabelOrText (vert, tboxObject, strFieldName, strTextContent, boolEditMode)
+function showControlsLabelOrText (vert, tboxObject, strFieldName, strTextContent, boolEditMode, boolInteractable)
 	local horz = UI.CreateHorizontalLayoutGroup (vert);
-	if (boolEditMode == true) then UI.CreateLabel (horz).SetText (strFieldName .. ":"); tboxObject = UI.CreateTextInputField (horz).SetText (tostring (strTextContent)).SetInteractable (true).SetFlexibleWidth (1).SetPreferredWidth (300); return (tboxObject);
+	if (boolEditMode == true) then UI.CreateLabel (horz).SetText (strFieldName .. ":"); tboxObject = UI.CreateTextInputField (horz).SetText (tostring (strTextContent)).SetInteractable (boolInteractable).SetFlexibleWidth (1).SetPreferredWidth (300); return (tboxObject);
 	else UI.CreateLabel (horz).SetText (strFieldName .. ": " .. tostring (strTextContent));
 	end
 	return (nil);
@@ -384,10 +412,14 @@ function createShowAllPlayerRPdataDialog (rootParent, setMaxSize, setScrollable,
 	local publicGameData = Mod.PublicGameData;
 	if (publicGameData.RolePlayData == nil) then publicGameData.RolePlayData = {}; end
 	if (publicGameData.RolePlayData [game.Us.ID] == nil) then publicGameData.RolePlayData [game.Us.ID] = {}; end
+	if (publicGameData.RolePlayData.Teams == nil) then publicGameData.RolePlayData.Teams = {}; end
 	for playerID, player in pairs (game.Game.Players) do
 		local RPdata = publicGameData.RolePlayData [playerID];
-		if (RPdata == nil) then UI.CreateLabel (vertNoRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "] [no data]");
-		else UI.CreateLabel (vertRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "] Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
+		local intWZteamNum = TeamOfPlayer (game, playerID, game.LatestStanding);
+		local strWZteamLetters = numberToLetters (intWZteamNum);
+		local strRPteamName = publicGameData.RolePlayData.Teams [intWZteamNum];
+		if (RPdata == nil) then UI.CreateLabel (vertNoRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "/WZ Team " ..tostring (strWZteamLetters).. "] [no data]");
+		else UI.CreateLabel (vertRPdata).SetText ("• [" ..player.DisplayName (nil, false).. "/WZ Team " ..tostring (strWZteamLetters).. "] RP Team: " ..tostring (strRPteamName).. ", Name: " ..tostring (RPdata.Name).. ", Title: " ..tostring (RPdata.Title).. ", Tagline: " ..tostring (RPdata.Tagline));
 		end
 	end
 end
@@ -397,7 +429,7 @@ function showPendingRequests (game, vert)
 	if (game.Us == nil) then return; end;
 	UI.CreateLabel (vert).SetText ("- - - - - - - PENDING REQUESTS - - - - - - -").SetColor ("#FFFF00");
 	local lblPendingRequestsMessage = UI.CreateLabel (vert);
-	local intNumPeaceOffers = ShowPeaceOffers (game, vert);
+	local intNumPeaceOffers = showPeaceOffers (game, vert);
 	local intNumTeamProposals = showPendingTeamProposals (vert, game);
 	if (intNumPeaceOffers + intNumTeamProposals <= 0) then lblPendingRequestsMessage.SetText ("You have no pending Peace Offers (NAP) or Team Proposals"); end
 end
@@ -434,7 +466,7 @@ function showPeaceWarActions (game, vertWar)
 	btnDeclareWar = UI.CreateButton (vertWar).SetText ("Declare War").SetOnClick (OpenDeclareWar);
 	btnOfferPeace = UI.CreateButton (vertWar).SetText ("Offer Peace (NAP)").SetOnClick (OpenOfferPeace);
 
-	local boolSimulationOptionsEnabled = false;
+	local boolSimulationOptionsEnabled = true; --false;
 	if (boolSimulationOptionsEnabled == true) then
 		btnSimulateOfferWar = UI.CreateButton (vertWar).SetText ("Simulate War Declaration").SetOnClick (
 			function ()
@@ -495,20 +527,9 @@ function showPeaceWarActions (game, vertWar)
 	end
 end
 
-function showTeamPeaceWarStatus (game, vert)
+function showTeamPeaceWarStatus_AllPlayers (game, vert)
 	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
-	UI.CreateLabel (vert).SetText ("- - - - - - - TEAM/PEACE/WAR STATUS - - - - - - -").SetColor ("#FFFF00");
-	local boolInAlliance = false;
-	local lblAllianceList = UI.CreateLabel (vert);
-	for _,player in pairs (game.Game.PlayingPlayers) do
-		if (player.ID ~= game.Us.ID and (TeamOfPlayer (game, player.ID, game.LatestStanding) ~= -1 and TeamOfPlayer (game, player.ID, game.LatestStanding) == TeamOfPlayer (game, game.Us.ID, game.LatestStanding))) then
-			UI.CreateLabel (vert).SetText ("    ■ " .. toname (player.ID, game));
-			boolInAlliance = true;
-		end
-	end
-	if (boolInAlliance == false) then lblAllianceList.SetText ("• In a team/alliance with: No one");
-	else lblAllianceList.SetText ("• In a team/alliance with: ").SetColor ("#00AA00");
-	end
+	UI.CreateLabel (vert).SetText ("- - - - - - - ALL PLAYERS - PEACE/WAR STATUS - - - - - - -").SetColor ("#FFFF00");
 
 	local boolAtWar = false; --at war with 1+ players
 	local lblWarList = UI.CreateLabel (vert);
@@ -546,49 +567,120 @@ function showTeamPeaceWarStatus (game, vert)
 	-- end
 end
 
-function ShowPeaceOffers (game, vert)
+function showTeamPeaceWarStatus (game, vert)
+	-- UI.CreateLabel (vert).SetText ("- - - - - - -").SetColor ("#FFFF00");
+	UI.CreateLabel (vert).SetText ("- - - - - - - TEAM/PEACE/WAR STATUS - - - - - - -").SetColor ("#FFFF00");
+	local boolInAlliance = false;
+	local lblAllianceList = UI.CreateLabel (vert);
+	for _,player in pairs (game.Game.PlayingPlayers) do
+		if (player.ID ~= game.Us.ID and (TeamOfPlayer (game, player.ID, game.LatestStanding) ~= NoTeam and TeamOfPlayer (game, player.ID, game.LatestStanding) == TeamOfPlayer (game, game.Us.ID, game.LatestStanding))) then
+			UI.CreateLabel (vert).SetText ("    ■ " .. getWZRPplayerName (game, player.ID)); --toname (player.ID, game));
+			boolInAlliance = true;
+		end
+	end
+	if (boolInAlliance == false) then lblAllianceList.SetText ("• In a team/alliance with: No one");
+	else lblAllianceList.SetText ("• In a team/alliance with: ").SetColor ("#00AA00");
+	end
+
+	local boolAtWar = false; --at war with 1+ players
+	local lblWarList = UI.CreateLabel (vert);
+	if (Mod.PublicGameData.War ~= nil and Mod.PublicGameData.War [game.Us.ID] ~= nil) then
+		for _,warringPlayerID in pairs (Mod.PublicGameData.War [game.Us.ID]) do
+			if (game.Game.PlayingPlayers [warringPlayerID] ~= nil) then
+				UI.CreateLabel (vert).SetText ("    ■ " .. getWZRPplayerName (game, warringPlayerID)); --toname (warringPlayerID, game));
+				boolAtWar = true;
+			end
+		end
+		if (boolAtWar == false) then lblWarList.SetText ("• At war with: No one").SetColor ("#FF0000");
+		else lblWarList.SetText ("• At war with:").SetColor ("#FF0000");
+		end
+	end
+	btnOfferPeace.SetInteractable (boolAtWar);
+
+	local boolAtPeace = false;
+	local lblPeaceList = UI.CreateLabel (vert);
+	for _,player in pairs (game.Game.PlayingPlayers) do
+		if (player.ID ~= game.Us.ID and (TeamOfPlayer (game, player.ID, game.LatestStanding) == -1 or TeamOfPlayer (game, player.ID, game.LatestStanding) ~= TeamOfPlayer (game, game.Us.ID, game.LatestStanding)) and atWarWithPlayer (game.Us.ID, player.ID) == false) then
+			UI.CreateLabel (vert).SetText ("    ■ " .. getWZRPplayerName (game, player.ID)); --toname (player.ID, game));
+			boolAtPeace = true;
+		end
+	end
+	if (boolAtPeace == false) then lblPeaceList.SetText ("• At peace with: No one"); btnDeclareWar.SetInteractable (false).SetColor ("#0000FF");
+	else lblPeaceList.SetText ("• At peace with: ").SetColor ("#0000FF"); --use default colour, no reason to highlight this like Alliance/Teammate (GREEN) or War (RED)
+	end
+
+	-- print ("[FULL ONGOING WAR LIST]");
+	-- for k,v in pairs (Mod.PublicGameData.War) do
+	-- 	print ("  [WAR ITEM] " ..tostring (k).." vs " ..tostring (v) .. ", size " ..tablelength (v));
+	-- 	for k2,v2 in pairs (v) do
+	-- 		print ("    [WAR ITEM!] " ..tostring (k).." vs " ..tostring (v2));
+	-- 	end
+	-- end
+end
+
+function showPeaceOffers (game, vert)
 	local intOfferCount = 0;
 	if (tablelength (Mod.PlayerGameData.PeaceOffers) > 0) then
 		lblPeaceOffers = UI.CreateLabel (vert).SetText ("Peace Offers:");
 
-		for _,offer in pairs (Mod.PlayerGameData.PeaceOffers) do
+		for targetPlayerID,offer in pairs (Mod.PlayerGameData.PeaceOffers) do
 			--this is a new Peace Offer
 			intOfferCount = intOfferCount + 1;
 
 			local horz = UI.CreateHorizontalLayoutGroup (vert);
-			print ("[PEACE OFFER] from " ..tostring (offer.OfferedBy));
-			buttonAccept = UI.CreateButton (horz).SetText ("Accept").SetColor (getColourCode ("Button|Green"));
-			local onclick2=function ()
-				local payload = {};
-				payload.Message = "Accept Peace";
-				payload.Spieler = offer.OfferedBy;
-				AcceptDeclinePeaceOffer (payload);
-				end;
-			buttonAccept.SetOnClick (onclick2);
+			print ("[PEACE OFFER] to " ..tostring (targetPlayerID).. ", from " ..tostring (offer.OfferedBy).. ", own request==" ..tostring (offer.OfferedBy == game.Us.ID));
+			if (offer.OfferedBy ~= game.Us.ID) then --only show "Accept" button if it an incoming Peace request, don't show if it's a request from local player to another player
+				local buttonAccept = UI.CreateButton (horz).SetText ("Accept").SetColor (getColourCode ("Button|Green")).SetInteractable (offer.OfferedBy ~= game.Us.ID);
+				local onclick2=function ()
+					local payload = {};
+					payload.Message = "Accept Peace";
+					payload.OfferedBy = offer.OfferedBy;
+					payload.TargetPlayerID = targetPlayerID;
+					payload.SendDataDisplay = "Sending peace acceptance";
+					acceptDeclinePeaceOffer (game, payload);
+					end;
+				buttonAccept.SetOnClick (onclick2);
 
-			buttonDeny = UI.CreateButton (horz).SetText ("Decline").SetColor (getColourCode ("Button|Red"));
-			local onclick=function ()
-				local payload = {};
-				payload.Message = "Decline Peace";
-				payload.Spieler = offer.OfferedBy;
-				AcceptDeclinePeaceOffer (payload);
-				end;
-			buttonDeny.SetOnClick (onclick);
-			UI.CreateLabel (horz).SetText ("  " ..PlayerName (game, offer.OfferedBy) .. " offers you peace");
+				local buttonDeny = UI.CreateButton (horz).SetText ("Decline").SetColor (getColourCode ("Button|Red"));
+				local onclick=function ()
+					local payload = {};
+					payload.Message = "Decline Peace";
+					payload.OfferedBy = offer.OfferedBy;
+					payload.TargetPlayerID = targetPlayerID;
+					payload.SendDataDisplay = "Sending peace declination";
+					acceptDeclinePeaceOffer (game, payload);
+					end;
+				buttonDeny.SetOnClick (onclick);
+				UI.CreateLabel (horz).SetText ("  " ..PlayerName (game, offer.OfferedBy) .. " offers you peace");
+			else
+				local buttonCancelPeaceOffer = UI.CreateButton (horz).SetText ("Cancel").SetColor (getColourCode ("Button|Red"));
+				local onclick=function ()
+					local payload = {};
+					payload.Message = "Cancel Peace Offer";
+					payload.OfferedBy = offer.OfferedBy;
+					payload.TargetPlayerID = targetPlayerID;
+					payload.SendDataDisplay = "Canceling peace offer";
+					acceptDeclinePeaceOffer (game, payload);
+					end;
+				buttonCancelPeaceOffer.SetOnClick (onclick);
+				UI.CreateLabel (horz).SetText ("  " ..PlayerName (game, targetPlayerID) .. " received your peace offering");
+
+			end
 		end
 	end
 	return (intOfferCount);
 end
 
-function AcceptDeclinePeaceOffer (data)
-	local payload = {};
-	payload.Message = data.Message;
-	payload.TargetPlayerID = data.Spieler;
-	Game.SendGameCustomMessage ("Sending data...", payload, function(returnvalue)
+function acceptDeclinePeaceOffer (game, data)
+	-- local payload = {};
+	-- payload.Message = data.Message;
+	-- payload.TargetPlayerID = data.OfferedBy;
+	Game.SendGameCustomMessage (data.SendDataDisplay or "Sending data", data, function(returnvalue)
 		showedreturnmessage = false;
-		-- UI.Alert(returnvalue.Message);
+		-- UI.Alert (returnvalue.Message);
 	end);
-	ShowMenu (Game);
+	print ("[ACCEPT/DECLINE PEACE OFFER] " ..tostring (data.Message).. ", " ..tostring (data.SendDataDisplay));
+	ShowMenu (game);
 end
 
 function toname (playerid, game)
